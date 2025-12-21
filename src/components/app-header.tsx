@@ -9,7 +9,7 @@ import { BookMarked, CalendarDays, Menu } from "lucide-react"
 function MobileHeader() {
     const { setOpenMobile } = useSidebar()
     return (
-        <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b bg-background px-4 sm:px-6 md:hidden">
+        <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 sm:px-6 md:hidden">
             <div className="flex items-center gap-2">
                 <Button variant="ghost" size="icon" onClick={() => setOpenMobile(true)}>
                     <Menu className="h-6 w-6" />
@@ -30,7 +30,7 @@ function MobileHeader() {
 
 function DesktopHeader() {
     return (
-        <header className="sticky top-0 z-40 hidden h-16 items-center justify-end border-b bg-background px-4 sm:px-6 md:flex">
+        <header className="sticky top-0 z-40 hidden h-16 shrink-0 items-center justify-end border-b bg-background px-4 sm:px-6 md:flex">
              <Button variant="ghost" size="icon">
                 <CalendarDays className="h-5 w-5" />
                 <span className="sr-only">Select date</span>
@@ -44,7 +44,7 @@ export function AppHeader() {
     return (
         <SidebarProvider>
              <AppSidebar />
-             <div className="flex flex-col flex-1">
+             <div className="flex h-screen flex-col flex-1">
                 <MobileHeader />
                 <DesktopHeader />
              </div>
