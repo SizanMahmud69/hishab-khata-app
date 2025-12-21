@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import PageHeader from "@/components/page-header"
-import { Banknote, Gift, Star } from "lucide-react"
+import { Banknote, Gift, Medal, Star, Trophy } from "lucide-react"
 import { useBudget } from "@/context/budget-context";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 const WITHDRAW_THRESHOLD = 1000;
 const CONVERSION_RATE = 1; // 1 point = 1 BDT
@@ -42,16 +43,18 @@ export default function RewardsPage() {
   return (
     <div className="flex-1 space-y-4">
       <PageHeader title="রিওয়ার্ড" description="আপনার অর্জিত রিওয়ার্ড এবং পয়েন্ট দেখুন।" />
-      <Card>
+      <Card className="bg-gradient-to-br from-yellow-300 to-yellow-500 text-yellow-900 border-yellow-600 overflow-hidden">
         <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-                <Star className="text-yellow-500" />
+            <CardTitle className="flex items-center gap-2 text-white drop-shadow-md">
+                <Star className="text-white" />
                 আপনার পয়েন্ট
             </CardTitle>
         </CardHeader>
-        <CardContent>
-            <div className="text-4xl font-bold text-center p-8">{rewardPoints}</div>
-            <p className="text-center text-muted-foreground">নিয়মিত অ্যাপ ব্যবহার করে আরও পয়েন্ট অর্জন করুন।</p>
+        <CardContent className="relative">
+            <Trophy className="absolute -top-4 -left-4 w-16 h-16 text-yellow-200 opacity-20 transform -rotate-12" />
+            <Medal className="absolute -bottom-6 -right-4 w-20 h-20 text-yellow-200 opacity-20 transform rotate-12" />
+            <div className="text-6xl font-bold text-center p-8 text-white drop-shadow-lg">{rewardPoints}</div>
+            <p className="text-center text-yellow-100 font-medium">নিয়মিত অ্যাপ ব্যবহার করে আরও পয়েন্ট অর্জন করুন।</p>
         </CardContent>
       </Card>
       
