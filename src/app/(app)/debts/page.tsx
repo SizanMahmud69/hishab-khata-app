@@ -260,7 +260,7 @@ export default function DebtsPage() {
                                     <p className="text-sm text-muted-foreground">{new Date(debt.date).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                                 </div>
                                 <span className={cn(
-                                    "font-bold text-sm",
+                                    "font-bold text-base",
                                     debt.status !== 'paid' ? 'text-red-500' : 'text-foreground'
                                 )}>{formatCurrency(debt.amount)}</span>
                            </div>
@@ -301,7 +301,7 @@ export default function DebtsPage() {
                                     <p className="text-sm text-muted-foreground">{new Date(debt.date).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                                 </div>
                                 <span className={cn(
-                                    "font-bold text-sm",
+                                    "font-bold text-base",
                                     debt.status !== 'paid' ? 'text-green-500' : 'text-foreground'
                                 )}>{formatCurrency(debt.amount)}</span>
                            </div>
@@ -389,9 +389,3 @@ function DebtsSkeleton() {
         </div>
     );
 }
-
-    
-
-    
-
-    
