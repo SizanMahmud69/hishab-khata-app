@@ -38,19 +38,35 @@ interface BudgetContextType {
     rewardPoints: number;
     addRewardPoints: (points: number) => void;
     deductRewardPoints: (points: number) => void;
+    isLoading: boolean;
 }
 
 const BudgetContext = createContext<BudgetContextType | undefined>(undefined);
 
 export const BudgetProvider = ({ children }: { children: ReactNode }) => {
-    const [income, setIncome] = useState<Income[]>(initialIncome);
-    const [expenses, setExpenses] = useState<Expense[]>(initialExpenses);
-    const [savings, setSavings] = useState<Saving[]>(initialSavings);
-    const [rewardPoints, setRewardPoints] = useState(120);
+    const [income, setIncome] = useState<Income[]>([]);
+    const [expenses, setExpenses] = useState<Expense[]>([]);
+    const [savings, setSavings] = useState<Saving[]>([]);
+    const [rewardPoints, setRewardPoints] = useState(0);
+    const [isLoading, setIsLoading] = useState(true);
 
     const [totalIncome, setTotalIncome] = useState(0);
     const [totalExpense, setTotalExpense] = useState(0);
     const [totalSavings, setTotalSavings] = useState(0);
+
+    useEffect(() => {
+        // Simulate data fetching
+        const timer = setTimeout(() => {
+            setIncome(initialIncome);
+            setExpenses(initialExpenses);
+            setSavings(initialSavings);
+            setRewardPoints(120);
+            setIsLoading(false);
+        }, 1500);
+
+        return () => clearTimeout(timer);
+    }, []);
+
 
     useEffect(() => {
         setTotalIncome(income.reduce((sum, item) => sum + item.amount, 0));
@@ -85,7 +101,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     }
 
     return (
-        <BudgetContext.Provider value={{ income, expenses, savings, addIncome, addExpense, addSaving, totalIncome, totalExpense, totalSavings, rewardPoints, addRewardPoints, deductRewardPoints }}>
+        <BudgetContext.Provider value={{ income, expenses, savings, addIncome, addExpense, addSaving, totalIncome, totalExpense, totalSavings, rewardPoints, addRewardPoints, deductRewardPoints, isLoading }}>
             {children}
         </BudgetContext.Provider>
     );

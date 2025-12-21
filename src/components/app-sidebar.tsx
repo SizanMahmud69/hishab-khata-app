@@ -94,7 +94,7 @@ export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
         </ScrollArea>
         <div className="mt-auto p-4">
             <SidebarSeparator />
-            <div className="flex items-center gap-3 rounded-md px-2 py-3 transition-colors">
+            <Link href="/profile" className="flex items-center gap-3 rounded-md px-2 py-3 transition-colors hover:bg-sidebar-accent" onClick={onLinkClick}>
                 <Avatar className="h-9 w-9">
                 <AvatarImage src="https://picsum.photos/seed/1/100/100" alt="@shadcn" data-ai-hint="profile avatar" />
                 <AvatarFallback>ইউ</AvatarFallback>
@@ -103,7 +103,7 @@ export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
                     <p className="font-medium">ব্যবহারকারী</p>
                     <p className="text-xs text-muted-foreground">user@example.com</p>
                 </div>
-            </div>
+            </Link>
             <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton asChild tooltip="সাপোর্ট" size="lg">

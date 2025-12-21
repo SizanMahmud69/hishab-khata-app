@@ -1,5 +1,7 @@
-import { PlusCircle } from "lucide-react"
+"use client";
 
+import { PlusCircle } from "lucide-react"
+import { useBudget } from "@/context/budget-context";
 import { Button } from "@/components/ui/button"
 import PageHeader from "@/components/page-header"
 import {
@@ -31,8 +33,10 @@ import { Label } from "@/components/ui/label"
 import { debts } from "@/lib/data"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DebtsPage() {
+    const { isLoading } = useBudget();
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat("bn-BD", {
           style: "currency",
@@ -43,6 +47,10 @@ export default function DebtsPage() {
 
     const lentDebts = debts.filter(d => d.type === 'lent');
     const borrowedDebts = debts.filter(d => d.type === 'borrowed');
+
+    if (isLoading) {
+        return <DebtsSkeleton />;
+    }
 
   return (
     <div className="flex-1 space-y-4">
@@ -134,7 +142,7 @@ export default function DebtsPage() {
             <CardHeader>
                 <CardTitle>ধার নিয়েছি</CardTitle>
                 <CardDescription>আপনি অন্যদের থেকে যে টাকা ধার নিয়েছেন।</CardDescription>
-            </CardHeader>
+            </Header>
             <CardContent>
             <Table>
                 <TableHeader>
@@ -163,4 +171,46 @@ export default function DebtsPage() {
       </div>
     </div>
   )
+}
+
+function DebtsSkeleton() {
+    return (
+        <div className="flex-1 space-y-4">
+            <div className="flex items-center justify-between mb-6">
+                <div className="grid gap-1">
+                    <Skeleton className="h-9 w-40" />
+                    <Skeleton className="h-5 w-72" />
+                </div>
+                <Skeleton className="h-10 w-40" />
+            </div>
+            <div className="grid gap-6 grid-cols-1">
+                <Card>
+                    <CardHeader>
+                        <Skeleton className="h-8 w-32" />
+                        <Skeleton className="h-5 w-64" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-4">
+                            <Skeleton className="h-10 w-full" />
+                            <Skeleton className="h-10 w-full" />
+                            <Skeleton className="h-10 w-full" />
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <Skeleton className="h-8 w-32" />
+                        <Skeleton className="h-5 w-64" />
+                    </CardHeader>
+                    <CardContent>
+                         <div className="space-y-4">
+                            <Skeleton className="h-10 w-full" />
+                            <Skeleton className="h-10 w-full" />
+                            <Skeleton className="h-10 w-full" />
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
+    );
 }

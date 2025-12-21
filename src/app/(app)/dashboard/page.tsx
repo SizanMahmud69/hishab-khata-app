@@ -7,9 +7,10 @@ import { OverviewPieChart } from "@/components/overview-pie-chart"
 import { Wallet, PiggyBank } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { useBudget } from "@/context/budget-context";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DashboardPage() {
-    const { totalIncome, totalExpense, totalSavings } = useBudget();
+    const { totalIncome, totalExpense, totalSavings, isLoading } = useBudget();
     const balance = totalIncome - totalExpense;
 
     const formatCurrency = (amount: number) => {
@@ -19,6 +20,10 @@ export default function DashboardPage() {
           minimumFractionDigits: 0,
         }).format(amount)
       }
+
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
 
   return (
     <div className="flex-1 space-y-4">
@@ -60,4 +65,19 @@ export default function DashboardPage() {
       </div>
     </div>
   )
+}
+
+
+function DashboardSkeleton() {
+  return (
+    <div className="flex-1 space-y-4">
+      <div className="grid gap-4 grid-cols-2">
+        <Skeleton className="h-28" />
+        <Skeleton className="h-28" />
+      </div>
+      <Skeleton className="h-36" />
+      <Skeleton className="h-72" />
+      <Skeleton className="h-96" />
+    </div>
+  );
 }

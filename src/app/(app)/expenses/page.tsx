@@ -19,9 +19,10 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { useBudget } from "@/context/budget-context"
 import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ExpensesPage() {
-    const { addExpense, addSaving } = useBudget();
+    const { addExpense, addSaving, isLoading } = useBudget();
     const { toast } = useToast();
     const formRef = React.useRef<HTMLFormElement>(null);
 
@@ -67,6 +68,10 @@ export default function ExpensesPage() {
         });
 
         formRef.current?.reset();
+    }
+
+    if (isLoading) {
+        return <FormSkeleton />;
     }
 
   return (
@@ -123,4 +128,47 @@ export default function ExpensesPage() {
       </Card>
     </div>
   )
+}
+
+
+function FormSkeleton() {
+    return (
+        <div className="flex-1 space-y-4">
+            <div className="grid gap-1 mb-6">
+                <Skeleton className="h-9 w-64" />
+                <Skeleton className="h-5 w-80" />
+            </div>
+            <Card className="max-w-2xl mx-auto">
+                <CardHeader>
+                    <Skeleton className="h-8 w-40" />
+                    <Skeleton className="h-5 w-60" />
+                </CardHeader>
+                <CardContent className="space-y-4 py-4">
+                    <div className="space-y-1.5">
+                        <Skeleton className="h-5 w-20" />
+                        <Skeleton className="h-10 w-full" />
+                    </div>
+                    <div className="space-y-1.5">
+                        <Skeleton className="h-5 w-20" />
+                        <Skeleton className="h-10 w-full" />
+                    </div>
+                    <div className="space-y-1.5">
+                        <Skeleton className="h-5 w-20" />
+                        <Skeleton className="h-10 w-full" />
+                    </div>
+                    <div className="space-y-1.5">
+                        <Skeleton className="h-5 w-20" />
+                        <Skeleton className="h-20 w-full" />
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <Skeleton className="h-6 w-11 rounded-full" />
+                        <Skeleton className="h-5 w-48" />
+                    </div>
+                </CardContent>
+                <CardFooter>
+                    <Skeleton className="h-10 w-full" />
+                </CardFooter>
+            </Card>
+        </div>
+    );
 }
