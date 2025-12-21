@@ -100,7 +100,7 @@ export function AppSidebar() {
                 <p className="text-xs text-muted-foreground">user@example.com</p>
             </div>
             <Button asChild variant="ghost" size="icon" className="ml-auto group-data-[collapsible=icon]:hidden">
-                <Link href="/">
+                <Link href="/" onClick={handleLinkClick}>
                     <LogOut className="size-5" />
                 </Link>
             </Button>
