@@ -65,7 +65,7 @@ const menuItems = [
   },
   {
     href: "/rewards",
-    label: "রেওয়ার্ড",
+    label: "রিওয়ার্ড",
     icon: Award,
   },
 ]
