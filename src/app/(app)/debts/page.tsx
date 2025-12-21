@@ -7,17 +7,10 @@ import { useBudget } from "@/context/budget-context";
 import { Button } from "@/components/ui/button"
 import PageHeader from "@/components/page-header"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import {
     Card,
     CardContent,
     CardDescription,
+    CardFooter,
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
@@ -169,104 +162,88 @@ export default function DebtsPage() {
       
       <Tabs defaultValue="lent" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="lent">ধার দিয়েছি</TabsTrigger>
-          <TabsTrigger value="borrowed">ধার নিয়েছি</TabsTrigger>
+          <TabsTrigger value="lent">ধার দিয়েছি ({lentDebts.length})</TabsTrigger>
+          <TabsTrigger value="borrowed">ধার নিয়েছি ({borrowedDebts.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="lent">
-          <Card>
-              <CardHeader>
-                  <CardTitle>ধার দিয়েছি</CardTitle>
-                  <CardDescription>আপনি অন্যদের যে টাকা ধার দিয়েছেন।</CardDescription>
-              </CardHeader>
-              <CardContent>
-              <Table>
-                  <TableHeader>
-                      <TableRow>
-                          <TableHead>নাম</TableHead>
-                          <TableHead>পরিমাণ</TableHead>
-                          <TableHead>স্ট্যাটাস</TableHead>
-                          <TableHead className="text-right">অ্যাকশন</TableHead>
-                      </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                  {lentDebts.map((debt) => (
-                      <TableRow key={debt.id}>
-                          <TableCell className="font-medium">{debt.person}</TableCell>
-                          <TableCell>
-                            <div className="font-semibold">{formatCurrency(debt.amount)}</div>
-                            {debt.status !== 'unpaid' && (
-                                <p className="text-xs text-muted-foreground">
-                                    পরিশোধিত: {formatCurrency(debt.paidAmount)}
-                                </p>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                              {getStatusBadge(debt.status)}
-                          </TableCell>
-                           <TableCell className="text-right">
-                            <Button 
+            <div className="space-y-4">
+                {lentDebts.map((debt) => (
+                    <Card key={debt.id}>
+                        <CardContent className="pt-6">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <p className="text-lg font-bold">{debt.person}</p>
+                                    <p className="text-sm text-muted-foreground">{new Date(debt.date).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                                </div>
+                                {getStatusBadge(debt.status)}
+                            </div>
+                            <div className="mt-4">
+                                <p className="text-2xl font-bold">{formatCurrency(debt.amount)}</p>
+                                {debt.status !== 'unpaid' && (
+                                    <p className="text-xs text-muted-foreground">
+                                        পরিশোধিত: {formatCurrency(debt.paidAmount)} | বাকি: {formatCurrency(debt.amount - debt.paidAmount)}
+                                    </p>
+                                )}
+                            </div>
+                        </CardContent>
+                        <CardFooter className="bg-muted/50 py-3 flex justify-end">
+                             <Button 
                                 size="sm" 
                                 onClick={() => openPaymentDialog(debt)}
                                 disabled={debt.status === 'paid'}
                                 variant={debt.status === 'paid' ? 'ghost' : 'outline'}
                             >
-                                {debt.status === 'paid' ? 'পরিশোধিত' : 'পরিশোধ করুন'}
+                                {debt.status === 'paid' ? 'সম্পূর্ণ পরিশোধিত' : 'পরিশোধ করুন'}
                             </Button>
-                          </TableCell>
-                      </TableRow>
-                  ))}
-                  </TableBody>
-              </Table>
-              </CardContent>
-          </Card>
+                        </CardFooter>
+                    </Card>
+                ))}
+                 {lentDebts.length === 0 && (
+                    <div className="text-center py-10 text-muted-foreground">
+                        <p>আপনি কাউকে ধার দেননি।</p>
+                    </div>
+                )}
+            </div>
         </TabsContent>
         <TabsContent value="borrowed">
-          <Card>
-              <CardHeader>
-                  <CardTitle>ধার নিয়েছি</CardTitle>
-                  <CardDescription>আপনি অন্যদের থেকে যে টাকা ধার নিয়েছেন।</CardDescription>
-              </CardHeader>
-              <CardContent>
-              <Table>
-                  <TableHeader>
-                      <TableRow>
-                          <TableHead>নাম</TableHead>
-                          <TableHead>পরিমাণ</TableHead>
-                          <TableHead>স্ট্যাটাস</TableHead>
-                          <TableHead className="text-right">অ্যাকশন</TableHead>
-                      </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                  {borrowedDebts.map((debt) => (
-                      <TableRow key={debt.id}>
-                          <TableCell className="font-medium">{debt.person}</TableCell>
-                          <TableCell>
-                            <div className="font-semibold">{formatCurrency(debt.amount)}</div>
-                            {debt.status !== 'unpaid' && (
-                                <p className="text-xs text-muted-foreground">
-                                    পরিশোধিত: {formatCurrency(debt.paidAmount)}
-                                </p>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                               {getStatusBadge(debt.status)}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button 
+           <div className="space-y-4">
+                {borrowedDebts.map((debt) => (
+                     <Card key={debt.id}>
+                        <CardContent className="pt-6">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <p className="text-lg font-bold">{debt.person}</p>
+                                    <p className="text-sm text-muted-foreground">{new Date(debt.date).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                                </div>
+                                {getStatusBadge(debt.status)}
+                            </div>
+                            <div className="mt-4">
+                                <p className="text-2xl font-bold">{formatCurrency(debt.amount)}</p>
+                                {debt.status !== 'unpaid' && (
+                                    <p className="text-xs text-muted-foreground">
+                                        পরিশোধিত: {formatCurrency(debt.paidAmount)} | বাকি: {formatCurrency(debt.amount - debt.paidAmount)}
+                                    </p>
+                                )}
+                            </div>
+                        </CardContent>
+                        <CardFooter className="bg-muted/50 py-3 flex justify-end">
+                             <Button 
                                 size="sm" 
-                                onClick={() => openPaymentDialog(debt)} 
+                                onClick={() => openPaymentDialog(debt)}
                                 disabled={debt.status === 'paid'}
-                                variant={debt.status === 'paid' ? 'ghost' : 'outline'}
+                                variant={debt.status === 'paid' ? 'ghost' : 'সম্পূর্ণ পরিশোধিত'}
                             >
-                                {debt.status === 'paid' ? 'পরিশোধিত' : 'পরিশোধ করুন'}
+                                {debt.status === 'paid' ? 'সম্পূর্ণ পরিশোধিত' : 'পরিশোধ করুন'}
                             </Button>
-                          </TableCell>
-                      </TableRow>
-                  ))}
-                  </TableBody>
-              </Table>
-              </CardContent>
-          </Card>
+                        </CardFooter>
+                    </Card>
+                ))}
+                 {borrowedDebts.length === 0 && (
+                    <div className="text-center py-10 text-muted-foreground">
+                        <p>আপনি কারো থেকে ধার নেননি।</p>
+                    </div>
+                )}
+            </div>
         </TabsContent>
       </Tabs>
       
@@ -317,22 +294,16 @@ function DebtsSkeleton() {
             </div>
             <div className="space-y-4">
                 <Skeleton className="h-10 w-full" />
-                <Card>
-                    <CardHeader>
-                        <Skeleton className="h-8 w-32" />
-                        <Skeleton className="h-5 w-64" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-4">
-                            <Skeleton className="h-10 w-full" />
-                            <Skeleton className="h-10 w-full" />
-                            <Skeleton className="h-10 w-full" />
-                        </div>
-                    </CardContent>
-                </Card>
+                <div className="space-y-4 mt-4">
+                    <Skeleton className="h-32 w-full" />
+                    <Skeleton className="h-32 w-full" />
+                    <Skeleton className="h-32 w-full" />
+                </div>
             </div>
         </div>
     );
 }
+
+    
 
     
