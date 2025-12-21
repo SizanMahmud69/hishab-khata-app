@@ -75,19 +75,19 @@ export default function IncomePage() {
                 অনুগ্রহ করে নিচের ফর্মটি পূরণ করুন।
               </CardDescription>
             </CardHeader>
-            <CardContent className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="amount" className="text-right">
+            <CardContent className="space-y-4 py-4">
+                <div className="grid w-full items-center gap-1.5">
+                    <Label htmlFor="amount">
                     পরিমাণ
                     </Label>
-                    <Input id="amount" name="amount" type="number" placeholder="50000" className="col-span-3" required />
+                    <Input id="amount" name="amount" type="number" placeholder="50000" required />
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="source" className="text-right">
+                <div className="grid w-full items-center gap-1.5">
+                    <Label htmlFor="source">
                     উৎস
                     </Label>
                     <Select name="source" onValueChange={setSelectedSource} required>
-                        <SelectTrigger className="col-span-3">
+                        <SelectTrigger>
                             <SelectValue placeholder="একটি উৎস নির্বাচন করুন" />
                         </SelectTrigger>
                         <SelectContent>
@@ -95,19 +95,19 @@ export default function IncomePage() {
                         </SelectContent>
                     </Select>
                 </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="date" className="text-right">
+              <div className="grid w-full items-center gap-1.5">
+                <Label htmlFor="date">
                   তারিখ
                 </Label>
-                <Input id="date" name="date" type="date" defaultValue={new Date().toISOString().split('T')[0]} className="col-span-3" required />
+                <Input id="date" name="date" type="date" defaultValue={new Date().toISOString().split('T')[0]} required />
               </div>
-               <div className="grid grid-cols-4 items-start gap-4">
-                <Label htmlFor="description" className="text-right pt-2">
+               <div className="grid w-full items-center gap-1.5">
+                <Label htmlFor="description">
                   বিবরণ
                 </Label>
                 {selectedSource === 'মাসিক বেতন' ? (
                     <Select name="description" required>
-                        <SelectTrigger className="col-span-3">
+                        <SelectTrigger>
                             <SelectValue placeholder="একটি মাস নির্বাচন করুন" />
                         </SelectTrigger>
                         <SelectContent>
@@ -115,7 +115,7 @@ export default function IncomePage() {
                         </SelectContent>
                     </Select>
                 ) : (
-                    <Textarea id="description" name="description" placeholder="আয়ের সংক্ষিপ্ত বিবরণ" className="col-span-3" />
+                    <Textarea id="description" name="description" placeholder="আয়ের সংক্ষিপ্ত বিবরণ" />
                 )}
               </div>
             </CardContent>

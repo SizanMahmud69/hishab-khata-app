@@ -81,17 +81,17 @@ export default function ExpensesPage() {
                 অনুগ্রহ করে নিচের ফর্মটি পূরণ করুন।
               </CardDescription>
             </CardHeader>
-            <CardContent className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="amount" className="text-right">
+            <CardContent className="space-y-4 py-4">
+                <div className="grid w-full items-center gap-1.5">
+                    <Label htmlFor="amount">
                     পরিমাণ
                     </Label>
-                    <Input id="amount" name="amount" type="number" placeholder="500" className="col-span-3" />
+                    <Input id="amount" name="amount" type="number" placeholder="500" />
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="category" className="text-right">বিভাগ</Label>
+                <div className="grid w-full items-center gap-1.5">
+                    <Label htmlFor="category">বিভাগ</Label>
                     <Select name="category">
-                        <SelectTrigger className="col-span-3">
+                        <SelectTrigger>
                             <SelectValue placeholder="একটি বিভাগ নির্বাচন করুন" />
                         </SelectTrigger>
                         <SelectContent>
@@ -99,26 +99,21 @@ export default function ExpensesPage() {
                         </SelectContent>
                     </Select>
                 </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="date" className="text-right">
+              <div className="grid w-full items-center gap-1.5">
+                <Label htmlFor="date">
                   তারিখ
                 </Label>
-                <Input id="date" name="date" type="date" defaultValue={new Date().toISOString().split('T')[0]} className="col-span-3" />
+                <Input id="date" name="date" type="date" defaultValue={new Date().toISOString().split('T')[0]} />
               </div>
-              <div className="grid grid-cols-4 items-start gap-4">
-                <Label htmlFor="description" className="text-right pt-2">
+              <div className="grid w-full items-center gap-1.5">
+                <Label htmlFor="description">
                   বিবরণ
                 </Label>
-                <Textarea id="description" name="description" placeholder="খরচের সংক্ষিপ্ত বিবরণ" className="col-span-3" />
+                <Textarea id="description" name="description" placeholder="খরচের সংক্ষিপ্ত বিবরণ" />
               </div>
-               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="is-savings" className="text-right">
-                  সঞ্চয়?
-                </Label>
-                 <div className="col-span-3 flex items-center space-x-2">
-                    <Switch id="is-savings" name="is-savings" />
-                    <Label htmlFor="is-savings" className="text-sm text-muted-foreground">এটা কি আপনার সঞ্চয়ের অংশ?</Label>
-                 </div>
+               <div className="flex items-center space-x-2">
+                <Switch id="is-savings" name="is-savings" />
+                <Label htmlFor="is-savings" className="text-sm text-muted-foreground">এটা কি আপনার সঞ্চয়ের অংশ?</Label>
               </div>
             </CardContent>
             <CardFooter>
