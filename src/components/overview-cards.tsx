@@ -22,6 +22,7 @@ import {
   } from "@/components/ui/dropdown-menu"
 import { useBudget } from "@/context/budget-context"
 import { isThisMonth, isSameMonth, subMonths } from "date-fns"
+import { cn } from "@/lib/utils"
 
 type FilterType = "all" | "thisMonth" | "lastMonth";
 
@@ -29,6 +30,7 @@ export function OverviewCards() {
   const { income, expenses } = useBudget();
   const [incomeFilter, setIncomeFilter] = React.useState<FilterType>("thisMonth");
   const [expenseFilter, setExpenseFilter] = React.useState<FilterType>("thisMonth");
+  const [activeButton, setActiveButton] = React.useState<'income' | 'expense' | null>(null);
 
   const filterData = <T extends { date: string }>(data: T[], filter: FilterType): T[] => {
     const now = new Date();
@@ -83,7 +85,12 @@ export function OverviewCards() {
             </DropdownMenuContent>
           </DropdownMenu>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="h-6 w-6">
+            <Button 
+                variant="ghost" 
+                size="icon" 
+                className={cn("h-6 w-6", activeButton === 'income' && "bg-green-200 dark:bg-green-800")}
+                onClick={() => setActiveButton(activeButton === 'income' ? null : 'income')}
+            >
                 <Plus className="h-4 w-4" />
             </Button>
           </div>
@@ -118,8 +125,13 @@ export function OverviewCards() {
                 </DropdownMenuContent>
             </DropdownMenu>
             <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="h-6 w-6">
-                    <Minus className="h-4 w-4" />
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className={cn("h-6 w-6", activeButton === 'expense' && "bg-red-200 dark:bg-red-800")}
+                    onClick={() => setActiveButton(activeButton === 'expense' ? null : 'expense')}
+                >
+                    <Minus className={cn("h-4 w-4", activeButton === 'expense' && 'text-red-600 dark:text-red-200')} />
                 </Button>
             </div>
         </CardHeader>

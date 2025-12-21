@@ -3,12 +3,12 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
-  ArrowDownCircle,
-  ArrowUpCircle,
   BookMarked,
   HandCoins,
   LayoutDashboard,
   LogOut,
+  MinusCircle,
+  PlusCircle,
   Target,
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -32,13 +32,13 @@ const menuItems = [
   },
   {
     href: "/income",
-    label: "আয়",
-    icon: ArrowUpCircle,
+    label: "আয় করুন",
+    icon: PlusCircle,
   },
   {
     href: "/expenses",
-    label: "খরচ",
-    icon: ArrowDownCircle,
+    label: "ব্যয় করুন",
+    icon: MinusCircle,
   },
   {
     href: "/budgets",
