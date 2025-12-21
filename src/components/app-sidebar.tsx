@@ -28,6 +28,7 @@ import {
   SidebarFooter,
   SidebarSeparator,
 } from "@/components/ui/sidebar"
+import { ScrollArea } from "./ui/scroll-area"
 
 const menuItems = [
     {
@@ -76,65 +77,57 @@ export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
   const pathname = usePathname()
 
   return (
-    <Sidebar>
-      <SidebarHeader>
-        <div className="flex items-center gap-2">
-          <BookMarked className="size-8 text-primary" />
-          <h2 className="text-xl font-bold font-headline group-data-[collapsible=icon]:hidden">
-            হিসাব খাতা
-          </h2>
-        </div>
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarMenu>
-          {menuItems.map((item) => (
-            <SidebarMenuItem key={item.href}>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname === item.href}
-                tooltip={item.label}
-                size="lg"
-              >
-                <Link href={item.href} onClick={onLinkClick}>
-                  <item.icon />
-                  <span className="text-base">{item.label}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarContent>
-      <SidebarFooter>
-        <SidebarSeparator />
-         <div className="flex items-center gap-3 rounded-md px-2 py-1.5 transition-colors">
-            <Avatar className="h-9 w-9">
-              <AvatarImage src="https://picsum.photos/seed/1/100/100" alt="@shadcn" data-ai-hint="profile avatar" />
-              <AvatarFallback>ইউ</AvatarFallback>
-            </Avatar>
-            <div className="grid group-data-[collapsible=icon]:hidden">
-                <p className="font-medium text-sidebar-foreground">ব্যবহারকারী</p>
-                <p className="text-xs text-muted-foreground">user@example.com</p>
+    <div className="flex h-full flex-col">
+        <ScrollArea className="flex-1">
+            <SidebarMenu>
+            {menuItems.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                <SidebarMenuButton
+                    asChild
+                    isActive={pathname === item.href}
+                    tooltip={item.label}
+                    size="lg"
+                >
+                    <Link href={item.href} onClick={onLinkClick}>
+                    <item.icon />
+                    <span className="text-base">{item.label}</span>
+                    </Link>
+                </SidebarMenuButton>
+                </SidebarMenuItem>
+            ))}
+            </SidebarMenu>
+        </ScrollArea>
+        <div className="mt-auto p-4">
+            <SidebarSeparator />
+            <div className="flex items-center gap-3 rounded-md px-2 py-3 transition-colors">
+                <Avatar className="h-9 w-9">
+                <AvatarImage src="https://picsum.photos/seed/1/100/100" alt="@shadcn" data-ai-hint="profile avatar" />
+                <AvatarFallback>ইউ</AvatarFallback>
+                </Avatar>
+                <div>
+                    <p className="font-medium">ব্যবহারকারী</p>
+                    <p className="text-xs text-muted-foreground">user@example.com</p>
+                </div>
             </div>
+            <SidebarMenu>
+                <SidebarMenuItem>
+                    <SidebarMenuButton asChild tooltip="সাপোর্ট" size="lg">
+                        <Link href="#" onClick={onLinkClick}>
+                            <LifeBuoy />
+                            <span>সাপোর্ট</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                    <SidebarMenuButton asChild tooltip="লগআউট" size="lg">
+                        <Link href="/" onClick={onLinkClick}>
+                            <LogOut />
+                            <span>লগআউট</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
         </div>
-        <SidebarMenu>
-            <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="সাপোর্ট" size="lg">
-                    <Link href="#" onClick={onLinkClick}>
-                        <LifeBuoy />
-                        <span>সাপোর্ট</span>
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="লগআউট" size="lg">
-                    <Link href="/" onClick={onLinkClick}>
-                        <LogOut />
-                        <span>লগআউট</span>
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
-    </Sidebar>
+    </div>
   )
 }

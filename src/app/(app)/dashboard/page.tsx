@@ -22,7 +22,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex-1 space-y-4">
-      <div className="grid gap-4 grid-cols-2">
+      <div className="grid gap-4 grid-cols-1">
         <OverviewCards />
       </div>
        <Card>

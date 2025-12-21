@@ -99,7 +99,7 @@ export default function DebtsPage() {
         </Dialog>
       </PageHeader>
       
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 grid-cols-1">
         <Card>
             <CardHeader>
                 <CardTitle>ধার দিয়েছি</CardTitle>
