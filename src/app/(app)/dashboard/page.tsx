@@ -48,20 +48,6 @@ export default function DashboardPage() {
                 </div>
                 <div className="text-sm font-semibold text-blue-600">{formatCurrency(totalSavings)}</div>
             </div>
-            {savingsTransactions.slice(0, 2).map(transaction => (
-                 <div key={transaction.id} className="flex items-center justify-between pl-8">
-                    <div className="flex items-center gap-2">
-                        <div className="p-2 bg-gray-100 rounded-full">
-                            <Landmark className="h-4 w-4 text-gray-600" />
-                        </div>
-                        <div>
-                            <p className="text-sm font-medium">{transaction.description}</p>
-                            <p className="text-xs text-muted-foreground">{new Date(transaction.date).toLocaleDateString('bn-BD')}</p>
-                        </div>
-                    </div>
-                    <div className="text-sm font-semibold text-gray-600">+{formatCurrency(transaction.amount)}</div>
-                </div>
-            ))}
           </div>
         </CardContent>
       </Card>
