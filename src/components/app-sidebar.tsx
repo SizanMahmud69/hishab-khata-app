@@ -3,15 +3,16 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
+  Award,
   BookMarked,
   HandCoins,
+  History,
   LayoutDashboard,
   LogOut,
   MinusCircle,
   PlusCircle,
-  Target,
-  History,
   Store,
+  Target,
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
@@ -34,18 +35,13 @@ const menuItems = [
   },
   {
     href: "/income",
-    label: "আয় করুন",
+    label: "আয়ের হিসাব",
     icon: PlusCircle,
   },
   {
     href: "/expenses",
-    label: "ব্যয় করুন",
+    label: "ব্যয়ের হিসাব",
     icon: MinusCircle,
-  },
-  {
-    href: "/budgets",
-    label: "বাজেট",
-    icon: Target,
   },
   {
     href: "/debts",
@@ -53,14 +49,24 @@ const menuItems = [
     icon: HandCoins,
   },
   {
+    href: "/shop-dues",
+    label: "দোকান বাকি",
+    icon: Store,
+  },
+  {
     href: "/history",
     label: "হিস্টোরি",
     icon: History,
   },
   {
-    href: "/shop-dues",
-    label: "দোকান বাকি",
-    icon: Store,
+    href: "/budgets",
+    label: "বাজেট",
+    icon: Target,
+  },
+  {
+    href: "/rewards",
+    label: "রেওয়ার্ড",
+    icon: Award,
   },
 ]
 
@@ -85,6 +91,7 @@ export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
                 asChild
                 isActive={pathname === item.href}
                 tooltip={item.label}
+                size="lg"
               >
                 <Link href={item.href} onClick={onLinkClick}>
                   <item.icon />
