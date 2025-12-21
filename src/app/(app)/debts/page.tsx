@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { debts as initialDebts } from "@/lib/data"
+import { debts as initialDebts, type Debt } from "@/lib/data"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton";
@@ -43,7 +43,10 @@ import { cn } from "@/lib/utils";
 export default function DebtsPage() {
     const { isLoading } = useBudget();
     const { toast } = useToast();
-    const [debts, setDebts] = useState(initialDebts);
+    const [debts, setDebts] = useState<Debt[]>(initialDebts);
+    const [selectedDebt, setSelectedDebt] = useState<Debt | null>(null);
+    const [paymentAmount, setPaymentAmount] = useState<number>(0);
+    const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat("bn-BD", {
@@ -53,12 +56,53 @@ export default function DebtsPage() {
         }).format(amount)
     }
 
-    const handleMarkAsPaid = (id: number) => {
-        setDebts(debts.map(debt => debt.id === id ? { ...debt, status: 'paid' } : debt));
+    const openPaymentDialog = (debt: Debt) => {
+        setSelectedDebt(debt);
+        setPaymentAmount(debt.amount - debt.paidAmount);
+        setIsPaymentDialogOpen(true);
+    }
+
+    const handlePaymentConfirm = () => {
+        if (!selectedDebt) return;
+
+        const remainingAmount = selectedDebt.amount - selectedDebt.paidAmount;
+        if (paymentAmount <= 0 || paymentAmount > remainingAmount) {
+            toast({
+                variant: "destructive",
+                title: "ভুল পরিমাণ",
+                description: `অনুগ্রহ করে সঠিক পরিমাণ লিখুন (সর্বোচ্চ: ${formatCurrency(remainingAmount)})।`,
+            });
+            return;
+        }
+
+        setDebts(debts.map(debt => {
+            if (debt.id === selectedDebt.id) {
+                const newPaidAmount = debt.paidAmount + paymentAmount;
+                const newStatus = newPaidAmount >= debt.amount ? 'paid' : 'partially-paid';
+                return { ...debt, paidAmount: newPaidAmount, status: newStatus };
+            }
+            return debt;
+        }));
+
         toast({
             title: "সফল!",
-            description: "ধারের হিসাব সফলভাবে আপডেট করা হয়েছে।",
+            description: "পরিশোধের হিসাব সফলভাবে আপডেট করা হয়েছে।",
         });
+
+        setIsPaymentDialogOpen(false);
+        setSelectedDebt(null);
+    }
+
+    const getStatusBadge = (status: 'unpaid' | 'paid' | 'partially-paid') => {
+        switch (status) {
+            case 'paid':
+                return <Badge className="bg-green-500 hover:bg-green-500/80">পরিশোধিত</Badge>;
+            case 'partially-paid':
+                return <Badge variant="outline" className="border-yellow-500 text-yellow-600">আংশিক পরিশোধিত</Badge>;
+            case 'unpaid':
+            default:
+                return <Badge variant="destructive">অপরিশোধিত</Badge>;
+        }
     }
 
     const lentDebts = debts.filter(d => d.type === 'lent');
@@ -139,8 +183,8 @@ export default function DebtsPage() {
                   <TableHeader>
                       <TableRow>
                           <TableHead>নাম</TableHead>
-                          <TableHead>স্ট্যাটাস</TableHead>
                           <TableHead>পরিমাণ</TableHead>
+                          <TableHead>স্ট্যাটাস</TableHead>
                           <TableHead className="text-right">অ্যাকশন</TableHead>
                       </TableRow>
                   </TableHeader>
@@ -149,15 +193,20 @@ export default function DebtsPage() {
                       <TableRow key={debt.id}>
                           <TableCell className="font-medium">{debt.person}</TableCell>
                           <TableCell>
-                              <Badge variant={debt.status === 'paid' ? 'default': 'destructive'} className={cn(debt.status === 'paid' && 'bg-green-500 hover:bg-green-500/80')}>
-                                  {debt.status === 'paid' ? 'পরিশোধিত' : 'অপরিশোধিত'}
-                              </Badge>
+                            <div className="font-semibold">{formatCurrency(debt.amount)}</div>
+                            {debt.status !== 'unpaid' && (
+                                <p className="text-xs text-muted-foreground">
+                                    পরিশোধিত: {formatCurrency(debt.paidAmount)}
+                                </p>
+                            )}
                           </TableCell>
-                          <TableCell className="font-semibold">{formatCurrency(debt.amount)}</TableCell>
+                          <TableCell>
+                              {getStatusBadge(debt.status)}
+                          </TableCell>
                            <TableCell className="text-right">
                             <Button 
                                 size="sm" 
-                                onClick={() => handleMarkAsPaid(debt.id)} 
+                                onClick={() => openPaymentDialog(debt)}
                                 disabled={debt.status === 'paid'}
                                 variant={debt.status === 'paid' ? 'ghost' : 'outline'}
                             >
@@ -182,8 +231,8 @@ export default function DebtsPage() {
                   <TableHeader>
                       <TableRow>
                           <TableHead>নাম</TableHead>
-                          <TableHead>স্ট্যাটাস</TableHead>
                           <TableHead>পরিমাণ</TableHead>
+                          <TableHead>স্ট্যাটাস</TableHead>
                           <TableHead className="text-right">অ্যাকশন</TableHead>
                       </TableRow>
                   </TableHeader>
@@ -192,15 +241,20 @@ export default function DebtsPage() {
                       <TableRow key={debt.id}>
                           <TableCell className="font-medium">{debt.person}</TableCell>
                           <TableCell>
-                               <Badge variant={debt.status === 'paid' ? 'default': 'destructive'} className={cn(debt.status === 'paid' && 'bg-green-500 hover:bg-green-500/80')}>
-                                  {debt.status === 'paid' ? 'পরিশোধিত' : 'অপরিশোধিত'}
-                              </Badge>
+                            <div className="font-semibold">{formatCurrency(debt.amount)}</div>
+                            {debt.status !== 'unpaid' && (
+                                <p className="text-xs text-muted-foreground">
+                                    পরিশোধিত: {formatCurrency(debt.paidAmount)}
+                                </p>
+                            )}
                           </TableCell>
-                          <TableCell className="font-semibold">{formatCurrency(debt.amount)}</TableCell>
+                          <TableCell>
+                               {getStatusBadge(debt.status)}
+                          </TableCell>
                           <TableCell className="text-right">
                             <Button 
                                 size="sm" 
-                                onClick={() => handleMarkAsPaid(debt.id)} 
+                                onClick={() => openPaymentDialog(debt)} 
                                 disabled={debt.status === 'paid'}
                                 variant={debt.status === 'paid' ? 'ghost' : 'outline'}
                             >
@@ -215,6 +269,38 @@ export default function DebtsPage() {
           </Card>
         </TabsContent>
       </Tabs>
+      
+        <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+            <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>পরিশোধ নিশ্চিত করুন</DialogTitle>
+                    <DialogDescription>
+                        {selectedDebt?.person} কে পরিশোধ করার জন্য পরিমাণ লিখুন।
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="payment-amount" className="text-right">
+                            পরিমাণ
+                        </Label>
+                        <Input 
+                            id="payment-amount" 
+                            type="number" 
+                            value={paymentAmount}
+                            onChange={(e) => setPaymentAmount(Number(e.target.value))}
+                            className="col-span-3"
+                        />
+                    </div>
+                     <p className="text-sm text-muted-foreground col-start-2 col-span-3">
+                        বাকি আছে: {formatCurrency(selectedDebt ? selectedDebt.amount - selectedDebt.paidAmount : 0)}
+                     </p>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsPaymentDialogOpen(false)}>বাতিল</Button>
+                    <Button type="submit" onClick={handlePaymentConfirm}>নিশ্চিত করুন</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </div>
   )
 }
@@ -248,3 +334,5 @@ function DebtsSkeleton() {
         </div>
     );
 }
+
+    

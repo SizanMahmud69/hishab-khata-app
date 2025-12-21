@@ -1,4 +1,14 @@
 
+export interface Debt {
+  id: number;
+  person: string;
+  amount: number;
+  paidAmount: number;
+  type: 'lent' | 'borrowed';
+  date: string;
+  status: 'unpaid' | 'paid' | 'partially-paid';
+}
+
 export const monthlyIncome = [
   { source: 'মাসিক বেতন', amount: 50000, date: '2024-07-01' },
   { source: 'ফ্রিল্যান্সিং প্রকল্প', amount: 15000, date: '2024-07-15' },
@@ -18,11 +28,11 @@ export const savingsTransactions = [
     { id: 2, date: '2024-06-20', description: 'বোনাস থেকে সঞ্চয়', amount: 10000 },
 ]
 
-export const debts = [
-    { id: 1, person: 'সোহেল', amount: 2000, type: 'lent', date: '2024-07-10', status: 'unpaid' },
-    { id: 2, person: 'রাকিব', amount: 5000, type: 'borrowed', date: '2024-07-05', status: 'paid' },
-    { id: 3, person: 'নাসরিন', amount: 1500, type: 'borrowed', date: '2024-07-20', status: 'unpaid' },
-    { id: 4, person: 'আরিফ', amount: 3000, type: 'lent', date: '2024-06-25', status: 'unpaid' },
+export const debts: Debt[] = [
+    { id: 1, person: 'সোহেল', amount: 2000, paidAmount: 0, type: 'lent', date: '2024-07-10', status: 'unpaid' },
+    { id: 2, person: 'রাকিব', amount: 5000, paidAmount: 5000, type: 'borrowed', date: '2024-07-05', status: 'paid' },
+    { id: 3, person: 'নাসরিন', amount: 1500, paidAmount: 500, type: 'borrowed', date: '2024-07-20', status: 'partially-paid' },
+    { id: 4, person: 'আরিফ', amount: 3000, paidAmount: 0, type: 'lent', date: '2024-06-25', status: 'unpaid' },
 ];
 
 export const overviewChartData = [
@@ -37,3 +47,5 @@ export const overviewChartData = [
 
 export const expenseCategories = ['খাবার', 'বাজার', 'যাতায়াত', 'শপিং', 'বিনোদন', 'বিল', 'স্বাস্থ্য', 'সঞ্চয় ডিপোজিট', 'অন্যান্য'];
 export const incomeSources = ['মাসিক বেতন', 'ফ্রিল্যান্সিং', 'ব্যবসা', 'সঞ্চয় উত্তোলন', 'অন্যান্য'];
+
+    
