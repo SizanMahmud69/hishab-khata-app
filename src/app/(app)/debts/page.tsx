@@ -1,5 +1,7 @@
+
 "use client";
 
+import { useState } from "react";
 import { PlusCircle } from "lucide-react"
 import { useBudget } from "@/context/budget-context";
 import { Button } from "@/components/ui/button"
@@ -30,21 +32,34 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { debts } from "@/lib/data"
+import { debts as initialDebts } from "@/lib/data"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 export default function DebtsPage() {
     const { isLoading } = useBudget();
+    const { toast } = useToast();
+    const [debts, setDebts] = useState(initialDebts);
+
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat("bn-BD", {
           style: "currency",
           currency: "BDT",
           minimumFractionDigits: 0,
         }).format(amount)
-      }
+    }
+
+    const handleMarkAsPaid = (id: number) => {
+        setDebts(debts.map(debt => debt.id === id ? { ...debt, status: 'paid' } : debt));
+        toast({
+            title: "সফল!",
+            description: "ধারের হিসাব সফলভাবে আপডেট করা হয়েছে।",
+        });
+    }
 
     const lentDebts = debts.filter(d => d.type === 'lent');
     const borrowedDebts = debts.filter(d => d.type === 'borrowed');
@@ -125,7 +140,8 @@ export default function DebtsPage() {
                       <TableRow>
                           <TableHead>নাম</TableHead>
                           <TableHead>স্ট্যাটাস</TableHead>
-                          <TableHead className="text-right">পরিমাণ</TableHead>
+                          <TableHead>পরিমাণ</TableHead>
+                          <TableHead className="text-right">অ্যাকশন</TableHead>
                       </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -133,11 +149,21 @@ export default function DebtsPage() {
                       <TableRow key={debt.id}>
                           <TableCell className="font-medium">{debt.person}</TableCell>
                           <TableCell>
-                              <Badge variant={debt.status === 'paid' ? 'default': 'destructive'} className={debt.status === 'paid' ? 'bg-green-500' : ''}>
+                              <Badge variant={debt.status === 'paid' ? 'default': 'destructive'} className={cn(debt.status === 'paid' && 'bg-green-500 hover:bg-green-500/80')}>
                                   {debt.status === 'paid' ? 'পরিশোধিত' : 'অপরিশোধিত'}
                               </Badge>
                           </TableCell>
-                          <TableCell className="text-right font-semibold">{formatCurrency(debt.amount)}</TableCell>
+                          <TableCell className="font-semibold">{formatCurrency(debt.amount)}</TableCell>
+                           <TableCell className="text-right">
+                            <Button 
+                                size="sm" 
+                                onClick={() => handleMarkAsPaid(debt.id)} 
+                                disabled={debt.status === 'paid'}
+                                variant={debt.status === 'paid' ? 'ghost' : 'outline'}
+                            >
+                                {debt.status === 'paid' ? 'পরিশোধিত' : 'পরিশোধ করুন'}
+                            </Button>
+                          </TableCell>
                       </TableRow>
                   ))}
                   </TableBody>
@@ -157,7 +183,8 @@ export default function DebtsPage() {
                       <TableRow>
                           <TableHead>নাম</TableHead>
                           <TableHead>স্ট্যাটাস</TableHead>
-                          <TableHead className="text-right">পরিমাণ</TableHead>
+                          <TableHead>পরিমাণ</TableHead>
+                          <TableHead className="text-right">অ্যাকশন</TableHead>
                       </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -165,11 +192,21 @@ export default function DebtsPage() {
                       <TableRow key={debt.id}>
                           <TableCell className="font-medium">{debt.person}</TableCell>
                           <TableCell>
-                              <Badge variant={debt.status === 'paid' ? 'default': 'destructive'} className={debt.status === 'paid' ? 'bg-green-500' : ''}>
+                               <Badge variant={debt.status === 'paid' ? 'default': 'destructive'} className={cn(debt.status === 'paid' && 'bg-green-500 hover:bg-green-500/80')}>
                                   {debt.status === 'paid' ? 'পরিশোধিত' : 'অপরিশোধিত'}
                               </Badge>
                           </TableCell>
-                          <TableCell className="text-right font-semibold">{formatCurrency(debt.amount)}</TableCell>
+                          <TableCell className="font-semibold">{formatCurrency(debt.amount)}</TableCell>
+                          <TableCell className="text-right">
+                            <Button 
+                                size="sm" 
+                                onClick={() => handleMarkAsPaid(debt.id)} 
+                                disabled={debt.status === 'paid'}
+                                variant={debt.status === 'paid' ? 'ghost' : 'outline'}
+                            >
+                                {debt.status === 'paid' ? 'পরিশোধিত' : 'পরিশোধ করুন'}
+                            </Button>
+                          </TableCell>
                       </TableRow>
                   ))}
                   </TableBody>
