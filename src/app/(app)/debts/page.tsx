@@ -91,7 +91,7 @@ export default function DebtsPage() {
             case 'paid':
                 return <Badge className="bg-green-500 hover:bg-green-500/80">পরিশোধিত</Badge>;
             case 'partially-paid':
-                return <Badge variant="outline" className="border-yellow-500 text-yellow-600">আংশিক পরিশোধিত</Badge>;
+                return <Badge variant="outline" className="border-yellow-500 text-yellow-600">আংশিক</Badge>;
             case 'unpaid':
             default:
                 return <Badge variant="destructive">অপরিশোধিত</Badge>;
@@ -166,27 +166,23 @@ export default function DebtsPage() {
           <TabsTrigger value="borrowed">ধার নিয়েছি ({borrowedDebts.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="lent">
-            <div className="space-y-4">
+            <div className="space-y-3">
                 {lentDebts.map((debt) => (
                     <Card key={debt.id}>
-                        <CardContent className="pt-6">
-                            <div className="flex justify-between items-start">
-                                <div>
-                                    <p className="text-lg font-bold">{debt.person}</p>
-                                    <p className="text-sm text-muted-foreground">{new Date(debt.date).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                                </div>
+                        <CardContent className="p-4">
+                            <p className="font-semibold">{debt.person}</p>
+                            <p className="text-sm text-muted-foreground">{new Date(debt.date).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                            {debt.status === 'partially-paid' && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    পরিশোধিত: {formatCurrency(debt.paidAmount)} | বাকি: {formatCurrency(debt.amount - debt.paidAmount)}
+                                </p>
+                            )}
+                        </CardContent>
+                        <CardFooter className="bg-muted/50 p-3 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <span className="font-bold text-sm">{formatCurrency(debt.amount)}</span>
                                 {getStatusBadge(debt.status)}
                             </div>
-                            <div className="mt-4">
-                                <p className="text-2xl font-bold">{formatCurrency(debt.amount)}</p>
-                                {debt.status !== 'unpaid' && (
-                                    <p className="text-xs text-muted-foreground">
-                                        পরিশোধিত: {formatCurrency(debt.paidAmount)} | বাকি: {formatCurrency(debt.amount - debt.paidAmount)}
-                                    </p>
-                                )}
-                            </div>
-                        </CardContent>
-                        <CardFooter className="bg-muted/50 py-3 flex justify-end">
                              <Button 
                                 size="sm" 
                                 onClick={() => openPaymentDialog(debt)}
@@ -206,32 +202,28 @@ export default function DebtsPage() {
             </div>
         </TabsContent>
         <TabsContent value="borrowed">
-           <div className="space-y-4">
+           <div className="space-y-3">
                 {borrowedDebts.map((debt) => (
                      <Card key={debt.id}>
-                        <CardContent className="pt-6">
-                            <div className="flex justify-between items-start">
-                                <div>
-                                    <p className="text-lg font-bold">{debt.person}</p>
-                                    <p className="text-sm text-muted-foreground">{new Date(debt.date).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                                </div>
-                                {getStatusBadge(debt.status)}
-                            </div>
-                            <div className="mt-4">
-                                <p className="text-2xl font-bold">{formatCurrency(debt.amount)}</p>
-                                {debt.status !== 'unpaid' && (
-                                    <p className="text-xs text-muted-foreground">
-                                        পরিশোধিত: {formatCurrency(debt.paidAmount)} | বাকি: {formatCurrency(debt.amount - debt.paidAmount)}
-                                    </p>
-                                )}
-                            </div>
+                        <CardContent className="p-4">
+                            <p className="font-semibold">{debt.person}</p>
+                            <p className="text-sm text-muted-foreground">{new Date(debt.date).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                             {debt.status === 'partially-paid' && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    পরিশোধিত: {formatCurrency(debt.paidAmount)} | বাকি: {formatCurrency(debt.amount - debt.paidAmount)}
+                                </p>
+                            )}
                         </CardContent>
-                        <CardFooter className="bg-muted/50 py-3 flex justify-end">
+                        <CardFooter className="bg-muted/50 p-3 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                               <span className="font-bold text-sm">{formatCurrency(debt.amount)}</span>
+                               {getStatusBadge(debt.status)}
+                            </div>
                              <Button 
                                 size="sm" 
                                 onClick={() => openPaymentDialog(debt)}
                                 disabled={debt.status === 'paid'}
-                                variant={debt.status === 'paid' ? 'ghost' : 'সম্পূর্ণ পরিশোধিত'}
+                                variant={debt.status === 'paid' ? 'ghost' : 'outline'}
                             >
                                 {debt.status === 'paid' ? 'সম্পূর্ণ পরিশোধিত' : 'পরিশোধ করুন'}
                             </Button>
@@ -295,15 +287,13 @@ function DebtsSkeleton() {
             <div className="space-y-4">
                 <Skeleton className="h-10 w-full" />
                 <div className="space-y-4 mt-4">
-                    <Skeleton className="h-32 w-full" />
-                    <Skeleton className="h-32 w-full" />
-                    <Skeleton className="h-32 w-full" />
+                    <Skeleton className="h-24 w-full" />
+                    <Skeleton className="h-24 w-full" />
+                    <Skeleton className="h-24 w-full" />
                 </div>
             </div>
         </div>
     );
 }
-
-    
 
     
