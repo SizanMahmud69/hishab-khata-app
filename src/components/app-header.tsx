@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils"
 export function AppHeader({children}: {children: ReactNode}) {
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [isCheckedIn, setIsCheckedIn] = useState(false);
+    const [notificationCount, setNotificationCount] = useState(3);
 
     useEffect(() => {
         const checkStatus = () => {
@@ -85,9 +86,14 @@ export function AppHeader({children}: {children: ReactNode}) {
                             <span className="sr-only">Check In</span>
                         </Link>
                     </Button>
-                    <DropdownMenu>
+                    <DropdownMenu onOpenChange={(open) => !open && setNotificationCount(0)}>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
+                            <Button variant="ghost" size="icon" className="relative">
+                                {notificationCount > 0 && (
+                                    <span className="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
+                                        {notificationCount}
+                                    </span>
+                                )}
                                 <Bell className="h-5 w-5" />
                                 <span className="sr-only">Notifications</span>
                             </Button>
