@@ -42,3 +42,4 @@ export const overviewChartData = [
 ];
 
 export const expenseCategories = ['খাবার', 'যাতায়াত', 'শপিং', 'বিনোদন', 'বিল', 'স্বাস্থ্য', 'অন্যান্য'];
+export const incomeSources = ['মাসিক বেতন', 'ফ্রিল্যান্সিং', 'ব্যবসা', 'অন্যান্য'];

@@ -16,6 +16,8 @@ import { Label } from "@/components/ui/label"
 import { useBudget } from "@/context/budget-context";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { incomeSources } from "@/lib/data";
 
 export default function IncomePage() {
     const { addIncome } = useBudget();
@@ -77,7 +79,14 @@ export default function IncomePage() {
                     <Label htmlFor="source" className="text-right">
                     উৎস
                     </Label>
-                    <Input id="source" name="source" placeholder="মাসিক বেতন" className="col-span-3" />
+                    <Select name="source">
+                        <SelectTrigger className="col-span-3">
+                            <SelectValue placeholder="একটি উৎস নির্বাচন করুন" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {incomeSources.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
                 </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="date" className="text-right">
