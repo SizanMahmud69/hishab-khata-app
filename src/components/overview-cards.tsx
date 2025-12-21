@@ -1,3 +1,6 @@
+"use client"
+
+import React from "react"
 import {
   Minus,
   Plus,
@@ -5,7 +8,6 @@ import {
   TrendingUp,
   TrendingDown,
 } from "lucide-react"
-import { dailyExpenses, monthlyIncome } from "@/lib/data"
 import {
   Card,
   CardContent,
@@ -18,10 +20,34 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
   } from "@/components/ui/dropdown-menu"
+import { useBudget } from "@/context/budget-context"
+import { isThisMonth, isLastMonth } from "date-fns"
+
+type FilterType = "all" | "thisMonth" | "lastMonth";
 
 export function OverviewCards() {
-  const totalIncome = monthlyIncome.reduce((sum, item) => sum + item.amount, 0)
-  const totalExpense = dailyExpenses.reduce((sum, item) => sum + item.amount, 0)
+  const { income, expenses } = useBudget();
+  const [incomeFilter, setIncomeFilter] = React.useState<FilterType>("thisMonth");
+  const [expenseFilter, setExpenseFilter] = React.useState<FilterType>("thisMonth");
+
+  const filterData = <T extends { date: string }>(data: T[], filter: FilterType): T[] => {
+    const now = new Date();
+    switch (filter) {
+      case "thisMonth":
+        return data.filter(item => isThisMonth(new Date(item.date)));
+      case "lastMonth":
+        return data.filter(item => isLastMonth(new Date(item.date)));
+      case "all":
+      default:
+        return data;
+    }
+  };
+
+  const filteredIncome = filterData(income, incomeFilter);
+  const filteredExpenses = filterData(expenses, expenseFilter);
+
+  const totalIncome = filteredIncome.reduce((sum, item) => sum + item.amount, 0)
+  const totalExpense = filteredExpenses.reduce((sum, item) => sum + item.amount, 0)
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("bn-BD", {
@@ -29,6 +55,14 @@ export function OverviewCards() {
       currency: "BDT",
       minimumFractionDigits: 0,
     }).format(amount)
+  }
+
+  const getFilterLabel = (filter: FilterType) => {
+    switch (filter) {
+        case "thisMonth": return "এই মাস";
+        case "lastMonth": return "গত মাস";
+        case "all": return "সকল";
+    }
   }
 
   return (
@@ -42,9 +76,9 @@ export function OverviewCards() {
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-                <DropdownMenuItem>এই মাস</DropdownMenuItem>
-                <DropdownMenuItem>গত মাস</DropdownMenuItem>
-                <DropdownMenuItem>সকল</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setIncomeFilter("thisMonth")}>এই মাস</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setIncomeFilter("lastMonth")}>গত মাস</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setIncomeFilter("all")}>সকল</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <div className="flex items-center gap-2">
@@ -63,7 +97,7 @@ export function OverviewCards() {
                 {formatCurrency(totalIncome)}
               </div>
               <p className="text-xs text-green-600 dark:text-green-400">
-                +100.0% গত মাস থেকে
+                {getFilterLabel(incomeFilter)}
               </p>
           </div>
         </CardContent>
@@ -77,9 +111,9 @@ export function OverviewCards() {
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                    <DropdownMenuItem>এই মাস</DropdownMenuItem>
-                    <DropdownMenuItem>গত মাস</DropdownMenuItem>
-                    <DropdownMenuItem>সকল</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setExpenseFilter("thisMonth")}>এই মাস</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setExpenseFilter("lastMonth")}>গত মাস</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setExpenseFilter("all")}>সকল</DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
             <div className="flex items-center gap-2">
@@ -98,7 +132,7 @@ export function OverviewCards() {
                 {formatCurrency(totalExpense)}
               </div>
               <p className="text-xs text-red-600 dark:text-red-400">
-                +100.0% গত মাস থেকে
+                {getFilterLabel(expenseFilter)}
               </p>
           </div>
         </CardContent>

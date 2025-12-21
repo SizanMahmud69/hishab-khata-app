@@ -1,4 +1,5 @@
-import { dailyExpenses } from "@/lib/data"
+"use client"
+
 import {
   Card,
   CardContent,
@@ -6,13 +7,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { History } from "lucide-react"
 import { Button } from "./ui/button"
 import Link from "next/link"
+import { useBudget } from "@/context/budget-context"
 
 export function RecentTransactions() {
+  const { expenses } = useBudget();
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("bn-BD", {
       style: "currency",
@@ -20,6 +22,8 @@ export function RecentTransactions() {
       minimumFractionDigits: 0,
     }).format(amount)
   }
+
+  const recentExpenses = [...expenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
     <Card>
@@ -36,7 +40,7 @@ export function RecentTransactions() {
       </CardHeader>
       <CardContent>
           <div className="space-y-6">
-            {dailyExpenses.slice(0, 5).map((expense) => (
+            {recentExpenses.slice(0, 5).map((expense) => (
               <div key={expense.id} className="flex items-center">
                 <Avatar className="h-10 w-10">
                     <AvatarFallback className="bg-muted text-muted-foreground font-bold">{expense.category.charAt(0)}</AvatarFallback>
@@ -48,6 +52,9 @@ export function RecentTransactions() {
                 <div className="ml-auto font-medium text-red-500">-{formatCurrency(expense.amount)}</div>
               </div>
             ))}
+            {recentExpenses.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center">কোনো লেনদেন পাওয়া যায়নি।</p>
+            )}
           </div>
       </CardContent>
     </Card>

@@ -1,9 +1,6 @@
-
 "use client"
 
 import { Pie, PieChart, Cell } from "recharts"
-import { dailyExpenses, monthlyIncome } from "@/lib/data"
-
 import {
   Card,
   CardContent,
@@ -16,17 +13,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart"
-
-const totalIncome = monthlyIncome.reduce((sum, item) => sum + item.amount, 0)
-const totalExpense = dailyExpenses.reduce((sum, item) => sum + item.amount, 0)
-const balance = totalIncome - totalExpense > 0 ? totalIncome - totalExpense : 0;
-
-
-const chartData = [
-  { name: "আয়", value: totalIncome, fill: "hsl(var(--chart-1))" },
-  { name: "ব্যয়", value: totalExpense, fill: "hsl(var(--destructive))" },
-  { name: "বর্তমান ব্যালেন্স", value: balance, fill: "hsl(var(--chart-4))" },
-]
+import { useBudget } from "@/context/budget-context"
 
 const chartConfig = {
   value: {
@@ -47,7 +34,14 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export function OverviewPieChart() {
-    const total = chartData.reduce((acc, curr) => acc + curr.value, 0)
+    const { totalIncome, totalExpense } = useBudget();
+    const balance = totalIncome - totalExpense > 0 ? totalIncome - totalExpense : 0;
+
+    const chartData = [
+      { name: "আয়", value: totalIncome, fill: "hsl(var(--chart-1))" },
+      { name: "ব্যয়", value: totalExpense, fill: "hsl(var(--destructive))" },
+      { name: "বর্তমান ব্যালেন্স", value: balance, fill: "hsl(var(--chart-4))" },
+    ]
 
   return (
     <Card>
@@ -101,7 +95,7 @@ export function OverviewPieChart() {
         </ChartContainer>
         <div className="flex items-center justify-center space-x-4 text-sm text-muted-foreground mt-4">
             {chartData.map(item => (
-                <div key={item.name} className="flex items-center">
+                item.value > 0 && <div key={item.name} className="flex items-center">
                     <span className="w-2.5 h-2.5 rounded-full mr-1.5" style={{ backgroundColor: item.fill }}></span>
                     {item.name}
                 </div>

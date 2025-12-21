@@ -1,17 +1,16 @@
+"use client";
+
 import { OverviewCards } from "@/components/overview-cards"
-import { OverviewChart } from "@/components/overview-chart"
 import { RecentTransactions } from "@/components/recent-transactions"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { OverviewPieChart } from "@/components/overview-pie-chart"
-import { Wallet, TrendingUp, TrendingDown, PiggyBank, Landmark } from "lucide-react"
-import { dailyExpenses, monthlyIncome, savingsTransactions } from "@/lib/data"
+import { Wallet, PiggyBank } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
+import { useBudget } from "@/context/budget-context";
 
 export default function DashboardPage() {
-    const totalIncome = monthlyIncome.reduce((sum, item) => sum + item.amount, 0)
-    const totalExpense = dailyExpenses.reduce((sum, item) => sum + item.amount, 0)
-    const totalSavings = savingsTransactions.reduce((sum, item) => sum + item.amount, 0)
-    const balance = totalIncome - totalExpense - totalSavings
+    const { totalIncome, totalExpense, totalSavings } = useBudget();
+    const balance = totalIncome - totalExpense;
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat("bn-BD", {
