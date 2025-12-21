@@ -54,9 +54,7 @@ export function AppHeader({children}: {children: ReactNode}) {
     }
     return (
         <SidebarProvider>
-             <div className="md:flex h-full">
-                <AppSidebar />
-             </div>
+             <AppSidebar onLinkClick={handleLinkClick} />
              <div className="flex flex-1 flex-col">
                 <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
                     <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 sm:px-6 md:hidden">
