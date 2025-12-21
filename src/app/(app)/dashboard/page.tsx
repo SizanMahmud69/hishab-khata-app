@@ -5,7 +5,7 @@ import { RecentTransactions } from "@/components/recent-transactions"
 export default function DashboardPage() {
   return (
     <div className="flex-1 space-y-4">
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
         <OverviewCards />
       </div>
       <div className="grid gap-4">
