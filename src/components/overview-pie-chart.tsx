@@ -19,12 +19,13 @@ import {
 
 const totalIncome = monthlyIncome.reduce((sum, item) => sum + item.amount, 0)
 const totalExpense = dailyExpenses.reduce((sum, item) => sum + item.amount, 0)
-const balance = totalIncome - totalExpense
+const balance = totalIncome - totalExpense > 0 ? totalIncome - totalExpense : 0;
+
 
 const chartData = [
   { name: "আয়", value: totalIncome, fill: "hsl(var(--chart-1))" },
   { name: "ব্যয়", value: totalExpense, fill: "hsl(var(--destructive))" },
-  { name: "বর্তমান ব্যালেন্স", value: balance > 0 ? balance : 0, fill: "hsl(var(--chart-4))" },
+  { name: "বর্তমান ব্যালেন্স", value: balance, fill: "hsl(var(--chart-4))" },
 ]
 
 const chartConfig = {
@@ -53,10 +54,10 @@ export function OverviewPieChart() {
       <CardHeader>
         <CardTitle>আয়-ব্যয়ের সারসংক্ষেপ</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex flex-col items-center">
         <ChartContainer
           config={chartConfig}
-          className="mx-auto aspect-square h-[250px]"
+          className="mx-auto aspect-square h-[200px]"
         >
           <PieChart>
             <ChartTooltip
@@ -67,8 +68,9 @@ export function OverviewPieChart() {
               data={chartData}
               dataKey="value"
               nameKey="name"
-              innerRadius={60}
-              strokeWidth={5}
+              innerRadius={50}
+              outerRadius={70}
+              strokeWidth={2}
               label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
                   if (chartData[index].value === 0) return null
                   const RADIAN = Math.PI / 180
@@ -92,7 +94,7 @@ export function OverviewPieChart() {
               labelLine={false}
             >
                 {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                    <Cell key={`cell-${index}`} fill={entry.fill} stroke={entry.fill} />
                 ))}
             </Pie>
           </PieChart>

@@ -35,12 +35,11 @@ export function RecentTransactions() {
         </Button>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-72">
           <div className="space-y-6">
             {dailyExpenses.slice(0, 5).map((expense) => (
               <div key={expense.id} className="flex items-center">
                 <Avatar className="h-10 w-10">
-                    <AvatarFallback className="bg-muted text-muted-foreground">{expense.category.charAt(0)}</AvatarFallback>
+                    <AvatarFallback className="bg-muted text-muted-foreground font-bold">{expense.category.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div className="ml-4 space-y-1">
                   <p className="text-sm font-medium leading-none">{expense.category}</p>
@@ -50,7 +49,6 @@ export function RecentTransactions() {
               </div>
             ))}
           </div>
-        </ScrollArea>
       </CardContent>
     </Card>
   )

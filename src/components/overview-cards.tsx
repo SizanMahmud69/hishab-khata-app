@@ -28,11 +28,13 @@ export function OverviewCards() {
           <PlusCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
-            <div className="text-2xl font-bold text-green-700 dark:text-green-300">{formatCurrency(totalIncome)}</div>
+          <div className="flex items-start gap-2">
+            <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400 mt-1" />
+            <div>
+              <div className="text-2xl font-bold text-green-700 dark:text-green-300">{formatCurrency(totalIncome)}</div>
+              <p className="text-xs text-green-600 dark:text-green-400">+100.0% গত মাস থেকে</p>
+            </div>
           </div>
-          <p className="text-xs text-green-600 dark:text-green-400">+100.0% গত মাস থেকে</p>
         </CardContent>
       </Card>
       <Card className="bg-red-50/50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
@@ -41,11 +43,13 @@ export function OverviewCards() {
           <MinusCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-2">
-              <TrendingDown className="h-5 w-5 text-red-600 dark:text-red-400" />
-              <div className="text-2xl font-bold text-red-700 dark:text-red-300">{formatCurrency(totalExpense)}</div>
-          </div>
-          <p className="text-xs text-red-600 dark:text-red-400">+100.0% গত মাস থেকে</p>
+            <div className="flex items-start gap-2">
+                <TrendingDown className="h-5 w-5 text-red-600 dark:text-red-400 mt-1" />
+                <div>
+                    <div className="text-2xl font-bold text-red-700 dark:text-red-300">{formatCurrency(totalExpense)}</div>
+                    <p className="text-xs text-red-600 dark:text-red-400">+100.0% গত মাস থেকে</p>
+                </div>
+            </div>
         </CardContent>
       </Card>
       <Card className="col-span-full">
