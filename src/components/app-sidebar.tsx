@@ -62,11 +62,6 @@ const menuItems = [
         icon: History,
     },
     {
-        href: "/budgets",
-        label: "বাজেট",
-        icon: Target,
-    },
-    {
         href: "/rewards",
         label: "রিওয়ার্ড",
         icon: Award,

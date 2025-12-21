@@ -18,13 +18,6 @@ export const savingsTransactions = [
     { id: 2, date: '2024-06-20', description: 'বোনাস থেকে সঞ্চয়', amount: 10000 },
 ]
 
-export const budgets = [
-  { category: 'খাবার', budget: 10000, spent: 4500 },
-  { category: 'যাতায়াত', budget: 5000, spent: 2100 },
-  { category: 'শপিং', budget: 8000, spent: 7500 },
-  { category: 'বিনোদন', budget: 3000, spent: 1800 },
-];
-
 export const debts = [
     { id: 1, person: 'সোহেল', amount: 2000, type: 'lent', date: '2024-07-10', status: 'unpaid' },
     { id: 2, person: 'রাকিব', amount: 5000, type: 'borrowed', date: '2024-07-05', status: 'paid' },
