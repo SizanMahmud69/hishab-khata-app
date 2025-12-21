@@ -10,6 +10,8 @@ import {
   MinusCircle,
   PlusCircle,
   Target,
+  History,
+  Store,
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
@@ -49,6 +51,16 @@ const menuItems = [
     href: "/debts",
     label: "ধারের হিসাব",
     icon: HandCoins,
+  },
+  {
+    href: "/history",
+    label: "হিস্টোরি",
+    icon: History,
+  },
+  {
+    href: "/shop-dues",
+    label: "দোকান বাকি",
+    icon: Store,
   },
 ]
 
