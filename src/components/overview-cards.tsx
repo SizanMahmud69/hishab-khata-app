@@ -21,7 +21,7 @@ import {
     DropdownMenuTrigger,
   } from "@/components/ui/dropdown-menu"
 import { useBudget } from "@/context/budget-context"
-import { isThisMonth, isLastMonth } from "date-fns"
+import { isThisMonth, isSameMonth, subMonths } from "date-fns"
 
 type FilterType = "all" | "thisMonth" | "lastMonth";
 
@@ -36,7 +36,8 @@ export function OverviewCards() {
       case "thisMonth":
         return data.filter(item => isThisMonth(new Date(item.date)));
       case "lastMonth":
-        return data.filter(item => isLastMonth(new Date(item.date)));
+        const lastMonth = subMonths(now, 1);
+        return data.filter(item => isSameMonth(new Date(item.date), lastMonth));
       case "all":
       default:
         return data;
