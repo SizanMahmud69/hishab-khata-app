@@ -30,46 +30,46 @@ import {
 } from "@/components/ui/sidebar"
 
 const menuItems = [
-  {
-    href: "/dashboard",
-    label: "ড্যাশবোর্ড",
-    icon: LayoutDashboard,
-  },
-  {
-    href: "/income",
-    label: "আয়ের হিসাব",
-    icon: PlusCircle,
-  },
-  {
-    href: "/expenses",
-    label: "ব্যয়ের হিসাব",
-    icon: MinusCircle,
-  },
-  {
-    href: "/debts",
-    label: "ধারের হিসাব",
-    icon: HandCoins,
-  },
-  {
-    href: "/shop-dues",
-    label: "দোকান বাকি",
-    icon: Store,
-  },
-  {
-    href: "/history",
-    label: "হিস্টোরি",
-    icon: History,
-  },
-  {
-    href: "/budgets",
-    label: "বাজেট",
-    icon: Target,
-  },
-  {
-    href: "/rewards",
-    label: "রিওয়ার্ড",
-    icon: Award,
-  },
+    {
+        href: "/dashboard",
+        label: "ড্যাশবোর্ড",
+        icon: LayoutDashboard,
+    },
+    {
+        href: "/income",
+        label: "আয়ের হিসাব",
+        icon: PlusCircle,
+    },
+    {
+        href: "/expenses",
+        label: "ব্যয়ের হিসাব",
+        icon: MinusCircle,
+    },
+    {
+        href: "/debts",
+        label: "ধারের হিসাব",
+        icon: HandCoins,
+    },
+    {
+        href: "/shop-dues",
+        label: "দোকান বাকি",
+        icon: Store,
+    },
+    {
+        href: "/history",
+        label: "হিস্টোরি",
+        icon: History,
+    },
+    {
+        href: "/budgets",
+        label: "বাজেট",
+        icon: Target,
+    },
+    {
+        href: "/rewards",
+        label: "রিওয়ার্ড",
+        icon: Award,
+    },
 ]
 
 export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
