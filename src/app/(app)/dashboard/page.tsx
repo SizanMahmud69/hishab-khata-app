@@ -25,7 +25,7 @@ export default function DashboardPage() {
       <div className="grid gap-4 grid-cols-2">
         <OverviewCards />
       </div>
-       <Card className="bg-yellow-50/50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">
+       <Card className="bg-yellow-50/50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 shadow-yellow-glow">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">বর্তমান ব্যালেন্স</CardTitle>
           <Wallet className="h-4 w-4 text-muted-foreground" />

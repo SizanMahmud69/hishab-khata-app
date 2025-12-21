@@ -83,3 +83,24 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+    .shadow-green-glow {
+        box-shadow: 0 4px 20px rgba(74, 222, 128, 0.4);
+    }
+    .dark .shadow-green-glow {
+        box-shadow: 0 4px 20px rgba(74, 222, 128, 0.2);
+    }
+    .shadow-red-glow {
+        box-shadow: 0 4px 20px rgba(248, 113, 113, 0.4);
+    }
+    .dark .shadow-red-glow {
+        box-shadow: 0 4px 20px rgba(248, 113, 113, 0.2);
+    }
+    .shadow-yellow-glow {
+        box-shadow: 0 4px 20px rgba(250, 204, 21, 0.4);
+    }
+    .dark .shadow-yellow-glow {
+        box-shadow: 0 4px 20px rgba(250, 204, 21, 0.2);
+    }
+}

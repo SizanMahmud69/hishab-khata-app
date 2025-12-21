@@ -70,7 +70,7 @@ export function OverviewCards() {
 
   return (
     <>
-      <Card className="bg-green-50/50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+      <Card className="bg-green-50/50 dark:bg-green-900/20 border-green-200 dark:border-green-800 shadow-green-glow">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -110,7 +110,7 @@ export function OverviewCards() {
           </div>
         </CardContent>
       </Card>
-      <Card className="bg-red-50/50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
+      <Card className="bg-red-50/50 dark:bg-red-900/20 border-red-200 dark:border-red-800 shadow-red-glow">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2">
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
