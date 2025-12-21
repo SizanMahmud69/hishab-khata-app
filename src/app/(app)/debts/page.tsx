@@ -32,6 +32,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 export default function DebtsPage() {
     const { debts, setDebts, isLoading, addExpense, addIncome, totalIncome, totalExpense } = useBudget();
@@ -258,7 +259,10 @@ export default function DebtsPage() {
                                     <p className="font-semibold">{debt.person}</p>
                                     <p className="text-sm text-muted-foreground">{new Date(debt.date).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                                 </div>
-                                <span className="font-bold text-sm">{formatCurrency(debt.amount)}</span>
+                                <span className={cn(
+                                    "font-bold text-sm",
+                                    debt.status !== 'paid' ? 'text-red-500' : 'text-foreground'
+                                )}>{formatCurrency(debt.amount)}</span>
                            </div>
                             {debt.status === 'partially-paid' && (
                                 <p className="text-xs text-muted-foreground mt-2">
@@ -296,7 +300,10 @@ export default function DebtsPage() {
                                     <p className="font-semibold">{debt.person}</p>
                                     <p className="text-sm text-muted-foreground">{new Date(debt.date).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                                 </div>
-                                <span className="font-bold text-sm">{formatCurrency(debt.amount)}</span>
+                                <span className={cn(
+                                    "font-bold text-sm",
+                                    debt.status !== 'paid' ? 'text-green-500' : 'text-foreground'
+                                )}>{formatCurrency(debt.amount)}</span>
                            </div>
                            {debt.status === 'partially-paid' && (
                                 <p className="text-xs text-muted-foreground mt-2">
@@ -382,6 +389,8 @@ function DebtsSkeleton() {
         </div>
     );
 }
+
+    
 
     
 
