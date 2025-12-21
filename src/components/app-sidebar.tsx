@@ -13,6 +13,8 @@ import {
   PlusCircle,
   Store,
   Target,
+  LifeBuoy,
+  User,
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
@@ -24,8 +26,8 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarFooter,
+  SidebarSeparator,
 } from "@/components/ui/sidebar"
-import { Button } from "@/components/ui/button"
 
 const menuItems = [
   {
@@ -103,7 +105,8 @@ export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="mt-auto">
-        <div className="flex items-center gap-3 rounded-md px-2 py-1.5 transition-colors">
+        <SidebarSeparator />
+         <div className="flex items-center gap-3 rounded-md px-2 py-1.5 transition-colors">
             <Avatar className="h-9 w-9">
               <AvatarImage src="https://picsum.photos/seed/1/100/100" alt="@shadcn" data-ai-hint="profile avatar" />
               <AvatarFallback>ইউ</AvatarFallback>
@@ -112,12 +115,25 @@ export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
                 <p className="font-medium text-sidebar-foreground">ব্যবহারকারী</p>
                 <p className="text-xs text-muted-foreground">user@example.com</p>
             </div>
-            <Button asChild variant="ghost" size="icon" className="ml-auto group-data-[collapsible=icon]:hidden">
-                <Link href="/" onClick={onLinkClick}>
-                    <LogOut className="size-5" />
-                </Link>
-            </Button>
         </div>
+        <SidebarMenu>
+            <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="সাপোর্ট" size="lg">
+                    <Link href="#" onClick={onLinkClick}>
+                        <LifeBuoy />
+                        <span>সাপোর্ট</span>
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="লগআউট" size="lg">
+                    <Link href="/" onClick={onLinkClick}>
+                        <LogOut />
+                        <span>লগআউট</span>
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
   )
