@@ -32,6 +32,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function DebtsPage() {
     const { isLoading } = useBudget();
@@ -124,34 +125,46 @@ export default function DebtsPage() {
             </DialogHeader>
             <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right">ধরন</Label>
+                    <RadioGroup defaultValue="lent" className="col-span-3 flex gap-4">
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="lent" id="r-lent" />
+                            <Label htmlFor="r-lent">ধার দিয়েছি</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="borrowed" id="r-borrowed" />
+                            <Label htmlFor="r-borrowed">ধার নিয়েছি</Label>
+                        </div>
+                    </RadioGroup>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="person" className="text-right">ব্যক্তির নাম</Label>
                     <Input id="person" placeholder="সোহেল" className="col-span-3" />
                 </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="amount" className="text-right">
-                  পরিমাণ
-                </Label>
-                <Input id="amount" type="number" placeholder="2000" className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right">ধরন</Label>
-                <RadioGroup defaultValue="lent" className="col-span-3 flex gap-4">
-                    <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="lent" id="r-lent" />
-                        <Label htmlFor="r-lent">ধার দিয়েছি</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="borrowed" id="r-borrowed" />
-                        <Label htmlFor="r-borrowed">ধার নিয়েছি</Label>
-                    </div>
-                </RadioGroup>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="date" className="text-right">
-                  তারিখ
-                </Label>
-                <Input id="date" type="date" defaultValue={new Date().toISOString().split('T')[0]} className="col-span-3" />
-              </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="amount" className="text-right">
+                    পরিমাণ
+                    </Label>
+                    <Input id="amount" type="number" placeholder="2000" className="col-span-3" />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="debt-date" className="text-right">
+                    ধারের তারিখ
+                    </Label>
+                    <Input id="debt-date" type="date" defaultValue={new Date().toISOString().split('T')[0]} className="col-span-3" />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="repayment-date" className="text-right">
+                    পরিশোধের তারিখ
+                    </Label>
+                    <Input id="repayment-date" type="date" className="col-span-3" />
+                </div>
+                <div className="grid grid-cols-4 items-start gap-4">
+                    <Label htmlFor="description" className="text-right pt-2">
+                        বিবরণ
+                    </Label>
+                    <Textarea id="description" placeholder="ধার সম্পর্কিত কোনো নোট" className="col-span-3" />
+                </div>
             </div>
             <DialogFooter>
               <Button type="submit">সংরক্ষণ করুন</Button>
@@ -299,3 +312,5 @@ function DebtsSkeleton() {
         </div>
     );
 }
+
+    
