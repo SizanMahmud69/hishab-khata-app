@@ -21,7 +21,6 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarFooter,
-  useSidebar,
 } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 
@@ -53,13 +52,8 @@ const menuItems = [
   },
 ]
 
-export function AppSidebar() {
+export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
   const pathname = usePathname()
-  const { setOpenMobile } = useSidebar()
-
-  const handleLinkClick = () => {
-    setOpenMobile(false)
-  }
 
   return (
     <Sidebar>
@@ -80,7 +74,7 @@ export function AppSidebar() {
                 isActive={pathname === item.href}
                 tooltip={item.label}
               >
-                <Link href={item.href} onClick={handleLinkClick}>
+                <Link href={item.href} onClick={onLinkClick}>
                   <item.icon />
                   <span>{item.label}</span>
                 </Link>
@@ -100,7 +94,7 @@ export function AppSidebar() {
                 <p className="text-xs text-muted-foreground">user@example.com</p>
             </div>
             <Button asChild variant="ghost" size="icon" className="ml-auto group-data-[collapsible=icon]:hidden">
-                <Link href="/" onClick={handleLinkClick}>
+                <Link href="/" onClick={onLinkClick}>
                     <LogOut className="size-5" />
                 </Link>
             </Button>

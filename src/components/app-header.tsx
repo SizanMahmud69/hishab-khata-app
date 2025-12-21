@@ -1,18 +1,20 @@
 "use client"
 import Link from "next/link"
-import type { ReactNode } from "react"
+import { type ReactNode, useState } from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
-import { SidebarProvider, useSidebar } from "@/components/ui/sidebar"
+import { SidebarProvider } from "@/components/ui/sidebar"
 import { BookMarked, CalendarDays, Menu } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
 
 
 function MobileHeader() {
+    const [isSheetOpen, setIsSheetOpen] = useState(false)
+
     return (
         <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 sm:px-6 md:hidden">
             <div className="flex items-center gap-2">
-                <Sheet>
+                <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
                     <SheetTrigger asChild>
                         <Button variant="ghost" size="icon">
                             <Menu className="h-6 w-6" />
@@ -24,7 +26,7 @@ function MobileHeader() {
                           <SheetTitle className="sr-only">Sidebar Navigation</SheetTitle>
                           <SheetDescription className="sr-only">Main application navigation menu.</SheetDescription>
                       </SheetHeader>
-                      <AppSidebar />
+                      <AppSidebar onLinkClick={() => setIsSheetOpen(false)} />
                     </SheetContent>
                 </Sheet>
                 <Link href="/dashboard" className="flex items-center gap-2 font-bold">
