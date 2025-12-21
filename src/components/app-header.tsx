@@ -13,6 +13,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Separator } from "@/components/ui/separator"
 
 export function AppHeader({children}: {children: ReactNode}) {
     const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -63,14 +64,28 @@ export function AppHeader({children}: {children: ReactNode}) {
                                 <span className="sr-only">Notifications</span>
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>বিজ্ঞপ্তি</DropdownMenuLabel>
+                        <DropdownMenuContent align="end" className="w-80">
+                            <DropdownMenuLabel className="font-bold">নোটিফিকেশন</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem>আপনার বাজেট প্রায় শেষ।</DropdownMenuItem>
-                            <DropdownMenuItem>নতুন বিল যোগ হয়েছে।</DropdownMenuItem>
+                            <DropdownMenuItem className="flex flex-col items-start gap-1">
+                                <p className="font-semibold">আপনার বাজেট প্রায় শেষ।</p>
+                                <p className="text-xs text-muted-foreground">মাসিক খরচের সীমা অতিক্রম করতে চলেছে।</p>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="flex flex-col items-start gap-1">
+                                <p className="font-semibold">নতুন বিল যোগ হয়েছে।</p>
+                                <p className="text-xs text-muted-foreground">ইন্টারনেট বিল পরিশোধ করুন।</p>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="flex flex-col items-start gap-1">
+                                <p className="font-semibold">রিওয়ার্ড পয়েন্ট আপডেট!</p>
+                                <p className="text-xs text-muted-foreground">আপনি সফলভাবে ৫০ পয়েন্ট অর্জন করেছেন।</p>
+                            </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem asChild className="justify-center">
-                                <Link href="/history">সব দেখুন</Link>
+                            <DropdownMenuItem asChild className="p-0">
+                                <Button variant="outline" className="w-full">
+                                    <Link href="/history" className="w-full text-center">
+                                        সমস্ত নোটিফিকেশন দেখুন
+                                    </Link>
+                                </Button>
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
