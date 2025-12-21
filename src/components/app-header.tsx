@@ -5,7 +5,7 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { Bell, BookMarked, CalendarDays, Menu } from "lucide-react"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -54,7 +54,7 @@ export function AppHeader({children}: {children: ReactNode}) {
     }
     return (
         <SidebarProvider>
-             <div className="flex h-full flex-col">
+             <div className="md:flex h-full">
                 <AppSidebar />
              </div>
              <div className="flex flex-1 flex-col">
