@@ -28,7 +28,7 @@ export function OverviewCards() {
 
   return (
     <>
-      <Card className="bg-green-50/50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+      <Card className="lg:col-span-1 bg-green-50/50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium text-green-800 dark:text-green-200">
             মোট আয়
@@ -49,7 +49,7 @@ export function OverviewCards() {
           </div>
         </CardContent>
       </Card>
-      <Card className="bg-red-50/50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
+      <Card className="lg:col-span-1 bg-red-50/50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium text-red-800 dark:text-red-200">
             মোট ব্যয়
