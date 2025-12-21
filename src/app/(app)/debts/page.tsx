@@ -142,7 +142,7 @@ export default function DebtsPage() {
             <CardHeader>
                 <CardTitle>ধার নিয়েছি</CardTitle>
                 <CardDescription>আপনি অন্যদের থেকে যে টাকা ধার নিয়েছেন।</CardDescription>
-            </Header>
+            </CardHeader>
             <CardContent>
             <Table>
                 <TableHeader>
