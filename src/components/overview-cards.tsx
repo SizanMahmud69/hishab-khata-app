@@ -13,6 +13,12 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Button } from "./ui/button"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+  } from "@/components/ui/dropdown-menu"
 
 export function OverviewCards() {
   const totalIncome = monthlyIncome.reduce((sum, item) => sum + item.amount, 0)
@@ -34,15 +40,24 @@ export function OverviewCards() {
             <Button variant="ghost" size="icon" className="h-6 w-6">
                 <Plus className="h-4 w-4" />
             </Button>
-            <CardTitle className="text-sm font-medium text-green-800 dark:text-green-200">
-                মোট আয়
-            </CardTitle>
           </div>
-          <Button variant="ghost" size="icon" className="h-6 w-6">
-            <MoreVertical className="h-4 w-4" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-6 w-6">
+                    <MoreVertical className="h-4 w-4" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuItem>এই মাস</DropdownMenuItem>
+                <DropdownMenuItem>গত মাস</DropdownMenuItem>
+                <DropdownMenuItem>সকল</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </CardHeader>
         <CardContent>
+            <div className="text-sm font-medium text-green-800 dark:text-green-200 mb-2">
+                মোট আয়
+            </div>
           <div className="flex items-start gap-2">
             <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400 mt-1" />
             <div>
@@ -62,15 +77,24 @@ export function OverviewCards() {
                 <Button variant="ghost" size="icon" className="h-6 w-6">
                     <Minus className="h-4 w-4" />
                 </Button>
-                <CardTitle className="text-sm font-medium text-red-800 dark:text-red-200">
-                    মোট ব্যয়
-                </CardTitle>
             </div>
-            <Button variant="ghost" size="icon" className="h-6 w-6">
-                <MoreVertical className="h-4 w-4" />
-            </Button>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-6 w-6">
+                        <MoreVertical className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuItem>এই মাস</DropdownMenuItem>
+                    <DropdownMenuItem>গত মাস</DropdownMenuItem>
+                    <DropdownMenuItem>সকল</DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
         </CardHeader>
         <CardContent>
+            <div className="text-sm font-medium text-red-800 dark:text-red-200 mb-2">
+                মোট ব্যয়
+            </div>
           <div className="flex items-start gap-2">
             <TrendingDown className="h-5 w-5 text-red-600 dark:text-red-400 mt-1" />
             <div>
