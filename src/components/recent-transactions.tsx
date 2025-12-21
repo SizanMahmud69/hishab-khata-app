@@ -7,6 +7,10 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { History } from "lucide-react"
+import { Button } from "./ui/button"
+import Link from "next/link"
 
 export function RecentTransactions() {
   const formatCurrency = (amount: number) => {
@@ -19,18 +23,25 @@ export function RecentTransactions() {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>সাম্প্রতিক লেনদেন</CardTitle>
-        <CardDescription>এই মাসে আপনার করা সর্বশেষ ৫টি খরচ।</CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>সাম্প্রতিক লেনদেন</CardTitle>
+          <CardDescription>এই মাসে আপনার করা সর্বশেষ ৫টি খরচ।</CardDescription>
+        </div>
+        <Button variant="ghost" size="sm" asChild>
+            <Link href="/expenses">
+                হিস্টোরি <History className="ml-2 h-4 w-4" />
+            </Link>
+        </Button>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-72">
           <div className="space-y-6">
             {dailyExpenses.slice(0, 5).map((expense) => (
               <div key={expense.id} className="flex items-center">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-                    <span className="text-lg">🛍️</span>
-                </div>
+                <Avatar className="h-10 w-10">
+                    <AvatarFallback className="bg-muted text-muted-foreground">{expense.category.charAt(0)}</AvatarFallback>
+                </Avatar>
                 <div className="ml-4 space-y-1">
                   <p className="text-sm font-medium leading-none">{expense.category}</p>
                   <p className="text-sm text-muted-foreground">{expense.description}</p>

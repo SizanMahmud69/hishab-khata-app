@@ -1,4 +1,4 @@
-import { ArrowDownCircle, ArrowUpCircle, Wallet } from "lucide-react"
+import { MinusCircle, PlusCircle, TrendingDown, TrendingUp, Wallet } from "lucide-react"
 import { dailyExpenses, monthlyIncome } from "@/lib/data"
 import {
   Card,
@@ -21,37 +21,43 @@ export function OverviewCards() {
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-3">
-      <Card>
+    <>
+      <Card className="bg-green-50/50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">মোট আয়</CardTitle>
-          <ArrowUpCircle className="h-4 w-4 text-muted-foreground text-green-500" />
+          <CardTitle className="text-sm font-medium text-green-800 dark:text-green-200">মোট আয়</CardTitle>
+          <PlusCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{formatCurrency(totalIncome)}</div>
-          <p className="text-xs text-muted-foreground">এই মাসের সর্বমোট আয়</p>
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
+            <div className="text-2xl font-bold text-green-700 dark:text-green-300">{formatCurrency(totalIncome)}</div>
+          </div>
+          <p className="text-xs text-green-600 dark:text-green-400">+100.0% গত মাস থেকে</p>
         </CardContent>
       </Card>
-      <Card>
+      <Card className="bg-red-50/50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">মোট ব্যয়</CardTitle>
-          <ArrowDownCircle className="h-4 w-4 text-muted-foreground text-red-500" />
+          <CardTitle className="text-sm font-medium text-red-800 dark:text-red-200">মোট ব্যয়</CardTitle>
+          <MinusCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{formatCurrency(totalExpense)}</div>
-          <p className="text-xs text-muted-foreground">এই মাসের সর্বমোট খরচ</p>
+          <div className="flex items-center gap-2">
+              <TrendingDown className="h-5 w-5 text-red-600 dark:text-red-400" />
+              <div className="text-2xl font-bold text-red-700 dark:text-red-300">{formatCurrency(totalExpense)}</div>
+          </div>
+          <p className="text-xs text-red-600 dark:text-red-400">+100.0% গত মাস থেকে</p>
         </CardContent>
       </Card>
-      <Card>
+      <Card className="col-span-full">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">অবশিষ্ট</CardTitle>
-          <Wallet className="h-4 w-4 text-muted-foreground text-blue-500" />
+          <CardTitle className="text-sm font-medium">বর্তমান ব্যালেন্স</CardTitle>
+          <Wallet className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{formatCurrency(balance)}</div>
-          <p className="text-xs text-muted-foreground">আপনার বর্তমান ব্যালেন্স</p>
+          <p className="text-xs text-muted-foreground">আপনার বর্তমান সঞ্চয়</p>
         </CardContent>
       </Card>
-    </div>
+    </>
   )
 }
