@@ -4,17 +4,43 @@ import { type ReactNode, useState } from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
 import { SidebarProvider } from "@/components/ui/sidebar"
-import { BookMarked, CalendarDays, Menu } from "lucide-react"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet"
+import { Bell, BookMarked, CalendarDays, Menu } from "lucide-react"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 
 function DesktopHeader() {
     return (
-        <header className="sticky top-0 z-40 hidden h-16 shrink-0 items-center justify-end border-b bg-background px-4 sm:px-6 md:flex">
+        <header className="sticky top-0 z-40 hidden h-16 shrink-0 items-center justify-end gap-2 border-b bg-background px-4 sm:px-6 md:flex">
              <Button variant="ghost" size="icon">
                 <CalendarDays className="h-5 w-5" />
                 <span className="sr-only">Select date</span>
             </Button>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                        <Bell className="h-5 w-5" />
+                        <span className="sr-only">Notifications</span>
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>বিজ্ঞপ্তি</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>আপনার বাজেট প্রায় শেষ।</DropdownMenuItem>
+                    <DropdownMenuItem>নতুন বিল যোগ হয়েছে।</DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                     <DropdownMenuItem asChild className="justify-center">
+                        <Link href="/history">সব দেখুন</Link>
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
         </header>
     )
 }
@@ -28,7 +54,7 @@ export function AppHeader({children}: {children: ReactNode}) {
     }
     return (
         <SidebarProvider>
-             <div className="hidden md:block">
+             <div className="flex h-full flex-col">
                 <AppSidebar />
              </div>
              <div className="flex flex-1 flex-col">
@@ -41,18 +67,38 @@ export function AppHeader({children}: {children: ReactNode}) {
                                     <span className="sr-only">Open sidebar</span>
                                 </Button>
                             </SheetTrigger>
-                            <Link href="/dashboard" className="flex items-center gap-2 font-bold">
+                            <Link href="/dashboard" className="flex items-center gap-2 font-bold" onClick={handleLinkClick}>
                                 <BookMarked className="h-6 w-6 text-primary" />
                                 <span>হিসাব খাতা</span>
                             </Link>
                         </div>
-                        <Button variant="ghost" size="icon">
-                            <CalendarDays className="h-5 w-5" />
-                            <span className="sr-only">Select date</span>
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            <Button variant="ghost" size="icon">
+                                <CalendarDays className="h-5 w-5" />
+                                <span className="sr-only">Select date</span>
+                            </Button>
+                             <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                        <Bell className="h-5 w-5" />
+                                        <span className="sr-only">Notifications</span>
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuLabel>বিজ্ঞপ্তি</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem>আপনার বাজেট প্রায় শেষ।</DropdownMenuItem>
+                                    <DropdownMenuItem>নতুন বিল যোগ হয়েছে।</DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem asChild className="justify-center">
+                                        <Link href="/history">সব দেখুন</Link>
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
                     </header>
                     <SheetContent side="left" className="p-0">
-                        <SheetHeader className="p-4">
+                         <SheetHeader className="p-4">
                           <SheetTitle className="sr-only">মেনু</SheetTitle>
                           <SheetDescription className="sr-only">অ্যাপ্লিকেশনের প্রধান নেভিগেশন মেনু।</SheetDescription>
                         </SheetHeader>
