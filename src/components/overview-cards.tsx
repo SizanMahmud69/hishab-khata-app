@@ -1,8 +1,6 @@
 import {
   Minus,
   Plus,
-  TrendingDown,
-  TrendingUp,
   MoreVertical,
 } from "lucide-react"
 import { dailyExpenses, monthlyIncome } from "@/lib/data"
@@ -10,7 +8,6 @@ import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card"
 import { Button } from "./ui/button"
 import {
@@ -58,16 +55,13 @@ export function OverviewCards() {
             <div className="text-sm font-medium text-green-800 dark:text-green-200 mb-2">
                 মোট আয়
             </div>
-          <div className="flex items-start gap-2">
-            <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400 mt-1" />
-            <div>
+          <div>
               <div className="text-2xl font-bold text-green-700 dark:text-green-300">
                 {formatCurrency(totalIncome)}
               </div>
               <p className="text-xs text-green-600 dark:text-green-400">
                 +100.0% গত মাস থেকে
               </p>
-            </div>
           </div>
         </CardContent>
       </Card>
@@ -95,16 +89,13 @@ export function OverviewCards() {
             <div className="text-sm font-medium text-red-800 dark:text-red-200 mb-2">
                 মোট ব্যয়
             </div>
-          <div className="flex items-start gap-2">
-            <TrendingDown className="h-5 w-5 text-red-600 dark:text-red-400 mt-1" />
-            <div>
+          <div>
               <div className="text-2xl font-bold text-red-700 dark:text-red-300">
                 {formatCurrency(totalExpense)}
               </div>
               <p className="text-xs text-red-600 dark:text-red-400">
                 +100.0% গত মাস থেকে
               </p>
-            </div>
           </div>
         </CardContent>
       </Card>
