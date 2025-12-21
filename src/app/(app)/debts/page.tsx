@@ -34,6 +34,7 @@ import { debts } from "@/lib/data"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function DebtsPage() {
     const { isLoading } = useBudget();
@@ -107,68 +108,76 @@ export default function DebtsPage() {
         </Dialog>
       </PageHeader>
       
-      <div className="grid gap-6 grid-cols-1">
-        <Card>
-            <CardHeader>
-                <CardTitle>ধার দিয়েছি</CardTitle>
-                <CardDescription>আপনি অন্যদের যে টাকা ধার দিয়েছেন।</CardDescription>
-            </CardHeader>
-            <CardContent>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>নাম</TableHead>
-                        <TableHead>স্ট্যাটাস</TableHead>
-                        <TableHead className="text-right">পরিমাণ</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                {lentDebts.map((debt) => (
-                    <TableRow key={debt.id}>
-                        <TableCell className="font-medium">{debt.person}</TableCell>
-                        <TableCell>
-                            <Badge variant={debt.status === 'paid' ? 'default': 'destructive'} className={debt.status === 'paid' ? 'bg-green-500' : ''}>
-                                {debt.status === 'paid' ? 'পরিশোধিত' : 'অপরিশোধিত'}
-                            </Badge>
-                        </TableCell>
-                        <TableCell className="text-right font-semibold">{formatCurrency(debt.amount)}</TableCell>
-                    </TableRow>
-                ))}
-                </TableBody>
-            </Table>
-            </CardContent>
-        </Card>
-        <Card>
-            <CardHeader>
-                <CardTitle>ধার নিয়েছি</CardTitle>
-                <CardDescription>আপনি অন্যদের থেকে যে টাকা ধার নিয়েছেন।</CardDescription>
-            </CardHeader>
-            <CardContent>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>নাম</TableHead>
-                        <TableHead>স্ট্যাটাস</TableHead>
-                        <TableHead className="text-right">পরিমাণ</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                {borrowedDebts.map((debt) => (
-                    <TableRow key={debt.id}>
-                        <TableCell className="font-medium">{debt.person}</TableCell>
-                        <TableCell>
-                            <Badge variant={debt.status === 'paid' ? 'default': 'destructive'} className={debt.status === 'paid' ? 'bg-green-500' : ''}>
-                                {debt.status === 'paid' ? 'পরিশোধিত' : 'অপরিশোধিত'}
-                            </Badge>
-                        </TableCell>
-                        <TableCell className="text-right font-semibold">{formatCurrency(debt.amount)}</TableCell>
-                    </TableRow>
-                ))}
-                </TableBody>
-            </Table>
-            </CardContent>
-        </Card>
-      </div>
+      <Tabs defaultValue="lent" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="lent">ধার দিয়েছি</TabsTrigger>
+          <TabsTrigger value="borrowed">ধার নিয়েছি</TabsTrigger>
+        </TabsList>
+        <TabsContent value="lent">
+          <Card>
+              <CardHeader>
+                  <CardTitle>ধার দিয়েছি</CardTitle>
+                  <CardDescription>আপনি অন্যদের যে টাকা ধার দিয়েছেন।</CardDescription>
+              </CardHeader>
+              <CardContent>
+              <Table>
+                  <TableHeader>
+                      <TableRow>
+                          <TableHead>নাম</TableHead>
+                          <TableHead>স্ট্যাটাস</TableHead>
+                          <TableHead className="text-right">পরিমাণ</TableHead>
+                      </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                  {lentDebts.map((debt) => (
+                      <TableRow key={debt.id}>
+                          <TableCell className="font-medium">{debt.person}</TableCell>
+                          <TableCell>
+                              <Badge variant={debt.status === 'paid' ? 'default': 'destructive'} className={debt.status === 'paid' ? 'bg-green-500' : ''}>
+                                  {debt.status === 'paid' ? 'পরিশোধিত' : 'অপরিশোধিত'}
+                              </Badge>
+                          </TableCell>
+                          <TableCell className="text-right font-semibold">{formatCurrency(debt.amount)}</TableCell>
+                      </TableRow>
+                  ))}
+                  </TableBody>
+              </Table>
+              </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="borrowed">
+          <Card>
+              <CardHeader>
+                  <CardTitle>ধার নিয়েছি</CardTitle>
+                  <CardDescription>আপনি অন্যদের থেকে যে টাকা ধার নিয়েছেন।</CardDescription>
+              </CardHeader>
+              <CardContent>
+              <Table>
+                  <TableHeader>
+                      <TableRow>
+                          <TableHead>নাম</TableHead>
+                          <TableHead>স্ট্যাটাস</TableHead>
+                          <TableHead className="text-right">পরিমাণ</TableHead>
+                      </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                  {borrowedDebts.map((debt) => (
+                      <TableRow key={debt.id}>
+                          <TableCell className="font-medium">{debt.person}</TableCell>
+                          <TableCell>
+                              <Badge variant={debt.status === 'paid' ? 'default': 'destructive'} className={debt.status === 'paid' ? 'bg-green-500' : ''}>
+                                  {debt.status === 'paid' ? 'পরিশোধিত' : 'অপরিশোধিত'}
+                              </Badge>
+                          </TableCell>
+                          <TableCell className="text-right font-semibold">{formatCurrency(debt.amount)}</TableCell>
+                      </TableRow>
+                  ))}
+                  </TableBody>
+              </Table>
+              </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
@@ -183,7 +192,8 @@ function DebtsSkeleton() {
                 </div>
                 <Skeleton className="h-10 w-40" />
             </div>
-            <div className="grid gap-6 grid-cols-1">
+            <div className="space-y-4">
+                <Skeleton className="h-10 w-full" />
                 <Card>
                     <CardHeader>
                         <Skeleton className="h-8 w-32" />
@@ -191,19 +201,6 @@ function DebtsSkeleton() {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
-                            <Skeleton className="h-10 w-full" />
-                            <Skeleton className="h-10 w-full" />
-                            <Skeleton className="h-10 w-full" />
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader>
-                        <Skeleton className="h-8 w-32" />
-                        <Skeleton className="h-5 w-64" />
-                    </CardHeader>
-                    <CardContent>
-                         <div className="space-y-4">
                             <Skeleton className="h-10 w-full" />
                             <Skeleton className="h-10 w-full" />
                             <Skeleton className="h-10 w-full" />
