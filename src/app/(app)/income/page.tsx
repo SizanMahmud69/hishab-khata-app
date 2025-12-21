@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useBudget } from "@/context/budget-context";
 import { useToast } from "@/hooks/use-toast";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function IncomePage() {
     const { addIncome } = useBudget();
@@ -83,6 +84,12 @@ export default function IncomePage() {
                   তারিখ
                 </Label>
                 <Input id="date" name="date" type="date" defaultValue={new Date().toISOString().split('T')[0]} className="col-span-3" />
+              </div>
+               <div className="grid grid-cols-4 items-start gap-4">
+                <Label htmlFor="description" className="text-right pt-2">
+                  বিবরণ
+                </Label>
+                <Textarea id="description" name="description" placeholder="আয়ের সংক্ষিপ্ত বিবরণ" className="col-span-3" />
               </div>
             </CardContent>
             <CardFooter>
