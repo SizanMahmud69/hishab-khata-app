@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { PlusCircle } from "lucide-react"
+import { PlusCircle, TrendingDown, TrendingUp } from "lucide-react"
 import { useBudget } from "@/context/budget-context";
 import { Button } from "@/components/ui/button"
 import PageHeader from "@/components/page-header"
@@ -171,6 +171,10 @@ export default function DebtsPage() {
     const lentDebts = debts.filter(d => d.type === 'lent');
     const borrowedDebts = debts.filter(d => d.type === 'borrowed');
 
+    const totalLent = lentDebts.reduce((sum, debt) => sum + debt.amount, 0);
+    const totalBorrowed = borrowedDebts.reduce((sum, debt) => sum + debt.amount, 0);
+
+
     if (isLoading) {
         return <DebtsSkeleton />;
     }
@@ -243,6 +247,29 @@ export default function DebtsPage() {
           </DialogContent>
         </Dialog>
       </PageHeader>
+
+      <div className="grid grid-cols-2 gap-4">
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">মোট ধার দিয়েছেন</CardTitle>
+                <TrendingDown className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+                <div className="text-2xl font-bold text-red-500">{formatCurrency(totalLent)}</div>
+                <p className="text-xs text-muted-foreground">আপনি অন্যদের যে টাকা দিয়েছেন</p>
+            </CardContent>
+        </Card>
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">মোট ধার নিয়েছেন</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+                <div className="text-2xl font-bold text-green-500">{formatCurrency(totalBorrowed)}</div>
+                <p className="text-xs text-muted-foreground">আপনি অন্যদের থেকে যে টাকা নিয়েছেন</p>
+            </CardContent>
+        </Card>
+      </div>
       
       <Tabs defaultValue="lent" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
@@ -378,6 +405,10 @@ function DebtsSkeleton() {
                 </div>
                 <Skeleton className="h-10 w-40" />
             </div>
+            <div className="grid grid-cols-2 gap-4">
+                <Skeleton className="h-28 w-full" />
+                <Skeleton className="h-28 w-full" />
+            </div>
             <div className="space-y-4">
                 <Skeleton className="h-10 w-full" />
                 <div className="space-y-4 mt-4">
@@ -389,3 +420,5 @@ function DebtsSkeleton() {
         </div>
     );
 }
+
+    
