@@ -1,4 +1,4 @@
-import { PlusCircle } from "lucide-react"
+import { PlusCircle, Landmark } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import PageHeader from "@/components/page-header"
@@ -30,6 +30,7 @@ import { Label } from "@/components/ui/label"
 import { dailyExpenses, expenseCategories } from "@/lib/data"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { Switch } from "@/components/ui/switch"
 
 export default function ExpensesPage() {
     const formatCurrency = (amount: number) => {
@@ -86,6 +87,15 @@ export default function ExpensesPage() {
                   বিবরণ
                 </Label>
                 <Textarea id="description" placeholder="খরচের সংক্ষিপ্ত বিবরণ" className="col-span-3" />
+              </div>
+               <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="is-savings" className="text-right">
+                  সঞ্চয়?
+                </Label>
+                 <div className="col-span-3 flex items-center space-x-2">
+                    <Switch id="is-savings" />
+                    <Label htmlFor="is-savings" className="text-sm text-muted-foreground">এটা কি আপনার সঞ্চয়ের অংশ?</Label>
+                 </div>
               </div>
             </div>
             <DialogFooter>

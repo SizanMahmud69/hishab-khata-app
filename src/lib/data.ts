@@ -12,6 +12,11 @@ export const dailyExpenses = [
   { id: 6, date: '2024-07-24', category: 'খাবার', amount: 250, description: 'সকালের নাস্তা' },
 ];
 
+export const savingsTransactions = [
+    { id: 1, date: '2024-07-20', description: 'মাসিক সঞ্চয়', amount: 5000 },
+    { id: 2, date: '2024-06-20', description: 'বোনাস থেকে সঞ্চয়', amount: 10000 },
+]
+
 export const budgets = [
   { category: 'খাবার', budget: 10000, spent: 4500 },
   { category: 'যাতায়াত', budget: 5000, spent: 2100 },
