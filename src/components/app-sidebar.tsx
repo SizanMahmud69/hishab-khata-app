@@ -5,15 +5,13 @@ import { usePathname } from "next/navigation"
 import {
   ArrowDownCircle,
   ArrowUpCircle,
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
   BookMarked,
   HandCoins,
   LayoutDashboard,
   LogOut,
   Target,
 } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 import {
   Sidebar,
@@ -24,6 +22,7 @@ import {
   SidebarMenuButton,
   SidebarFooter,
 } from "@/components/ui/sidebar"
+import { Button } from "@/components/ui/button"
 
 const menuItems = [
   {
