@@ -1,5 +1,6 @@
 
 "use client"
+import Link from "next/link"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
 import { SidebarProvider, useSidebar } from "@/components/ui/sidebar"
