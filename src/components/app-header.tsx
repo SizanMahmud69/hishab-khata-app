@@ -50,9 +50,11 @@ export function AppHeader({children}: {children: ReactNode}) {
                     </Link>
                 </div>
                 <div className="flex items-center gap-2">
-                     <Button variant="ghost" size="icon">
-                        <CalendarDays className="h-5 w-5" />
-                        <span className="sr-only">Select date</span>
+                     <Button variant="ghost" size="icon" asChild>
+                        <Link href="/check-in">
+                            <CalendarDays className="h-5 w-5" />
+                            <span className="sr-only">Check In</span>
+                        </Link>
                     </Button>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>

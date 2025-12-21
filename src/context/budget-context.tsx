@@ -35,6 +35,8 @@ interface BudgetContextType {
     totalIncome: number;
     totalExpense: number;
     totalSavings: number;
+    rewardPoints: number;
+    addRewardPoints: (points: number) => void;
 }
 
 const BudgetContext = createContext<BudgetContextType | undefined>(undefined);
@@ -43,6 +45,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const [income, setIncome] = useState<Income[]>(initialIncome);
     const [expenses, setExpenses] = useState<Expense[]>(initialExpenses);
     const [savings, setSavings] = useState<Saving[]>(initialSavings);
+    const [rewardPoints, setRewardPoints] = useState(120);
 
     const [totalIncome, setTotalIncome] = useState(0);
     const [totalExpense, setTotalExpense] = useState(0);
@@ -72,8 +75,12 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         setSavings(prev => [...prev, newSaving]);
     }
 
+    const addRewardPoints = (points: number) => {
+        setRewardPoints(prev => prev + points);
+    }
+
     return (
-        <BudgetContext.Provider value={{ income, expenses, savings, addIncome, addExpense, addSaving, totalIncome, totalExpense, totalSavings }}>
+        <BudgetContext.Provider value={{ income, expenses, savings, addIncome, addExpense, addSaving, totalIncome, totalExpense, totalSavings, rewardPoints, addRewardPoints }}>
             {children}
         </BudgetContext.Provider>
     );
