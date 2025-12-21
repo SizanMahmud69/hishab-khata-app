@@ -83,6 +83,12 @@ export default function ExpensesPage() {
             </CardHeader>
             <CardContent className="grid gap-4 py-4">
                 <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="amount" className="text-right">
+                    পরিমাণ
+                    </Label>
+                    <Input id="amount" name="amount" type="number" placeholder="500" className="col-span-3" />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="category" className="text-right">বিভাগ</Label>
                     <Select name="category">
                         <SelectTrigger className="col-span-3">
@@ -93,12 +99,6 @@ export default function ExpensesPage() {
                         </SelectContent>
                     </Select>
                 </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="amount" className="text-right">
-                  পরিমাণ
-                </Label>
-                <Input id="amount" name="amount" type="number" placeholder="500" className="col-span-3" />
-              </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="date" className="text-right">
                   তারিখ
