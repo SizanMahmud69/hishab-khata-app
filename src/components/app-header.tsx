@@ -1,6 +1,6 @@
 "use client"
 import Link from "next/link"
-import { type ReactNode, useState } from "react"
+import { type ReactNode, useState, useEffect } from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
 import { Bell, BookMarked, Menu, CalendarDays } from "lucide-react"
@@ -14,9 +14,37 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Separator } from "@/components/ui/separator"
+import { cn } from "@/lib/utils"
 
 export function AppHeader({children}: {children: ReactNode}) {
     const [isSheetOpen, setIsSheetOpen] = useState(false);
+    const [isCheckedIn, setIsCheckedIn] = useState(false);
+
+    useEffect(() => {
+        const checkStatus = () => {
+            const lastCheckIn = localStorage.getItem('lastCheckInDate');
+            if (!lastCheckIn) {
+                setIsCheckedIn(false);
+                return;
+            }
+            const today = new Date().toDateString();
+            const lastCheckInDate = new Date(lastCheckIn).toDateString();
+            setIsCheckedIn(today === lastCheckInDate);
+        };
+
+        checkStatus();
+
+        // Listen for storage changes to update in real-time
+        window.addEventListener('storage', checkStatus);
+        
+        // Also check when the window gains focus
+        window.addEventListener('focus', checkStatus);
+
+        return () => {
+            window.removeEventListener('storage', checkStatus);
+            window.removeEventListener('focus', checkStatus);
+        };
+    }, []);
 
     const handleLinkClick = () => {
         setIsSheetOpen(false);
@@ -51,9 +79,9 @@ export function AppHeader({children}: {children: ReactNode}) {
                     </Link>
                 </div>
                 <div className="flex items-center gap-2">
-                     <Button variant="ghost" size="icon" asChild>
+                     <Button variant="ghost" size="icon" asChild className={cn(isCheckedIn && "animate-glow rounded-full")}>
                         <Link href="/check-in">
-                            <CalendarDays className="h-5 w-5" />
+                            <CalendarDays className={cn("h-5 w-5", isCheckedIn && "text-green-500")} />
                             <span className="sr-only">Check In</span>
                         </Link>
                     </Button>
