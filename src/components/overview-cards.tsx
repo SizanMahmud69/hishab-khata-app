@@ -2,6 +2,8 @@ import {
   Minus,
   Plus,
   MoreVertical,
+  TrendingUp,
+  TrendingDown,
 } from "lucide-react"
 import { dailyExpenses, monthlyIncome } from "@/lib/data"
 import {
@@ -52,7 +54,8 @@ export function OverviewCards() {
           </div>
         </CardHeader>
         <CardContent>
-            <div className="text-sm font-medium text-green-800 dark:text-green-200 mb-2">
+            <div className="text-sm font-medium text-green-800 dark:text-green-200 mb-2 flex items-center">
+                <TrendingUp className="mr-2 h-4 w-4" />
                 মোট আয়
             </div>
           <div>
@@ -86,7 +89,8 @@ export function OverviewCards() {
             </div>
         </CardHeader>
         <CardContent>
-            <div className="text-sm font-medium text-red-800 dark:text-red-200 mb-2">
+            <div className="text-sm font-medium text-red-800 dark:text-red-200 mb-2 flex items-center">
+                <TrendingDown className="mr-2 h-4 w-4" />
                 মোট ব্যয়
             </div>
           <div>
