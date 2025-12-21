@@ -1,4 +1,3 @@
-
 "use client"
 import Link from "next/link"
 import { AppSidebar } from "@/components/app-sidebar"
@@ -44,10 +43,6 @@ export function AppHeader() {
     return (
         <SidebarProvider>
              <AppSidebar />
-             <div className="flex h-screen flex-col flex-1">
-                <MobileHeader />
-                <DesktopHeader />
-             </div>
         </SidebarProvider>
     )
 }
