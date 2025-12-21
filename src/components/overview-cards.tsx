@@ -22,7 +22,7 @@ export function OverviewCards() {
 
   return (
     <>
-      <Card className="bg-green-50/50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+      <Card className="col-span-1 lg:col-span-1 bg-green-50/50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium text-green-800 dark:text-green-200">মোট আয়</CardTitle>
           <PlusCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
@@ -37,7 +37,7 @@ export function OverviewCards() {
           </div>
         </CardContent>
       </Card>
-      <Card className="bg-red-50/50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
+      <Card className="col-span-1 lg:col-span-1 bg-red-50/50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium text-red-800 dark:text-red-200">মোট ব্যয়</CardTitle>
           <MinusCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
@@ -52,7 +52,7 @@ export function OverviewCards() {
             </div>
         </CardContent>
       </Card>
-      <Card className="col-span-full">
+      <Card className="col-span-1 md:col-span-2 lg:col-span-2">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">বর্তমান ব্যালেন্স</CardTitle>
           <Wallet className="h-4 w-4 text-muted-foreground" />
