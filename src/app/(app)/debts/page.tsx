@@ -170,19 +170,21 @@ export default function DebtsPage() {
                 {lentDebts.map((debt) => (
                     <Card key={debt.id}>
                         <CardContent className="p-4">
-                            <p className="font-semibold">{debt.person}</p>
-                            <p className="text-sm text-muted-foreground">{new Date(debt.date).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                           <div className="flex justify-between items-start">
+                                <div>
+                                    <p className="font-semibold">{debt.person}</p>
+                                    <p className="text-sm text-muted-foreground">{new Date(debt.date).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                                </div>
+                                <span className="font-bold text-sm">{formatCurrency(debt.amount)}</span>
+                           </div>
                             {debt.status === 'partially-paid' && (
-                                <p className="text-xs text-muted-foreground mt-1">
+                                <p className="text-xs text-muted-foreground mt-2">
                                     পরিশোধিত: {formatCurrency(debt.paidAmount)} | বাকি: {formatCurrency(debt.amount - debt.paidAmount)}
                                 </p>
                             )}
                         </CardContent>
                         <CardFooter className="bg-muted/50 p-3 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <span className="font-bold text-sm">{formatCurrency(debt.amount)}</span>
-                                {getStatusBadge(debt.status)}
-                            </div>
+                             {getStatusBadge(debt.status)}
                              <Button 
                                 size="sm" 
                                 onClick={() => openPaymentDialog(debt)}
@@ -206,20 +208,22 @@ export default function DebtsPage() {
                 {borrowedDebts.map((debt) => (
                      <Card key={debt.id}>
                         <CardContent className="p-4">
-                            <p className="font-semibold">{debt.person}</p>
-                            <p className="text-sm text-muted-foreground">{new Date(debt.date).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                             {debt.status === 'partially-paid' && (
-                                <p className="text-xs text-muted-foreground mt-1">
+                           <div className="flex justify-between items-start">
+                                <div>
+                                    <p className="font-semibold">{debt.person}</p>
+                                    <p className="text-sm text-muted-foreground">{new Date(debt.date).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                                </div>
+                                <span className="font-bold text-sm">{formatCurrency(debt.amount)}</span>
+                           </div>
+                           {debt.status === 'partially-paid' && (
+                                <p className="text-xs text-muted-foreground mt-2">
                                     পরিশোধিত: {formatCurrency(debt.paidAmount)} | বাকি: {formatCurrency(debt.amount - debt.paidAmount)}
                                 </p>
                             )}
                         </CardContent>
                         <CardFooter className="bg-muted/50 p-3 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                               <span className="font-bold text-sm">{formatCurrency(debt.amount)}</span>
-                               {getStatusBadge(debt.status)}
-                            </div>
-                             <Button 
+                           {getStatusBadge(debt.status)}
+                           <Button 
                                 size="sm" 
                                 onClick={() => openPaymentDialog(debt)}
                                 disabled={debt.status === 'paid'}
@@ -295,5 +299,3 @@ function DebtsSkeleton() {
         </div>
     );
 }
-
-    
