@@ -5,36 +5,8 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { BookMarked, CalendarDays, Menu } from "lucide-react"
-import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 
-
-function MobileHeader({ onLinkClick }: { onLinkClick: () => void }) {
-    return (
-        <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 sm:px-6 md:hidden">
-            <div className="flex items-center gap-2">
-                <Sheet>
-                    <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                            <Menu className="h-6 w-6" />
-                            <span className="sr-only">Open sidebar</span>
-                        </Button>
-                    </SheetTrigger>
-                    <SheetContent side="left" className="p-0">
-                      <AppSidebar onLinkClick={onLinkClick} />
-                    </SheetContent>
-                </Sheet>
-                <Link href="/dashboard" className="flex items-center gap-2 font-bold">
-                    <BookMarked className="h-6 w-6 text-primary" />
-                    <span>হিসাব খাতা</span>
-                </Link>
-            </div>
-            <Button variant="ghost" size="icon">
-                <CalendarDays className="h-5 w-5" />
-                <span className="sr-only">Select date</span>
-            </Button>
-        </header>
-    )
-}
 
 function DesktopHeader() {
     return (
