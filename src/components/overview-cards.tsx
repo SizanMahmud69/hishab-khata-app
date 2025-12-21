@@ -33,11 +33,6 @@ export function OverviewCards() {
     <>
       <Card className="bg-green-50/50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="h-6 w-6">
-                <Plus className="h-4 w-4" />
-            </Button>
-          </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-6 w-6">
@@ -50,6 +45,11 @@ export function OverviewCards() {
                 <DropdownMenuItem>সকল</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="h-6 w-6">
+                <Plus className="h-4 w-4" />
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
             <div className="text-sm font-medium text-green-800 dark:text-green-200 mb-2">
@@ -67,11 +67,6 @@ export function OverviewCards() {
       </Card>
       <Card className="bg-red-50/50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="h-6 w-6">
-                    <Minus className="h-4 w-4" />
-                </Button>
-            </div>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-6 w-6">
@@ -84,6 +79,11 @@ export function OverviewCards() {
                     <DropdownMenuItem>সকল</DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
+            <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="h-6 w-6">
+                    <Minus className="h-4 w-4" />
+                </Button>
+            </div>
         </CardHeader>
         <CardContent>
             <div className="text-sm font-medium text-red-800 dark:text-red-200 mb-2">
