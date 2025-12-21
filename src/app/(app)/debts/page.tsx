@@ -25,22 +25,23 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { debts as initialDebts, type Debt } from "@/lib/data"
+import { type Debt } from "@/lib/data"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 
 export default function DebtsPage() {
-    const { isLoading } = useBudget();
+    const { debts, setDebts, isLoading, addExpense, addIncome, totalIncome, totalExpense } = useBudget();
     const { toast } = useToast();
-    const [debts, setDebts] = useState<Debt[]>(initialDebts);
     const [selectedDebt, setSelectedDebt] = useState<Debt | null>(null);
     const [paymentAmount, setPaymentAmount] = useState<number>(0);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+    const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+
+    const balance = totalIncome - totalExpense;
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat("bn-BD", {
@@ -48,6 +49,73 @@ export default function DebtsPage() {
           currency: "BDT",
           minimumFractionDigits: 0,
         }).format(amount)
+    }
+
+    const handleAddNewDebt = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const formData = new FormData(event.currentTarget);
+        const type = formData.get('type') as 'lent' | 'borrowed';
+        const person = formData.get('person') as string;
+        const amount = Number(formData.get('amount'));
+        const date = formData.get('date') as string;
+        const repaymentDate = formData.get('repayment-date') as string;
+        const description = formData.get('description') as string;
+
+        if (!type || !person || !amount || !date) {
+            toast({
+                variant: "destructive",
+                title: "ফর্ম পূরণ আবশ্যক",
+                description: "অনুগ্রহ করে সকল প্রয়োজনীয় তথ্য পূরণ করুন।",
+            });
+            return;
+        }
+
+        if (type === 'lent' && amount > balance) {
+            toast({
+                variant: "destructive",
+                title: "অপর্যাপ্ত ব্যালেন্স",
+                description: `আপনি ${formatCurrency(amount)} ধার দিতে পারবেন না। আপনার বর্তমান ব্যালেন্স ${formatCurrency(balance)}।`,
+            });
+            return;
+        }
+
+        const newDebt: Debt = {
+            id: Date.now(),
+            type,
+            person,
+            amount,
+            date,
+            repaymentDate,
+            description,
+            paidAmount: 0,
+            status: 'unpaid'
+        };
+
+        if (type === 'lent') {
+            addExpense({
+                id: Date.now(),
+                category: 'ধার প্রদান',
+                amount: amount,
+                date: date,
+                description: `${person} কে ধার দেওয়া হলো`,
+            });
+        } else {
+            addIncome({
+                source: 'ধার গ্রহণ',
+                amount: amount,
+                date: date,
+                description: `${person} এর থেকে ধার নেওয়া হলো`,
+            });
+        }
+        
+        setDebts(prev => [newDebt, ...prev]);
+
+        toast({
+            title: "সফল!",
+            description: "নতুন ধারের হিসাব সফলভাবে যোগ করা হয়েছে।",
+        });
+
+        setIsAddDialogOpen(false);
     }
 
     const openPaymentDialog = (debt: Debt) => {
@@ -109,7 +177,7 @@ export default function DebtsPage() {
   return (
     <div className="flex-1 space-y-4">
       <PageHeader title="ধারের হিসাব" description="আপনার সকল দেনা-পাওনার হিসাব রাখুন।">
-        <Dialog>
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <PlusCircle className="mr-2 h-4 w-4" />
@@ -123,52 +191,54 @@ export default function DebtsPage() {
                 সম্পর্কিত ব্যক্তির নাম এবং অর্থের পরিমাণ লিখুন।
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label className="text-right">ধরন</Label>
-                    <RadioGroup defaultValue="lent" className="col-span-3 flex gap-4">
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="lent" id="r-lent" />
-                            <Label htmlFor="r-lent">ধার দিয়েছি</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="borrowed" id="r-borrowed" />
-                            <Label htmlFor="r-borrowed">ধার নিয়েছি</Label>
-                        </div>
-                    </RadioGroup>
+            <form onSubmit={handleAddNewDebt}>
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label className="text-right">ধরন</Label>
+                        <RadioGroup defaultValue="lent" name="type" className="col-span-3 flex gap-4">
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="lent" id="r-lent" />
+                                <Label htmlFor="r-lent">ধার দিয়েছি</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="borrowed" id="r-borrowed" />
+                                <Label htmlFor="r-borrowed">ধার নিয়েছি</Label>
+                            </div>
+                        </RadioGroup>
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="person" className="text-right">ব্যক্তির নাম</Label>
+                        <Input id="person" name="person" placeholder="সোহেল" className="col-span-3" required />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="amount" className="text-right">
+                        পরিমাণ
+                        </Label>
+                        <Input id="amount" name="amount" type="number" placeholder="2000" className="col-span-3" required />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="debt-date" className="text-right">
+                        ধারের তারিখ
+                        </Label>
+                        <Input id="debt-date" name="date" type="date" defaultValue={new Date().toISOString().split('T')[0]} className="col-span-3" required />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="repayment-date" className="text-right">
+                        পরিশোধের তারিখ
+                        </Label>
+                        <Input id="repayment-date" name="repayment-date" type="date" className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-start gap-4">
+                        <Label htmlFor="description" className="text-right pt-2">
+                            বিবরণ
+                        </Label>
+                        <Textarea id="description" name="description" placeholder="ধার সম্পর্কিত কোনো নোট" className="col-span-3" />
+                    </div>
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="person" className="text-right">ব্যক্তির নাম</Label>
-                    <Input id="person" placeholder="সোহেল" className="col-span-3" />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="amount" className="text-right">
-                    পরিমাণ
-                    </Label>
-                    <Input id="amount" type="number" placeholder="2000" className="col-span-3" />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="debt-date" className="text-right">
-                    ধারের তারিখ
-                    </Label>
-                    <Input id="debt-date" type="date" defaultValue={new Date().toISOString().split('T')[0]} className="col-span-3" />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="repayment-date" className="text-right">
-                    পরিশোধের তারিখ
-                    </Label>
-                    <Input id="repayment-date" type="date" className="col-span-3" />
-                </div>
-                <div className="grid grid-cols-4 items-start gap-4">
-                    <Label htmlFor="description" className="text-right pt-2">
-                        বিবরণ
-                    </Label>
-                    <Textarea id="description" placeholder="ধার সম্পর্কিত কোনো নোট" className="col-span-3" />
-                </div>
-            </div>
-            <DialogFooter>
-              <Button type="submit">সংরক্ষণ করুন</Button>
-            </DialogFooter>
+                <DialogFooter>
+                  <Button type="submit">সংরক্ষণ করুন</Button>
+                </DialogFooter>
+            </form>
           </DialogContent>
         </Dialog>
       </PageHeader>
@@ -312,5 +382,7 @@ function DebtsSkeleton() {
         </div>
     );
 }
+
+    
 
     

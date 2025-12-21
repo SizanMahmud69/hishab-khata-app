@@ -6,12 +6,14 @@ export interface Debt {
   paidAmount: number;
   type: 'lent' | 'borrowed';
   date: string;
+  repaymentDate?: string;
+  description?: string;
   status: 'unpaid' | 'paid' | 'partially-paid';
 }
 
 export const monthlyIncome = [
-  { source: 'মাসিক বেতন', amount: 50000, date: '2024-07-01' },
-  { source: 'ফ্রিল্যান্সিং প্রকল্প', amount: 15000, date: '2024-07-15' },
+  { source: 'মাসিক বেতন', amount: 50000, date: '2024-07-01', description: 'জুলাই মাসের বেতন' },
+  { source: 'ফ্রিল্যান্সিং প্রকল্প', amount: 15000, date: '2024-07-15', description: 'ওয়েবসাইট ডিজাইন' },
 ];
 
 export const dailyExpenses = [
@@ -29,8 +31,8 @@ export const savingsTransactions = [
 ]
 
 export const debts: Debt[] = [
-    { id: 1, person: 'সোহেল', amount: 2000, paidAmount: 0, type: 'lent', date: '2024-07-10', status: 'unpaid' },
-    { id: 2, person: 'রাকিব', amount: 5000, paidAmount: 5000, type: 'borrowed', date: '2024-07-05', status: 'paid' },
+    { id: 1, person: 'সোহেল', amount: 2000, paidAmount: 0, type: 'lent', date: '2024-07-10', status: 'unpaid', description: 'জরুরী প্রয়োজনে' },
+    { id: 2, person: 'রাকিব', amount: 5000, paidAmount: 5000, type: 'borrowed', date: '2024-07-05', status: 'paid', description: 'বাইক কেনার জন্য' },
     { id: 3, person: 'নাসরিন', amount: 1500, paidAmount: 500, type: 'borrowed', date: '2024-07-20', status: 'partially-paid' },
     { id: 4, person: 'আরিফ', amount: 3000, paidAmount: 0, type: 'lent', date: '2024-06-25', status: 'unpaid' },
 ];
@@ -45,7 +47,9 @@ export const overviewChartData = [
   { name: 'Jul', income: 65000, expense: 32250 },
 ];
 
-export const expenseCategories = ['খাবার', 'বাজার', 'যাতায়াত', 'শপিং', 'বিনোদন', 'বিল', 'স্বাস্থ্য', 'সঞ্চয় ডিপোজিট', 'অন্যান্য'];
-export const incomeSources = ['মাসিক বেতন', 'ফ্রিল্যান্সিং', 'ব্যবসা', 'সঞ্চয় উত্তোলন', 'অন্যান্য'];
+export const expenseCategories = ['খাবার', 'বাজার', 'যাতায়াত', 'শপিং', 'বিনোদন', 'বিল', 'স্বাস্থ্য', 'সঞ্চয় ডিপোজিট', 'ধার প্রদান', 'অন্যান্য'];
+export const incomeSources = ['মাসিক বেতন', 'ফ্রিল্যান্সিং', 'ব্যবসা', 'সঞ্চয় উত্তোলন', 'ধার গ্রহণ', 'অন্যান্য'];
+
+    
 
     

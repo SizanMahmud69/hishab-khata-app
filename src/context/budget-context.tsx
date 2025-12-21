@@ -1,7 +1,8 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { dailyExpenses as initialExpenses, monthlyIncome as initialIncome, savingsTransactions as initialSavings } from '@/lib/data';
+import { dailyExpenses as initialExpenses, monthlyIncome as initialIncome, savingsTransactions as initialSavings, debts as initialDebts, type Debt } from '@/lib/data';
 
 interface Income {
     source: string;
@@ -29,6 +30,8 @@ interface BudgetContextType {
     income: Income[];
     expenses: Expense[];
     savings: Saving[];
+    debts: Debt[];
+    setDebts: React.Dispatch<React.SetStateAction<Debt[]>>;
     addIncome: (income: Income) => void;
     addExpense: (expense: Expense) => void;
     addSaving: (saving: Saving) => void;
@@ -47,6 +50,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const [income, setIncome] = useState<Income[]>([]);
     const [expenses, setExpenses] = useState<Expense[]>([]);
     const [savings, setSavings] = useState<Saving[]>([]);
+    const [debts, setDebts] = useState<Debt[]>([]);
     const [rewardPoints, setRewardPoints] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -60,6 +64,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             setIncome(initialIncome);
             setExpenses(initialExpenses);
             setSavings(initialSavings);
+            setDebts(initialDebts);
             setRewardPoints(120);
             setIsLoading(false);
         }, 1500);
@@ -101,7 +106,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     }
 
     return (
-        <BudgetContext.Provider value={{ income, expenses, savings, addIncome, addExpense, addSaving, totalIncome, totalExpense, totalSavings, rewardPoints, addRewardPoints, deductRewardPoints, isLoading }}>
+        <BudgetContext.Provider value={{ income, expenses, savings, debts, setDebts, addIncome, addExpense, addSaving, totalIncome, totalExpense, totalSavings, rewardPoints, addRewardPoints, deductRewardPoints, isLoading }}>
             {children}
         </BudgetContext.Provider>
     );
@@ -114,3 +119,5 @@ export const useBudget = () => {
     }
     return context;
 };
+
+    
