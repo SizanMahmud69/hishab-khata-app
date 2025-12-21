@@ -83,7 +83,7 @@ export function AppSidebar() {
           ))}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter className="group-data-[collapsible=icon]:-ml-1">
+      <SidebarFooter className="group-data-[collapsible=icon]:-ml-1 mt-auto">
         <div className="flex items-center gap-3 rounded-md px-2 py-1.5 transition-colors">
             <Avatar className="h-9 w-9">
               <AvatarImage src="https://picsum.photos/seed/1/100/100" alt="@shadcn" data-ai-hint="profile avatar" />
