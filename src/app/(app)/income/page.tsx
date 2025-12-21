@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -33,9 +34,9 @@ export default function IncomePage() {
         const source = formData.get('source') as string;
         const amount = parseFloat(formData.get('amount') as string);
         const date = formData.get('date') as string;
-        const description = formData.get('description') as string;
+        const descriptionInput = formData.get('description') as string;
 
-        if (!source || !amount || !date) {
+        if (!source || !amount || !date || (selectedSource === 'মাসিক বেতন' && !descriptionInput)) {
             toast({
                 variant: "destructive",
                 title: "ফর্ম পূরণ আবশ্যক",
@@ -48,7 +49,7 @@ export default function IncomePage() {
             source,
             amount,
             date,
-            description: selectedSource === 'মাসিক বেতন' ? `${description} মাসের বেতন` : description,
+            description: selectedSource === 'মাসিক বেতন' ? `${descriptionInput} মাসের বেতন` : descriptionInput,
         };
 
         addIncome(newIncome);
