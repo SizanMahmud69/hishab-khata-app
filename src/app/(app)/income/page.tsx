@@ -19,10 +19,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { incomeSources } from "@/lib/data";
 
+const months = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
+
 export default function IncomePage() {
     const { addIncome } = useBudget();
     const { toast } = useToast();
     const formRef = React.useRef<HTMLFormElement>(null);
+    const [selectedSource, setSelectedSource] = React.useState<string>("");
     
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -30,6 +33,7 @@ export default function IncomePage() {
         const source = formData.get('source') as string;
         const amount = parseFloat(formData.get('amount') as string);
         const date = formData.get('date') as string;
+        const description = formData.get('description') as string;
 
         if (!source || !amount || !date) {
             toast({
@@ -44,6 +48,7 @@ export default function IncomePage() {
             source,
             amount,
             date,
+            description: selectedSource === 'মাসিক বেতন' ? `${description} মাসের বেতন` : description,
         };
 
         addIncome(newIncome);
@@ -54,6 +59,7 @@ export default function IncomePage() {
         });
 
         formRef.current?.reset();
+        setSelectedSource("");
     }
 
   return (
@@ -73,13 +79,13 @@ export default function IncomePage() {
                     <Label htmlFor="amount" className="text-right">
                     পরিমাণ
                     </Label>
-                    <Input id="amount" name="amount" type="number" placeholder="50000" className="col-span-3" />
+                    <Input id="amount" name="amount" type="number" placeholder="50000" className="col-span-3" required />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="source" className="text-right">
                     উৎস
                     </Label>
-                    <Select name="source">
+                    <Select name="source" onValueChange={setSelectedSource} required>
                         <SelectTrigger className="col-span-3">
                             <SelectValue placeholder="একটি উৎস নির্বাচন করুন" />
                         </SelectTrigger>
@@ -92,13 +98,24 @@ export default function IncomePage() {
                 <Label htmlFor="date" className="text-right">
                   তারিখ
                 </Label>
-                <Input id="date" name="date" type="date" defaultValue={new Date().toISOString().split('T')[0]} className="col-span-3" />
+                <Input id="date" name="date" type="date" defaultValue={new Date().toISOString().split('T')[0]} className="col-span-3" required />
               </div>
                <div className="grid grid-cols-4 items-start gap-4">
                 <Label htmlFor="description" className="text-right pt-2">
                   বিবরণ
                 </Label>
-                <Textarea id="description" name="description" placeholder="আয়ের সংক্ষিপ্ত বিবরণ" className="col-span-3" />
+                {selectedSource === 'মাসিক বেতন' ? (
+                    <Select name="description" required>
+                        <SelectTrigger className="col-span-3">
+                            <SelectValue placeholder="একটি মাস নির্বাচন করুন" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {months.map(month => <SelectItem key={month} value={month}>{month}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                ) : (
+                    <Textarea id="description" name="description" placeholder="আয়ের সংক্ষিপ্ত বিবরণ" className="col-span-3" />
+                )}
               </div>
             </CardContent>
             <CardFooter>

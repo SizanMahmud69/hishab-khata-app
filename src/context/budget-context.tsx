@@ -7,6 +7,7 @@ interface Income {
     source: string;
     amount: number;
     date: string;
+    description?: string;
 }
 
 interface Expense {
