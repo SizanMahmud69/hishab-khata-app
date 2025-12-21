@@ -5,7 +5,7 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { BookMarked, CalendarDays, Menu } from "lucide-react"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet"
 
 
 function DesktopHeader() {
@@ -52,6 +52,10 @@ export function AppHeader({children}: {children: ReactNode}) {
                         </Button>
                     </header>
                     <SheetContent side="left" className="p-0">
+                        <SheetHeader className="p-4">
+                          <SheetTitle className="sr-only">মেনু</SheetTitle>
+                          <SheetDescription className="sr-only">অ্যাপ্লিকেশনের প্রধান নেভিগেশন মেনু।</SheetDescription>
+                        </SheetHeader>
                         <AppSidebar onLinkClick={handleLinkClick} />
                     </SheetContent>
                 </Sheet>
