@@ -1,3 +1,4 @@
+
 export const monthlyIncome = [
   { source: 'মাসিক বেতন', amount: 50000, date: '2024-07-01' },
   { source: 'ফ্রিল্যান্সিং প্রকল্প', amount: 15000, date: '2024-07-15' },
@@ -41,5 +42,5 @@ export const overviewChartData = [
   { name: 'Jul', income: 65000, expense: 32250 },
 ];
 
-export const expenseCategories = ['খাবার', 'যাতায়াত', 'শপিং', 'বিনোদন', 'বিল', 'স্বাস্থ্য', 'অন্যান্য'];
-export const incomeSources = ['মাসিক বেতন', 'ফ্রিল্যান্সিং', 'ব্যবসা', 'অন্যান্য'];
+export const expenseCategories = ['খাবার', 'বাজার', 'যাতায়াত', 'শপিং', 'বিনোদন', 'বিল', 'স্বাস্থ্য', 'সঞ্চয় ডিপোজিট', 'অন্যান্য'];
+export const incomeSources = ['মাসিক বেতন', 'ফ্রিল্যান্সিং', 'ব্যবসা', 'সঞ্চয় উত্তোলন', 'অন্যান্য'];
