@@ -97,14 +97,14 @@ export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
               >
                 <Link href={item.href} onClick={onLinkClick}>
                   <item.icon />
-                  <span>{item.label}</span>
+                  <span className="text-base">{item.label}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter className="mt-auto">
+      <SidebarFooter>
         <SidebarSeparator />
          <div className="flex items-center gap-3 rounded-md px-2 py-1.5 transition-colors">
             <Avatar className="h-9 w-9">
