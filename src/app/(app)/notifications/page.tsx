@@ -11,31 +11,41 @@ import { useRouter } from 'next/navigation';
 import { isThisMonth, parseISO } from 'date-fns';
 
 interface Notification {
-    id: number;
+    id: string;
     title: string;
     description: string;
     read: boolean;
-    link: string;
+    link?: string;
     createdAt: string; // ISO date string
 }
-
-const initialNotifications: Notification[] = [
-    { id: 1, title: "আপনার বাজেট প্রায় শেষ।", description: "মাসিক খরচের সীমা অতিক্রম করতে চলেছে।", read: false, link: "/expenses", createdAt: new Date().toISOString() },
-    { id: 2, title: "নতুন বিল যোগ হয়েছে।", description: "ইন্টারনেট বিল পরিশোধ করুন।", read: false, link: "/expenses", createdAt: new Date().toISOString() },
-    { id: 3, title: "রিওয়ার্ড পয়েন্ট আপডেট!", description: "আপনি সফলভাবে ৫০ পয়েন্ট অর্জন করেছেন।", read: false, link: "/rewards", createdAt: new Date().toISOString() },
-];
 
 export default function NotificationsPage() {
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const router = useRouter();
+    
+    const updateLocalStorageAndState = (updatedNotifications: Notification[]) => {
+        setNotifications(updatedNotifications);
+        localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
+        window.dispatchEvent(new Event('storage')); // Trigger storage event for header to update
+    }
 
     useEffect(() => {
         const storedNotifications = localStorage.getItem('notifications');
         if (storedNotifications) {
             setNotifications(JSON.parse(storedNotifications));
-        } else {
-            setNotifications(initialNotifications);
-            localStorage.setItem('notifications', JSON.stringify(initialNotifications));
+        }
+
+        const handleStorageChange = () => {
+            const updatedStorage = localStorage.getItem('notifications');
+            if (updatedStorage) {
+                setNotifications(JSON.parse(updatedStorage));
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
         }
     }, []);
 
@@ -43,15 +53,9 @@ export default function NotificationsPage() {
         return notifications.filter(n => isThisMonth(parseISO(n.createdAt)));
     }, [notifications]);
 
-    const updateLocalStorage = (updatedNotifications: Notification[]) => {
-        localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
-        window.dispatchEvent(new Event('storage')); // Trigger storage event for header to update
-    }
-
-    const markAsRead = (id: number) => {
+    const markAsRead = (id: string) => {
         const updated = notifications.map(n => n.id === id ? { ...n, read: true } : n);
-        setNotifications(updated);
-        updateLocalStorage(updated);
+        updateLocalStorageAndState(updated);
     }
 
     const handleNotificationClick = (notification: Notification) => {
@@ -65,8 +69,7 @@ export default function NotificationsPage() {
 
     const markAllAsRead = () => {
         const updated = notifications.map(n => ({ ...n, read: true }));
-        setNotifications(updated);
-        updateLocalStorage(updated);
+        updateLocalStorageAndState(updated);
     }
 
     return (

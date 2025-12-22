@@ -19,6 +19,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { createNotification } from '@/components/app-header';
 
 const WITHDRAW_THRESHOLD = 1000;
 const CONVERSION_RATE = 1; // 1 point = 1 BDT
@@ -32,10 +33,18 @@ export default function RewardsPage() {
     const withdrawableAmount = Math.floor(rewardPoints) * CONVERSION_RATE;
 
     const handleWithdraw = () => {
-        deductRewardPoints(rewardPoints);
+        const withdrawnAmount = rewardPoints;
+        deductRewardPoints(withdrawnAmount);
+
+        createNotification({
+            title: "উইথড্র সফল হয়েছে",
+            description: `${withdrawnAmount} পয়েন্ট আপনার অ্যাকাউন্ট থেকে সফলভাবে উইথড্র করা হয়েছে।`,
+            link: "/rewards",
+        });
+
         toast({
             title: "সফল!",
-            description: `আপনার উইথড্র সফল হয়েছে। ${rewardPoints} পয়েন্ট আপনার অ্যাকাউন্ট থেকে কেটে নেওয়া হয়েছে।`,
+            description: `আপনার উইথড্র সফল হয়েছে। ${withdrawnAmount} পয়েন্ট আপনার অ্যাকাউন্ট থেকে কেটে নেওয়া হয়েছে।`,
         });
         setIsDialogOpen(false);
     }

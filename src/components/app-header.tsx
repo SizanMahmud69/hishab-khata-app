@@ -15,21 +15,40 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { isToday, parseISO } from "date-fns"
 
 interface Notification {
-    id: number;
+    id: string;
     title: string;
     description: string;
     read: boolean;
-    link: string;
+    link?: string;
     createdAt: string;
 }
 
-const initialNotifications: Notification[] = [
-    { id: 1, title: "আপনার বাজেট প্রায় শেষ।", description: "মাসিক খরচের সীমা অতিক্রম করতে চলেছে।", read: false, link: "/expenses", createdAt: new Date().toISOString() },
-    { id: 2, title: "নতুন বিল যোগ হয়েছে।", description: "ইন্টারনেট বিল পরিশোধ করুন।", read: false, link: "/expenses", createdAt: new Date().toISOString() },
-    { id: 3, title: "রিওয়ার্ড পয়েন্ট আপডেট!", description: "আপনি সফলভাবে ৫০ পয়েন্ট অর্জন করেছেন।", read: false, link: "/rewards", createdAt: new Date().toISOString() },
-];
+const getNotifications = (): Notification[] => {
+    if (typeof window === 'undefined') return [];
+    const stored = localStorage.getItem('notifications');
+    return stored ? JSON.parse(stored) : [];
+}
+
+const saveNotifications = (notifications: Notification[]) => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem('notifications', JSON.stringify(notifications));
+    window.dispatchEvent(new Event('storage'));
+}
+
+export const createNotification = (notification: Omit<Notification, 'id' | 'createdAt' | 'read'>) => {
+    const newNotification: Notification = {
+        ...notification,
+        id: new Date().getTime().toString(),
+        createdAt: new Date().toISOString(),
+        read: false,
+    };
+    const existingNotifications = getNotifications();
+    saveNotifications([newNotification, ...existingNotifications]);
+};
+
 
 export function AppHeader({children}: {children: ReactNode}) {
     const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -38,12 +57,37 @@ export function AppHeader({children}: {children: ReactNode}) {
     const router = useRouter();
 
     useEffect(() => {
-        const storedNotifications = localStorage.getItem('notifications');
-        const data = storedNotifications ? JSON.parse(storedNotifications) : initialNotifications;
+        const checkDailyNotification = () => {
+            const lastNotificationDate = localStorage.getItem('dailyCheckinNotificationDate');
+            const todayStr = new Date().toDateString();
+
+            if (lastNotificationDate !== todayStr) {
+                const allNotifications = getNotifications();
+                const hasTodayCheckinNotification = allNotifications.some(n => 
+                    n.title === "দৈনিক চেক-ইন" && isToday(parseISO(n.createdAt))
+                );
+
+                const lastCheckIn = localStorage.getItem('lastCheckInDate');
+                let checkedInToday = false;
+                if(lastCheckIn) {
+                    checkedInToday = new Date(lastCheckIn).toDateString() === todayStr;
+                }
+
+                if (!hasTodayCheckinNotification && !checkedInToday) {
+                    createNotification({
+                        title: "দৈনিক চেক-ইন",
+                        description: "আজকের চেক-ইন করে রিওয়ার্ড পয়েন্ট অর্জন করুন।",
+                        link: "/check-in",
+                    });
+                    localStorage.setItem('dailyCheckinNotificationDate', todayStr);
+                }
+            }
+        };
+
+        checkDailyNotification();
+        
+        const data = getNotifications();
         setNotifications(data);
-        if (!storedNotifications) {
-            localStorage.setItem('notifications', JSON.stringify(data));
-        }
 
         const handleStorageChange = () => {
             const updatedStorage = localStorage.getItem('notifications');
@@ -87,11 +131,10 @@ export function AppHeader({children}: {children: ReactNode}) {
         setIsSheetOpen(false);
     }
     
-    const markAsRead = (id: number) => {
-        const updatedNotifications = notifications.map(n => n.id === id ? { ...n, read: true } : n);
-        setNotifications(updatedNotifications);
-        localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
-        window.dispatchEvent(new Event('storage')); // Trigger update for other components
+    const markAsRead = (id: string) => {
+        const allNotifications = getNotifications();
+        const updatedNotifications = allNotifications.map(n => n.id === id ? { ...n, read: true } : n);
+        saveNotifications(updatedNotifications);
     }
 
     const handleNotificationClick = (notification: Notification) => {
@@ -146,6 +189,7 @@ export function AppHeader({children}: {children: ReactNode}) {
                                     <span className="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
                                         {notificationCount}
                                     </span>
+
                                 )}
                                 <Bell className="h-5 w-5" />
                                 <span className="sr-only">Notifications</span>

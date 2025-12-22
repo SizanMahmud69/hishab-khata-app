@@ -1,11 +1,12 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo, useCallback } from 'react';
 import { type Debt, type ShopDue } from '@/lib/data';
 import { useUser } from '@/firebase/provider';
 import { useFirestore } from '@/firebase/provider';
-import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, writeBatch, setDoc, query, CollectionReference, DocumentData } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, doc, updateDoc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { createNotification } from '@/components/app-header';
 
 export interface Income {
     id?: string;
@@ -60,6 +61,8 @@ interface BudgetContextType {
 
 const BudgetContext = createContext<BudgetContextType | undefined>(undefined);
 
+const SAVINGS_MILESTONES = [1000, 5000, 10000, 20000, 30000, 40000, 50000, 100000];
+
 export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
@@ -74,7 +77,41 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
 
     const totalIncome = useMemo(() => income.reduce((sum, item) => sum + item.amount, 0), [income]);
     const totalExpense = useMemo(() => expenses.reduce((sum, item) => sum + item.amount, 0), [expenses]);
-    const totalSavings = useMemo(() => savings.reduce((sum, item) => sum + item.amount, 0), [savings]);
+    
+    const checkSavingsMilestones = useCallback((currentSavings: number, previousSavings: number) => {
+        if (typeof window === 'undefined') return;
+
+        const notifiedMilestonesStr = localStorage.getItem('notifiedSavingsMilestones') || '[]';
+        const notifiedMilestones: number[] = JSON.parse(notifiedMilestonesStr);
+
+        SAVINGS_MILESTONES.forEach(milestone => {
+            if (currentSavings >= milestone && previousSavings < milestone && !notifiedMilestones.includes(milestone)) {
+                createNotification({
+                    title: "অভিনন্দন! সঞ্চয়ের মাইলফলক অর্জন",
+                    description: `আপনি সফলভাবে ${new Intl.NumberFormat("bn-BD").format(milestone)} টাকার সঞ্চয়ের মাইলফলক অর্জন করেছেন!`,
+                    link: "/dashboard" 
+                });
+                notifiedMilestones.push(milestone);
+            }
+        });
+
+        localStorage.setItem('notifiedSavingsMilestones', JSON.stringify(notifiedMilestones));
+    }, []);
+
+    const totalSavings = useMemo(() => {
+        const currentTotal = savings.reduce((sum, item) => sum + item.amount, 0);
+        return currentTotal;
+    }, [savings]);
+
+    useEffect(() => {
+        const previousSavings = parseFloat(localStorage.getItem('previousTotalSavings') || '0');
+        if(totalSavings > previousSavings) {
+             checkSavingsMilestones(totalSavings, previousSavings);
+        }
+        localStorage.setItem('previousTotalSavings', totalSavings.toString());
+
+    }, [totalSavings, checkSavingsMilestones]);
+
 
      useEffect(() => {
         if (isUserLoading) {
@@ -235,5 +272,3 @@ export const useBudget = () => {
     }
     return context;
 };
-
-    
