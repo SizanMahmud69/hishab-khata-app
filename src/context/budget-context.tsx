@@ -1,11 +1,11 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo } from 'react';
 import { type Debt, type ShopDue } from '@/lib/data';
 import { useUser } from '@/firebase/provider';
 import { useFirestore } from '@/firebase/provider';
-import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, writeBatch, setDoc, query } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, writeBatch, setDoc, query, CollectionReference, DocumentData } from 'firebase/firestore';
 
 export interface Income {
     id?: string;
@@ -13,27 +13,27 @@ export interface Income {
     amount: number;
     date: string;
     description?: string;
-    createdAt: any;
-    userId: string;
+    createdAt?: any;
+    userId?: string;
 }
 
 export interface Expense {
-    id: string;
+    id?: string;
     date: string;
     category: string;
     amount: number;
     description: string;
-    createdAt: any;
-    userId: string;
+    createdAt?: any;
+    userId?: string;
 }
 
 export interface Saving {
-    id: string;
+    id?: string;
     date: string;
     description: string;
     amount: number;
-    createdAt: any;
-    userId: string;
+    createdAt?: any;
+    userId?: string;
 }
 
 interface BudgetContextType {
@@ -42,8 +42,6 @@ interface BudgetContextType {
     savings: Saving[];
     debts: Debt[];
     shopDues: ShopDue[];
-    setDebts: (debts: Debt[]) => Promise<void>;
-    setShopDues: (shopDues: ShopDue[]) => Promise<void>;
     addIncome: (income: Omit<Income, 'id' | 'createdAt' | 'userId'>) => Promise<void>;
     addExpense: (expense: Omit<Expense, 'id' | 'createdAt' | 'userId'>) => Promise<void>;
     addSaving: (saving: Omit<Saving, 'id' | 'createdAt' | 'userId'>) => Promise<void>;
@@ -74,9 +72,9 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const [rewardPoints, setRewardPoints] = useState(0);
     const [isDataLoading, setIsDataLoading] = useState(true);
 
-    const [totalIncome, setTotalIncome] = useState(0);
-    const [totalExpense, setTotalExpense] = useState(0);
-    const [totalSavings, setTotalSavings] = useState(0);
+    const totalIncome = useMemo(() => income.reduce((sum, item) => sum + item.amount, 0), [income]);
+    const totalExpense = useMemo(() => expenses.reduce((sum, item) => sum + item.amount, 0), [expenses]);
+    const totalSavings = useMemo(() => savings.reduce((sum, item) => sum + item.amount, 0), [savings]);
 
      useEffect(() => {
         if (isUserLoading) {
@@ -100,7 +98,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         
         const onDataLoaded = () => {
             activeListeners--;
-            if (activeListeners === 0) {
+            if (activeListeners <= 0) {
                 setIsDataLoading(false);
             }
         };
@@ -117,7 +115,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             });
         };
 
-        const rewardsDocRef = doc(firestore, basePath, 'rewards/summary');
+        const rewardsDocRef = doc(firestore, basePath, 'rewards', 'summary');
         const unsubRewards = onSnapshot(rewardsDocRef, (snapshot) => {
             setRewardPoints(snapshot.data()?.points || 0);
             onDataLoaded();
@@ -125,7 +123,6 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             console.error("Rewards fetch error: ", err);
             onDataLoaded();
         });
-
 
         const unsubscribes = [
             createSnapshotListener('income', setIncome),
@@ -139,19 +136,6 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         return () => unsubscribes.forEach(unsub => unsub());
 
     }, [user, firestore, isUserLoading]);
-
-
-    useEffect(() => {
-        setTotalIncome(income.reduce((sum, item) => sum + item.amount, 0));
-    }, [income]);
-
-    useEffect(() => {
-        setTotalExpense(expenses.reduce((sum, item) => sum + item.amount, 0));
-    }, [expenses]);
-
-    useEffect(() => {
-        setTotalSavings(savings.reduce((sum, item) => sum + item.amount, 0));
-    }, [savings]);
 
     const getCollectionRef = (name: string) => {
         if (!user || !firestore) throw new Error("User or firestore not available");
@@ -192,7 +176,14 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const addShopDue = async (shopDue: Omit<ShopDue, 'id'>) => {
-        await addDocToCollection('shopDues', shopDue);
+        if (!user) throw new Error("User not logged in");
+        const dataToSave = {
+            ...shopDue,
+            userId: user.uid,
+            createdAt: serverTimestamp()
+        };
+        const collectionRef = getCollectionRef('shopDues');
+        await addDoc(collectionRef, dataToSave);
     }
 
     const updateShopDue = async (shopDue: ShopDue) => {
@@ -209,36 +200,12 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
 
     const addRewardPoints = (points: number) => {
         const newPoints = rewardPoints + points;
-        setRewardPoints(newPoints);
         updateRewardPoints(newPoints);
     }
 
     const deductRewardPoints = (points: number) => {
         const newPoints = Math.max(0, rewardPoints - points);
-        setRewardPoints(newPoints);
         updateRewardPoints(newPoints);
-    }
-
-    const setDebtsFirebase = async (newDebts: Debt[]) => {
-        if (!user || !firestore) return;
-        const batch = writeBatch(firestore);
-        newDebts.forEach(debt => {
-            if (!debt.id) return;
-            const docRef = doc(firestore, `users/${user.uid}/debts`, debt.id);
-            batch.set(docRef, debt);
-        });
-        await batch.commit();
-    }
-
-    const setShopDuesFirebase = async (newShopDues: ShopDue[]) => {
-        if (!user || !firestore) return;
-        const batch = writeBatch(firestore);
-        newShopDues.forEach(due => {
-            if (!due.id) return;
-            const docRef = doc(firestore, `users/${user.uid}/shopDues`, due.id);
-            batch.set(docRef, due);
-        });
-        await batch.commit();
     }
     
     const isLoading = isUserLoading || isDataLoading;
@@ -249,9 +216,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             expenses, 
             savings, 
             debts, 
-            setDebts: setDebtsFirebase, 
             shopDues, 
-            setShopDues: setShopDuesFirebase, 
             addIncome, 
             addExpense, 
             addSaving, 
@@ -279,7 +244,3 @@ export const useBudget = () => {
     }
     return context;
 };
-
-    
-
-    

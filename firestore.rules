@@ -140,6 +140,17 @@ service cloud.firestore {
       }
 
       /**
+       * @description Controls access to a user's private savings records.
+       * @path /users/{userId}/savings/{savingId}
+       */
+      match /savings/{savingId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isCreatingConsistentChild(userId);
+        allow update: if isExistingOwner(userId) && isUpdatingConsistentChild();
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
        * @description Controls access to a user's custom expense categories.
        * @path /users/{userId}/categories/{categoryId}
        * @allow (create) User 'A' adding a new category to their own account.
@@ -170,6 +181,15 @@ service cloud.firestore {
         allow update: if isExistingOwner(userId) && isUpdatingConsistentChild();
         allow delete: if isExistingOwner(userId);
       }
+      
+       /**
+       * @description Controls access to a user's reward points.
+       * @path /users/{userId}/rewards/{rewardDoc}
+       */
+      match /rewards/{rewardDoc} {
+        allow get, list, create, update: if isOwner(userId);
+        allow delete: if false; // Generally, users shouldn't delete reward docs
+      }
 
       /**
        * @description Controls access to a user's private loan records.
@@ -184,6 +204,17 @@ service cloud.firestore {
         allow get, list: if isOwner(userId);
         allow create: if isOwner(userId) && isCreatingConsistentChild(userId);
         allow update: if isExistingOwner(userId) && isUpdatingConsistentChild();
+        allow delete: if isExistingOwner(userId);
+      }
+
+       /**
+       * @description Controls access to a user's shop dues.
+       * @path /users/{userId}/shopDues/{dueId}
+       */
+      match /shopDues/{dueId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update: if isExistingOwner(userId);
         allow delete: if isExistingOwner(userId);
       }
     }
