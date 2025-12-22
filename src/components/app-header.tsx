@@ -97,7 +97,9 @@ export function AppHeader({children}: {children: ReactNode}) {
         if (!notification.read) {
             markAsRead(notification.id);
         }
-        router.push(notification.link);
+        if (notification.link) {
+            router.push(notification.link);
+        }
     }
 
     return (

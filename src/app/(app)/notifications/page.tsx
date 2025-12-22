@@ -52,7 +52,9 @@ export default function NotificationsPage() {
         if (!notification.read) {
             markAsRead(notification.id);
         }
-        router.push(notification.link);
+        if (notification.link) {
+            router.push(notification.link);
+        }
     }
 
     const markAllAsRead = () => {
