@@ -4,7 +4,7 @@ import { OverviewCards } from "@/components/overview-cards"
 import { RecentTransactions } from "@/components/recent-transactions"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { OverviewPieChart } from "@/components/overview-pie-chart"
-import { Wallet, PiggyBank } from "lucide-react"
+import { Wallet, Landmark } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { useBudget } from "@/context/budget-context";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -45,7 +45,7 @@ export default function DashboardPage() {
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <div className="p-2 bg-blue-100 rounded-full">
-                                <PiggyBank className="h-4 w-4 text-blue-600" />
+                                <Landmark className="h-4 w-4 text-blue-600" />
                             </div>
                             <div>
                                 <p className="text-sm font-medium">মোট সঞ্চয়</p>
