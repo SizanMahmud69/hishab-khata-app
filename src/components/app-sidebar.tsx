@@ -22,7 +22,7 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar"
 import { ScrollArea } from "./ui/scroll-area"
-import { useUser } from "@/firebase/provider"
+import { useUser } from "@/firebase"
 import { getAuth, signOut } from "firebase/auth"
 
 const menuItems = [

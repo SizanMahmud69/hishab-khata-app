@@ -3,8 +3,8 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo, useCallback } from 'react';
 import { type Debt, type ShopDue } from '@/lib/data';
-import { useUser } from '@/firebase/provider';
-import { useFirestore } from '@/firebase/provider';
+import { useUser } from '@/firebase';
+import { useFirestore } from '@/firebase';
 import { collection, onSnapshot, addDoc, doc, updateDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { createNotification } from '@/components/app-header';
 

@@ -6,7 +6,7 @@ import { BudgetClientProvider, useBudget } from "@/context/budget-context-provid
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useUser } from "@/firebase/provider";
+import { useUser } from "@/firebase";
 
 
 function AppContent({ children }: { children: ReactNode }) {

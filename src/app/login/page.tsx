@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { useAuth } from "@/firebase/provider";
+import { useAuth } from "@/firebase";
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -29,20 +29,11 @@ export default function LoginPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!auth) return;
     setIsLoading(true);
 
-    if (!auth) {
-        toast({
-            variant: "destructive",
-            title: "লগইন ব্যর্থ হয়েছে",
-            description: " প্রমাণীকরণ পরিষেবা উপলব্ধ নয়।",
-        });
-        setIsLoading(false);
-        return;
-    }
-
     signInWithEmailAndPassword(auth, email, password)
-      .then(() => {
+      .then((userCredential) => {
         toast({
           title: "লগইন সফল হয়েছে!",
           description: "আপনাকে ড্যাশবোর্ডে নিয়ে যাওয়া হচ্ছে।",

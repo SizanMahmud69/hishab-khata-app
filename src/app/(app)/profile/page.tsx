@@ -4,7 +4,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useUser, useFirestore, useMemoFirebase } from "@/firebase/provider";
+import { useUser, useFirestore, useMemoFirebase, useDoc } from "@/firebase";
 import { Mail, Phone, UserCheck, XCircle, CheckCircle, User as UserIcon, MapPin, Cake } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import React, { useState } from "react";
@@ -21,7 +21,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge";
 import { doc, setDoc } from "firebase/firestore";
-import { useDoc } from "@/firebase/firestore/use-doc";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface UserProfile {
