@@ -4,9 +4,8 @@ import { useMemo } from "react";
 import PageHeader from "@/components/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBudget } from "@/context/budget-context";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { TrendingUp, TrendingDown, Edit, Trash2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { TrendingUp, TrendingDown } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { bn } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -39,9 +38,9 @@ export default function HistoryPage() {
           <Skeleton className="h-5 w-72" />
         </div>
         <div className="space-y-4">
-            <Skeleton className="h-28 w-full" />
-            <Skeleton className="h-28 w-full" />
-            <Skeleton className="h-28 w-full" />
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
         </div>
       </div>
     );
@@ -72,16 +71,6 @@ export default function HistoryPage() {
 
                     {transaction.description && <p className="text-sm text-muted-foreground mt-1">{transaction.description}</p>}
                 </CardContent>
-              <CardFooter className="bg-muted/50 px-4 py-2 flex justify-end gap-1">
-                <Button variant="ghost" size="sm" className="h-8">
-                    <Edit className="mr-2 h-3.5 w-3.5" />
-                    সম্পাদনা
-                </Button>
-                <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600 hover:bg-red-100 dark:hover:bg-red-900/50 h-8">
-                    <Trash2 className="mr-2 h-3.5 w-3.5" />
-                    মুছুন
-                </Button>
-              </CardFooter>
             </Card>
           ))}
         </div>
