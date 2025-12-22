@@ -22,10 +22,9 @@ export default function HistoryPage() {
     ];
 
     return allTransactions.sort((a, b) => {
-        const dateA = a.date ? (typeof a.date === 'string' ? parseISO(a.date) : a.date) : 0;
-        const dateB = b.date ? (typeof b.date === 'string' ? parseISO(b.date) : b.date) : 0;
-        if (!dateA || !dateB) return 0;
-        return dateB.getTime() - dateA.getTime();
+        const timeA = a.createdAt?.seconds || 0;
+        const timeB = b.createdAt?.seconds || 0;
+        return timeB - timeA;
     });
   }, [income, expenses]);
 
