@@ -17,7 +17,6 @@ import { Label } from "@/components/ui/label"
 import { expenseCategories } from "@/lib/data"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
 import { useBudget } from "@/context/budget-context"
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from '@/components/ui/skeleton';
@@ -34,7 +33,7 @@ export default function ExpensesPage() {
         const amount = parseFloat(formData.get('amount') as string);
         const date = formData.get('date') as string;
         const description = formData.get('description') as string;
-        const isSavings = formData.get('is-savings') === 'on';
+        const isSavingsCategory = category === 'সঞ্চয় ডিপোজিট';
 
         if (!category || !amount || !date) {
             toast({
@@ -53,7 +52,7 @@ export default function ExpensesPage() {
         };
 
         await addExpense(newExpense);
-        if (isSavings) {
+        if (isSavingsCategory) {
             await addSaving({
                 amount,
                 date,
@@ -114,10 +113,6 @@ export default function ExpensesPage() {
                   বিবরণ
                 </Label>
                 <Textarea id="description" name="description" placeholder="খরচের সংক্ষিপ্ত বিবরণ" />
-              </div>
-               <div className="flex items-center space-x-2">
-                <Switch id="is-savings" name="is-savings" />
-                <Label htmlFor="is-savings" className="text-sm text-muted-foreground">এটা কি আপনার সঞ্চয়ের অংশ?</Label>
               </div>
             </CardContent>
             <CardFooter>
