@@ -38,13 +38,10 @@ service cloud.firestore {
       // A user cannot change their core identifiers or sensitive info.
       let protectedFields = ['id', 'userId', 'email', 'joinDate', 'points'];
       
-      // Check that no protected fields are being changed.
-      let isProtectedUnchanged = !request.resource.data.keys().hasAny(protectedFields);
+      let incomingData = request.resource.data;
       
-      // Check that only allowed fields are present in the request data.
-      let hasOnlyAllowedFields = request.resource.data.keys().hasOnly(allowedFields);
-
-      return hasOnlyAllowedFields && isProtectedUnchanged;
+      // Check that no protected fields are being changed by comparing them to existing resource
+      return protectedFields.size() == 0 || incomingData.diff(resource.data).affectedKeys.hasAny(protectedFields) == false;
     }
 
     // ------------------------------------------------------------------------
@@ -74,9 +71,7 @@ service cloud.firestore {
       
       // Sub-collection for daily check-ins
       match /checkIns/{checkInId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update, delete: if isExistingOwner(userId);
+        allow read, write: if isOwner(userId);
       }
 
       // Sub-collection for NID verification requests
