@@ -186,8 +186,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         const userDocRef = doc(firestore, `users/${user.uid}`);
         
         try {
-            const currentDoc = await getDocs(query(collection(firestore, `users`), where("id", "==", user.uid)));
-            const currentPoints = currentDoc.docs[0]?.data()?.points || 0;
+            const currentPoints = rewardPoints; // Use component state
             
             let newPoints = 0;
             if (operation === 'add') {
@@ -199,8 +198,6 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             await setDoc(userDocRef, { points: newPoints }, { merge: true });
         } catch (e) {
             console.error("Error updating points: ", e);
-            // Fallback for user document creation
-            await setDoc(userDocRef, { points: operation === 'add' ? points : 0 }, { merge: true });
         }
     }
 
@@ -208,20 +205,8 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         updateRewardPoints(points, 'add');
     }
 
-
-
     const deductRewardPoints = async (pointsToDeduct: number) => {
-        if (!user || !firestore) return;
-        const userDocRef = doc(firestore, `users/${user.uid}`);
-
-        try {
-            const currentDoc = await getDocs(query(collection(firestore, `users`), where("id", "==", user.uid)));
-            const currentPoints = currentDoc.docs[0]?.data()?.points || 0;
-            const newPoints = Math.max(0, currentPoints - pointsToDeduct);
-            await setDoc(userDocRef, { points: newPoints }, { merge: true });
-        } catch (e) {
-             console.error("Error deducting points: ", e);
-        }
+        await updateRewardPoints(pointsToDeduct, 'deduct');
     };
     
     const isLoading = isUserLoading || isDataLoading;

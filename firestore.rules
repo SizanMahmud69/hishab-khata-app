@@ -28,15 +28,8 @@ service cloud.firestore {
     }
     
     function isUpdatingAllowedUserFields() {
-      // List of fields a user is allowed to update on their own profile.
-      let allowedFields = [
-        'name', 'avatar', 'phone', 'address', 
-        'lastCheckIn', 'checkInStreak', 'verificationStatus',
-        'verificationRequestId', 'nidName', 'nidNumber', 'nidDob', 
-        'nidAddress', 'nidRejectionReason'
-      ];
       // A user cannot change their core identifiers or sensitive info.
-      let protectedFields = ['id', 'userId', 'email', 'joinDate', 'points'];
+      let protectedFields = ['id', 'userId', 'email', 'joinDate'];
       
       let incomingData = request.resource.data;
       
