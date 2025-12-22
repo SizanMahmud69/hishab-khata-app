@@ -1,10 +1,11 @@
+
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUser } from "@/firebase/provider";
-import { Mail, Phone, UserCheck, XCircle } from "lucide-react";
+import { Mail, Phone, UserCheck, XCircle, CheckCircle, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import {
@@ -18,19 +19,28 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge";
+
+interface NidData {
+    name: string;
+    nid: string;
+    phone: string;
+}
 
 export default function ProfilePage() {
   const { user } = useUser();
   const { toast } = useToast();
   const [isNidVerified, setIsNidVerified] = useState(false);
+  const [isVerificationPending, setIsVerificationPending] = useState(false);
+  const [nidData, setNidData] = useState<NidData | null>(null);
   const [isVerificationDialogOpen, setIsVerificationDialogOpen] = useState(false);
 
   const handleNidSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const name = formData.get('name');
-    const nid = formData.get('nid');
-    const phone = formData.get('phone');
+    const name = formData.get('name') as string;
+    const nid = formData.get('nid') as string;
+    const phone = formData.get('phone') as string;
 
     if (!name || !nid || !phone) {
       toast({
@@ -41,16 +51,19 @@ export default function ProfilePage() {
       return;
     }
     
-    // This is a placeholder for actual NID verification logic.
+    setIsVerificationPending(true);
+    setIsVerificationDialogOpen(false);
+    
     toast({
       title: "আবেদন জমা হয়েছে",
       description: "আপনার এনআইডি ভেরিফিকেশনের আবেদনটি প্রক্রিয়াধীন আছে।",
     });
 
-    setIsVerificationDialogOpen(false);
-    // Simulate verification for demonstration
+    // Simulate manual verification process
     setTimeout(() => {
       setIsNidVerified(true);
+      setIsVerificationPending(false);
+      setNidData({ name, nid, phone });
       toast({
         title: "এনআইডি ভেরিফাইড!",
         description: "আপনার অ্যাকাউন্টটি সফলভাবে ভেরিফাই করা হয়েছে।",
@@ -61,14 +74,18 @@ export default function ProfilePage() {
   return (
     <div className="flex-1 space-y-6">
       <Card className="overflow-hidden">
-        <div className="relative h-24 bg-primary/20">
-          <Avatar className="h-32 w-32 absolute top-1/2 left-1/2 -translate-x-1/2 border-4 border-background shadow-lg">
-              <AvatarImage src={user?.photoURL ?? "https://picsum.photos/seed/1/200/200"} alt="User avatar" data-ai-hint="profile avatar" />
-              <AvatarFallback className="text-4xl">{user?.displayName?.charAt(0) ?? 'U'}</AvatarFallback>
-          </Avatar>
+        <div className="h-24 bg-primary/20" />
+        <div className="relative -mt-16 flex justify-center">
+             <Avatar className="h-32 w-32 border-4 border-background shadow-lg">
+                <AvatarImage src={user?.photoURL ?? `https://i.pravatar.cc/150?u=${user?.email}`} alt="User avatar" data-ai-hint="profile avatar" />
+                <AvatarFallback className="text-4xl">{user?.displayName?.charAt(0) ?? 'U'}</AvatarFallback>
+            </Avatar>
         </div>
-        <CardContent className="text-center pt-20 pb-6 px-4 sm:px-6">
-            <h2 className="text-3xl font-bold">{user?.displayName ?? 'ব্যবহারকারী'}</h2>
+        <CardContent className="text-center pt-6 pb-6 px-4 sm:px-6">
+            <div className="flex items-center justify-center gap-2">
+                <h2 className="text-3xl font-bold">{user?.displayName ?? 'ব্যবহারকারী'}</h2>
+                {isNidVerified && <CheckCircle className="w-7 h-7 text-green-500" />}
+            </div>
         </CardContent>
       </Card>
 
@@ -81,7 +98,13 @@ export default function ProfilePage() {
                 <Mail className="w-6 h-6 text-muted-foreground" />
                 <div className="flex-1">
                      <p className="text-sm font-medium">ইমেইল</p>
-                     <p className="text-muted-foreground">{user?.email ?? 'ইমেইল পাওয়া যায়নি'}</p>
+                     <div className="flex items-center gap-2">
+                        <p className="text-muted-foreground">{user?.email ?? 'ইমেইল পাওয়া যায়নি'}</p>
+                        {user?.emailVerified ? 
+                            <Badge className="bg-green-100 text-green-800 border-green-300">ভেরিফাইড</Badge> : 
+                            <Badge variant="destructive">ভেরিফাইড নয়</Badge>
+                        }
+                     </div>
                 </div>
             </div>
 
@@ -94,6 +117,30 @@ export default function ProfilePage() {
             </div>
         </CardContent>
       </Card>
+      
+      {isNidVerified && nidData && (
+        <Card>
+            <CardHeader>
+                <CardTitle>ভেরিফাইড এনআইডি তথ্য</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                 <div className="flex items-center gap-4">
+                    <User className="w-6 h-6 text-muted-foreground" />
+                    <div className="flex-1">
+                         <p className="text-sm font-medium">নাম (এনআইডি অনুযায়ী)</p>
+                         <p className="text-muted-foreground">{nidData.name}</p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-4">
+                    <UserCheck className="w-6 h-6 text-muted-foreground" />
+                    <div className="flex-1">
+                        <p className="text-sm font-medium">এনআইডি নম্বর</p>
+                        <p className="text-muted-foreground">{nidData.nid}</p>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+      )}
 
        <Card>
         <CardHeader>
@@ -111,7 +158,7 @@ export default function ProfilePage() {
                         </div>
                     </>
                 ) : (
-                    <>
+                     <>
                         <XCircle className="w-8 h-8 text-red-500" />
                         <div>
                             <p className="font-semibold text-red-500">এনআইডি ভেরিফাইড নয়</p>
@@ -120,12 +167,12 @@ export default function ProfilePage() {
                     </>
                 )}
             </div>
-             {!isNidVerified && (
+             {(!isNidVerified) && (
                 <Dialog open={isVerificationDialogOpen} onOpenChange={setIsVerificationDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button>
+                    <Button disabled={isVerificationPending}>
                       <UserCheck className="mr-2 h-4 w-4" />
-                      এনআইডি ভেরিফাই করুন
+                      {isVerificationPending ? 'প্রসেসিং...' : 'এনআইডি ভেরিফাই করুন'}
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-[425px]">
@@ -138,8 +185,8 @@ export default function ProfilePage() {
                     <form onSubmit={handleNidSubmit}>
                         <div className="grid gap-4 py-4">
                           <div className="space-y-1.5">
-                            <Label htmlFor="name">পুরো নাম</Label>
-                            <Input id="name" name="name" placeholder="এনআইডি অনুযায়ী নাম" required />
+                            <Label htmlFor="name">পুরো নাম (এনআইডি অনুযায়ী)</Label>
+                            <Input id="name" name="name" placeholder="আপনার পুরো নাম লিখুন" required />
                           </div>
                           <div className="space-y-1.5">
                             <Label htmlFor="nid">এনআইডি নম্বর</Label>
