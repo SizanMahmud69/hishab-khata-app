@@ -52,7 +52,8 @@ export default function LoginPage() {
       let errorMessage = "লগইন করার সময় একটি সমস্যা হয়েছে।";
       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
         errorMessage = "আপনার দেওয়া ইমেইল অথবা পাসওয়ার্ড সঠিক নয়।";
-        console.error("Login Error:", error.message);
+        // Log only the message to the console to avoid the overlay in dev mode
+        console.error(error.message);
       } else if (error.code === 'auth/invalid-email') {
         errorMessage = "অনুগ্রহ করে একটি সঠিক ইমেইল ঠিকানা দিন।";
       }
