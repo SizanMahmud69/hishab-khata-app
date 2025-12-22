@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUser } from "@/firebase/provider";
-import { Mail, Phone, UserCheck, XCircle, CheckCircle, User } from "lucide-react";
+import { Mail, Phone, UserCheck, XCircle, CheckCircle, User, MapPin, Cake } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import {
@@ -25,6 +25,8 @@ interface NidData {
     name: string;
     nid: string;
     phone: string;
+    dob: string;
+    address: string;
 }
 
 export default function ProfilePage() {
@@ -41,8 +43,10 @@ export default function ProfilePage() {
     const name = formData.get('name') as string;
     const nid = formData.get('nid') as string;
     const phone = formData.get('phone') as string;
+    const dob = formData.get('dob') as string;
+    const address = formData.get('address') as string;
 
-    if (!name || !nid || !phone) {
+    if (!name || !nid || !phone || !dob || !address) {
       toast({
         variant: "destructive",
         title: "ফর্ম পূরণ আবশ্যক",
@@ -63,7 +67,7 @@ export default function ProfilePage() {
     setTimeout(() => {
       setIsNidVerified(true);
       setIsVerificationPending(false);
-      setNidData({ name, nid, phone });
+      setNidData({ name, nid, phone, dob, address });
       toast({
         title: "এনআইডি ভেরিফাইড!",
         description: "আপনার অ্যাকাউন্টটি সফলভাবে ভেরিফাই করা হয়েছে।",
@@ -94,8 +98,8 @@ export default function ProfilePage() {
             <CardTitle>যোগাযোগের তথ্য</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-             <div className="flex items-center gap-4">
-                <Mail className="w-6 h-6 text-muted-foreground" />
+             <div className="flex items-start gap-4">
+                <Mail className="w-6 h-6 text-muted-foreground mt-1" />
                 <div className="flex-1">
                      <p className="text-sm font-medium">ইমেইল</p>
                      <div className="flex items-center gap-2">
@@ -108,11 +112,18 @@ export default function ProfilePage() {
                 </div>
             </div>
 
-            <div className="flex items-center gap-4">
-                <Phone className="w-6 h-6 text-muted-foreground" />
+            <div className="flex items-start gap-4">
+                <Phone className="w-6 h-6 text-muted-foreground mt-1" />
                 <div className="flex-1">
                     <p className="text-sm font-medium">ফোন নম্বর</p>
-                    <p className="text-muted-foreground">{user?.phoneNumber ?? 'ফোন নম্বর সেট করা নেই'}</p>
+                    <p className="text-muted-foreground">{nidData?.phone ?? user?.phoneNumber ?? 'ফোন নম্বর সেট করা নেই'}</p>
+                </div>
+            </div>
+             <div className="flex items-start gap-4">
+                <MapPin className="w-6 h-6 text-muted-foreground mt-1" />
+                <div className="flex-1">
+                    <p className="text-sm font-medium">ঠিকানা</p>
+                    <p className="text-muted-foreground">{nidData?.address ?? 'ঠিকানা সেট করা নেই'}</p>
                 </div>
             </div>
         </CardContent>
@@ -126,18 +137,32 @@ export default function ProfilePage() {
         <CardContent>
             {isNidVerified && nidData ? (
                  <div className="space-y-4">
-                     <div className="flex items-center gap-4">
-                        <User className="w-6 h-6 text-muted-foreground" />
+                     <div className="flex items-start gap-4">
+                        <User className="w-6 h-6 text-muted-foreground mt-1" />
                         <div className="flex-1">
                              <p className="text-sm font-medium">নাম (এনআইডি অনুযায়ী)</p>
                              <p className="text-muted-foreground">{nidData.name}</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                        <UserCheck className="w-6 h-6 text-muted-foreground" />
+                    <div className="flex items-start gap-4">
+                        <UserCheck className="w-6 h-6 text-muted-foreground mt-1" />
                         <div className="flex-1">
                             <p className="text-sm font-medium">এনআইডি নম্বর</p>
                             <p className="text-muted-foreground">{nidData.nid}</p>
+                        </div>
+                    </div>
+                    <div className="flex items-start gap-4">
+                        <Cake className="w-6 h-6 text-muted-foreground mt-1" />
+                        <div className="flex-1">
+                            <p className="text-sm font-medium">জন্ম তারিখ</p>
+                            <p className="text-muted-foreground">{new Date(nidData.dob).toLocaleDateString('bn-BD')}</p>
+                        </div>
+                    </div>
+                    <div className="flex items-start gap-4">
+                        <MapPin className="w-6 h-6 text-muted-foreground mt-1" />
+                        <div className="flex-1">
+                            <p className="text-sm font-medium">ঠিকানা (এনআইডি অনুযায়ী)</p>
+                            <p className="text-muted-foreground">{nidData.address}</p>
                         </div>
                     </div>
                 </div>
@@ -165,7 +190,7 @@ export default function ProfilePage() {
                           </DialogDescription>
                         </DialogHeader>
                         <form onSubmit={handleNidSubmit}>
-                            <div className="grid gap-4 py-4">
+                            <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto px-2">
                               <div className="space-y-1.5">
                                 <Label htmlFor="name">পুরো নাম (এনআইডি অনুযায়ী)</Label>
                                 <Input id="name" name="name" placeholder="আপনার পুরো নাম লিখুন" required />
@@ -174,12 +199,20 @@ export default function ProfilePage() {
                                 <Label htmlFor="nid">এনআইডি নম্বর</Label>
                                 <Input id="nid" name="nid" type="number" placeholder="আপনার এনআইডি নম্বর" required />
                               </div>
+                               <div className="space-y-1.5">
+                                <Label htmlFor="dob">জন্ম তারিখ</Label>
+                                <Input id="dob" name="dob" type="date" required />
+                              </div>
                               <div className="space-y-1.5">
                                 <Label htmlFor="phone">ফোন নম্বর</Label>
                                 <Input id="phone" name="phone" placeholder="আপনার ফোন নম্বর" required />
                               </div>
+                              <div className="space-y-1.5">
+                                <Label htmlFor="address">ঠিকানা</Label>
+                                <Input id="address" name="address" placeholder="আপনার ঠিকানা লিখুন" required />
+                              </div>
                             </div>
-                            <DialogFooter>
+                            <DialogFooter className="pt-4">
                               <Button type="submit">জমা দিন</Button>
                             </DialogFooter>
                         </form>
