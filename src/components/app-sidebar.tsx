@@ -4,7 +4,6 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
   Award,
-  BookMarked,
   HandCoins,
   History,
   LayoutDashboard,
@@ -12,19 +11,13 @@ import {
   MinusCircle,
   PlusCircle,
   Store,
-  Target,
-  User,
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarFooter,
   SidebarSeparator,
 } from "@/components/ui/sidebar"
 import { ScrollArea } from "./ui/scroll-area"
