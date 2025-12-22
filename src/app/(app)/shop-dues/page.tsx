@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -51,12 +52,12 @@ export default function ShopDuesPage() {
     const handleAddNewDue = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
-        const customerName = formData.get('customerName') as string;
+        const shopName = formData.get('shopName') as string;
         const amount = Number(formData.get('amount'));
         const date = formData.get('date') as string;
         const description = formData.get('description') as string;
 
-        if (!customerName || !amount || !date) {
+        if (!shopName || !amount || !date) {
             toast({
                 variant: "destructive",
                 title: "ফর্ম পূরণ আবশ্যক",
@@ -67,7 +68,7 @@ export default function ShopDuesPage() {
 
         const newDue: ShopDue = {
             id: Date.now(),
-            customerName,
+            shopName,
             amount,
             date,
             description,
@@ -145,7 +146,7 @@ export default function ShopDuesPage() {
 
   return (
     <div className="flex-1 space-y-4">
-      <PageHeader title="দোকানের বাকি" description="আপনার দোকানের বাকির সমস্ত হিসাব রাখুন।">
+      <PageHeader title="আমার দোকানের বাকি" description="বিভিন্ন দোকানে আপনার বাকির হিসাব রাখুন।">
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -157,14 +158,14 @@ export default function ShopDuesPage() {
             <DialogHeader>
               <DialogTitle>নতুন বাকির হিসাব</DialogTitle>
               <DialogDescription>
-                গ্রাহকের নাম এবং বাকির পরিমাণ লিখুন।
+                দোকানের নাম এবং বাকির পরিমাণ লিখুন।
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleAddNewDue}>
                 <div className="grid gap-4 py-4 px-1 max-h-[70vh] overflow-y-auto">
                     <div className="space-y-1.5">
-                        <Label htmlFor="customerName">গ্রাহকের নাম</Label>
-                        <Input id="customerName" name="customerName" placeholder="রহিম শেখ" required />
+                        <Label htmlFor="shopName">দোকানের নাম</Label>
+                        <Input id="shopName" name="shopName" placeholder="করিম স্টোর" required />
                     </div>
                     <div className="space-y-1.5">
                         <Label htmlFor="amount">পরিমাণ</Label>
@@ -190,22 +191,22 @@ export default function ShopDuesPage() {
       <div className="grid grid-cols-2 gap-4">
         <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">মোট বাকি</CardTitle>
+                <CardTitle className="text-sm font-medium">মোট বাকি আছে</CardTitle>
                 <ShoppingBag className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
                 <div className="text-2xl font-bold text-red-500">{formatCurrency(totalRemainingDue)}</div>
-                <p className="text-xs text-muted-foreground">এখনও আদায় হয়নি</p>
+                <p className="text-xs text-muted-foreground">এখনও পরিশোধ করা হয়নি</p>
             </CardContent>
         </Card>
         <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">মোট আদায় হয়েছে</CardTitle>
+                <CardTitle className="text-sm font-medium">মোট পরিশোধ হয়েছে</CardTitle>
                 <Banknote className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
                 <div className="text-2xl font-bold text-green-500">{formatCurrency(totalPaidAmount)}</div>
-                <p className="text-xs text-muted-foreground">এই পর্যন্ত মোট আদায়</p>
+                <p className="text-xs text-muted-foreground">এই পর্যন্ত মোট পরিশোধ</p>
             </CardContent>
         </Card>
       </div>
@@ -216,7 +217,7 @@ export default function ShopDuesPage() {
                 <CardContent className="p-4">
                    <div className="flex justify-between items-start">
                         <div>
-                            <p className="font-semibold">{due.customerName}</p>
+                            <p className="font-semibold">{due.shopName}</p>
                             <p className="text-sm text-muted-foreground">{new Date(due.date).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                         </div>
                         <span className={cn(
@@ -255,7 +256,7 @@ export default function ShopDuesPage() {
                 <DialogHeader>
                     <DialogTitle>পরিশোধ নিশ্চিত করুন</DialogTitle>
                     <DialogDescription>
-                        {selectedDue?.customerName} এর থেকে প্রাপ্ত পরিমাণ লিখুন।
+                        {selectedDue?.shopName} কে পরিশোধ করার জন্য পরিমাণ লিখুন।
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
@@ -316,3 +317,5 @@ function DuesSkeleton() {
         </div>
     );
 }
+
+    

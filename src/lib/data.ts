@@ -13,7 +13,7 @@ export interface Debt {
 
 export interface ShopDue {
   id: number;
-  customerName: string;
+  shopName: string;
   amount: number;
   paidAmount: number;
   date: string;
@@ -48,9 +48,9 @@ export const debts: Debt[] = [
 ];
 
 export const initialShopDues: ShopDue[] = [
-    { id: 1, customerName: 'করিম স্টোর', amount: 1250, paidAmount: 500, date: '2024-07-25', status: 'partially-paid', description: 'মাসিক সদাই' },
-    { id: 2, customerName: 'রহমান সাহেব', amount: 780, paidAmount: 780, type: 'borrowed', date: '2024-07-22', status: 'paid' },
-    { id: 3, customerName: 'সালাম ব্রাদার্স', amount: 2100, paidAmount: 0, type: 'lent', date: '2024-07-28', status: 'unpaid', description: 'জরুরী মালপত্র' },
+    { id: 1, shopName: 'করিম স্টোর', amount: 1250, paidAmount: 500, date: '2024-07-25', status: 'partially-paid', description: 'মাসিক সদাই' },
+    { id: 2, shopName: 'রহমান ট্রেডার্স', amount: 780, paidAmount: 780, date: '2024-07-22', status: 'paid' },
+    { id: 3, shopName: 'সালাম ব্রাদার্স', amount: 2100, paidAmount: 0, date: '2024-07-28', status: 'unpaid', description: 'জরুরী মালপত্র' },
 ];
 
 
@@ -68,5 +68,8 @@ export const expenseCategories = ['খাবার', 'বাজার', 'যা�
 export const incomeSources = ['মাসিক বেতন', 'ফ্রিল্যান্সিং', 'ব্যবসা', 'সঞ্চয় উত্তোলন', 'ধার গ্রহণ', 'অন্যান্য'];
 
     
+
+    
+
 
     
