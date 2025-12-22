@@ -14,6 +14,7 @@ export interface Income {
     date: string;
     description?: string;
     createdAt?: any;
+    userId?: string;
 }
 
 export interface Expense {
@@ -23,6 +24,7 @@ export interface Expense {
     amount: number;
     description: string;
     createdAt: any;
+    userId: string;
 }
 
 export interface Saving {
@@ -31,6 +33,7 @@ export interface Saving {
     description: string;
     amount: number;
     createdAt: any;
+    userId: string;
 }
 
 interface BudgetContextType {
@@ -41,9 +44,9 @@ interface BudgetContextType {
     shopDues: ShopDue[];
     setDebts: (debts: Debt[]) => Promise<void>;
     setShopDues: (shopDues: ShopDue[]) => Promise<void>;
-    addIncome: (income: Omit<Income, 'id' | 'createdAt'>) => Promise<void>;
-    addExpense: (expense: Omit<Expense, 'id' | 'createdAt'>) => Promise<void>;
-    addSaving: (saving: Omit<Saving, 'id' | 'createdAt'>) => Promise<void>;
+    addIncome: (income: Omit<Income, 'id' | 'createdAt' | 'userId'>) => Promise<void>;
+    addExpense: (expense: Omit<Expense, 'id' | 'createdAt' | 'userId'>) => Promise<void>;
+    addSaving: (saving: Omit<Saving, 'id' | 'createdAt' | 'userId'>) => Promise<void>;
     addDebt: (debt: Omit<Debt, 'id'>) => Promise<void>;
     updateDebt: (debt: Debt) => Promise<void>;
     addShopDue: (shopDue: Omit<ShopDue, 'id'>) => Promise<void>;
@@ -158,18 +161,18 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
 
     const addDocToCollection = async (collectionName: string, data: any) => {
         if (!user) throw new Error("User not logged in");
-        await addDoc(getCollectionRef(collectionName), { ...data, createdAt: serverTimestamp(), userId: user.uid });
+        await addDoc(getCollectionRef(collectionName), { ...data, userId: user.uid, createdAt: serverTimestamp() });
     }
     
-    const addIncome = async (newIncome: Omit<Income, 'id' | 'createdAt'>) => {
+    const addIncome = async (newIncome: Omit<Income, 'id' | 'createdAt' | 'userId'>) => {
         await addDocToCollection('income', newIncome);
     };
 
-    const addExpense = async (newExpense: Omit<Expense, 'id' | 'createdAt'>) => {
+    const addExpense = async (newExpense: Omit<Expense, 'id' | 'createdAt' | 'userId'>) => {
         await addDocToCollection('expenses', newExpense);
     };
 
-    const addSaving = async (newSaving: Omit<Saving, 'id' | 'createdAt'>) => {
+    const addSaving = async (newSaving: Omit<Saving, 'id' | 'createdAt' | 'userId'>) => {
        await addDocToCollection('savings', newSaving);
     }
     
