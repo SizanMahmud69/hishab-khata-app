@@ -23,6 +23,8 @@ export default function RegisterPage() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [referralId, setReferralId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
@@ -31,6 +33,16 @@ export default function RegisterPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+
+    if (password !== confirmPassword) {
+        toast({
+            variant: "destructive",
+            title: "পাসওয়ার্ড মেলেনি",
+            description: "আপনার দেওয়া পাসওয়ার্ড এবং কনফার্ম পাসওয়ার্ড একই নয়।",
+        });
+        setIsLoading(false);
+        return;
+    }
 
     if (!auth) {
         toast({
@@ -134,6 +146,27 @@ export default function RegisterPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="confirm-password">কনফার্ম পাসওয়ার্ড</Label>
+                <Input 
+                  id="confirm-password" 
+                  type="password" 
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
+               <div className="space-y-1.5">
+                <Label htmlFor="referral-id">রেফার আইডি (ঐচ্ছিক)</Label>
+                <Input 
+                  id="referral-id" 
+                  placeholder="রেফারেল আইডি"
+                  value={referralId}
+                  onChange={(e) => setReferralId(e.target.value)}
                   disabled={isLoading}
                 />
               </div>
