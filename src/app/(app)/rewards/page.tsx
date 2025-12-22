@@ -20,14 +20,31 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { createNotification } from '@/components/app-header';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase/provider';
+import { doc } from 'firebase/firestore';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const WITHDRAW_THRESHOLD = 1000;
 const CONVERSION_RATE = 1; // 1 point = 1 BDT
 
+interface UserProfile {
+    rewardPoints?: number;
+}
+
 export default function RewardsPage() {
-    const { rewardPoints, deductRewardPoints } = useBudget();
+    const { deductRewardPoints } = useBudget();
     const { toast } = useToast();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const { user } = useUser();
+    const firestore = useFirestore();
+
+    const userDocRef = useMemoFirebase(() => {
+        if (!user || !firestore) return null;
+        return doc(firestore, 'users', user.uid);
+    }, [user, firestore]);
+
+    const { data: userProfile, isLoading } = useDoc<UserProfile>(userDocRef);
+    const rewardPoints = userProfile?.rewardPoints ?? 0;
 
     const canWithdraw = rewardPoints >= WITHDRAW_THRESHOLD;
     const withdrawableAmount = Math.floor(rewardPoints) * CONVERSION_RATE;
@@ -48,6 +65,16 @@ export default function RewardsPage() {
         });
         setIsDialogOpen(false);
     }
+
+  if (isLoading) {
+    return (
+        <div className="flex-1 space-y-4">
+            <PageHeader title="রিওয়ার্ড" description="আপনার অর্জিত রিওয়ার্ড এবং পয়েন্ট দেখুন।" />
+            <Skeleton className="h-48 w-full" />
+            <Skeleton className="h-60 w-full" />
+        </div>
+    )
+  }
 
   return (
     <div className="flex-1 space-y-4">

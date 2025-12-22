@@ -187,6 +187,17 @@ service cloud.firestore {
         allow update: if isExistingOwner(userId) && isUpdatingConsistentChild();
         allow delete: if isExistingOwner(userId);
       }
+
+       /**
+       * @description Controls access to a user's check-in history.
+       * @path /users/{userId}/checkIns/{checkInId}
+       */
+      match /checkIns/{checkInId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update: if isExistingOwner(userId);
+        allow delete: if isExistingOwner(userId);
+      }
     }
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import PageHeader from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -8,69 +8,85 @@ import { CheckCircle, Gift, Star, History } from "lucide-react"
 import { useBudget } from "@/context/budget-context";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { format } from 'date-fns';
+import { format, isToday, isYesterday, parseISO } from 'date-fns';
 import { bn } from 'date-fns/locale';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase/provider';
+import { collection, addDoc, serverTimestamp, query, orderBy, limit } from 'firebase/firestore';
 
 const MAX_STREAK_DAYS = 30;
 const BASE_REWARD = 5;
 
 interface CheckInRecord {
-    date: string;
+    id: string;
+    date: string; // ISO String
     points: number;
+    createdAt: any;
 }
 
 export default function CheckInPage() {
-    const [lastCheckInDate, setLastCheckInDate] = useState<string | null>(null);
-    const [consecutiveDays, setConsecutiveDays] = useState(0);
-    const [history, setHistory] = useState<CheckInRecord[]>([]);
     const { addRewardPoints } = useBudget();
     const { toast } = useToast();
+    const { user } = useUser();
+    const firestore = useFirestore();
+
+    const checkInsQuery = useMemoFirebase(() => {
+        if (!user || !firestore) return null;
+        return query(collection(firestore, `users/${user.uid}/checkIns`), orderBy("createdAt", "desc"), limit(30));
+    }, [user, firestore]);
     
-    useEffect(() => {
-        const storedDate = localStorage.getItem('lastCheckInDate');
-        const storedStreak = localStorage.getItem('consecutiveCheckInDays');
-        const storedHistory = localStorage.getItem('checkInHistory');
+    const { data: history, isLoading } = useCollection<CheckInRecord>(checkInsQuery);
+
+    const { lastCheckInDate, consecutiveDays, isCheckedInToday } = useMemo(() => {
+        if (!history || history.length === 0) {
+            return { lastCheckInDate: null, consecutiveDays: 0, isCheckedInToday: false };
+        }
+
+        const latestCheckIn = history[0];
+        const lastDate = parseISO(latestCheckIn.date);
+        const today = new Date();
+
+        const checkedInToday = isToday(lastDate);
         
-        if (storedHistory) {
-            setHistory(JSON.parse(storedHistory));
-        }
+        let streak = 0;
+        if (checkedInToday || isYesterday(lastDate)) {
+            streak = 1;
+            let lastStreakDate = lastDate;
 
-        if (storedDate && storedStreak) {
-            const lastDate = new Date(storedDate);
-            const today = new Date();
-            const yesterday = new Date();
-            yesterday.setDate(today.getDate() - 1);
+            for (let i = 1; i < history.length; i++) {
+                const currentCheckInDate = parseISO(history[i].date);
+                const expectedPreviousDate = new Date(lastStreakDate);
+                expectedPreviousDate.setDate(lastStreakDate.getDate() - 1);
 
-            if (lastDate.toDateString() === yesterday.toDateString()) {
-                setConsecutiveDays(parseInt(storedStreak, 10));
-            } else if (lastDate.toDateString() !== today.toDateString()) {
-                setConsecutiveDays(0);
-            } else {
-                 setConsecutiveDays(parseInt(storedStreak, 10));
+                if (currentCheckInDate.toDateString() === expectedPreviousDate.toDateString()) {
+                    streak++;
+                    lastStreakDate = currentCheckInDate;
+                } else {
+                    break; 
+                }
             }
-            setLastCheckInDate(storedDate);
-        } else {
-            setConsecutiveDays(0);
         }
-    }, []);
+        
+        // If they checked in yesterday but not today, the streak is valid. If they checked in today, the streak is also valid.
+        // If the last check-in was before yesterday, the streak is 0.
+        const lastCheckInIsOlderThanYesterday = !isToday(lastDate) && !isYesterday(lastDate);
+        
+        return {
+            lastCheckInDate: latestCheckIn.date,
+            consecutiveDays: lastCheckInIsOlderThanYesterday ? 0 : streak,
+            isCheckedInToday: checkedInToday,
+        };
 
-    const isCheckedInToday = () => {
-        if (!lastCheckInDate) return false;
-        const today = new Date().toDateString();
-        const lastDate = new Date(lastCheckInDate).toDateString();
-        return today === lastDate;
-    };
+    }, [history]);
 
     const calculateReward = (streak: number) => {
-        // The streak passed is the *new* streak after today's check-in
         const effectiveStreak = Math.min(streak, MAX_STREAK_DAYS);
         return effectiveStreak * BASE_REWARD;
     };
     
     const rewardForToday = calculateReward(consecutiveDays + 1);
 
-    const handleCheckIn = () => {
-        if (isCheckedInToday()) {
+    const handleCheckIn = async () => {
+        if (isCheckedInToday || !user || !firestore) {
             toast({
                 variant: "destructive",
                 title: "ইতিমধ্যে চেক-ইন করেছেন",
@@ -85,23 +101,30 @@ export default function CheckInPage() {
         addRewardPoints(points);
 
         const today = new Date();
-        const todayISO = today.toISOString();
-        localStorage.setItem('lastCheckInDate', todayISO);
-        localStorage.setItem('consecutiveCheckInDays', newConsecutiveDays.toString());
-        
-        // Update history
-        const newHistoryRecord: CheckInRecord = { date: todayISO, points };
-        const updatedHistory = [newHistoryRecord, ...history];
-        localStorage.setItem('checkInHistory', JSON.stringify(updatedHistory));
-        setHistory(updatedHistory);
+        const newCheckIn = {
+            date: today.toISOString(),
+            points: points,
+        };
 
-        setLastCheckInDate(todayISO);
-        setConsecutiveDays(newConsecutiveDays);
+        try {
+            const collectionRef = collection(firestore, `users/${user.uid}/checkIns`);
+            await addDoc(collectionRef, {
+                ...newCheckIn,
+                createdAt: serverTimestamp(),
+            });
 
-        toast({
-            title: "অভিনন্দন!",
-            description: `আপনি ${points} পয়েন্ট অর্জন করেছেন। আপনার ধারাবাহিক চেক-ইন ${newConsecutiveDays} দিন!`,
-        });
+            toast({
+                title: "অভিনন্দন!",
+                description: `আপনি ${points} পয়েন্ট অর্জন করেছেন। আপনার ধারাবাহিক চেক-ইন ${newConsecutiveDays} দিন!`,
+            });
+        } catch (error) {
+            console.error("Error adding check-in:", error);
+            toast({
+                variant: "destructive",
+                title: "ত্রুটি",
+                description: "চেক-ইন করার সময় একটি সমস্যা হয়েছে।",
+            });
+        }
     }
 
   return (
@@ -115,7 +138,9 @@ export default function CheckInPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="text-center p-8">
-            {isCheckedInToday() ? (
+            {isLoading ? (
+                <p>লোড হচ্ছে...</p>
+            ) : isCheckedInToday ? (
                 <div className="flex flex-col items-center gap-4">
                     <CheckCircle className="w-16 h-16 text-green-500" />
                     <p className="font-semibold text-lg">আজকের জন্য আপনার চেক-ইন সম্পন্ন!</p>
@@ -150,7 +175,7 @@ export default function CheckInPage() {
             <CardDescription>আপনার সাম্প্রতিক চেক-ইন রেকর্ড।</CardDescription>
         </CardHeader>
         <CardContent>
-            {history.length > 0 ? (
+            {history && history.length > 0 ? (
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -162,7 +187,7 @@ export default function CheckInPage() {
                         {history.slice(0, 7).map((record, index) => (
                             <TableRow key={index}>
                                 <TableCell className='font-medium'>
-                                    {format(new Date(record.date), "d MMMM, yyyy", { locale: bn })}
+                                    {format(parseISO(record.date), "d MMMM, yyyy", { locale: bn })}
                                 </TableCell>
                                 <TableCell className='text-right font-semibold text-primary'>+{record.points}</TableCell>
                             </TableRow>

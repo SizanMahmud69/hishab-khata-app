@@ -252,6 +252,32 @@
         "date",
         "loanType"
       ]
+    },
+     "CheckIn": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CheckIn",
+      "type": "object",
+      "description": "Represents a daily check-in record for a user.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the check-in record."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N CheckIn)"
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The ISO 8601 timestamp of the check-in."
+        },
+        "points": {
+          "type": "number",
+          "description": "Points awarded for this check-in."
+        }
+      },
+      "required": ["id", "userId", "date", "points"]
     }
   },
   "auth": {
@@ -377,9 +403,28 @@
             }
           ]
         }
+      },
+      {
+        "path": "/users/{userId}/checkIns/{checkInId}",
+        "definition": {
+          "entityName": "CheckIn",
+          "schema": {
+            "$ref": "#/backend/entities/CheckIn"
+          },
+          "description": "Stores daily check-in records for a user to track streaks and rewards. Path-based ownership ensures privacy.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "checkInId",
+              "description": "The unique identifier for the check-in record."
+            }
+          ]
+        }
       }
     ],
     "reasoning": "The Firestore structure is designed to be secure, scalable, and debuggable, adhering to the core design principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), QAPs (Rules are not Filters), and Invariants. The primary strategy is to ensure Authorization Independence via Denormalization, which avoids hierarchical authorization dependencies and allows atomic operations.  Structural Segregation is used to maintain a homogeneous security posture within collections.  Access Modeling employs path-based ownership for private user data. The error reported (auth/configuration-not-found) indicates a Firebase configuration issue, not a data structure issue, but I will still provide the data structure according to your requirements. All User-related data will be stored under the /users/{userId} collection to ensure only the user has access to their information unless collaborative features are added in the future which would require membership maps. The user ID is automatically generated upon account creation, allowing data to be secured using rules based on request.auth.uid. This data structure supports QAPs by ensuring clear ownership and access patterns, enabling efficient list operations without compromising security."
   }
 }
-    

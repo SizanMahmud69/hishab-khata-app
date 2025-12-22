@@ -225,18 +225,21 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     
     const updateRewardPoints = async (points: number) => {
         if (!user || !firestore) return;
+        const currentPoints = rewardPoints;
+        const newPoints = currentPoints + points;
         const userDocRef = doc(firestore, `users/${user.uid}`);
-        await setDoc(userDocRef, { rewardPoints: points }, { merge: true });
+        await setDoc(userDocRef, { rewardPoints: newPoints }, { merge: true });
     }
 
     const addRewardPoints = (points: number) => {
-        const newPoints = rewardPoints + points;
-        updateRewardPoints(newPoints);
+        updateRewardPoints(points);
     }
 
     const deductRewardPoints = (points: number) => {
         const newPoints = Math.max(0, rewardPoints - points);
-        updateRewardPoints(newPoints);
+        if (!user || !firestore) return;
+        const userDocRef = doc(firestore, `users/${user.uid}`);
+        setDoc(userDocRef, { rewardPoints: newPoints }, { merge: true });
     }
     
     const isLoading = isUserLoading || isDataLoading;
