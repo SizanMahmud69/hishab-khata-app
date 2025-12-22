@@ -3,7 +3,7 @@ import Link from "next/link"
 import { type ReactNode, useState, useEffect } from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
-import { Bell, BookMarked, Menu, CalendarDays, Check } from "lucide-react"
+import { Bell, BookMarked, Menu, CalendarDays } from "lucide-react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet"
 import {
     DropdownMenu,
@@ -13,7 +13,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Separator } from "@/components/ui/separator"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 
 interface Notification {
@@ -33,23 +33,30 @@ export function AppHeader({children}: {children: ReactNode}) {
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [isCheckedIn, setIsCheckedIn] = useState(false);
     const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
 
     useEffect(() => {
         const storedNotifications = localStorage.getItem('notifications');
-        if (storedNotifications) {
-            setNotifications(JSON.parse(storedNotifications));
-        } else {
-            setNotifications(initialNotifications);
-            localStorage.setItem('notifications', JSON.stringify(initialNotifications));
+        const data = storedNotifications ? JSON.parse(storedNotifications) : initialNotifications;
+        setNotifications(data);
+        if (!storedNotifications) {
+            localStorage.setItem('notifications', JSON.stringify(data));
+        }
+
+        const handleStorageChange = () => {
+            const updatedStorage = localStorage.getItem('notifications');
+            if (updatedStorage) {
+                setNotifications(JSON.parse(updatedStorage));
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
         }
     }, []);
 
-    useEffect(() => {
-        if(notifications.length > 0) {
-            localStorage.setItem('notifications', JSON.stringify(notifications));
-        }
-    }, [notifications]);
-    
     const notificationCount = notifications.filter(n => !n.read).length;
 
     useEffect(() => {
@@ -77,9 +84,19 @@ export function AppHeader({children}: {children: ReactNode}) {
     const handleLinkClick = () => {
         setIsSheetOpen(false);
     }
+    
+    const handleNotificationClick = (notification: Notification) => {
+        setSelectedNotification(notification);
+        if (!notification.read) {
+            markAsRead(notification.id);
+        }
+    }
 
     const markAsRead = (id: number) => {
-        setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+        const updatedNotifications = notifications.map(n => n.id === id ? { ...n, read: true } : n);
+        setNotifications(updatedNotifications);
+        localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
+        window.dispatchEvent(new Event('storage'));
     }
 
     return (
@@ -135,15 +152,11 @@ export function AppHeader({children}: {children: ReactNode}) {
                             <DropdownMenuSeparator />
                              {notificationCount > 0 ? (
                                 notifications.filter(n => !n.read).map(notification => (
-                                    <DropdownMenuItem key={notification.id} className="flex items-start justify-between gap-2" onSelect={(e) => e.preventDefault()}>
+                                    <DropdownMenuItem key={notification.id} onSelect={() => handleNotificationClick(notification)}>
                                         <div className="flex flex-col gap-1">
                                             <p className="font-semibold">{notification.title}</p>
                                             <p className="text-xs text-muted-foreground">{notification.description}</p>
                                         </div>
-                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => markAsRead(notification.id)}>
-                                            <Check className="h-4 w-4" />
-                                            <span className="sr-only">Mark as read</span>
-                                        </Button>
                                     </DropdownMenuItem>
                                 ))
                              ) : (
@@ -165,6 +178,19 @@ export function AppHeader({children}: {children: ReactNode}) {
             <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-background">
                 {children}
             </main>
+            <Dialog open={!!selectedNotification} onOpenChange={(isOpen) => !isOpen && setSelectedNotification(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{selectedNotification?.title}</DialogTitle>
+                        <DialogDescription>
+                            {selectedNotification?.description}
+                        </DialogDescription>
+                    </DialogHeader>
+                     <div className="mt-4 text-sm text-muted-foreground">
+                        নোটিফিকেশনটি পঠিত হিসেবে চিহ্নিত করা হয়েছে।
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
