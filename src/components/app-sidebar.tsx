@@ -117,14 +117,6 @@ export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
             </Link>
             <SidebarMenu>
                 <SidebarMenuItem>
-                    <SidebarMenuButton asChild tooltip="সাপোর্ট" size="lg">
-                        <Link href="#" onClick={onLinkClick}>
-                            <LifeBuoy />
-                            <span>সাপোর্ট</span>
-                        </Link>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
                     <SidebarMenuButton asChild tooltip="লগআউট" size="lg" onClick={handleLogout}>
                         <Link href="/login">
                             <LogOut />
