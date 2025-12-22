@@ -18,7 +18,7 @@ import { useBudget } from "@/context/budget-context";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { incomeSources } from "@/lib/data";
+import { incomeSources, savingsDestinations } from "@/lib/data";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const months = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
@@ -37,7 +37,7 @@ export default function IncomePage() {
         const date = formData.get('date') as string;
         const descriptionInput = formData.get('description') as string;
 
-        if (!source || !amount || !date || (selectedSource === 'মাসিক বেতন' && !descriptionInput)) {
+        if (!source || !amount || !date || ((selectedSource === 'মাসিক বেতন' || selectedSource === 'সঞ্চয় উত্তোলন') && !descriptionInput)) {
             toast({
                 variant: "destructive",
                 title: "ফর্ম পূরণ আবশ্যক",
@@ -46,11 +46,18 @@ export default function IncomePage() {
             return;
         }
 
+        let description = descriptionInput;
+        if (selectedSource === 'মাসিক বেতন') {
+            description = `${descriptionInput} মাসের বেতন`;
+        } else if (selectedSource === 'সঞ্চয় উত্তোলন') {
+            description = `${descriptionInput} থেকে উত্তোলন`;
+        }
+
         const newIncome = {
             source,
             amount,
             date,
-            description: selectedSource === 'মাসিক বেতন' ? `${descriptionInput} মাসের বেতন` : descriptionInput,
+            description,
         };
 
         await addIncome(newIncome);
@@ -117,6 +124,15 @@ export default function IncomePage() {
                         </SelectTrigger>
                         <SelectContent>
                             {months.map(month => <SelectItem key={month} value={month}>{month}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                ) : selectedSource === 'সঞ্চয় উত্তোলন' ? (
+                     <Select name="description" required>
+                        <SelectTrigger>
+                            <SelectValue placeholder="একটি মাধ্যম নির্বাচন করুন" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {savingsDestinations.map(dest => <SelectItem key={dest} value={dest}>{dest}</SelectItem>)}
                         </SelectContent>
                     </Select>
                 ) : (
