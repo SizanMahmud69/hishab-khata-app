@@ -30,11 +30,11 @@ service cloud.firestore {
     function isUpdatingAllowedUserFields() {
       // A user cannot change their core identifiers or sensitive info.
       let protectedFields = ['id', 'userId', 'email', 'joinDate'];
-      
-      let incomingData = request.resource.data;
-      
+      let incomingKeys = request.resource.data.keys();
+      let existingKeys = resource.data.keys();
+
       // Check that no protected fields are being changed by comparing them to existing resource
-      return protectedFields.size() == 0 || incomingData.diff(resource.data).affectedKeys.hasAny(protectedFields) == false;
+      return !incomingKeys.hasAny(protectedFields);
     }
 
     // ------------------------------------------------------------------------
