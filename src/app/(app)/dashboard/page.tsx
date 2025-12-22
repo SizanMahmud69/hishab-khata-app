@@ -38,21 +38,25 @@ export default function DashboardPage() {
         <CardContent className="pt-2">
           <div className="text-2xl font-bold">{formatCurrency(balance)}</div>
           <p className="text-xs text-muted-foreground">আপনার বর্তমান ব্যবহারযোগ্য ব্যালেন্স</p>
-          <Separator className="my-2" />
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <div className="p-2 bg-blue-100 rounded-full">
-                        <PiggyBank className="h-4 w-4 text-blue-600" />
-                    </div>
-                    <div>
-                        <p className="text-sm font-medium">মোট সঞ্চয়</p>
-                        <p className="text-xs text-muted-foreground">আপনার জমানো অর্থ</p>
+          {totalSavings > 0 && (
+            <>
+                <Separator className="my-2" />
+                <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <div className="p-2 bg-blue-100 rounded-full">
+                                <PiggyBank className="h-4 w-4 text-blue-600" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium">মোট সঞ্চয়</p>
+                                <p className="text-xs text-muted-foreground">আপনার জমানো অর্থ</p>
+                            </div>
+                        </div>
+                        <div className="text-sm font-semibold text-blue-600">{formatCurrency(totalSavings)}</div>
                     </div>
                 </div>
-                <div className="text-sm font-semibold text-blue-600">{formatCurrency(totalSavings)}</div>
-            </div>
-          </div>
+            </>
+          )}
         </CardContent>
       </Card>
       <div className="grid grid-cols-1 gap-6">
