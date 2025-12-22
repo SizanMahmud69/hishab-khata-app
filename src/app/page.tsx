@@ -117,15 +117,15 @@ export default function Home() {
             </div>
             <div>
               <h4 className="font-semibold">গুরুত্বপূর্ণ লিঙ্ক</h4>
-              <ul className="mt-4 space-y-2">
+              <ul className="mt-4 flex space-x-4">
                 <li><Link href="/#features" className="text-muted-foreground hover:text-primary">ফিচার</Link></li>
                 <li><Link href="/login" className="text-muted-foreground hover:text-primary">লগইন</Link></li>
-                <li><Link href="/register" className="text-muted-foreground hover-text-primary">রেজিস্ট্রেশন</Link></li>
+                <li><Link href="/register" className="text-muted-foreground hover:text-primary">রেজিস্ট্রেশন</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="font-semibold">আইনি</h4>
-              <ul className="mt-4 space-y-2">
+              <ul className="mt-4 flex space-x-4">
                 <li><Link href="/terms-and-conditions" className="text-muted-foreground hover:text-primary">শর্তাবলী</Link></li>
                 <li><Link href="/privacy-policy" className="text-muted-foreground hover:text-primary">গোপনীয়তা নীতি</Link></li>
               </ul>
