@@ -109,20 +109,20 @@ service cloud.firestore {
 
       /**
        * @description Controls access to a user's private income records.
-       * @path /users/{userId}/incomes/{incomeId}
+       * @path /users/{userId}/income/{incomeId}
        * @allow (create) User 'A' adding a new income record to their own account.
        * @allow (list) User 'A' querying for all of their own income records.
        * @deny (update) User 'B' trying to modify an income record belonging to user 'A'.
        * @deny (delete) An unauthenticated user trying to delete any income record.
        * @principle Enforces document ownership for all CRUD and list operations within a user-specific subcollection.
        */
-      match /incomes/{incomeId} {
+      match /income/{incomeId} {
         allow get, list: if isOwner(userId);
         allow create: if isOwner(userId) && isCreatingConsistentChild(userId);
         allow update: if isExistingOwner(userId) && isUpdatingConsistentChild();
         allow delete: if isExistingOwner(userId);
       }
-
+      
       /**
        * @description Controls access to a user's private expense records.
        * @path /users/{userId}/expenses/{expenseId}
@@ -187,20 +187,16 @@ service cloud.firestore {
        * @path /users/{userId}/rewards/{rewardId}
        */
       match /rewards/{rewardId} {
-        allow get, list, create, update: if isOwner(userId);
+        allow get, list: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isCreatingConsistentChild(userId);
         allow delete: if false; // Generally, users shouldn't delete reward docs
       }
 
       /**
        * @description Controls access to a user's private loan records.
-       * @path /users/{userId}/loans/{loanId}
-       * @allow (create) User 'A' adding a new loan record to their own account.
-       * @allow (list) User 'A' querying for all of their own loan records.
-       * @deny (update) User 'B' trying to modify a loan record belonging to user 'A'.
-       * @deny (delete) An unauthenticated user trying to delete any loan record.
-       * @principle Enforces document ownership for all CRUD and list operations within a user-specific subcollection.
+       * @path /users/{userId}/debts/{debtId}
        */
-      match /loans/{loanId} {
+      match /debts/{debtId} {
         allow get, list: if isOwner(userId);
         allow create: if isOwner(userId) && isCreatingConsistentChild(userId);
         allow update: if isExistingOwner(userId) && isUpdatingConsistentChild();
@@ -220,3 +216,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

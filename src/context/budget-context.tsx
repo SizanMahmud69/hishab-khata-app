@@ -82,7 +82,6 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             return;
         }
         if (!user || !firestore) {
-            // No user or firestore, so finish loading and clear data
             setIsDataLoading(false);
             setIncome([]);
             setExpenses([]);
@@ -100,7 +99,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         
         const onDataLoaded = () => {
             activeListeners--;
-            if (activeListeners <= 0) {
+            if (activeListeners === 0) {
                 setIsDataLoading(false);
             }
         };
@@ -123,6 +122,9 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             setRewardPoints(snapshot.data()?.points || 0);
             onDataLoaded();
         }, (err) => {
+            if (err.code === 'permission-denied') {
+                 setDoc(rewardsDocRef, { points: 0, userId: user.uid }, { merge: true });
+            }
             console.error("Rewards fetch error: ", err);
             onDataLoaded();
         });
@@ -137,8 +139,8 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         return () => listeners.forEach(unsub => unsub());
 
     }, [user, firestore, isUserLoading]);
-
-    const addDocToCollection = async (collectionName: string, data: Omit<any, 'id'>) => {
+    
+    const addDocToCollection = async (collectionName: string, data: any) => {
         if (!user || !firestore) throw new Error("User or firestore not available");
         const collectionRef = collection(firestore, `users/${user.uid}/${collectionName}`);
         await addDoc(collectionRef, {
@@ -147,7 +149,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             createdAt: serverTimestamp()
         });
     };
-    
+
     const addIncome = async (newIncome: Omit<Income, 'id' | 'createdAt' | 'userId'>) => {
         await addDocToCollection('income', newIncome);
     };
@@ -170,6 +172,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         await updateDoc(docRef, { ...debt });
     }
 
+
     const addShopDue = async (shopDue: Omit<ShopDue, 'id'>) => {
         await addDocToCollection('shopDues', shopDue);
     }
@@ -183,7 +186,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const updateRewardPoints = async (points: number) => {
         if (!user || !firestore) return;
         const rewardRef = doc(firestore, `users/${user.uid}/rewards`, 'summary');
-        await setDoc(rewardRef, { points }, { merge: true });
+        await setDoc(rewardRef, { points: points, userId: user.uid }, { merge: true });
     }
 
     const addRewardPoints = (points: number) => {
@@ -232,3 +235,5 @@ export const useBudget = () => {
     }
     return context;
 };
+
+    
