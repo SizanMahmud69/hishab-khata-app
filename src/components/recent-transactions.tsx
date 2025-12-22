@@ -33,7 +33,7 @@ export function RecentTransactions() {
           <CardDescription>এই মাসে আপনার করা সর্বশেষ ৫টি খরচ।</CardDescription>
         </div>
         <Button variant="ghost" size="sm" asChild>
-            <Link href="/expenses">
+            <Link href="/history">
                 হিস্টোরি <History className="ml-2 h-4 w-4" />
             </Link>
         </Button>

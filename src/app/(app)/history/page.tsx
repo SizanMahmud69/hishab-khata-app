@@ -40,9 +40,9 @@ export default function HistoryPage() {
           <Skeleton className="h-5 w-72" />
         </div>
         <div className="space-y-4">
-            <Skeleton className="h-40 w-full" />
-            <Skeleton className="h-40 w-full" />
-            <Skeleton className="h-40 w-full" />
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
         </div>
       </div>
     );
@@ -53,34 +53,34 @@ export default function HistoryPage() {
       <PageHeader title="হিস্টোরি" description="আপনার সকল লেনদেনের ইতিহাস দেখুন।" />
       
       {transactions.length > 0 ? (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {transactions.map((transaction) => (
             <Card key={transaction.id} className={cn("overflow-hidden", transaction.type === 'income' ? 'border-green-200 dark:border-green-800' : 'border-red-200 dark:border-red-800')}>
-                <div className="p-6 pb-0">
+                <div className="p-4 pb-0">
                     <div className="flex items-start justify-between">
                         <div>
                             <Badge variant={transaction.type === 'income' ? 'default' : 'destructive'} className={cn(transaction.type === 'income' && 'bg-green-500 hover:bg-green-600')}>
                                 {transaction.type === 'income' ? 'আয়' : 'ব্যয়'}
                             </Badge>
-                            <h3 className="text-2xl font-bold mt-2">{formatCurrency(transaction.amount)}</h3>
+                            <h3 className="text-xl font-bold mt-1">{formatCurrency(transaction.amount)}</h3>
                             <p className="text-sm text-muted-foreground">{transaction.category}</p>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             {transaction.type === 'income' ? 
-                                <TrendingUp className="h-5 w-5 text-green-500" /> : 
-                                <TrendingDown className="h-5 w-5 text-red-500" />}
+                                <TrendingUp className="h-4 w-4 text-green-500" /> : 
+                                <TrendingDown className="h-4 w-4 text-red-500" />}
                             <span>{format(parseISO(transaction.date), "d MMM, yyyy", { locale: bn })}</span>
                         </div>
                     </div>
-                    {transaction.description && <p className="text-sm text-muted-foreground mt-4">{transaction.description}</p>}
+                    {transaction.description && <p className="text-xs text-muted-foreground mt-2">{transaction.description}</p>}
                 </div>
-              <CardFooter className="bg-muted/50 px-6 py-3 mt-4 flex justify-end gap-2">
-                <Button variant="ghost" size="sm">
-                    <Edit className="mr-2 h-4 w-4" />
+              <CardFooter className="bg-muted/50 px-4 py-2 mt-3 flex justify-end gap-1">
+                <Button variant="ghost" size="sm" className="h-8">
+                    <Edit className="mr-2 h-3.5 w-3.5" />
                     সম্পাদনা
                 </Button>
-                <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600 hover:bg-red-100 dark:hover:bg-red-900/50">
-                    <Trash2 className="mr-2 h-4 w-4" />
+                <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600 hover:bg-red-100 dark:hover:bg-red-900/50 h-8">
+                    <Trash2 className="mr-2 h-3.5 w-3.5" />
                     মুছুন
                 </Button>
               </CardFooter>
