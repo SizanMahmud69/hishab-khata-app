@@ -1,6 +1,8 @@
+
 "use client"
 
 import React from "react"
+import Link from "next/link"
 import {
   Minus,
   Plus,
@@ -85,13 +87,17 @@ export function OverviewCards() {
             </DropdownMenuContent>
           </DropdownMenu>
           <div className="flex items-center gap-2">
-            <Button 
+             <Button 
+                asChild
                 variant="ghost" 
                 size="icon" 
-                className={cn("h-6 w-6", activeButton === 'income' && "bg-green-200 dark:bg-green-800")}
-                onClick={() => setActiveButton(activeButton === 'income' ? null : 'income')}
+                className="h-6 w-6 hover:bg-green-200 dark:hover:bg-green-800"
+                onFocus={() => setActiveButton('income')}
+                onBlur={() => setActiveButton(null)}
             >
-                <Plus className="h-4 w-4" />
+                <Link href="/income">
+                    <Plus className={cn("h-4 w-4", activeButton === 'income' && "text-green-600 dark:text-green-200")} />
+                </Link>
             </Button>
           </div>
         </CardHeader>
@@ -126,12 +132,16 @@ export function OverviewCards() {
             </DropdownMenu>
             <div className="flex items-center gap-2">
                 <Button 
+                    asChild
                     variant="ghost" 
                     size="icon" 
-                    className={cn("h-6 w-6", activeButton === 'expense' && "bg-red-200 dark:bg-red-800")}
-                    onClick={() => setActiveButton(activeButton === 'expense' ? null : 'expense')}
+                    className="h-6 w-6 hover:bg-red-200 dark:hover:bg-red-800"
+                    onFocus={() => setActiveButton('expense')}
+                    onBlur={() => setActiveButton(null)}
                 >
-                    <Minus className={cn("h-4 w-4", activeButton === 'expense' && 'text-red-600 dark:text-red-200')} />
+                    <Link href="/expenses">
+                        <Minus className={cn("h-4 w-4", activeButton === 'expense' && 'text-red-600 dark:text-red-200')} />
+                    </Link>
                 </Button>
             </div>
         </CardHeader>
