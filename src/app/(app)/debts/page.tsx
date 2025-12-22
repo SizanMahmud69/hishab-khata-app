@@ -33,6 +33,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { Slider } from "@/components/ui/slider";
 
 export default function DebtsPage() {
     const { debts, setDebts, isLoading, addExpense, addIncome, totalIncome, totalExpense } = useBudget();
@@ -378,10 +379,21 @@ export default function DebtsPage() {
                             type="number" 
                             value={paymentAmount}
                             onChange={(e) => setPaymentAmount(Number(e.target.value))}
+                            max={selectedDebt ? selectedDebt.amount - selectedDebt.paidAmount : 0}
                             className="col-span-3"
                         />
                     </div>
-                     <p className="text-sm text-muted-foreground col-start-2 col-span-3">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                         <Label className="text-right">স্লাইডার</Label>
+                         <Slider
+                            value={[paymentAmount]}
+                            max={selectedDebt ? selectedDebt.amount - selectedDebt.paidAmount : 0}
+                            step={10}
+                            onValueChange={(value) => setPaymentAmount(value[0])}
+                            className="col-span-3"
+                        />
+                    </div>
+                     <p className="text-sm text-muted-foreground text-right col-span-4 pr-4">
                         বাকি আছে: {formatCurrency(selectedDebt ? selectedDebt.amount - selectedDebt.paidAmount : 0)}
                      </p>
                 </div>
@@ -420,5 +432,7 @@ function DebtsSkeleton() {
         </div>
     );
 }
+
+    
 
     
