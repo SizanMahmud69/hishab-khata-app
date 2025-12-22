@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useMemo } from "react";
@@ -14,12 +15,18 @@ export default function HistoryPage() {
   const { income, expenses, isLoading } = useBudget();
 
   const transactions = useMemo(() => {
+    if (!income || !expenses) return [];
     const allTransactions = [
-      ...income.map(i => ({ ...i, type: 'income' as const, category: i.source, id: Math.random().toString() })),
-      ...expenses.map(e => ({ ...e, type: 'expense' as const }))
+      ...income.map(i => ({ ...i, type: 'income' as const, category: i.source, id: i.id || Math.random().toString() })),
+      ...expenses.map(e => ({ ...e, type: 'expense' as const, id: e.id || Math.random().toString() }))
     ];
 
-    return allTransactions.sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime());
+    return allTransactions.sort((a, b) => {
+        const dateA = a.date ? (typeof a.date === 'string' ? parseISO(a.date) : a.date) : 0;
+        const dateB = b.date ? (typeof b.date === 'string' ? parseISO(b.date) : b.date) : 0;
+        if (!dateA || !dateB) return 0;
+        return dateB.getTime() - dateA.getTime();
+    });
   }, [income, expenses]);
 
   const formatCurrency = (amount: number) => {
@@ -62,7 +69,7 @@ export default function HistoryPage() {
                                 <TrendingDown className="h-4 w-4 text-red-500" />}
                             <span>{transaction.category}</span>
                         </div>
-                        <span>{format(parseISO(transaction.date), "d MMM, yyyy", { locale: bn })}</span>
+                        {transaction.date && <span>{format(parseISO(transaction.date), "d MMM, yyyy", { locale: bn })}</span>}
                     </div>
                     
                     <h3 className={cn("text-2xl font-bold", transaction.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400')}>

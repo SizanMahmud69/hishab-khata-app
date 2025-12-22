@@ -29,7 +29,7 @@ export default function IncomePage() {
     const formRef = React.useRef<HTMLFormElement>(null);
     const [selectedSource, setSelectedSource] = React.useState<string>("");
     
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
         const source = formData.get('source') as string;
@@ -53,7 +53,7 @@ export default function IncomePage() {
             description: selectedSource === 'মাসিক বেতন' ? `${descriptionInput} মাসের বেতন` : descriptionInput,
         };
 
-        addIncome(newIncome);
+        await addIncome(newIncome);
 
         toast({
             title: "সফল!",

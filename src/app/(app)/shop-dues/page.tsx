@@ -34,7 +34,7 @@ import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
 
 export default function ShopDuesPage() {
-    const { shopDues, setShopDues, isLoading } = useBudget();
+    const { shopDues, addShopDue, updateShopDue, isLoading } = useBudget();
     const { toast } = useToast();
     const [selectedDue, setSelectedDue] = useState<ShopDue | null>(null);
     const [paymentAmount, setPaymentAmount] = useState<number>(0);
@@ -49,7 +49,7 @@ export default function ShopDuesPage() {
         }).format(amount)
     }
 
-    const handleAddNewDue = (event: React.FormEvent<HTMLFormElement>) => {
+    const handleAddNewDue = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
         const shopName = formData.get('shopName') as string;
@@ -66,8 +66,7 @@ export default function ShopDuesPage() {
             return;
         }
 
-        const newDue: ShopDue = {
-            id: Date.now(),
+        const newDue: Omit<ShopDue, 'id'> = {
             shopName,
             amount,
             date,
@@ -76,7 +75,7 @@ export default function ShopDuesPage() {
             status: 'unpaid'
         };
         
-        setShopDues(prev => [newDue, ...prev]);
+        await addShopDue(newDue);
 
         toast({
             title: "সফল!",
@@ -84,6 +83,7 @@ export default function ShopDuesPage() {
         });
 
         setIsAddDialogOpen(false);
+        (event.target as HTMLFormElement).reset();
     }
 
     const openPaymentDialog = (due: ShopDue) => {
@@ -92,7 +92,7 @@ export default function ShopDuesPage() {
         setIsPaymentDialogOpen(true);
     }
 
-    const handlePaymentConfirm = () => {
+    const handlePaymentConfirm = async () => {
         if (!selectedDue) return;
 
         const remainingAmount = selectedDue.amount - selectedDue.paidAmount;
@@ -105,14 +105,11 @@ export default function ShopDuesPage() {
             return;
         }
 
-        setShopDues(shopDues.map(due => {
-            if (due.id === selectedDue.id) {
-                const newPaidAmount = due.paidAmount + paymentAmount;
-                const newStatus = newPaidAmount >= due.amount ? 'paid' : 'partially-paid';
-                return { ...due, paidAmount: newPaidAmount, status: newStatus };
-            }
-            return due;
-        }));
+        const newPaidAmount = selectedDue.paidAmount + paymentAmount;
+        const newStatus = newPaidAmount >= selectedDue.amount ? 'paid' : 'partially-paid';
+        const updatedDue: ShopDue = { ...selectedDue, paidAmount: newPaidAmount, status: newStatus };
+        
+        await updateShopDue(updatedDue);
 
         toast({
             title: "সফল!",
@@ -317,5 +314,3 @@ function DuesSkeleton() {
         </div>
     );
 }
-
-    

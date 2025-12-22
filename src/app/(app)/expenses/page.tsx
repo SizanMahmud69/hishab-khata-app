@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -26,7 +27,7 @@ export default function ExpensesPage() {
     const { toast } = useToast();
     const formRef = React.useRef<HTMLFormElement>(null);
 
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
         const category = formData.get('category') as string;
@@ -45,17 +46,15 @@ export default function ExpensesPage() {
         }
 
         const newExpense = {
-            id: Date.now(),
             category,
             amount,
             date,
             description,
         };
 
-        addExpense(newExpense);
+        await addExpense(newExpense);
         if (isSavings) {
-            addSaving({
-                id: Date.now(),
+            await addSaving({
                 amount,
                 date,
                 description: description || "সঞ্চয়",
@@ -91,11 +90,11 @@ export default function ExpensesPage() {
                     <Label htmlFor="amount">
                     পরিমাণ
                     </Label>
-                    <Input id="amount" name="amount" type="number" placeholder="500" />
+                    <Input id="amount" name="amount" type="number" placeholder="500" required/>
                 </div>
                 <div className="grid w-full items-center gap-1.5">
                     <Label htmlFor="category">বিভাগ</Label>
-                    <Select name="category">
+                    <Select name="category" required>
                         <SelectTrigger>
                             <SelectValue placeholder="একটি বিভাগ নির্বাচন করুন" />
                         </SelectTrigger>
@@ -108,7 +107,7 @@ export default function ExpensesPage() {
                 <Label htmlFor="date">
                   তারিখ
                 </Label>
-                <Input id="date" name="date" type="date" defaultValue={new Date().toISOString().split('T')[0]} />
+                <Input id="date" name="date" type="date" defaultValue={new Date().toISOString().split('T')[0]} required/>
               </div>
               <div className="grid w-full items-center gap-1.5">
                 <Label htmlFor="description">

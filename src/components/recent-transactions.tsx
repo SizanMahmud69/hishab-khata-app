@@ -1,3 +1,4 @@
+
 "use client"
 
 import {
@@ -12,6 +13,7 @@ import { History } from "lucide-react"
 import { Button } from "./ui/button"
 import Link from "next/link"
 import { useBudget } from "@/context/budget-context"
+import { parseISO } from "date-fns"
 
 export function RecentTransactions() {
   const { expenses } = useBudget();
@@ -23,7 +25,12 @@ export function RecentTransactions() {
     }).format(amount)
   }
 
-  const recentExpenses = [...expenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const recentExpenses = [...(expenses || [])].sort((a, b) => {
+      const dateA = a.date ? (typeof a.date === 'string' ? parseISO(a.date) : a.date) : 0;
+      const dateB = b.date ? (typeof b.date === 'string' ? parseISO(b.date) : b.date) : 0;
+      if (!dateA || !dateB) return 0;
+      return dateB.getTime() - dateA.getTime();
+  });
 
   return (
     <Card>

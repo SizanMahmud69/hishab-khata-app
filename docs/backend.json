@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -5,29 +6,89 @@
       "description": "Represents a user's profile information.",
       "type": "object",
       "properties": {
-        "uid": {
-          "type": "string",
-          "description": "The user's unique ID."
-        },
-        "email": {
-          "type": "string",
-          "format": "email",
-          "description": "The user's email address."
-        },
-        "displayName": {
-          "type": "string",
-          "description": "The user's display name."
-        },
-        "photoURL": {
-          "type": "string",
-          "format": "uri",
-          "description": "The URL of the user's profile picture."
-        }
+        "uid": { "type": "string", "description": "The user's unique ID." },
+        "email": { "type": "string", "format": "email", "description": "The user's email address." },
+        "displayName": { "type": "string", "description": "The user's display name." },
+        "photoURL": { "type": "string", "format": "uri", "description": "The URL of the user's profile picture." }
       },
-      "required": [
-        "uid",
-        "email"
-      ]
+      "required": ["uid", "email"]
+    },
+    "Income": {
+      "title": "Income",
+      "description": "Represents a single income entry.",
+      "type": "object",
+      "properties": {
+        "source": { "type": "string", "description": "Source of the income." },
+        "amount": { "type": "number", "description": "Amount of income." },
+        "date": { "type": "string", "format": "date", "description": "Date of the income." },
+        "description": { "type": "string", "description": "Description of the income." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of creation." }
+      },
+      "required": ["source", "amount", "date", "createdAt"]
+    },
+    "Expense": {
+      "title": "Expense",
+      "description": "Represents a single expense entry.",
+      "type": "object",
+      "properties": {
+        "category": { "type": "string", "description": "Category of the expense." },
+        "amount": { "type": "number", "description": "Amount of expense." },
+        "date": { "type": "string", "format": "date", "description": "Date of the expense." },
+        "description": { "type": "string", "description": "Description of the expense." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of creation." }
+      },
+      "required": ["category", "amount", "date", "createdAt"]
+    },
+    "Saving": {
+      "title": "Saving",
+      "description": "Represents a single saving entry.",
+      "type": "object",
+      "properties": {
+        "amount": { "type": "number", "description": "Amount saved." },
+        "date": { "type": "string", "format": "date", "description": "Date of the saving." },
+        "description": { "type": "string", "description": "Description of the saving." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of creation." }
+      },
+      "required": ["amount", "date", "createdAt"]
+    },
+    "Debt": {
+      "title": "Debt",
+      "description": "Represents a debt (lent or borrowed).",
+      "type": "object",
+      "properties": {
+        "person": { "type": "string", "description": "Person involved." },
+        "amount": { "type": "number", "description": "Total amount." },
+        "paidAmount": { "type": "number", "description": "Amount paid." },
+        "type": { "type": "string", "enum": ["lent", "borrowed"], "description": "Type of debt." },
+        "date": { "type": "string", "format": "date", "description": "Date of the debt." },
+        "repaymentDate": { "type": "string", "format": "date", "description": "Expected repayment date." },
+        "description": { "type": "string", "description": "Description of the debt." },
+        "status": { "type": "string", "enum": ["unpaid", "paid", "partially-paid"], "description": "Status of the debt." }
+      },
+      "required": ["person", "amount", "paidAmount", "type", "date", "status"]
+    },
+    "ShopDue": {
+      "title": "Shop Due",
+      "description": "Represents a due to a shop.",
+      "type": "object",
+      "properties": {
+        "shopName": { "type": "string", "description": "Name of the shop." },
+        "amount": { "type": "number", "description": "Total amount." },
+        "paidAmount": { "type": "number", "description": "Amount paid." },
+        "date": { "type": "string", "format": "date", "description": "Date of the due." },
+        "description": { "type": "string", "description": "Description of the due." },
+        "status": { "type": "string", "enum": ["unpaid", "paid", "partially-paid"], "description": "Status of the due." }
+      },
+      "required": ["shopName", "amount", "paidAmount", "date", "status"]
+    },
+     "Reward": {
+      "title": "Reward",
+      "description": "Represents user's reward points.",
+      "type": "object",
+      "properties": {
+        "points": { "type": "number", "description": "Total reward points." }
+      },
+      "required": ["points"]
     }
   },
   "auth": {
@@ -37,10 +98,32 @@
   },
   "firestore": {
     "/users/{userId}": {
-      "schema": {
-        "$ref": "#/entities/UserProfile"
-      },
+      "schema": { "$ref": "#/entities/UserProfile" },
       "description": "Stores public information about a user."
+    },
+    "/users/{userId}/income/{incomeId}": {
+      "schema": { "$ref": "#/entities/Income" },
+      "description": "Stores user's income entries."
+    },
+    "/users/{userId}/expenses/{expenseId}": {
+      "schema": { "$ref": "#/entities/Expense" },
+      "description": "Stores user's expense entries."
+    },
+    "/users/{userId}/savings/{savingId}": {
+      "schema": { "$ref": "#/entities/Saving" },
+      "description": "Stores user's saving entries."
+    },
+    "/users/{userId}/debts/{debtId}": {
+      "schema": { "$ref": "#/entities/Debt" },
+      "description": "Stores user's debt records."
+    },
+    "/users/{userId}/shopDues/{shopDueId}": {
+      "schema": { "$ref": "#/entities/ShopDue" },
+      "description": "Stores user's shop due records."
+    },
+    "/users/{userId}/rewards/summary": {
+        "schema": { "$ref": "#/entities/Reward" },
+        "description": "Stores user's total reward points in a single document."
     }
   }
 }

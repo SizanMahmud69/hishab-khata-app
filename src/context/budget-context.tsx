@@ -2,28 +2,35 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { dailyExpenses as initialExpenses, monthlyIncome as initialIncome, savingsTransactions as initialSavings, debts as initialDebts, type Debt, type ShopDue, initialShopDues } from '@/lib/data';
+import { type Debt, type ShopDue } from '@/lib/data';
+import { useUser } from '@/firebase/auth/use-user';
+import { useFirestore } from '@/firebase';
+import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
 
-interface Income {
+export interface Income {
+    id?: string;
     source: string;
     amount: number;
     date: string;
     description?: string;
+    createdAt: any;
 }
 
-interface Expense {
-    id: number;
+export interface Expense {
+    id: string;
     date: string;
     category: string;
     amount: number;
     description: string;
+    createdAt: any;
 }
 
-interface Saving {
-    id: number;
+export interface Saving {
+    id: string;
     date: string;
     description: string;
     amount: number;
+    createdAt: any;
 }
 
 interface BudgetContextType {
@@ -32,11 +39,15 @@ interface BudgetContextType {
     savings: Saving[];
     debts: Debt[];
     shopDues: ShopDue[];
-    setDebts: React.Dispatch<React.SetStateAction<Debt[]>>;
-    setShopDues: React.Dispatch<React.SetStateAction<ShopDue[]>>;
-    addIncome: (income: Income) => void;
-    addExpense: (expense: Expense) => void;
-    addSaving: (saving: Saving) => void;
+    setDebts: (debts: Debt[]) => Promise<void>;
+    setShopDues: (shopDues: ShopDue[]) => Promise<void>;
+    addIncome: (income: Omit<Income, 'id' | 'createdAt'>) => Promise<void>;
+    addExpense: (expense: Omit<Expense, 'id' | 'createdAt'>) => Promise<void>;
+    addSaving: (saving: Omit<Saving, 'id' | 'createdAt'>) => Promise<void>;
+    addDebt: (debt: Omit<Debt, 'id'>) => Promise<void>;
+    updateDebt: (debt: Debt) => Promise<void>;
+    addShopDue: (shopDue: Omit<ShopDue, 'id'>) => Promise<void>;
+    updateShopDue: (shopDue: ShopDue) => Promise<void>;
     totalIncome: number;
     totalExpense: number;
     totalSavings: number;
@@ -49,6 +60,9 @@ interface BudgetContextType {
 const BudgetContext = createContext<BudgetContextType | undefined>(undefined);
 
 export const BudgetProvider = ({ children }: { children: ReactNode }) => {
+    const { user, isLoading: isUserLoading } = useUser();
+    const firestore = useFirestore();
+    
     const [income, setIncome] = useState<Income[]>([]);
     const [expenses, setExpenses] = useState<Expense[]>([]);
     const [savings, setSavings] = useState<Saving[]>([]);
@@ -61,20 +75,56 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const [totalExpense, setTotalExpense] = useState(0);
     const [totalSavings, setTotalSavings] = useState(0);
 
-    useEffect(() => {
-        // Simulate data fetching
-        const timer = setTimeout(() => {
-            setIncome(initialIncome);
-            setExpenses(initialExpenses);
-            setSavings(initialSavings);
-            setDebts(initialDebts);
-            setShopDues(initialShopDues);
-            setRewardPoints(120);
+     useEffect(() => {
+        if (isUserLoading) {
+            setIsLoading(true);
+            return;
+        }
+        if (!user || !firestore) {
             setIsLoading(false);
-        }, 1500);
+            setIncome([]);
+            setExpenses([]);
+            setSavings([]);
+            setDebts([]);
+            setShopDues([]);
+            setRewardPoints(0);
+            return;
+        }
 
-        return () => clearTimeout(timer);
-    }, []);
+        setIsLoading(true);
+        const basePath = `users/${user.uid}`;
+
+        const unsubscribes = [
+            onSnapshot(collection(firestore, basePath, 'income'), (snapshot) => {
+                const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Income));
+                setIncome(data);
+            }),
+            onSnapshot(collection(firestore, basePath, 'expenses'), (snapshot) => {
+                const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense));
+                setExpenses(data);
+            }),
+            onSnapshot(collection(firestore, basePath, 'savings'), (snapshot) => {
+                const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Saving));
+                setSavings(data);
+            }),
+            onSnapshot(collection(firestore, basePath, 'debts'), (snapshot) => {
+                const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Debt));
+                setDebts(data);
+            }),
+            onSnapshot(collection(firestore, basePath, 'shopDues'), (snapshot) => {
+                const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ShopDue));
+                setShopDues(data);
+            }),
+            onSnapshot(doc(firestore, basePath, 'rewards'), (snapshot) => {
+                setRewardPoints(snapshot.data()?.points || 0);
+            })
+        ];
+
+        setIsLoading(false);
+
+        return () => unsubscribes.forEach(unsub => unsub());
+
+    }, [user, firestore, isUserLoading]);
 
 
     useEffect(() => {
@@ -89,28 +139,111 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         setTotalSavings(savings.reduce((sum, item) => sum + item.amount, 0));
     }, [savings]);
 
-    const addIncome = (newIncome: Income) => {
-        setIncome(prev => [...prev, newIncome]);
+    const getCollectionRef = (name: string) => {
+        if (!user || !firestore) throw new Error("User or firestore not available");
+        return collection(firestore, `users/${user.uid}/${name}`);
+    }
+
+    const addDocToCollection = async (collectionName: string, data: any) => {
+        await addDoc(getCollectionRef(collectionName), { ...data, createdAt: serverTimestamp() });
+    }
+    
+    const addIncome = async (newIncome: Omit<Income, 'id' | 'createdAt'>) => {
+        await addDocToCollection('income', newIncome);
     };
 
-    const addExpense = (newExpense: Expense) => {
-        setExpenses(prev => [...prev, newExpense]);
+    const addExpense = async (newExpense: Omit<Expense, 'id' | 'createdAt'>) => {
+        await addDocToCollection('expenses', newExpense);
     };
 
-    const addSaving = (newSaving: Saving) => {
-        setSavings(prev => [...prev, newSaving]);
+    const addSaving = async (newSaving: Omit<Saving, 'id' | 'createdAt'>) => {
+       await addDocToCollection('savings', newSaving);
+    }
+    
+    const addDebt = async (debt: Omit<Debt, 'id'>) => {
+        await addDocToCollection('debts', debt);
+    }
+
+    const updateDebt = async (debt: Debt) => {
+        if (!user || !firestore) return;
+        const docRef = doc(firestore, `users/${user.uid}/debts`, debt.id);
+        await updateDoc(docRef, { ...debt });
+    }
+
+    const addShopDue = async (shopDue: Omit<ShopDue, 'id'>) => {
+        await addDocToCollection('shopDues', shopDue);
+    }
+
+    const updateShopDue = async (shopDue: ShopDue) => {
+        if (!user || !firestore) return;
+        const docRef = doc(firestore, `users/${user.uid}/shopDues`, shopDue.id);
+        await updateDoc(docRef, { ...shopDue });
+    }
+    
+    const updateRewardPoints = async (points: number) => {
+        if (!user || !firestore) return;
+        const rewardRef = doc(firestore, `users/${user.uid}/rewards`, 'summary');
+        await updateDoc(rewardRef, { points });
     }
 
     const addRewardPoints = (points: number) => {
-        setRewardPoints(prev => prev + points);
+        const newPoints = rewardPoints + points;
+        setRewardPoints(newPoints);
+        updateRewardPoints(newPoints);
     }
 
+
+
     const deductRewardPoints = (points: number) => {
-        setRewardPoints(prev => Math.max(0, prev - points));
+        const newPoints = Math.max(0, rewardPoints - points);
+        setRewardPoints(newPoints);
+        updateRewardPoints(newPoints);
+    }
+
+    const setDebtsFirebase = async (newDebts: Debt[]) => {
+        if (!user || !firestore) return;
+        const batch = writeBatch(firestore);
+        newDebts.forEach(debt => {
+            const docRef = doc(firestore, `users/${user.uid}/debts`, debt.id);
+            batch.set(docRef, debt);
+        });
+        await batch.commit();
+    }
+
+    const setShopDuesFirebase = async (newShopDues: ShopDue[]) => {
+        if (!user || !firestore) return;
+        const batch = writeBatch(firestore);
+        newShopDues.forEach(due => {
+            const docRef = doc(firestore, `users/${user.uid}/shopDues`, due.id);
+            batch.set(docRef, due);
+        });
+        await batch.commit();
     }
 
     return (
-        <BudgetContext.Provider value={{ income, expenses, savings, debts, setDebts, shopDues, setShopDues, addIncome, addExpense, addSaving, totalIncome, totalExpense, totalSavings, rewardPoints, addRewardPoints, deductRewardPoints, isLoading }}>
+        <BudgetContext.Provider value={{ 
+            income, 
+            expenses, 
+            savings, 
+            debts, 
+            setDebts: setDebtsFirebase, 
+            shopDues, 
+            setShopDues: setShopDuesFirebase, 
+            addIncome, 
+            addExpense, 
+            addSaving, 
+            addDebt, 
+            updateDebt, 
+            addShopDue, 
+            updateShopDue, 
+            totalIncome, 
+            totalExpense, 
+            totalSavings, 
+            rewardPoints, 
+            addRewardPoints, 
+            deductRewardPoints, 
+            isLoading 
+        }}>
             {children}
         </BudgetContext.Provider>
     );
@@ -123,8 +256,3 @@ export const useBudget = () => {
     }
     return context;
 };
-
-    
-
-
-    

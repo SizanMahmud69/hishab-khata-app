@@ -1,6 +1,6 @@
 
 export interface Debt {
-  id: number;
+  id: string;
   person: string;
   amount: number;
   paidAmount: number;
@@ -12,7 +12,7 @@ export interface Debt {
 }
 
 export interface ShopDue {
-  id: number;
+  id: string;
   shopName: string;
   amount: number;
   paidAmount: number;
@@ -21,55 +21,15 @@ export interface ShopDue {
   status: 'unpaid' | 'paid' | 'partially-paid';
 }
 
-export const monthlyIncome = [
-  { source: 'মাসিক বেতন', amount: 50000, date: '2024-07-01', description: 'জুলাই মাসের বেতন' },
-  { source: 'ফ্রিল্যান্সিং প্রকল্প', amount: 15000, date: '2024-07-15', description: 'ওয়েবসাইট ডিজাইন' },
-];
-
-export const dailyExpenses = [
-  { id: 1, date: '2024-07-28', category: 'খাবার', amount: 350, description: 'দুপুরের খাবার' },
-  { id: 2, date: '2024-07-28', category: 'যাতায়াত', amount: 100, description: 'অফিস যাতায়াত' },
-  { id: 3, date: '2024-07-27', category: 'শপিং', amount: 2500, description: 'মাসের বাজার' },
-  { id: 4, date: '2024-07-26', category: 'বিনোদন', amount: 1200, description: 'সিনেমা দেখা' },
-  { id: 5, date: '2024-07-25', category: 'বিল', amount: 800, description: 'ইন্টারনেট বিল' },
-  { id: 6, date: '2024-07-24', category: 'খাবার', amount: 250, description: 'সকালের নাস্তা' },
-];
-
-export const savingsTransactions = [
-    { id: 1, date: '2024-07-20', description: 'মাসিক সঞ্চয়', amount: 5000 },
-    { id: 2, date: '2024-06-20', description: 'বোনাস থেকে সঞ্চয়', amount: 10000 },
-]
-
-export const debts: Debt[] = [
-    { id: 1, person: 'সোহেল', amount: 2000, paidAmount: 0, type: 'lent', date: '2024-07-10', status: 'unpaid', description: 'জরুরী প্রয়োজনে' },
-    { id: 2, person: 'রাকিব', amount: 5000, paidAmount: 5000, type: 'borrowed', date: '2024-07-05', status: 'paid', description: 'বাইক কেনার জন্য' },
-    { id: 3, person: 'নাসরিন', amount: 1500, paidAmount: 500, type: 'borrowed', date: '2024-07-20', status: 'partially-paid' },
-    { id: 4, person: 'আরিফ', amount: 3000, paidAmount: 0, type: 'lent', date: '2024-06-25', status: 'unpaid' },
-];
-
-export const initialShopDues: ShopDue[] = [
-    { id: 1, shopName: 'করিম স্টোর', amount: 1250, paidAmount: 500, date: '2024-07-25', status: 'partially-paid', description: 'মাসিক সদাই' },
-    { id: 2, shopName: 'রহমান ট্রেডার্স', amount: 780, paidAmount: 780, date: '2024-07-22', status: 'paid' },
-    { id: 3, shopName: 'সালাম ব্রাদার্স', amount: 2100, paidAmount: 0, date: '2024-07-28', status: 'unpaid', description: 'জরুরী মালপত্র' },
-];
-
-
 export const overviewChartData = [
-  { name: 'Jan', income: 65000, expense: 40000 },
-  { name: 'Feb', income: 65000, expense: 42000 },
-  { name: 'Mar', income: 68000, expense: 38000 },
-  { name: 'Apr', income: 70000, expense: 45000 },
-  { name: 'May', income: 65000, expense: 41000 },
-  { name: 'Jun', income: 72000, expense: 50000 },
-  { name: 'Jul', income: 65000, expense: 32250 },
+  { name: 'Jan', income: 0, expense: 0 },
+  { name: 'Feb', income: 0, expense: 0 },
+  { name: 'Mar', income: 0, expense: 0 },
+  { name: 'Apr', income: 0, expense: 0 },
+  { name: 'May', income: 0, expense: 0 },
+  { name: 'Jun', income: 0, expense: 0 },
+  { name: 'Jul', income: 0, expense: 0 },
 ];
 
 export const expenseCategories = ['খাবার', 'বাজার', 'যাতায়াত', 'শপিং', 'বিনোদন', 'বিল', 'স্বাস্থ্য', 'সঞ্চয় ডিপোজিট', 'ধার প্রদান', 'অন্যান্য'];
 export const incomeSources = ['মাসিক বেতন', 'ফ্রিল্যান্সিং', 'ব্যবসা', 'সঞ্চয় উত্তোলন', 'ধার গ্রহণ', 'অন্যান্য'];
-
-    
-
-    
-
-
-    

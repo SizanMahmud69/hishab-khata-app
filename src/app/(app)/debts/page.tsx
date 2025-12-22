@@ -36,7 +36,7 @@ import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
 
 export default function DebtsPage() {
-    const { debts, setDebts, isLoading, addExpense, addIncome, totalIncome, totalExpense } = useBudget();
+    const { debts, addDebt, updateDebt, isLoading, addExpense, addIncome, totalIncome, totalExpense } = useBudget();
     const { toast } = useToast();
     const [selectedDebt, setSelectedDebt] = useState<Debt | null>(null);
     const [paymentAmount, setPaymentAmount] = useState<number>(0);
@@ -53,7 +53,7 @@ export default function DebtsPage() {
         }).format(amount)
     }
 
-    const handleAddNewDebt = (event: React.FormEvent<HTMLFormElement>) => {
+    const handleAddNewDebt = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
         const type = formData.get('type') as 'lent' | 'borrowed';
@@ -81,8 +81,7 @@ export default function DebtsPage() {
             return;
         }
 
-        const newDebt: Debt = {
-            id: Date.now(),
+        const newDebt: Omit<Debt, 'id'> = {
             type,
             person,
             amount,
@@ -94,15 +93,14 @@ export default function DebtsPage() {
         };
 
         if (type === 'lent') {
-            addExpense({
-                id: Date.now(),
+            await addExpense({
                 category: 'ধার প্রদান',
                 amount: amount,
                 date: date,
                 description: `${person} কে ধার দেওয়া হলো`,
             });
         } else {
-            addIncome({
+            await addIncome({
                 source: 'ধার গ্রহণ',
                 amount: amount,
                 date: date,
@@ -110,7 +108,7 @@ export default function DebtsPage() {
             });
         }
         
-        setDebts(prev => [newDebt, ...prev]);
+        await addDebt(newDebt);
 
         toast({
             title: "সফল!",
@@ -118,6 +116,7 @@ export default function DebtsPage() {
         });
 
         setIsAddDialogOpen(false);
+        (event.target as HTMLFormElement).reset();
     }
 
     const openPaymentDialog = (debt: Debt) => {
@@ -126,7 +125,7 @@ export default function DebtsPage() {
         setIsPaymentDialogOpen(true);
     }
 
-    const handlePaymentConfirm = () => {
+    const handlePaymentConfirm = async () => {
         if (!selectedDebt) return;
 
         const remainingAmount = selectedDebt.amount - selectedDebt.paidAmount;
@@ -139,14 +138,11 @@ export default function DebtsPage() {
             return;
         }
 
-        setDebts(debts.map(debt => {
-            if (debt.id === selectedDebt.id) {
-                const newPaidAmount = debt.paidAmount + paymentAmount;
-                const newStatus = newPaidAmount >= debt.amount ? 'paid' : 'partially-paid';
-                return { ...debt, paidAmount: newPaidAmount, status: newStatus };
-            }
-            return debt;
-        }));
+        const newPaidAmount = selectedDebt.paidAmount + paymentAmount;
+        const newStatus = newPaidAmount >= selectedDebt.amount ? 'paid' : 'partially-paid';
+        const updatedDebt = { ...selectedDebt, paidAmount: newPaidAmount, status: newStatus };
+        
+        await updateDebt(updatedDebt);
 
         toast({
             title: "সফল!",
@@ -422,11 +418,3 @@ function DebtsSkeleton() {
         </div>
     );
 }
-
-    
-
-    
-
-
-
-    
