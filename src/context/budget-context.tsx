@@ -105,32 +105,24 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             }
         };
 
+        const createSnapshotListener = (collectionName: string, setData: React.Dispatch<React.SetStateAction<any[]>>) => {
+            const collectionRef = collection(firestore, basePath, collectionName);
+            return onSnapshot(collectionRef, (snapshot) => {
+                const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                setData(data);
+                onDataLoaded();
+            }, (err) => {
+                console.error(`Error fetching ${collectionName}:`, err);
+                onDataLoaded();
+            });
+        };
+
         const unsubscribes = [
-            onSnapshot(collection(firestore, basePath, 'income'), (snapshot) => {
-                const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Income));
-                setIncome(data);
-                onDataLoaded();
-            }, (err) => { console.error("Income fetch error: ", err); onDataLoaded(); }),
-            onSnapshot(collection(firestore, basePath, 'expenses'), (snapshot) => {
-                const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense));
-                setExpenses(data);
-                onDataLoaded();
-            }, (err) => { console.error("Expenses fetch error: ", err); onDataLoaded(); }),
-            onSnapshot(collection(firestore, basePath, 'savings'), (snapshot) => {
-                const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Saving));
-                setSavings(data);
-                onDataLoaded();
-            }, (err) => { console.error("Savings fetch error: ", err); onDataLoaded(); }),
-            onSnapshot(collection(firestore, basePath, 'debts'), (snapshot) => {
-                const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Debt));
-                setDebts(data);
-                onDataLoaded();
-            }, (err) => { console.error("Debts fetch error: ", err); onDataLoaded(); }),
-            onSnapshot(collection(firestore, basePath, 'shopDues'), (snapshot) => {
-                const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ShopDue));
-                setShopDues(data);
-                onDataLoaded();
-            }, (err) => { console.error("Shop Dues fetch error: ", err); onDataLoaded(); }),
+            createSnapshotListener('income', setIncome),
+            createSnapshotListener('expenses', setExpenses),
+            createSnapshotListener('savings', setSavings),
+            createSnapshotListener('debts', setDebts),
+            createSnapshotListener('shopDues', setShopDues),
             onSnapshot(doc(firestore, `users/${user.uid}/rewards`, 'summary'), (snapshot) => {
                 setRewardPoints(snapshot.data()?.points || 0);
                 onDataLoaded();
