@@ -24,14 +24,6 @@ import { doc, setDoc } from "firebase/firestore";
 import { useDoc } from "@/firebase/firestore/use-doc";
 import { Skeleton } from "@/components/ui/skeleton";
 
-interface NidData {
-    name: string;
-    nid: string;
-    phone: string;
-    dob: string;
-    address: string;
-}
-
 interface UserProfile {
     id: string;
     email: string;
@@ -51,7 +43,6 @@ export default function ProfilePage() {
   const firestore = useFirestore();
   const { toast } = useToast();
   
-  const [isVerificationPending, setIsVerificationPending] = useState(false);
   const [isVerificationDialogOpen, setIsVerificationDialogOpen] = useState(false);
 
   const userDocRef = useMemoFirebase(() => {
@@ -60,15 +51,6 @@ export default function ProfilePage() {
   }, [user, firestore]);
 
   const { data: userProfile, isLoading } = useDoc<UserProfile>(userDocRef);
-
-  useEffect(() => {
-    if (userProfile?.nidApplicationPending) {
-        setIsVerificationPending(true);
-    } else {
-        setIsVerificationPending(false);
-    }
-  }, [userProfile]);
-
 
   const handleNidSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -91,7 +73,6 @@ export default function ProfilePage() {
     }
     
     setIsVerificationDialogOpen(false);
-    setIsVerificationPending(true);
 
     try {
         await setDoc(userDocRef, {
@@ -108,20 +89,6 @@ export default function ProfilePage() {
           description: "আপনার এনআইডি ভেরিফিকেশনের আবেদনটি প্রক্রিয়াধীন আছে।",
         });
 
-        // Simulate manual verification process
-        setTimeout(async () => {
-            await setDoc(userDocRef, {
-                isNidVerified: true,
-                nidApplicationPending: false,
-            }, { merge: true });
-
-            toast({
-                title: "এনআইডি ভেরিফাইড!",
-                description: "আপনার অ্যাকাউন্টটি সফলভাবে ভেরিফাই করা হয়েছে।",
-            });
-            setIsVerificationPending(false);
-        }, 5000);
-
     } catch (error) {
         console.error("Error submitting NID application:", error);
         toast({
@@ -129,7 +96,6 @@ export default function ProfilePage() {
             title: "ত্রুটি",
             description: "আবেদন জমা দেওয়ার সময় একটি সমস্যা হয়েছে।",
         });
-        setIsVerificationPending(false);
     }
   };
   
@@ -245,9 +211,9 @@ export default function ProfilePage() {
                     </div>
                      <Dialog open={isVerificationDialogOpen} onOpenChange={setIsVerificationDialogOpen}>
                       <DialogTrigger asChild>
-                        <Button disabled={isVerificationPending}>
+                        <Button disabled={userProfile?.nidApplicationPending}>
                           <UserCheck className="mr-2 h-4 w-4" />
-                          {isVerificationPending ? 'প্রসেসিং...' : 'এনআইডি ভেরিফাই করুন'}
+                          {userProfile?.nidApplicationPending ? 'প্রসেসিং...' : 'এনআইডি ভেরিফাই করুন'}
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="sm:max-w-[425px]">
