@@ -14,6 +14,43 @@
           "type": "string",
           "description": "User's email address.",
           "format": "email"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "User's display name."
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "URL of the user's profile picture."
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "User's phone number."
+        },
+        "isNidVerified": {
+          "type": "boolean",
+          "description": "Whether the user's NID is verified."
+        },
+        "nidApplicationPending": {
+          "type": "boolean",
+          "description": "Whether the user has a pending NID verification application."
+        },
+        "nidName": {
+          "type": "string",
+          "description": "Name as per NID."
+        },
+        "nidNumber": {
+          "type": "string",
+          "description": "NID card number."
+        },
+        "nidDob": {
+          "type": "string",
+          "description": "Date of birth from NID.",
+          "format": "date"
+        },
+        "nidAddress": {
+          "type": "string",
+          "description": "Address as per NID."
         }
       },
       "required": [
@@ -341,3 +378,4 @@
     "reasoning": "The Firestore structure is designed to be secure, scalable, and debuggable, adhering to the core design principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), QAPs (Rules are not Filters), and Invariants. The primary strategy is to ensure Authorization Independence via Denormalization, which avoids hierarchical authorization dependencies and allows atomic operations.  Structural Segregation is used to maintain a homogeneous security posture within collections.  Access Modeling employs path-based ownership for private user data. The error reported (auth/configuration-not-found) indicates a Firebase configuration issue, not a data structure issue, but I will still provide the data structure according to your requirements. All User-related data will be stored under the /users/{userId} collection to ensure only the user has access to their information unless collaborative features are added in the future which would require membership maps. The user ID is automatically generated upon account creation, allowing data to be secured using rules based on request.auth.uid. This data structure supports QAPs by ensuring clear ownership and access patterns, enabling efficient list operations without compromising security."
   }
 }
+    

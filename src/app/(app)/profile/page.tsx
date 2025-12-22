@@ -4,10 +4,10 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useUser } from "@/firebase/provider";
-import { Mail, Phone, UserCheck, XCircle, CheckCircle, User, MapPin, Cake } from "lucide-react";
+import { useUser, useFirestore, useMemoFirebase } from "@/firebase/provider";
+import { Mail, Phone, UserCheck, XCircle, CheckCircle, User as UserIcon, MapPin, Cake } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -20,6 +20,9 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge";
+import { doc, setDoc } from "firebase/firestore";
+import { useDoc } from "@/firebase/firestore/use-doc";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface NidData {
     name: string;
@@ -29,16 +32,48 @@ interface NidData {
     address: string;
 }
 
+interface UserProfile {
+    id: string;
+    email: string;
+    displayName: string;
+    photoURL?: string;
+    phoneNumber?: string;
+    isNidVerified?: boolean;
+    nidApplicationPending?: boolean;
+    nidName?: string;
+    nidNumber?: string;
+    nidDob?: string;
+    nidAddress?: string;
+}
+
 export default function ProfilePage() {
   const { user } = useUser();
+  const firestore = useFirestore();
   const { toast } = useToast();
-  const [isNidVerified, setIsNidVerified] = useState(false);
+  
   const [isVerificationPending, setIsVerificationPending] = useState(false);
-  const [nidData, setNidData] = useState<NidData | null>(null);
   const [isVerificationDialogOpen, setIsVerificationDialogOpen] = useState(false);
 
-  const handleNidSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const userDocRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [user, firestore]);
+
+  const { data: userProfile, isLoading } = useDoc<UserProfile>(userDocRef);
+
+  useEffect(() => {
+    if (userProfile?.nidApplicationPending) {
+        setIsVerificationPending(true);
+    } else {
+        setIsVerificationPending(false);
+    }
+  }, [userProfile]);
+
+
+  const handleNidSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!userDocRef) return;
+
     const formData = new FormData(event.currentTarget);
     const name = formData.get('name') as string;
     const nid = formData.get('nid') as string;
@@ -55,40 +90,73 @@ export default function ProfilePage() {
       return;
     }
     
-    setIsVerificationPending(true);
     setIsVerificationDialogOpen(false);
-    
-    toast({
-      title: "আবেদন জমা হয়েছে",
-      description: "আপনার এনআইডি ভেরিফিকেশনের আবেদনটি প্রক্রিয়াধীন আছে।",
-    });
+    setIsVerificationPending(true);
 
-    // Simulate manual verification process
-    setTimeout(() => {
-      setIsNidVerified(true);
-      setIsVerificationPending(false);
-      setNidData({ name, nid, phone, dob, address });
-      toast({
-        title: "এনআইডি ভেরিফাইড!",
-        description: "আপনার অ্যাকাউন্টটি সফলভাবে ভেরিফাই করা হয়েছে।",
-      });
-    }, 5000);
+    try {
+        await setDoc(userDocRef, {
+            nidApplicationPending: true,
+            nidName: name,
+            nidNumber: nid,
+            nidDob: dob,
+            nidAddress: address,
+            phoneNumber: phone
+        }, { merge: true });
+
+        toast({
+          title: "আবেদন জমা হয়েছে",
+          description: "আপনার এনআইডি ভেরিফিকেশনের আবেদনটি প্রক্রিয়াধীন আছে।",
+        });
+
+        // Simulate manual verification process
+        setTimeout(async () => {
+            await setDoc(userDocRef, {
+                isNidVerified: true,
+                nidApplicationPending: false,
+            }, { merge: true });
+
+            toast({
+                title: "এনআইডি ভেরিফাইড!",
+                description: "আপনার অ্যাকাউন্টটি সফলভাবে ভেরিফাই করা হয়েছে।",
+            });
+            setIsVerificationPending(false);
+        }, 5000);
+
+    } catch (error) {
+        console.error("Error submitting NID application:", error);
+        toast({
+            variant: "destructive",
+            title: "ত্রুটি",
+            description: "আবেদন জমা দেওয়ার সময় একটি সমস্যা হয়েছে।",
+        });
+        setIsVerificationPending(false);
+    }
   };
   
+  if (isLoading) {
+      return (
+          <div className="flex-1 space-y-6">
+              <Skeleton className="h-48 w-full" />
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-24 w-full" />
+          </div>
+      )
+  }
+
   return (
     <div className="flex-1 space-y-6">
       <Card className="overflow-hidden">
         <div className="h-24 bg-primary/20" />
         <div className="relative -mt-16 flex justify-center">
              <Avatar className="h-32 w-32 border-4 border-background shadow-lg">
-                <AvatarImage src={user?.photoURL ?? `https://i.pravatar.cc/150?u=${user?.email}`} alt="User avatar" data-ai-hint="profile avatar" />
-                <AvatarFallback className="text-4xl">{user?.displayName?.charAt(0) ?? 'U'}</AvatarFallback>
+                <AvatarImage src={userProfile?.photoURL ?? user?.photoURL ?? `https://i.pravatar.cc/150?u=${user?.email}`} alt="User avatar" data-ai-hint="profile avatar" />
+                <AvatarFallback className="text-4xl">{userProfile?.displayName?.charAt(0) ?? user?.displayName?.charAt(0) ?? 'U'}</AvatarFallback>
             </Avatar>
         </div>
         <CardContent className="text-center pt-6 pb-6 px-4 sm:px-6">
             <div className="flex items-center justify-center gap-2">
-                <h2 className="text-3xl font-bold">{user?.displayName ?? 'ব্যবহারকারী'}</h2>
-                {isNidVerified && <CheckCircle className="w-7 h-7 text-green-500" />}
+                <h2 className="text-3xl font-bold">{userProfile?.displayName ?? user?.displayName ?? 'ব্যবহারকারী'}</h2>
+                {userProfile?.isNidVerified && <CheckCircle className="w-7 h-7 text-green-500" />}
             </div>
         </CardContent>
       </Card>
@@ -103,7 +171,7 @@ export default function ProfilePage() {
                 <div className="flex-1">
                      <p className="text-sm font-medium">ইমেইল</p>
                      <div className="flex items-center gap-2">
-                        <p className="text-muted-foreground">{user?.email ?? 'ইমেইল পাওয়া যায়নি'}</p>
+                        <p className="text-muted-foreground">{userProfile?.email ?? user?.email ?? 'ইমেইল পাওয়া যায়নি'}</p>
                         {user?.emailVerified ? 
                             <Badge className="bg-green-100 text-green-800 border-green-300">ভেরিফাইড</Badge> : 
                             <Badge variant="destructive">ভেরিফাইড নয়</Badge>
@@ -116,14 +184,14 @@ export default function ProfilePage() {
                 <Phone className="w-6 h-6 text-muted-foreground mt-1" />
                 <div className="flex-1">
                     <p className="text-sm font-medium">ফোন নম্বর</p>
-                    <p className="text-muted-foreground">{nidData?.phone ?? user?.phoneNumber ?? 'ফোন নম্বর সেট করা নেই'}</p>
+                    <p className="text-muted-foreground">{userProfile?.phoneNumber ?? user?.phoneNumber ?? 'ফোন নম্বর সেট করা নেই'}</p>
                 </div>
             </div>
              <div className="flex items-start gap-4">
                 <MapPin className="w-6 h-6 text-muted-foreground mt-1" />
                 <div className="flex-1">
                     <p className="text-sm font-medium">ঠিকানা</p>
-                    <p className="text-muted-foreground">{nidData?.address ?? 'ঠিকানা সেট করা নেই'}</p>
+                    <p className="text-muted-foreground">{userProfile?.nidAddress ?? 'ঠিকানা সেট করা নেই'}</p>
                 </div>
             </div>
         </CardContent>
@@ -132,37 +200,37 @@ export default function ProfilePage() {
        <Card>
         <CardHeader>
             <CardTitle>এনআইডি ভেরিফিকেশন</CardTitle>
-            {!isNidVerified && <CardDescription>আপনার অ্যাকাউন্টের নিরাপত্তা এবং বিশ্বাসযোগ্যতা বাড়ান।</CardDescription>}
+            {!userProfile?.isNidVerified && <CardDescription>আপনার অ্যাকাউন্টের নিরাপত্তা এবং বিশ্বাসযোগ্যতা বাড়ান।</CardDescription>}
         </CardHeader>
         <CardContent>
-            {isNidVerified && nidData ? (
+            {userProfile?.isNidVerified && userProfile.nidName ? (
                  <div className="space-y-4">
                      <div className="flex items-start gap-4">
-                        <User className="w-6 h-6 text-muted-foreground mt-1" />
+                        <UserIcon className="w-6 h-6 text-muted-foreground mt-1" />
                         <div className="flex-1">
                              <p className="text-sm font-medium">নাম (এনআইডি অনুযায়ী)</p>
-                             <p className="text-muted-foreground">{nidData.name}</p>
+                             <p className="text-muted-foreground">{userProfile.nidName}</p>
                         </div>
                     </div>
                     <div className="flex items-start gap-4">
                         <UserCheck className="w-6 h-6 text-muted-foreground mt-1" />
                         <div className="flex-1">
                             <p className="text-sm font-medium">এনআইডি নম্বর</p>
-                            <p className="text-muted-foreground">{nidData.nid}</p>
+                            <p className="text-muted-foreground">{userProfile.nidNumber}</p>
                         </div>
                     </div>
                     <div className="flex items-start gap-4">
                         <Cake className="w-6 h-6 text-muted-foreground mt-1" />
                         <div className="flex-1">
                             <p className="text-sm font-medium">জন্ম তারিখ</p>
-                            <p className="text-muted-foreground">{new Date(nidData.dob).toLocaleDateString('bn-BD')}</p>
+                            <p className="text-muted-foreground">{userProfile.nidDob ? new Date(userProfile.nidDob).toLocaleDateString('bn-BD') : 'N/A'}</p>
                         </div>
                     </div>
                     <div className="flex items-start gap-4">
                         <MapPin className="w-6 h-6 text-muted-foreground mt-1" />
                         <div className="flex-1">
                             <p className="text-sm font-medium">ঠিকানা (এনআইডি অনুযায়ী)</p>
-                            <p className="text-muted-foreground">{nidData.address}</p>
+                            <p className="text-muted-foreground">{userProfile.nidAddress}</p>
                         </div>
                     </div>
                 </div>
@@ -225,3 +293,5 @@ export default function ProfilePage() {
     </div>
   )
 }
+
+    
