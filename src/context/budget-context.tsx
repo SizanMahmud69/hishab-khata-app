@@ -3,9 +3,9 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { type Debt, type ShopDue } from '@/lib/data';
-import { useUser } from '@/firebase/auth/use-user';
-import { useFirestore } from '@/firebase';
-import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { useUser } from '@/firebase/provider';
+import { useFirestore } from '@/firebase/provider';
+import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, writeBatch, setDoc } from 'firebase/firestore';
 
 export interface Income {
     id?: string;
@@ -13,7 +13,7 @@ export interface Income {
     amount: number;
     date: string;
     description?: string;
-    createdAt: any;
+    createdAt?: any;
 }
 
 export interface Expense {
@@ -60,7 +60,7 @@ interface BudgetContextType {
 const BudgetContext = createContext<BudgetContextType | undefined>(undefined);
 
 export const BudgetProvider = ({ children }: { children: ReactNode }) => {
-    const { user, isLoading: isUserLoading } = useUser();
+    const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
     
     const [income, setIncome] = useState<Income[]>([]);
@@ -69,7 +69,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const [debts, setDebts] = useState<Debt[]>([]);
     const [shopDues, setShopDues] = useState<ShopDue[]>([]);
     const [rewardPoints, setRewardPoints] = useState(0);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isDataLoading, setIsDataLoading] = useState(true);
 
     const [totalIncome, setTotalIncome] = useState(0);
     const [totalExpense, setTotalExpense] = useState(0);
@@ -77,11 +77,11 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
 
      useEffect(() => {
         if (isUserLoading) {
-            setIsLoading(true);
+            setIsDataLoading(true);
             return;
         }
         if (!user || !firestore) {
-            setIsLoading(false);
+            setIsDataLoading(false);
             setIncome([]);
             setExpenses([]);
             setSavings([]);
@@ -91,37 +91,49 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             return;
         }
 
-        setIsLoading(true);
+        setIsDataLoading(true);
         const basePath = `users/${user.uid}`;
+        let activeListeners = 6;
+        
+        const onDataLoaded = () => {
+            activeListeners--;
+            if (activeListeners === 0) {
+                setIsDataLoading(false);
+            }
+        };
 
         const unsubscribes = [
             onSnapshot(collection(firestore, basePath, 'income'), (snapshot) => {
                 const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Income));
                 setIncome(data);
-            }),
+                onDataLoaded();
+            }, onDataLoaded),
             onSnapshot(collection(firestore, basePath, 'expenses'), (snapshot) => {
                 const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense));
                 setExpenses(data);
-            }),
+                onDataLoaded();
+            }, onDataLoaded),
             onSnapshot(collection(firestore, basePath, 'savings'), (snapshot) => {
                 const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Saving));
                 setSavings(data);
-            }),
+                onDataLoaded();
+            }, onDataLoaded),
             onSnapshot(collection(firestore, basePath, 'debts'), (snapshot) => {
                 const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Debt));
                 setDebts(data);
-            }),
+                onDataLoaded();
+            }, onDataLoaded),
             onSnapshot(collection(firestore, basePath, 'shopDues'), (snapshot) => {
                 const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ShopDue));
                 setShopDues(data);
-            }),
-            onSnapshot(doc(firestore, basePath, 'rewards'), (snapshot) => {
+                onDataLoaded();
+            }, onDataLoaded),
+            onSnapshot(doc(firestore, `users/${user.uid}/rewards`, 'summary'), (snapshot) => {
                 setRewardPoints(snapshot.data()?.points || 0);
-            })
+                onDataLoaded();
+            }, onDataLoaded)
         ];
-
-        setIsLoading(false);
-
+        
         return () => unsubscribes.forEach(unsub => unsub());
 
     }, [user, firestore, isUserLoading]);
@@ -145,7 +157,8 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const addDocToCollection = async (collectionName: string, data: any) => {
-        await addDoc(getCollectionRef(collectionName), { ...data, createdAt: serverTimestamp() });
+        if (!user) throw new Error("User not logged in");
+        await addDoc(getCollectionRef(collectionName), { ...data, createdAt: serverTimestamp(), userId: user.uid });
     }
     
     const addIncome = async (newIncome: Omit<Income, 'id' | 'createdAt'>) => {
@@ -183,7 +196,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const updateRewardPoints = async (points: number) => {
         if (!user || !firestore) return;
         const rewardRef = doc(firestore, `users/${user.uid}/rewards`, 'summary');
-        await updateDoc(rewardRef, { points });
+        await setDoc(rewardRef, { points }, { merge: true });
     }
 
     const addRewardPoints = (points: number) => {
@@ -191,8 +204,6 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         setRewardPoints(newPoints);
         updateRewardPoints(newPoints);
     }
-
-
 
     const deductRewardPoints = (points: number) => {
         const newPoints = Math.max(0, rewardPoints - points);
@@ -219,6 +230,8 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         });
         await batch.commit();
     }
+    
+    const isLoading = isUserLoading || isDataLoading;
 
     return (
         <BudgetContext.Provider value={{ 

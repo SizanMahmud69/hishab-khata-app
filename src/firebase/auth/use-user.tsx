@@ -2,7 +2,7 @@
 
 import { User } from 'firebase/auth';
 import { createContext, useContext, useEffect, useState } from 'react';
-import { useAuth } from '..';
+import { useAuth } from '../provider';
 
 type UserContext = {
     user: User | null;

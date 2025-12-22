@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { useAuth } from "@/firebase";
+import { useAuth } from "@/firebase/provider";
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState('');

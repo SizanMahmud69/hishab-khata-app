@@ -3,14 +3,14 @@
 import type { ReactNode } from "react"
 import { AppHeader } from "@/components/app-header"
 import { BudgetClientProvider } from "@/context/budget-context-provider"
-import { useUser } from "@/firebase/auth/use-user";
+import { useUser } from "@/firebase/provider";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 
 export default function AppLayout({ children }: { children: ReactNode }) {
-    const { user, isLoading: isUserLoading } = useUser();
+    const { user, isUserLoading } = useUser();
     const router = useRouter();
 
     useEffect(() => {
