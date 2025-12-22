@@ -2,61 +2,53 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo, useCallback } from 'react';
-import { type Debt, type ShopDue } from '@/lib/data';
 import { useUser } from '@/firebase';
 import { useFirestore } from '@/firebase';
-import { collection, onSnapshot, addDoc, doc, updateDoc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, doc, updateDoc, serverTimestamp, setDoc, query, where, getDocs } from 'firebase/firestore';
 import { createNotification } from '@/components/app-header';
 
-export interface Income {
+// New unified Transaction interface
+export interface Transaction {
     id?: string;
-    source: string;
-    amount: number;
-    date: string;
-    description?: string;
-    createdAt?: any;
-    userId?: string;
-}
-
-export interface Expense {
-    id?: string;
-    date: string;
+    userId: string;
+    type: 'income' | 'expense';
     category: string;
     amount: number;
-    description: string;
-    createdAt?: any;
-    userId?: string;
-}
-
-export interface Saving {
-    id?: string;
     date: string;
     description: string;
-    amount: number;
     createdAt?: any;
-    userId?: string;
 }
 
+// New unified DebtNote interface
+export interface DebtNote {
+    id?: string;
+    userId: string;
+    type: 'lent' | 'borrowed' | 'shopDue';
+    person: string; // Name of person or shop
+    amount: number;
+    paidAmount: number;
+    status: 'unpaid' | 'partially-paid' | 'paid';
+    date: string;
+    repaymentDate?: string;
+    description?: string;
+    createdAt?: any;
+}
+
+// UserProfile to match new structure
 interface UserProfile {
-    rewardPoints?: number;
+    points?: number;
+    joinDate?: string;
 }
 
 interface BudgetContextType {
-    income: Income[];
-    expenses: Expense[];
-    savings: Saving[];
-    debts: Debt[];
-    shopDues: ShopDue[];
-    addIncome: (income: Omit<Income, 'id' | 'createdAt' | 'userId'>) => Promise<void>;
-    addExpense: (expense: Omit<Expense, 'id' | 'createdAt' | 'userId'>) => Promise<void>;
-    addSaving: (saving: Omit<Saving, 'id' | 'createdAt' | 'userId'>) => Promise<void>;
-    addDebt: (debt: Omit<Debt, 'id'>) => Promise<void>;
-    updateDebt: (debt: Debt) => Promise<void>;
-    addShopDue: (shopDue: Omit<ShopDue, 'id'>) => Promise<void>;
-    updateShopDue: (shopDue: ShopDue) => Promise<void>;
+    transactions: Transaction[];
+    debtNotes: DebtNote[];
+    addTransaction: (transaction: Omit<Transaction, 'id' | 'createdAt' | 'userId'>) => Promise<void>;
+    addDebtNote: (debtNote: Omit<DebtNote, 'id' | 'createdAt' | 'userId'>) => Promise<void>;
+    updateDebtNote: (debtNote: DebtNote) => Promise<void>;
     totalIncome: number;
     totalExpense: number;
-    totalSavings: number;
+    totalSavings: number; // This can now be derived from transactions if needed, or kept separate
     rewardPoints: number;
     addRewardPoints: (points: number) => void;
     deductRewardPoints: (points: number) => void;
@@ -71,17 +63,15 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
     
-    const [income, setIncome] = useState<Income[]>([]);
-    const [expenses, setExpenses] = useState<Expense[]>([]);
-    const [savings, setSavings] = useState<Saving[]>([]);
-    const [debts, setDebts] = useState<Debt[]>([]);
-    const [shopDues, setShopDues] = useState<ShopDue[]>([]);
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [debtNotes, setDebtNotes] = useState<DebtNote[]>([]);
     const [rewardPoints, setRewardPoints] = useState(0);
     const [isDataLoading, setIsDataLoading] = useState(true);
 
-    const totalIncome = useMemo(() => income.reduce((sum, item) => sum + item.amount, 0), [income]);
-    const totalExpense = useMemo(() => expenses.reduce((sum, item) => sum + item.amount, 0), [expenses]);
-    
+    const totalIncome = useMemo(() => transactions.filter(t => t.type === 'income').reduce((sum, item) => sum + item.amount, 0), [transactions]);
+    const totalExpense = useMemo(() => transactions.filter(t => t.type === 'expense').reduce((sum, item) => sum + item.amount, 0), [transactions]);
+    const totalSavings = useMemo(() => transactions.filter(t => t.category === 'সঞ্চয় ডিপোজিট').reduce((sum, t) => sum + t.amount, 0), [transactions]);
+
     const checkSavingsMilestones = useCallback((currentSavings: number, previousSavings: number) => {
         if (typeof window === 'undefined') return;
 
@@ -102,18 +92,12 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         localStorage.setItem('notifiedSavingsMilestones', JSON.stringify(notifiedMilestones));
     }, []);
 
-    const totalSavings = useMemo(() => {
-        const currentTotal = savings.reduce((sum, item) => sum + item.amount, 0);
-        return currentTotal;
-    }, [savings]);
-
     useEffect(() => {
         const previousSavings = parseFloat(localStorage.getItem('previousTotalSavings') || '0');
         if(totalSavings > previousSavings) {
              checkSavingsMilestones(totalSavings, previousSavings);
         }
         localStorage.setItem('previousTotalSavings', totalSavings.toString());
-
     }, [totalSavings, checkSavingsMilestones]);
 
 
@@ -124,11 +108,8 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         }
         if (!user || !firestore) {
             setIsDataLoading(false);
-            setIncome([]);
-            setExpenses([]);
-            setSavings([]);
-            setDebts([]);
-            setShopDues([]);
+            setTransactions([]);
+            setDebtNotes([]);
             setRewardPoints(0);
             return;
         }
@@ -136,7 +117,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         setIsDataLoading(true);
         const basePath = `users/${user.uid}`;
         const listeners: (() => void)[] = [];
-        let activeListeners = 6; // sub-collections + user doc
+        let activeListeners = 3; // transactions, debtNotes, user doc
         
         const onDataLoaded = () => {
             activeListeners--;
@@ -158,11 +139,10 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             listeners.push(listener);
         };
 
-        // Listener for the main user document to get reward points
         const userDocRef = doc(firestore, basePath);
         const unsubUser = onSnapshot(userDocRef, (snapshot) => {
             const userData = snapshot.data() as UserProfile | undefined;
-            setRewardPoints(userData?.rewardPoints || 0);
+            setRewardPoints(userData?.points || 0);
             onDataLoaded();
         }, (err) => {
             console.error("User profile fetch error: ", err);
@@ -170,11 +150,8 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         });
         listeners.push(unsubUser);
 
-        createSnapshotListener<Income>('income', setIncome);
-        createSnapshotListener<Expense>('expenses', setExpenses);
-        createSnapshotListener<Saving>('savings', setSavings);
-        createSnapshotListener<Debt>('debts', setDebts);
-        createSnapshotListener<ShopDue>('shopDues', setShopDues);
+        createSnapshotListener<Transaction>('transactions', setTransactions);
+        createSnapshotListener<DebtNote>('debtNotes', setDebtNotes);
         
         return () => listeners.forEach(unsub => unsub());
 
@@ -190,74 +167,72 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         });
     };
 
-    const addIncome = async (newIncome: Omit<Income, 'id' | 'createdAt' | 'userId'>) => {
-        await addDocToCollection('income', newIncome);
+    const addTransaction = async (transaction: Omit<Transaction, 'id' | 'createdAt' | 'userId'>) => {
+        await addDocToCollection('transactions', transaction);
     };
 
-    const addExpense = async (newExpense: Omit<Expense, 'id' | 'createdAt' | 'userId'>) => {
-        await addDocToCollection('expenses', newExpense);
-    };
+    const addDebtNote = async (debtNote: Omit<DebtNote, 'id' | 'createdAt' | 'userId'>) => {
+        await addDocToCollection('debtNotes', debtNote);
+    }
 
-    const addSaving = async (newSaving: Omit<Saving, 'id' | 'createdAt' | 'userId'>) => {
-       await addDocToCollection('savings', newSaving);
+    const updateDebtNote = async (debtNote: DebtNote) => {
+        if (!user || !firestore || !debtNote.id) return;
+        const docRef = doc(firestore, `users/${user.uid}/debtNotes`, debtNote.id);
+        await updateDoc(docRef, { ...debtNote });
     }
     
-    const addDebt = async (debt: Omit<Debt, 'id'>) => {
-        await addDocToCollection('debts', debt);
-    }
-
-    const updateDebt = async (debt: Debt) => {
-        if (!user || !firestore || !debt.id) return;
-        const docRef = doc(firestore, `users/${user.uid}/debts`, debt.id);
-        await updateDoc(docRef, { ...debt });
-    }
-
-
-    const addShopDue = async (shopDue: Omit<ShopDue, 'id'>) => {
-        await addDocToCollection('shopDues', shopDue);
-    }
-
-    const updateShopDue = async (shopDue: ShopDue) => {
-        if (!user || !firestore || !shopDue.id) return;
-        const docRef = doc(firestore, `users/${user.uid}/shopDues`, shopDue.id);
-        await updateDoc(docRef, { ...shopDue });
-    }
-    
-    const updateRewardPoints = async (points: number) => {
+    const updateRewardPoints = async (points: number, operation: 'add' | 'deduct') => {
         if (!user || !firestore) return;
-        const currentPoints = rewardPoints;
-        const newPoints = currentPoints + points;
         const userDocRef = doc(firestore, `users/${user.uid}`);
-        await setDoc(userDocRef, { rewardPoints: newPoints }, { merge: true });
+        
+        try {
+            const currentDoc = await getDocs(query(collection(firestore, `users`), where("id", "==", user.uid)));
+            const currentPoints = currentDoc.docs[0]?.data()?.points || 0;
+            
+            let newPoints = 0;
+            if (operation === 'add') {
+                newPoints = currentPoints + points;
+            } else {
+                newPoints = Math.max(0, currentPoints - points);
+            }
+            
+            await setDoc(userDocRef, { points: newPoints }, { merge: true });
+        } catch (e) {
+            console.error("Error updating points: ", e);
+            // Fallback for user document creation
+            await setDoc(userDocRef, { points: operation === 'add' ? points : 0 }, { merge: true });
+        }
     }
 
     const addRewardPoints = (points: number) => {
-        updateRewardPoints(points);
+        updateRewardPoints(points, 'add');
     }
 
-    const deductRewardPoints = (points: number) => {
-        const newPoints = Math.max(0, rewardPoints - points);
+
+
+    const deductRewardPoints = async (pointsToDeduct: number) => {
         if (!user || !firestore) return;
         const userDocRef = doc(firestore, `users/${user.uid}`);
-        setDoc(userDocRef, { rewardPoints: newPoints }, { merge: true });
-    }
+
+        try {
+            const currentDoc = await getDocs(query(collection(firestore, `users`), where("id", "==", user.uid)));
+            const currentPoints = currentDoc.docs[0]?.data()?.points || 0;
+            const newPoints = Math.max(0, currentPoints - pointsToDeduct);
+            await setDoc(userDocRef, { points: newPoints }, { merge: true });
+        } catch (e) {
+             console.error("Error deducting points: ", e);
+        }
+    };
     
     const isLoading = isUserLoading || isDataLoading;
 
     return (
         <BudgetContext.Provider value={{ 
-            income, 
-            expenses, 
-            savings, 
-            debts, 
-            shopDues, 
-            addIncome, 
-            addExpense, 
-            addSaving, 
-            addDebt, 
-            updateDebt, 
-            addShopDue, 
-            updateShopDue, 
+            transactions, 
+            debtNotes,
+            addTransaction, 
+            addDebtNote, 
+            updateDebtNote, 
             totalIncome, 
             totalExpense, 
             totalSavings, 

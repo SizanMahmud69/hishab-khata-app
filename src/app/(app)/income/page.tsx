@@ -23,7 +23,7 @@ import { incomeSources, savingsDestinations } from "@/lib/data";
 const months = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
 
 export default function IncomePage() {
-    const { addIncome } = useBudget();
+    const { addTransaction } = useBudget();
     const { toast } = useToast();
     const formRef = React.useRef<HTMLFormElement>(null);
     const [selectedSource, setSelectedSource] = React.useState<string>("");
@@ -52,14 +52,13 @@ export default function IncomePage() {
             description = `${descriptionInput} থেকে উত্তোলন`;
         }
 
-        const newIncome = {
-            source,
+        await addTransaction({
+            type: 'income',
+            category: source,
             amount,
-            date,
+            date: new Date(date).toISOString(),
             description,
-        };
-
-        await addIncome(newIncome);
+        });
 
         toast({
             title: "সফল!",

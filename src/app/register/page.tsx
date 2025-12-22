@@ -17,7 +17,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { useAuth } from "@/firebase";
+import { useAuth, useFirestore } from "@/firebase";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState('');
@@ -29,6 +30,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
+  const firestore = useFirestore();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,11 +46,11 @@ export default function RegisterPage() {
         return;
     }
 
-    if (!auth) {
+    if (!auth || !firestore) {
         toast({
             variant: "destructive",
             title: "নিবন্ধন ব্যর্থ হয়েছে",
-            description: "প্রমাণীকরণ পরিষেবা উপলব্ধ নয়।",
+            description: "প্রয়োজনীয় পরিষেবা উপলব্ধ নয়।",
         });
         setIsLoading(false);
         return;
@@ -66,10 +68,29 @@ export default function RegisterPage() {
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
       
-      if(userCredential.user) {
-        await updateProfile(userCredential.user, {
+      if(user) {
+        // Update Firebase Auth profile
+        await updateProfile(user, {
           displayName: fullName
+        });
+
+        // Create user document in Firestore
+        const userDocRef = doc(firestore, "users", user.uid);
+        await setDoc(userDocRef, {
+            id: user.uid,
+            userId: `#hishab-${Math.random().toString(36).substr(2, 4)}`, // Example custom ID
+            name: fullName,
+            email: user.email,
+            avatar: user.photoURL || `https://i.pravatar.cc/150?u=${user.email}`,
+            phone: user.phoneNumber || '',
+            address: '',
+            points: 0,
+            joinDate: serverTimestamp(),
+            lastCheckIn: null,
+            checkInStreak: 0,
+            verificationStatus: 'none',
         });
       }
 

@@ -1,4 +1,7 @@
 
+// This file is now deprecated as Debt and ShopDue are combined into DebtNote in budget-context.
+// Keeping it for categories and other static data.
+
 export interface Debt {
   id: string;
   person: string;

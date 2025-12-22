@@ -21,17 +21,17 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { createNotification } from '@/components/app-header';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { doc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { paymentMethods } from '@/lib/data';
 import { Slider } from '@/components/ui/slider';
 
 const WITHDRAW_THRESHOLD = 100;
-const CONVERSION_RATE = 0.05; // 100 points = 5 BDT
+const CONVERSION_RATE = 5; // 100 points = 5 BDT
 
 interface UserProfile {
-    rewardPoints?: number;
+    points?: number;
 }
 
 export default function RewardsPage() {
@@ -47,13 +47,13 @@ export default function RewardsPage() {
     }, [user, firestore]);
 
     const { data: userProfile, isLoading } = useDoc<UserProfile>(userDocRef);
-    const rewardPoints = userProfile?.rewardPoints ?? 0;
+    const rewardPoints = userProfile?.points ?? 0;
     
     const [pointsToWithdraw, setPointsToWithdraw] = useState(rewardPoints);
 
     const canWithdraw = rewardPoints >= WITHDRAW_THRESHOLD;
-    const withdrawableAmountBdt = Math.floor(rewardPoints / 100) * 5;
-    const selectedAmountBdt = Math.floor(pointsToWithdraw / 100) * 5;
+    const withdrawableAmountBdt = Math.floor(rewardPoints / 100) * CONVERSION_RATE;
+    const selectedAmountBdt = Math.floor(pointsToWithdraw / 100) * CONVERSION_RATE;
 
     const handlePointsChange = (value: number) => {
         if (value > rewardPoints) {
@@ -65,8 +65,9 @@ export default function RewardsPage() {
         }
     }
     
-    const handleWithdraw = (event: React.FormEvent<HTMLFormElement>) => {
+    const handleWithdraw = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        if (!user || !firestore) return;
 
         const formData = new FormData(event.currentTarget);
         const paymentMethod = formData.get('payment-method') as string;
@@ -92,21 +93,44 @@ export default function RewardsPage() {
             return;
         }
 
-        const withdrawnTkAmount = (pointsToDeduct / 100) * 5;
+        const withdrawnTkAmount = (pointsToDeduct / 100) * CONVERSION_RATE;
 
-        deductRewardPoints(pointsToDeduct);
+        try {
+            // 1. Create a withdrawal request
+            const withdrawalRequestRef = collection(firestore, `users/${user.uid}/withdrawalRequests`);
+            await addDoc(withdrawalRequestRef, {
+                userId: user.uid,
+                status: 'pending',
+                points: pointsToDeduct,
+                amountBdt: withdrawnTkAmount,
+                paymentMethod: paymentMethod,
+                accountNumber: accountNumber,
+                requestedAt: serverTimestamp()
+            });
 
-        createNotification({
-            title: "উইথড্র সফল হয়েছে",
-            description: `${pointsToDeduct} পয়েন্টের বিনিময়ে ${withdrawnTkAmount} টাকা আপনার অ্যাকাউন্টে পাঠানো হয়েছে।`,
-            link: "/rewards",
-        });
+            // 2. Deduct points from user's profile
+            await deductRewardPoints(pointsToDeduct);
 
-        toast({
-            title: "সফল!",
-            description: `আপনার উইথড্র সফল হয়েছে। ${pointsToDeduct} পয়েন্ট আপনার অ্যাকাউন্ট থেকে কেটে নেওয়া হয়েছে।`,
-        });
-        setIsDialogOpen(false);
+            createNotification({
+                title: "উইথড্র অনুরোধ সফল হয়েছে",
+                description: `${pointsToDeduct} পয়েন্টের বিনিময়ে ${withdrawnTkAmount} টাকা পাঠানোর অনুরোধ প্রক্রিয়াধীন আছে।`,
+                link: "/rewards",
+            });
+
+            toast({
+                title: "সফল!",
+                description: `আপনার উইথড্র অনুরোধ সফল হয়েছে। ${pointsToDeduct} পয়েন্ট আপনার অ্যাকাউন্ট থেকে কেটে নেওয়া হয়েছে।`,
+            });
+            setIsDialogOpen(false);
+
+        } catch (error) {
+            console.error("Withdrawal error: ", error);
+             toast({
+                variant: "destructive",
+                title: "ত্রুটি",
+                description: "আপনার উইথড্র অনুরোধ প্রক্রিয়া করার সময় একটি সমস্যা হয়েছে।",
+            });
+        }
     }
 
     const formatCurrency = (amount: number) => {
@@ -160,7 +184,7 @@ export default function RewardsPage() {
                 <div className="text-center space-y-2">
                     <p className="text-sm text-muted-foreground">মোট উইথড্র করার মতো পরিমাণ</p>
                     <p className="text-3xl font-bold">{formatCurrency(withdrawableAmountBdt)}</p>
-                    <p className="text-xs text-muted-foreground">১০০ পয়েন্ট = ৫ টাকা</p>
+                    <p className="text-xs text-muted-foreground">১০০ পয়েন্ট = {CONVERSION_RATE} টাকা</p>
                 </div>
             </CardContent>
             <CardFooter>

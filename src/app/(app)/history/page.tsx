@@ -1,7 +1,6 @@
 
 "use client";
 
-import { useMemo } from "react";
 import PageHeader from "@/components/page-header";
 import { useBudget } from "@/context/budget-context";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,21 +10,13 @@ import { bn } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
 export default function HistoryPage() {
-  const { income, expenses } = useBudget();
+  const { transactions } = useBudget();
 
-  const transactions = useMemo(() => {
-    if (!income || !expenses) return [];
-    const allTransactions = [
-      ...income.map(i => ({ ...i, type: 'income' as const, category: i.source, id: i.id || Math.random().toString() })),
-      ...expenses.map(e => ({ ...e, type: 'expense' as const, id: e.id || Math.random().toString() }))
-    ];
-
-    return allTransactions.sort((a, b) => {
-        const timeA = a.createdAt?.seconds || 0;
-        const timeB = b.createdAt?.seconds || 0;
-        return timeB - timeA;
-    });
-  }, [income, expenses]);
+  const sortedTransactions = transactions.sort((a, b) => {
+      const timeA = a.createdAt?.seconds || new Date(a.date).getTime() / 1000;
+      const timeB = b.createdAt?.seconds || new Date(b.date).getTime() / 1000;
+      return timeB - timeA;
+  });
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("bn-BD", {
@@ -39,9 +30,9 @@ export default function HistoryPage() {
     <div className="flex-1 space-y-4">
       <PageHeader title="হিস্টোরি" description="আপনার সকল লেনদেনের ইতিহাস দেখুন।" />
       
-      {transactions.length > 0 ? (
+      {sortedTransactions.length > 0 ? (
         <div className="space-y-3">
-          {transactions.map((transaction) => (
+          {sortedTransactions.map((transaction) => (
             <Card key={transaction.id} className={cn("overflow-hidden", transaction.type === 'income' ? 'border-green-200 dark:border-green-800' : 'border-red-200 dark:border-red-800')}>
                 <CardContent className="p-4">
                     <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">

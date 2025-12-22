@@ -1,28 +1,4 @@
-/**
- * Core Philosophy: This ruleset enforces a strict user-ownership model where all data is private.
- * Users have complete control over their own data subtree and have no visibility into or access to
- * the data of other users. The security model prioritizes authentication and authorization for
- * every request.
- *
- * Data Structure: All application data is hierarchically organized under the `/users/{userId}` path.
- * Each user has their own set of subcollections (e.g., incomes, expenses, categories) nested under
- * their unique user document. This structure inherently scopes data to a specific user.
- *
- * Key Security Decisions:
- * - Default Deny: All paths are closed by default. Access is only granted through explicit `allow` statements.
- * - No Public Data: All reads and writes require user authentication.
- * - No User Listing: It is not possible to query the top-level `/users` collection to discover other users.
- * - Path-Based Security: Authorization is primarily determined by the `{userId}` wildcard in the document path,
- *   ensuring a user can only operate within their own data tree.
- *
- * Denormalization for Authorization: The data model is designed for efficient rules. By nesting all user-specific
- * data, we avoid the need for slow and costly `get()` or `exists()` calls to other documents to verify ownership.
- * Authorization decisions are made instantly by comparing the `{userId}` in the path with the requester's `request.auth.uid`.
- *
- * Structural Segregation: Each data type (Income, Expense, Category, etc.) is stored in its own dedicated
- * subcollection under the user's main document. This ensures that queries are simple, secure, and only return
- * documents of a single type, which all share the same security posture.
- */
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -31,172 +7,70 @@ service cloud.firestore {
     // Helper Functions
     // ------------------------------------------------------------------------
 
-    /**
-     * Checks if the user is authenticated.
-     */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /**
-     * Checks if the authenticated user's UID matches the provided userId from the path.
-     * This is the primary function for enforcing data ownership.
-     */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /**
-     * A robust check for update and delete operations. Ensures the user is the owner
-     * AND the document they are trying to modify actually exists.
-     */
     function isExistingOwner(userId) {
       return isOwner(userId) && resource != null;
     }
 
-    /**
-     * On create, validates that a new document in a user's subcollection
-     * contains a 'userId' field that correctly points back to the user.
-     */
     function isCreatingConsistentChild(userId) {
       return request.resource.data.userId == userId;
     }
-
-    /**
-     * On update, ensures the 'userId' field of a subcollection document is immutable.
-     * This prevents re-assigning the document to a different user.
-     */
+    
     function isUpdatingConsistentChild() {
       return request.resource.data.userId == resource.data.userId;
     }
-
 
     // ------------------------------------------------------------------------
     // Collection Rules
     // ------------------------------------------------------------------------
 
-    /**
-     * @description Controls access to a user's own profile document.
-     * @path /users/{userId}
-     * @allow (create) A new user creating their own profile document.
-     * @allow (get) An authenticated user reading their own profile.
-     * @deny (list) Any user, authenticated or not, attempting to list all user profiles.
-     * @deny (get) User 'A' trying to read the profile of user 'B'.
-     * @principle Restricts access to a user's own data tree and prevents user enumeration.
-     */
     match /users/{userId} {
       allow get: if isOwner(userId);
-      allow list: if false;
+      allow list: if false; // Prevent listing all users
       allow create: if isOwner(userId);
       allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
 
-      /**
-       * @description Controls access to a user's private income records.
-       * @path /users/{userId}/income/{incomeId}
-       * @allow (create) User 'A' adding a new income record to their own account.
-       * @allow (list) User 'A' querying for all of their own income records.
-       * @deny (update) User 'B' trying to modify an income record belonging to user 'A'.
-       * @deny (delete) An unauthenticated user trying to delete any income record.
-       * @principle Enforces document ownership for all CRUD and list operations within a user-specific subcollection.
-       */
-      match /income/{incomeId} {
+      // Sub-collection for all financial transactions (income/expense)
+      match /transactions/{transactionId} {
         allow get, list: if isOwner(userId);
         allow create: if isOwner(userId) && isCreatingConsistentChild(userId);
-        allow update: if isExistingOwner(userId) && isUpdatingConsistentChild();
-        allow delete: if isExistingOwner(userId);
+        allow update, delete: if isExistingOwner(userId);
+      }
+
+      // Sub-collection for all debt records (lent, borrowed, shop dues)
+      match /debtNotes/{debtNoteId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isCreatingConsistentChild(userId);
+        allow update, delete: if isExistingOwner(userId);
       }
       
-      /**
-       * @description Controls access to a user's private expense records.
-       * @path /users/{userId}/expenses/{expenseId}
-       * @allow (create) User 'A' adding a new expense record to their own account.
-       * @allow (list) User 'A' querying for all of their own expense records.
-       * @deny (update) User 'B' trying to modify an expense record belonging to user 'A'.
-       * @deny (delete) An unauthenticated user trying to delete any expense record.
-       * @principle Enforces document ownership for all CRUD and list operations within a user-specific subcollection.
-       */
-      match /expenses/{expenseId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && isCreatingConsistentChild(userId);
-        allow update: if isExistingOwner(userId) && isUpdatingConsistentChild();
-        allow delete: if isExistingOwner(userId);
-      }
-
-      /**
-       * @description Controls access to a user's private savings records.
-       * @path /users/{userId}/savings/{savingId}
-       */
-      match /savings/{savingId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && isCreatingConsistentChild(userId);
-        allow update: if isExistingOwner(userId) && isUpdatingConsistentChild();
-        allow delete: if isExistingOwner(userId);
-      }
-
-      /**
-       * @description Controls access to a user's custom expense categories.
-       * @path /users/{userId}/categories/{categoryId}
-       * @allow (create) User 'A' adding a new category to their own account.
-       * @allow (list) User 'A' querying for all of their own categories.
-       * @deny (update) User 'B' trying to modify a category belonging to user 'A'.
-       * @deny (delete) An unauthenticated user trying to delete any category.
-       * @principle Enforces document ownership for all CRUD and list operations within a user-specific subcollection.
-       */
-      match /categories/{categoryId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && isCreatingConsistentChild(userId);
-        allow update: if isExistingOwner(userId) && isUpdatingConsistentChild();
-        allow delete: if isExistingOwner(userId);
-      }
-
-      /**
-       * @description Controls access to a user's private budget records.
-       * @path /users/{userId}/budgets/{budgetId}
-       * @allow (create) User 'A' adding a new budget to their own account.
-       * @allow (list) User 'A' querying for all of their own budgets.
-       * @deny (update) User 'B' trying to modify a budget belonging to user 'A'.
-       * @deny (delete) An unauthenticated user trying to delete any budget.
-       * @principle Enforces document ownership for all CRUD and list operations within a user-specific subcollection.
-       */
-      match /budgets/{budgetId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && isCreatingConsistentChild(userId);
-        allow update: if isExistingOwner(userId) && isUpdatingConsistentChild();
-        allow delete: if isExistingOwner(userId);
-      }
-
-      /**
-       * @description Controls access to a user's private loan records.
-       * @path /users/{userId}/debts/{debtId}
-       */
-      match /debts/{debtId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && isCreatingConsistentChild(userId);
-        allow update: if isExistingOwner(userId) && isUpdatingConsistentChild();
-        allow delete: if isExistingOwner(userId);
-      }
-
-       /**
-       * @description Controls access to a user's shop dues.
-       * @path /users/{userId}/shopDues/{dueId}
-       */
-      match /shopDues/{dueId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && isCreatingConsistentChild(userId);
-        allow update: if isExistingOwner(userId) && isUpdatingConsistentChild();
-        allow delete: if isExistingOwner(userId);
-      }
-
-       /**
-       * @description Controls access to a user's check-in history.
-       * @path /users/{userId}/checkIns/{checkInId}
-       */
+      // Sub-collection for daily check-ins
       match /checkIns/{checkInId} {
         allow get, list: if isOwner(userId);
         allow create: if isOwner(userId);
-        allow update: if isExistingOwner(userId);
-        allow delete: if isExistingOwner(userId);
+        allow update, delete: if isExistingOwner(userId);
+      }
+
+      // Sub-collection for NID verification requests
+      match /verificationRequests/{requestId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update, delete: if isExistingOwner(userId); // Allow user to update/delete their own request if needed. Admin rules would be separate.
+      }
+
+      // Sub-collection for reward point withdrawal requests
+      match /withdrawalRequests/{requestId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update, delete: if isExistingOwner(userId); // Allow user to manage their requests.
       }
     }
   }

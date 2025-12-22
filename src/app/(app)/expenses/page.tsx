@@ -21,7 +21,7 @@ import { useBudget } from "@/context/budget-context"
 import { useToast } from "@/hooks/use-toast";
 
 export default function ExpensesPage() {
-    const { addExpense, addSaving } = useBudget();
+    const { addTransaction } = useBudget();
     const { toast } = useToast();
     const formRef = React.useRef<HTMLFormElement>(null);
     const [selectedCategory, setSelectedCategory] = useState<string>("");
@@ -33,9 +33,8 @@ export default function ExpensesPage() {
         const amount = parseFloat(formData.get('amount') as string);
         const date = formData.get('date') as string;
         const description = formData.get('description') as string;
-        const isSavingsCategory = category === 'সঞ্চয় ডিপোজিট';
-
-        if (!category || !amount || !date || (isSavingsCategory && !description)) {
+        
+        if (!category || !amount || !date) {
             toast({
                 variant: "destructive",
                 title: "ফর্ম পূরণ আবশ্যক",
@@ -44,21 +43,13 @@ export default function ExpensesPage() {
             return;
         }
 
-        const newExpense = {
+        await addTransaction({
+            type: 'expense',
             category,
             amount,
-            date,
+            date: new Date(date).toISOString(),
             description,
-        };
-
-        await addExpense(newExpense);
-        if (isSavingsCategory) {
-            await addSaving({
-                amount,
-                date,
-                description: description || "সঞ্চয়",
-            });
-        }
+        });
 
         toast({
             title: "সফল!",

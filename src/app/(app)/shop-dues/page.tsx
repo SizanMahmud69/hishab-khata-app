@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { PlusCircle, ShoppingBag, Banknote } from "lucide-react"
-import { useBudget } from "@/context/budget-context";
+import { useBudget, type DebtNote } from "@/context/budget-context";
 import { Button } from "@/components/ui/button"
 import PageHeader from "@/components/page-header"
 import {
@@ -25,7 +25,6 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { type ShopDue } from "@/lib/data"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,12 +32,14 @@ import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
 
 export default function ShopDuesPage() {
-    const { shopDues, addShopDue, updateShopDue } = useBudget();
+    const { debtNotes, addDebtNote, updateDebtNote } = useBudget();
     const { toast } = useToast();
-    const [selectedDue, setSelectedDue] = useState<ShopDue | null>(null);
+    const [selectedDue, setSelectedDue] = useState<DebtNote | null>(null);
     const [paymentAmount, setPaymentAmount] = useState<number>(0);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+
+    const shopDues = debtNotes.filter(d => d.type === 'shopDue');
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat("bn-BD", {
@@ -65,16 +66,17 @@ export default function ShopDuesPage() {
             return;
         }
 
-        const newDue: Omit<ShopDue, 'id'> = {
-            shopName,
+        const newDue: Omit<DebtNote, 'id' | 'userId' | 'createdAt'> = {
+            person: shopName,
+            type: 'shopDue',
             amount,
-            date,
+            date: new Date(date).toISOString(),
             description,
             paidAmount: 0,
             status: 'unpaid'
         };
         
-        await addShopDue(newDue);
+        await addDebtNote(newDue);
 
         toast({
             title: "সফল!",
@@ -85,7 +87,7 @@ export default function ShopDuesPage() {
         (event.target as HTMLFormElement).reset();
     }
 
-    const openPaymentDialog = (due: ShopDue) => {
+    const openPaymentDialog = (due: DebtNote) => {
         setSelectedDue(due);
         setPaymentAmount(due.amount - due.paidAmount);
         setIsPaymentDialogOpen(true);
@@ -106,9 +108,9 @@ export default function ShopDuesPage() {
 
         const newPaidAmount = selectedDue.paidAmount + paymentAmount;
         const newStatus = newPaidAmount >= selectedDue.amount ? 'paid' : 'partially-paid';
-        const updatedDue: ShopDue = { ...selectedDue, paidAmount: newPaidAmount, status: newStatus };
+        const updatedDue: DebtNote = { ...selectedDue, paidAmount: newPaidAmount, status: newStatus };
         
-        await updateShopDue(updatedDue);
+        await updateDebtNote(updatedDue);
 
         toast({
             title: "সফল!",
@@ -209,7 +211,7 @@ export default function ShopDuesPage() {
                 <CardContent className="p-4">
                    <div className="flex justify-between items-start">
                         <div>
-                            <p className="font-semibold">{due.shopName}</p>
+                            <p className="font-semibold">{due.person}</p>
                             <p className="text-sm text-muted-foreground">{new Date(due.date).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                         </div>
                         <span className={cn(
@@ -248,7 +250,7 @@ export default function ShopDuesPage() {
                 <DialogHeader>
                     <DialogTitle>পরিশোধ নিশ্চিত করুন</DialogTitle>
                     <DialogDescription>
-                        {selectedDue?.shopName} কে পরিশোধ করার জন্য পরিমাণ লিখুন।
+                        {selectedDue?.person} কে পরিশোধ করার জন্য পরিমাণ লিখুন।
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">

@@ -29,7 +29,7 @@ import { cn } from "@/lib/utils"
 type FilterType = "all" | "thisMonth" | "lastMonth";
 
 export function OverviewCards() {
-  const { income, expenses } = useBudget();
+  const { transactions } = useBudget();
   const [incomeFilter, setIncomeFilter] = React.useState<FilterType>("thisMonth");
   const [expenseFilter, setExpenseFilter] = React.useState<FilterType>("thisMonth");
   const [activeButton, setActiveButton] = React.useState<'income' | 'expense' | null>(null);
@@ -47,6 +47,9 @@ export function OverviewCards() {
         return data;
     }
   };
+  
+  const income = transactions.filter(t => t.type === 'income');
+  const expenses = transactions.filter(t => t.type === 'expense');
 
   const filteredIncome = filterData(income, incomeFilter);
   const filteredExpenses = filterData(expenses, expenseFilter);

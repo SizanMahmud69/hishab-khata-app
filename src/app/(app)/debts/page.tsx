@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { PlusCircle, TrendingDown, TrendingUp } from "lucide-react"
-import { useBudget } from "@/context/budget-context";
+import { useBudget, type DebtNote } from "@/context/budget-context";
 import { Button } from "@/components/ui/button"
 import PageHeader from "@/components/page-header"
 import {
@@ -25,7 +25,6 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { type Debt } from "@/lib/data"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -35,9 +34,9 @@ import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
 
 export default function DebtsPage() {
-    const { debts, addDebt, updateDebt, addExpense, addIncome, totalIncome, totalExpense } = useBudget();
+    const { debtNotes, addDebtNote, updateDebtNote, addTransaction, totalIncome, totalExpense } = useBudget();
     const { toast } = useToast();
-    const [selectedDebt, setSelectedDebt] = useState<Debt | null>(null);
+    const [selectedDebt, setSelectedDebt] = useState<DebtNote | null>(null);
     const [paymentAmount, setPaymentAmount] = useState<number>(0);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -80,34 +79,36 @@ export default function DebtsPage() {
             return;
         }
 
-        const newDebt: Omit<Debt, 'id'> = {
+        const newDebtNote: Omit<DebtNote, 'id' | 'userId' | 'createdAt'> = {
             type,
             person,
             amount,
-            date,
-            repaymentDate,
+            date: new Date(date).toISOString(),
+            repaymentDate: repaymentDate ? new Date(repaymentDate).toISOString() : undefined,
             description,
             paidAmount: 0,
             status: 'unpaid'
         };
 
         if (type === 'lent') {
-            await addExpense({
+            await addTransaction({
+                type: 'expense',
                 category: 'ধার প্রদান',
                 amount: amount,
-                date: date,
+                date: new Date(date).toISOString(),
                 description: `${person} কে ধার দেওয়া হলো`,
             });
         } else {
-            await addIncome({
-                source: 'ধার গ্রহণ',
+            await addTransaction({
+                type: 'income',
+                category: 'ধার গ্রহণ',
                 amount: amount,
-                date: date,
+                date: new Date(date).toISOString(),
                 description: `${person} এর থেকে ধার নেওয়া হলো`,
             });
         }
         
-        await addDebt(newDebt);
+        await addDebtNote(newDebtNote);
 
         toast({
             title: "সফল!",
@@ -118,7 +119,7 @@ export default function DebtsPage() {
         (event.target as HTMLFormElement).reset();
     }
 
-    const openPaymentDialog = (debt: Debt) => {
+    const openPaymentDialog = (debt: DebtNote) => {
         setSelectedDebt(debt);
         setPaymentAmount(debt.amount - debt.paidAmount);
         setIsPaymentDialogOpen(true);
@@ -141,7 +142,7 @@ export default function DebtsPage() {
         const newStatus = newPaidAmount >= selectedDebt.amount ? 'paid' : 'partially-paid';
         const updatedDebt = { ...selectedDebt, paidAmount: newPaidAmount, status: newStatus };
         
-        await updateDebt(updatedDebt);
+        await updateDebtNote(updatedDebt);
 
         toast({
             title: "সফল!",
@@ -164,8 +165,8 @@ export default function DebtsPage() {
         }
     }
 
-    const lentDebts = debts.filter(d => d.type === 'lent');
-    const borrowedDebts = debts.filter(d => d.type === 'borrowed');
+    const lentDebts = debtNotes.filter(d => d.type === 'lent');
+    const borrowedDebts = debtNotes.filter(d => d.type === 'borrowed');
 
     const totalLent = lentDebts.reduce((sum, debt) => sum + debt.amount, 0);
     const totalBorrowed = borrowedDebts.reduce((sum, debt) => sum + debt.amount, 0);

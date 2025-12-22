@@ -8,10 +8,10 @@ import { CheckCircle, Gift, Star, History } from "lucide-react"
 import { useBudget } from "@/context/budget-context";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { format, isToday, isYesterday, parseISO } from 'date-fns';
+import { format, isToday, isYesterday, parseISO, subDays } from 'date-fns';
 import { bn } from 'date-fns/locale';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, addDoc, serverTimestamp, query, orderBy, limit } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, orderBy, limit, setDoc, doc } from 'firebase/firestore';
 
 const MAX_STREAK_DAYS = 30;
 const BASE_REWARD = 5;
@@ -36,45 +36,49 @@ export default function CheckInPage() {
     
     const { data: history, isLoading } = useCollection<CheckInRecord>(checkInsQuery);
 
-    const { lastCheckInDate, consecutiveDays, isCheckedInToday } = useMemo(() => {
+    const { consecutiveDays, isCheckedInToday } = useMemo(() => {
         if (!history || history.length === 0) {
-            return { lastCheckInDate: null, consecutiveDays: 0, isCheckedInToday: false };
+            return { consecutiveDays: 0, isCheckedInToday: false };
         }
 
         const latestCheckIn = history[0];
         const lastDate = parseISO(latestCheckIn.date);
-        const today = new Date();
-
-        const checkedInToday = isToday(lastDate);
         
-        let streak = 0;
-        if (checkedInToday || isYesterday(lastDate)) {
-            streak = 1;
-            let lastStreakDate = lastDate;
+        const checkedInToday = isToday(lastDate);
+        if (checkedInToday) {
+             let streak = 1;
+             let lastStreakDate = lastDate;
+             for (let i = 1; i < history.length; i++) {
+                 const currentCheckInDate = parseISO(history[i].date);
+                 const expectedPreviousDate = subDays(lastStreakDate, 1);
+                 if (currentCheckInDate.toDateString() === expectedPreviousDate.toDateString()) {
+                     streak++;
+                     lastStreakDate = currentCheckInDate;
+                 } else {
+                     break; 
+                 }
+             }
+             return { consecutiveDays: streak, isCheckedInToday: true };
+        }
 
-            for (let i = 1; i < history.length; i++) {
-                const currentCheckInDate = parseISO(history[i].date);
-                const expectedPreviousDate = new Date(lastStreakDate);
-                expectedPreviousDate.setDate(lastStreakDate.getDate() - 1);
+        if (isYesterday(lastDate)) {
+             let streak = 1;
+             let lastStreakDate = lastDate;
+             for (let i = 1; i < history.length; i++) {
+                 const currentCheckInDate = parseISO(history[i].date);
+                 const expectedPreviousDate = subDays(lastStreakDate, 1);
 
-                if (currentCheckInDate.toDateString() === expectedPreviousDate.toDateString()) {
-                    streak++;
-                    lastStreakDate = currentCheckInDate;
-                } else {
-                    break; 
-                }
-            }
+                 if (currentCheckInDate.toDateString() === expectedPreviousDate.toDateString()) {
+                     streak++;
+                     lastStreakDate = currentCheckInDate;
+                 } else {
+                     break; 
+                 }
+             }
+             return { consecutiveDays: streak, isCheckedInToday: false };
         }
         
-        // If they checked in yesterday but not today, the streak is valid. If they checked in today, the streak is also valid.
-        // If the last check-in was before yesterday, the streak is 0.
-        const lastCheckInIsOlderThanYesterday = !isToday(lastDate) && !isYesterday(lastDate);
-        
-        return {
-            lastCheckInDate: latestCheckIn.date,
-            consecutiveDays: lastCheckInIsOlderThanYesterday ? 0 : streak,
-            isCheckedInToday: checkedInToday,
-        };
+        return { consecutiveDays: 0, isCheckedInToday: false };
 
     }, [history]);
 
@@ -98,8 +102,6 @@ export default function CheckInPage() {
         const newConsecutiveDays = consecutiveDays + 1;
         const points = calculateReward(newConsecutiveDays);
         
-        addRewardPoints(points);
-
         const today = new Date();
         const newCheckIn = {
             date: today.toISOString(),
@@ -112,6 +114,14 @@ export default function CheckInPage() {
                 ...newCheckIn,
                 createdAt: serverTimestamp(),
             });
+
+            addRewardPoints(points);
+
+            const userDocRef = doc(firestore, `users/${user.uid}`);
+            await setDoc(userDocRef, {
+                lastCheckIn: today.toISOString().split('T')[0],
+                checkInStreak: newConsecutiveDays
+            }, { merge: true });
 
             toast({
                 title: "অভিনন্দন!",

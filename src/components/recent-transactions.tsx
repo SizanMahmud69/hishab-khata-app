@@ -14,11 +14,10 @@ import { History, TrendingDown, TrendingUp } from "lucide-react"
 import { Button } from "./ui/button"
 import Link from "next/link"
 import { useBudget } from "@/context/budget-context"
-import { parseISO } from "date-fns"
 import { cn } from "@/lib/utils";
 
 export function RecentTransactions() {
-  const { income, expenses } = useBudget();
+  const { transactions } = useBudget();
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("bn-BD", {
       style: "currency",
@@ -27,19 +26,13 @@ export function RecentTransactions() {
     }).format(amount)
   }
 
-  const transactions = useMemo(() => {
-    if (!income || !expenses) return [];
-    const allTransactions = [
-      ...income.map(i => ({ ...i, type: 'income' as const, category: i.source, id: i.id || Math.random().toString() })),
-      ...expenses.map(e => ({ ...e, type: 'expense' as const, id: e.id || Math.random().toString() }))
-    ];
-
-    return allTransactions.sort((a, b) => {
-        const timeA = a.createdAt?.seconds || 0;
-        const timeB = b.createdAt?.seconds || 0;
+  const sortedTransactions = useMemo(() => {
+    return [...transactions].sort((a, b) => {
+        const timeA = a.createdAt?.seconds || new Date(a.date).getTime() / 1000;
+        const timeB = b.createdAt?.seconds || new Date(b.date).getTime() / 1000;
         return timeB - timeA;
     });
-  }, [income, expenses]);
+  }, [transactions]);
 
   return (
     <Card>
@@ -56,7 +49,7 @@ export function RecentTransactions() {
       </CardHeader>
       <CardContent>
           <div className="space-y-6">
-            {transactions.slice(0, 5).map((transaction) => (
+            {sortedTransactions.slice(0, 5).map((transaction) => (
               <div key={transaction.id} className="flex items-center">
                 <Avatar className="h-10 w-10">
                     <AvatarFallback className={cn("font-bold", transaction.type === 'income' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600')}>

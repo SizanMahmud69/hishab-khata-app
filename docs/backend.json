@@ -8,256 +8,173 @@
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the user entity."
+          "description": "Unique Firebase Auth UID for the user."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Custom, user-facing ID like '#hishab-4310'."
         },
         "email": {
           "type": "string",
           "description": "User's email address.",
           "format": "email"
         },
-        "displayName": {
+        "name": {
           "type": "string",
-          "description": "User's display name."
+          "description": "User's full display name."
         },
-        "photoURL": {
+        "avatar": {
           "type": "string",
           "description": "URL of the user's profile picture."
         },
-        "phoneNumber": {
+        "phone": {
           "type": "string",
           "description": "User's phone number."
         },
-        "isNidVerified": {
-          "type": "boolean",
-          "description": "Whether the user's NID is verified."
+        "address": {
+          "type": "string",
+          "description": "User's primary address."
         },
-        "nidApplicationPending": {
-          "type": "boolean",
-          "description": "Whether the user has a pending NID verification application."
+        "points": {
+          "type": "number",
+          "description": "User's total reward points."
+        },
+        "joinDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The ISO 8601 timestamp when the user registered."
+        },
+        "lastCheckIn": {
+            "type": "string",
+            "format": "date",
+            "description": "The date of the user's last daily check-in."
+        },
+        "checkInStreak": {
+            "type": "number",
+            "description": "The user's current daily check-in streak."
+        },
+        "verificationStatus": {
+            "type": "string",
+            "enum": ["pending", "verified", "rejected", "none"],
+            "description": "The current status of the user's NID verification."
+        },
+        "verificationRequestId": {
+          "type": "string",
+          "description": "ID of the current or last verification request document."
         },
         "nidName": {
           "type": "string",
-          "description": "Name as per NID."
+          "description": "Name as per NID, submitted for verification."
         },
         "nidNumber": {
           "type": "string",
-          "description": "NID card number."
+          "description": "NID card number, submitted for verification."
         },
         "nidDob": {
           "type": "string",
-          "description": "Date of birth from NID.",
+          "description": "Date of birth from NID, submitted for verification.",
           "format": "date"
         },
         "nidAddress": {
           "type": "string",
-          "description": "Address as per NID."
-        },
-        "rewardPoints": {
-          "type": "number",
-          "description": "User's total reward points."
-        },
-        "nidRejectionReason": {
-          "type": "string",
-          "description": "Reason why the NID verification was rejected."
+          "description": "Address as per NID, submitted for verification."
         }
       },
-      "required": [
-        "id",
-        "email"
-      ]
+      "required": ["id", "email", "name"]
     },
-    "Income": {
+    "Transaction": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Income",
+      "title": "Transaction",
       "type": "object",
-      "description": "Represents a user's income entry.",
+      "description": "Represents a single financial transaction, either income or expense.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the income entry."
+          "description": "Unique identifier for the transaction."
         },
         "userId": {
           "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N Income)"
+          "description": "The UID of the user who owns this transaction."
+        },
+        "type": {
+            "type": "string",
+            "enum": ["income", "expense"],
+            "description": "The type of transaction."
+        },
+        "category": {
+            "type": "string",
+            "description": "The category of the transaction (e.g., 'Salary', 'Food')."
         },
         "amount": {
           "type": "number",
-          "description": "Amount of income."
+          "description": "The amount of the transaction."
         },
         "date": {
           "type": "string",
-          "description": "Date of income.",
+          "description": "Date of the transaction.",
           "format": "date-time"
         },
         "description": {
           "type": "string",
-          "description": "Description of income source."
+          "description": "A brief description of the transaction."
         }
       },
-      "required": [
-        "id",
-        "userId",
-        "amount",
-        "date"
-      ]
+      "required": ["id", "userId", "type", "category", "amount", "date"]
     },
-    "Expense": {
+    "DebtNote": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Expense",
+      "title": "DebtNote",
       "type": "object",
-      "description": "Represents a user's expense entry.",
+      "description": "Represents a debt record, either money lent or borrowed.",
       "properties": {
         "id": {
-          "type": "string",
-          "description": "Unique identifier for the expense entry."
+            "type": "string",
+            "description": "Unique identifier for the debt note."
         },
         "userId": {
-          "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N Expense)"
+            "type": "string",
+            "description": "The UID of the user who owns this debt note."
         },
-        "categoryId": {
-          "type": "string",
-          "description": "Reference to Category. (Relationship: Category 1:N Expense)"
+        "type": {
+            "type": "string",
+            "enum": ["lent", "borrowed", "shopDue"],
+            "description": "The type of debt."
+        },
+        "person": {
+            "type": "string",
+            "description": "Name of the person or shop involved in the debt."
         },
         "amount": {
-          "type": "number",
-          "description": "Amount of expense."
+            "type": "number",
+            "description": "The total amount of the debt."
+        },
+        "paidAmount": {
+            "type": "number",
+            "description": "The amount that has been paid back."
+        },
+        "status": {
+            "type": "string",
+            "enum": ["unpaid", "partially-paid", "paid"],
+            "description": "The current status of the debt."
         },
         "date": {
-          "type": "string",
-          "description": "Date of expense.",
-          "format": "date-time"
+            "type": "string",
+            "format": "date-time",
+            "description": "The date the debt was created."
+        },
+        "repaymentDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The expected repayment date."
         },
         "description": {
-          "type": "string",
-          "description": "Description of expense."
+            "type": "string",
+            "description": "A brief description of the debt."
         }
       },
-      "required": [
-        "id",
-        "userId",
-        "categoryId",
-        "amount",
-        "date"
-      ]
+      "required": ["id", "userId", "type", "person", "amount", "paidAmount", "status", "date"]
     },
-    "Category": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Category",
-      "type": "object",
-      "description": "Represents a category for expenses.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the category."
-        },
-        "name": {
-          "type": "string",
-          "description": "Name of the category."
-        },
-        "description": {
-          "type": "string",
-          "description": "Description of the category."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N Category)"
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "userId"
-      ]
-    },
-    "Budget": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Budget",
-      "type": "object",
-      "description": "Represents a user's budget.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the budget."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N Budget)"
-        },
-        "categoryId": {
-          "type": "string",
-          "description": "Reference to Category. (Relationship: Category 1:N Budget)"
-        },
-        "amount": {
-          "type": "number",
-          "description": "Budgeted amount for the category."
-        },
-        "startDate": {
-          "type": "string",
-          "description": "Start date of the budget.",
-          "format": "date-time"
-        },
-        "endDate": {
-          "type": "string",
-          "description": "End date of the budget.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "userId",
-        "categoryId",
-        "amount",
-        "startDate",
-        "endDate"
-      ]
-    },
-    "Loan": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Loan",
-      "type": "object",
-      "description": "Represents a loan a user has given or taken.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the loan."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to User taking or giving loan. (Relationship: User 1:N Loan)"
-        },
-        "friendId": {
-          "type": "string",
-          "description": "Reference to User who is the friend involved in the loan. (Relationship: User 1:N Loan)"
-        },
-        "amount": {
-          "type": "number",
-          "description": "Amount of the loan."
-        },
-        "date": {
-          "type": "string",
-          "description": "Date of the loan.",
-          "format": "date-time"
-        },
-        "description": {
-          "type": "string",
-          "description": "Description of the loan."
-        },
-        "loanType": {
-          "type": "string",
-          "description": "Type of loan ('given' or 'taken')."
-        }
-      },
-      "required": [
-        "id",
-        "userId",
-        "friendId",
-        "amount",
-        "date",
-        "loanType"
-      ]
-    },
-     "CheckIn": {
+    "CheckIn": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "CheckIn",
       "type": "object",
@@ -282,6 +199,44 @@
         }
       },
       "required": ["id", "userId", "date", "points"]
+    },
+    "VerificationRequest": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "VerificationRequest",
+      "type": "object",
+      "description": "Represents a user's NID verification request.",
+      "properties": {
+          "id": {"type": "string"},
+          "userId": {"type": "string"},
+          "status": {"type": "string", "enum": ["pending", "approved", "rejected"]},
+          "submittedAt": {"type": "string", "format": "date-time"},
+          "reviewedAt": {"type": "string", "format": "date-time"},
+          "rejectionReason": {"type": "string"},
+          "nidName": {"type": "string"},
+          "nidNumber": {"type": "string"},
+          "nidDob": {"type": "string", "format": "date"},
+          "nidAddress": {"type": "string"},
+          "phone": {"type": "string"}
+      },
+      "required": ["id", "userId", "status", "submittedAt"]
+    },
+    "WithdrawalRequest": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "WithdrawalRequest",
+        "type": "object",
+        "description": "Represents a user's request to withdraw reward points.",
+        "properties": {
+            "id": {"type": "string"},
+            "userId": {"type": "string"},
+            "status": {"type": "string", "enum": ["pending", "completed", "failed"]},
+            "points": {"type": "number"},
+            "amountBdt": {"type": "number"},
+            "paymentMethod": {"type": "string"},
+            "accountNumber": {"type": "string"},
+            "requestedAt": {"type": "string", "format": "date-time"},
+            "processedAt": {"type": "string", "format": "date-time"}
+        },
+        "required": ["id", "userId", "status", "points", "amountBdt", "paymentMethod", "accountNumber", "requestedAt"]
     }
   },
   "auth": {
@@ -299,113 +254,27 @@
           "schema": {
             "$ref": "#/backend/entities/User"
           },
-          "description": "Stores user profile information. Path-based ownership ensures only the authenticated user can access their own profile. This collection ensures Authorization Independence without relying on get() calls, supporting QAPs.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            }
-          ]
+          "description": "Stores user profile information. Path-based ownership ensures only the authenticated user can access their own profile."
         }
       },
       {
-        "path": "/users/{userId}/incomes/{incomeId}",
+        "path": "/users/{userId}/transactions/{transactionId}",
         "definition": {
-          "entityName": "Income",
+          "entityName": "Transaction",
           "schema": {
-            "$ref": "#/backend/entities/Income"
+            "$ref": "#/backend/entities/Transaction"
           },
-          "description": "Stores income entries for a specific user. Path-based ownership ensures only the authenticated user can access their own income data. This collection ensures Authorization Independence without relying on get() calls, supporting QAPs.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "incomeId",
-              "description": "The unique identifier for the income entry."
-            }
-          ]
+          "description": "Stores all financial transactions (income and expense) for a user."
         }
       },
       {
-        "path": "/users/{userId}/expenses/{expenseId}",
+        "path": "/users/{userId}/debtNotes/{debtNoteId}",
         "definition": {
-          "entityName": "Expense",
+          "entityName": "DebtNote",
           "schema": {
-            "$ref": "#/backend/entities/Expense"
+            "$ref": "#/backend/entities/DebtNote"
           },
-          "description": "Stores expense entries for a specific user. Path-based ownership ensures only the authenticated user can access their own expense data. This collection ensures Authorization Independence without relying on get() calls, supporting QAPs.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "expenseId",
-              "description": "The unique identifier for the expense entry."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/categories/{categoryId}",
-        "definition": {
-          "entityName": "Category",
-          "schema": {
-            "$ref": "#/backend/entities/Category"
-          },
-          "description": "Stores expense categories for a specific user. Path-based ownership ensures only the authenticated user can access their own categories. This collection ensures Authorization Independence without relying on get() calls, supporting QAPs.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "categoryId",
-              "description": "The unique identifier for the expense category."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/budgets/{budgetId}",
-        "definition": {
-          "entityName": "Budget",
-          "schema": {
-            "$ref": "#/backend/entities/Budget"
-          },
-          "description": "Stores budget entries for a specific user. Path-based ownership ensures only the authenticated user can access their own budgets. This collection ensures Authorization Independence without relying on get() calls, supporting QAPs.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "budgetId",
-              "description": "The unique identifier for the budget entry."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/loans/{loanId}",
-        "definition": {
-          "entityName": "Loan",
-          "schema": {
-            "$ref": "#/backend/entities/Loan"
-          },
-          "description": "Stores loan entries (given or taken) for a specific user. Path-based ownership ensures only the authenticated user can access their own loan data. This collection ensures Authorization Independence without relying on get() calls, supporting QAPs.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "loanId",
-              "description": "The unique identifier for the loan entry."
-            }
-          ]
+          "description": "Stores all debt-related records (lent, borrowed, shop dues) for a user."
         }
       },
       {
@@ -415,20 +284,25 @@
           "schema": {
             "$ref": "#/backend/entities/CheckIn"
           },
-          "description": "Stores daily check-in records for a user to track streaks and rewards. Path-based ownership ensures privacy.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "checkInId",
-              "description": "The unique identifier for the check-in record."
-            }
-          ]
+          "description": "Stores daily check-in records for a user to track streaks and rewards."
         }
+      },
+      {
+        "path": "/users/{userId}/verificationRequests/{requestId}",
+        "definition": {
+            "entityName": "VerificationRequest",
+            "schema": { "$ref": "#/backend/entities/VerificationRequest" },
+            "description": "Stores a user's NID verification requests."
+        }
+      },
+      {
+          "path": "/users/{userId}/withdrawalRequests/{requestId}",
+          "definition": {
+              "entityName": "WithdrawalRequest",
+              "schema": { "$ref": "#/backend/entities/WithdrawalRequest" },
+              "description": "Stores a user's reward point withdrawal requests."
+          }
       }
-    ],
-    "reasoning": "The Firestore structure is designed to be secure, scalable, and debuggable, adhering to the core design principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), QAPs (Rules are not Filters), and Invariants. The primary strategy is to ensure Authorization Independence via Denormalization, which avoids hierarchical authorization dependencies and allows atomic operations.  Structural Segregation is used to maintain a homogeneous security posture within collections.  Access Modeling employs path-based ownership for private user data. The error reported (auth/configuration-not-found) indicates a Firebase configuration issue, not a data structure issue, but I will still provide the data structure according to your requirements. All User-related data will be stored under the /users/{userId} collection to ensure only the user has access to their information unless collaborative features are added in the future which would require membership maps. The user ID is automatically generated upon account creation, allowing data to be secured using rules based on request.auth.uid. This data structure supports QAPs by ensuring clear ownership and access patterns, enabling efficient list operations without compromising security."
+    ]
   }
 }

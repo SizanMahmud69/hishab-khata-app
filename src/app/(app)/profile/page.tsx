@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -19,25 +20,32 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
+// This interface now reflects the new 'User' entity in backend.json
 interface UserProfile {
     id: string;
+    userId: string;
     email: string;
-    displayName: string;
-    photoURL?: string;
-    phoneNumber?: string;
-    isNidVerified?: boolean;
-    nidApplicationPending?: boolean;
+    name: string;
+    avatar?: string;
+    phone?: string;
+    address?: string;
+    points?: number;
+    joinDate?: string;
+    lastCheckIn?: string;
+    checkInStreak?: number;
+    verificationStatus?: 'pending' | 'verified' | 'rejected' | 'none';
+    verificationRequestId?: string;
     nidName?: string;
     nidNumber?: string;
     nidDob?: string;
     nidAddress?: string;
-    rewardPoints?: number;
-    nidRejectionReason?: string;
+    nidRejectionReason?: string; // Custom field, not in schema but useful
 }
+
 
 export default function ProfilePage() {
   const { user } = useUser();
@@ -55,7 +63,7 @@ export default function ProfilePage() {
 
   const handleNidSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!userDocRef) return;
+    if (!user || !firestore) return;
 
     const formData = new FormData(event.currentTarget);
     const name = formData.get('name') as string;
@@ -76,15 +84,27 @@ export default function ProfilePage() {
     setIsVerificationDialogOpen(false);
 
     try {
-        await setDoc(userDocRef, {
-            isNidVerified: false,
-            nidApplicationPending: true,
-            nidRejectionReason: '', // Clear previous rejection reason
+        const verificationRequestRef = collection(firestore, `users/${user.uid}/verificationRequests`);
+        const newRequestDoc = await addDoc(verificationRequestRef, {
+            userId: user.uid,
+            status: 'pending',
+            submittedAt: serverTimestamp(),
             nidName: name,
             nidNumber: nid,
             nidDob: dob,
             nidAddress: address,
-            phoneNumber: phone
+            phone: phone,
+        });
+
+        await setDoc(userDocRef, {
+            verificationStatus: 'pending',
+            verificationRequestId: newRequestDoc.id,
+            nidName: name,
+            nidNumber: nid,
+            nidDob: dob,
+            nidAddress: address,
+            phone: phone,
+            nidRejectionReason: '', // Clear previous reason
         }, { merge: true });
 
         toast({
@@ -103,7 +123,7 @@ export default function ProfilePage() {
   };
 
   const VerificationStatus = () => {
-    if (userProfile?.isNidVerified) {
+    if (userProfile?.verificationStatus === 'verified') {
       return (
         <div className="space-y-4">
           <div className="flex items-start gap-4">
@@ -138,7 +158,7 @@ export default function ProfilePage() {
       );
     }
 
-    if (userProfile?.nidApplicationPending) {
+    if (userProfile?.verificationStatus === 'pending') {
         return (
              <Alert className="bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-700">
                 <AlertTriangle className="h-4 w-4 text-yellow-500" />
@@ -152,7 +172,7 @@ export default function ProfilePage() {
 
     return (
         <div>
-            {userProfile?.nidRejectionReason && (
+            {userProfile?.verificationStatus === 'rejected' && userProfile?.nidRejectionReason && (
                  <Alert variant="destructive" className="mb-4">
                     <Info className="h-4 w-4" />
                     <AlertTitle>আবেদন বাতিল হয়েছে</AlertTitle>
@@ -233,17 +253,17 @@ export default function ProfilePage() {
         <div className="h-24 bg-primary/20" />
         <div className="relative -mt-16 flex justify-center">
              <Avatar className="h-32 w-32 border-4 border-background shadow-lg">
-                <AvatarImage src={userProfile?.photoURL ?? user?.photoURL ?? `https://i.pravatar.cc/150?u=${user?.email}`} alt="User avatar" data-ai-hint="profile avatar" />
-                <AvatarFallback className="text-4xl">{userProfile?.displayName?.charAt(0) ?? user?.displayName?.charAt(0) ?? 'U'}</AvatarFallback>
+                <AvatarImage src={userProfile?.avatar ?? user?.photoURL ?? `https://i.pravatar.cc/150?u=${user?.email}`} alt="User avatar" data-ai-hint="profile avatar" />
+                <AvatarFallback className="text-4xl">{userProfile?.name?.charAt(0) ?? user?.displayName?.charAt(0) ?? 'U'}</AvatarFallback>
             </Avatar>
         </div>
         <CardContent className="text-center pt-6 pb-6 px-4 sm:px-6">
             <div className="flex items-center justify-center gap-2">
-                <h2 className="text-3xl font-bold">{userProfile?.displayName ?? user?.displayName ?? 'ব্যবহারকারী'}</h2>
-                 {userProfile?.isNidVerified && <Badge className="bg-green-100 text-green-800 border-green-300 hover:bg-green-100/80"><CheckCircle className="w-3.5 h-3.5 mr-1.5" />ভেরিফাইড</Badge>}
-                 {userProfile?.nidApplicationPending && <Badge variant="outline" className="text-yellow-600 border-yellow-400">প্রসেসিং...</Badge>}
+                <h2 className="text-3xl font-bold">{userProfile?.name ?? user?.displayName ?? 'ব্যবহারকারী'}</h2>
+                 {userProfile?.verificationStatus === 'verified' && <Badge className="bg-green-100 text-green-800 border-green-300 hover:bg-green-100/80"><CheckCircle className="w-3.5 h-3.5 mr-1.5" />ভেরিফাইড</Badge>}
+                 {userProfile?.verificationStatus === 'pending' && <Badge variant="outline" className="text-yellow-600 border-yellow-400">প্রসেসিং...</Badge>}
             </div>
-             <p className="text-sm text-muted-foreground mt-2">রিওয়ার্ড পয়েন্ট: {userProfile?.rewardPoints ?? 0}</p>
+             <p className="text-sm text-muted-foreground mt-2">রিওয়ার্ড পয়েন্ট: {userProfile?.points ?? 0}</p>
         </CardContent>
       </Card>
 
@@ -270,14 +290,14 @@ export default function ProfilePage() {
                 <Phone className="w-6 h-6 text-muted-foreground mt-1" />
                 <div className="flex-1">
                     <p className="text-sm font-medium">ফোন নম্বর</p>
-                    <p className="text-muted-foreground">{userProfile?.phoneNumber ?? user?.phoneNumber ?? 'ফোন নম্বর সেট করা নেই'}</p>
+                    <p className="text-muted-foreground">{userProfile?.phone ?? user?.phoneNumber ?? 'ফোন নম্বর সেট করা নেই'}</p>
                 </div>
             </div>
              <div className="flex items-start gap-4">
                 <MapPin className="w-6 h-6 text-muted-foreground mt-1" />
                 <div className="flex-1">
                     <p className="text-sm font-medium">ঠিকানা</p>
-                    <p className="text-muted-foreground">{userProfile?.nidAddress ?? 'ঠিকানা সেট করা নেই'}</p>
+                    <p className="text-muted-foreground">{userProfile?.address ?? 'ঠিকানা সেট করা নেই'}</p>
                 </div>
             </div>
         </CardContent>
@@ -286,7 +306,7 @@ export default function ProfilePage() {
        <Card>
         <CardHeader>
             <CardTitle>এনআইডি ভেরিফিকেশন</CardTitle>
-            {!userProfile?.isNidVerified && <CardDescription>আপনার অ্যাকাউন্টের নিরাপত্তা এবং বিশ্বাসযোগ্যতা বাড়ান।</CardDescription>}
+            {userProfile?.verificationStatus !== 'verified' && <CardDescription>আপনার অ্যাকাউন্টের নিরাপত্তা এবং বিশ্বাসযোগ্যতা বাড়ান।</CardDescription>}
         </CardHeader>
         <CardContent>
             <VerificationStatus />
