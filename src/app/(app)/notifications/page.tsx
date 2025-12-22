@@ -50,7 +50,7 @@ export default function NotificationsPage() {
     }, []);
 
     const monthlyNotifications = useMemo(() => {
-        return notifications.filter(n => isThisMonth(parseISO(n.createdAt)));
+        return notifications.filter(n => n.createdAt && isThisMonth(parseISO(n.createdAt)));
     }, [notifications]);
 
     const markAsRead = (id: string) => {
@@ -91,7 +91,8 @@ export default function NotificationsPage() {
                                 key={notification.id} 
                                 className={cn(
                                     "flex items-start justify-between gap-4 p-4 rounded-lg border cursor-pointer transition-colors", 
-                                    notification.read ? "bg-muted/50 hover:bg-muted" : "bg-card hover:bg-muted/50"
+                                    notification.read ? "bg-muted/50 hover:bg-muted" : "bg-card hover:bg-muted/50",
+                                    notification.link ? "cursor-pointer" : "cursor-default"
                                 )}
                                 onClick={() => handleNotificationClick(notification)}
                             >
