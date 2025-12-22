@@ -5,7 +5,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import { type Debt, type ShopDue } from '@/lib/data';
 import { useUser } from '@/firebase/provider';
 import { useFirestore } from '@/firebase/provider';
-import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, writeBatch, setDoc, query, where } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, writeBatch, setDoc, query } from 'firebase/firestore';
 
 export interface Income {
     id?: string;
@@ -107,8 +107,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
 
         const createSnapshotListener = (collectionName: string, setData: React.Dispatch<React.SetStateAction<any[]>>) => {
             const collectionRef = collection(firestore, basePath, collectionName);
-            const q = query(collectionRef, where("userId", "==", user.uid));
-            return onSnapshot(q, (snapshot) => {
+            return onSnapshot(collectionRef, (snapshot) => {
                 const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 setData(data);
                 onDataLoaded();
@@ -118,7 +117,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             });
         };
 
-        const rewardsDocRef = doc(firestore, `users/${user.uid}/rewards/summary`);
+        const rewardsDocRef = doc(firestore, basePath, 'rewards/summary');
         const unsubRewards = onSnapshot(rewardsDocRef, (snapshot) => {
             setRewardPoints(snapshot.data()?.points || 0);
             onDataLoaded();
@@ -280,5 +279,7 @@ export const useBudget = () => {
     }
     return context;
 };
+
+    
 
     
