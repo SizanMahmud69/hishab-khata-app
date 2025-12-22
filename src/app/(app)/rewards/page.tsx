@@ -23,6 +23,9 @@ import { createNotification } from '@/components/app-header';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { paymentMethods } from '@/lib/data';
+import { Slider } from '@/components/ui/slider';
 
 const WITHDRAW_THRESHOLD = 100;
 const CONVERSION_RATE = 0.05; // 100 points = 5 BDT
@@ -45,14 +48,42 @@ export default function RewardsPage() {
 
     const { data: userProfile, isLoading } = useDoc<UserProfile>(userDocRef);
     const rewardPoints = userProfile?.rewardPoints ?? 0;
+    
+    const [pointsToWithdraw, setPointsToWithdraw] = useState(rewardPoints);
 
     const canWithdraw = rewardPoints >= WITHDRAW_THRESHOLD;
-    const withdrawableAmount = Math.floor(rewardPoints / 100) * 5;
+    const withdrawableAmountBdt = Math.floor(rewardPoints / 100) * 5;
+    const selectedAmountBdt = Math.floor(pointsToWithdraw / 100) * 5;
 
-    const handleWithdraw = () => {
-        const pointsToDeduct = Math.floor(rewardPoints / 100) * 100;
+    const handlePointsChange = (value: number) => {
+        if (value > rewardPoints) {
+            setPointsToWithdraw(rewardPoints);
+        } else if (value < 0) {
+            setPointsToWithdraw(0);
+        } else {
+            setPointsToWithdraw(value);
+        }
+    }
+    
+    const handleWithdraw = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        const formData = new FormData(event.currentTarget);
+        const paymentMethod = formData.get('payment-method') as string;
+        const accountNumber = formData.get('account-number') as string;
+
+        if (!paymentMethod || !accountNumber) {
+             toast({
+                variant: "destructive",
+                title: "ফর্ম পূরণ আবশ্যক",
+                description: "অনুগ্রহ করে পেমেন্ট মাধ্যম এবং অ্যাকাউন্ট নম্বর দিন।",
+            });
+            return;
+        }
         
-        if (pointsToDeduct <= 0) {
+        const pointsToDeduct = Math.floor(pointsToWithdraw / 100) * 100;
+        
+        if (pointsToDeduct < WITHDRAW_THRESHOLD) {
              toast({
                 variant: "destructive",
                 title: "অপর্যাপ্ত পয়েন্ট",
@@ -76,6 +107,14 @@ export default function RewardsPage() {
             description: `আপনার উইথড্র সফল হয়েছে। ${pointsToDeduct} পয়েন্ট আপনার অ্যাকাউন্ট থেকে কেটে নেওয়া হয়েছে।`,
         });
         setIsDialogOpen(false);
+    }
+
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat("bn-BD", {
+          style: "currency",
+          currency: "BDT",
+          minimumFractionDigits: 0,
+        }).format(amount)
     }
 
   if (isLoading) {
@@ -120,14 +159,14 @@ export default function RewardsPage() {
             <CardContent>
                 <div className="text-center space-y-2">
                     <p className="text-sm text-muted-foreground">মোট উইথড্র করার মতো পরিমাণ</p>
-                    <p className="text-3xl font-bold">৳{withdrawableAmount}</p>
+                    <p className="text-3xl font-bold">{formatCurrency(withdrawableAmountBdt)}</p>
                     <p className="text-xs text-muted-foreground">১০০ পয়েন্ট = ৫ টাকা</p>
                 </div>
             </CardContent>
             <CardFooter>
                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button className="w-full" disabled={withdrawableAmount <= 0}>
+                        <Button className="w-full" disabled={withdrawableAmountBdt <= 0}>
                             উইথড্র করুন
                         </Button>
                     </DialogTrigger>
@@ -138,23 +177,48 @@ export default function RewardsPage() {
                             আপনার পেমেন্ট বিবরণ দিন। টাকা ২৪ ঘন্টার মধ্যে পাঠানো হবে।
                         </DialogDescription>
                         </DialogHeader>
-                        <div className="grid gap-4 py-4">
-                            <div className="grid w-full items-center gap-1.5">
-                                <Label htmlFor="payment-method">
-                                    মাধ্যম
-                                </Label>
-                                <Input id="payment-method" defaultValue="বিকাশ" />
+                        <form onSubmit={handleWithdraw}>
+                            <div className="grid gap-4 py-4">
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="points-to-withdraw">কত পয়েন্ট উইথড্র করবেন?</Label>
+                                    <Input 
+                                        id="points-to-withdraw"
+                                        type="number"
+                                        value={pointsToWithdraw}
+                                        onChange={(e) => handlePointsChange(Number(e.target.value))}
+                                        max={rewardPoints}
+                                        min="0"
+                                    />
+                                    <Slider
+                                        value={[pointsToWithdraw]}
+                                        max={rewardPoints}
+                                        step={100}
+                                        onValueChange={(value) => handlePointsChange(value[0])}
+                                    />
+                                    <p className="text-sm text-muted-foreground text-center pt-1">
+                                        আপনি পাবেন: <span className="font-bold text-primary">{formatCurrency(selectedAmountBdt)}</span>
+                                    </p>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="payment-method">মাধ্যম</Label>
+                                    <Select name="payment-method" required>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="একটি মাধ্যম নির্বাচন করুন" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {paymentMethods.map(method => <SelectItem key={method} value={method}>{method}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="account-number">অ্যাকাউন্ট নম্বর</Label>
+                                    <Input id="account-number" name="account-number" placeholder="017********" required />
+                                </div>
                             </div>
-                            <div className="grid w-full items-center gap-1.5">
-                                <Label htmlFor="account-number">
-                                    অ্যাকাউন্ট নম্বর
-                                </Label>
-                                <Input id="account-number" placeholder="017********" />
-                            </div>
-                        </div>
-                        <DialogFooter>
-                            <Button onClick={handleWithdraw}>নিশ্চিত করুন</Button>
-                        </DialogFooter>
+                            <DialogFooter>
+                                <Button type="submit">নিশ্চিত করুন</Button>
+                            </DialogFooter>
+                        </form>
                     </DialogContent>
                 </Dialog>
             </CardFooter>

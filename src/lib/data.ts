@@ -34,3 +34,4 @@ export const overviewChartData = [
 export const expenseCategories = ['খাবার', 'বাজার', 'যাতায়াত', 'শপিং', 'বিনোদন', 'বিল', 'স্বাস্থ্য', 'সঞ্চয় ডিপোজিট', 'ধার প্রদান', 'অন্যান্য'];
 export const incomeSources = ['মাসিক বেতন', 'ফ্রিল্যান্সিং', 'ব্যবসা', 'সঞ্চয় উত্তোলন', 'ধার গ্রহণ', 'অন্যান্য'];
 export const savingsDestinations = ['ব্যাংক', 'বিকাশ', 'রকেট', 'নগদ'];
+export const paymentMethods = ['বিকাশ', 'নগদ', 'রকেট'];
