@@ -110,31 +110,31 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                 const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Income));
                 setIncome(data);
                 onDataLoaded();
-            }, (err) => { console.error(err); onDataLoaded(); }),
+            }, (err) => { console.error("Income fetch error: ", err); onDataLoaded(); }),
             onSnapshot(collection(firestore, basePath, 'expenses'), (snapshot) => {
                 const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense));
                 setExpenses(data);
                 onDataLoaded();
-            }, (err) => { console.error(err); onDataLoaded(); }),
+            }, (err) => { console.error("Expenses fetch error: ", err); onDataLoaded(); }),
             onSnapshot(collection(firestore, basePath, 'savings'), (snapshot) => {
                 const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Saving));
                 setSavings(data);
                 onDataLoaded();
-            }, (err) => { console.error(err); onDataLoaded(); }),
+            }, (err) => { console.error("Savings fetch error: ", err); onDataLoaded(); }),
             onSnapshot(collection(firestore, basePath, 'debts'), (snapshot) => {
                 const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Debt));
                 setDebts(data);
                 onDataLoaded();
-            }, (err) => { console.error(err); onDataLoaded(); }),
+            }, (err) => { console.error("Debts fetch error: ", err); onDataLoaded(); }),
             onSnapshot(collection(firestore, basePath, 'shopDues'), (snapshot) => {
                 const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ShopDue));
                 setShopDues(data);
                 onDataLoaded();
-            }, (err) => { console.error(err); onDataLoaded(); }),
+            }, (err) => { console.error("Shop Dues fetch error: ", err); onDataLoaded(); }),
             onSnapshot(doc(firestore, `users/${user.uid}/rewards`, 'summary'), (snapshot) => {
                 setRewardPoints(snapshot.data()?.points || 0);
                 onDataLoaded();
-            }, (err) => { console.error(err); onDataLoaded(); })
+            }, (err) => { console.error("Rewards fetch error: ", err); onDataLoaded(); })
         ];
         
         return () => unsubscribes.forEach(unsub => unsub());
@@ -161,48 +161,29 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
 
     const addDocToCollection = async (collectionName: string, data: object) => {
         if (!user) throw new Error("User not logged in");
+        const dataToSave = {
+            ...data,
+            userId: user.uid,
+            createdAt: serverTimestamp()
+        };
         const collectionRef = getCollectionRef(collectionName);
-        await addDoc(collectionRef, data);
+        await addDoc(collectionRef, dataToSave);
     };
     
     const addIncome = async (newIncome: Omit<Income, 'id' | 'createdAt' | 'userId'>) => {
-        if (!user) throw new Error("User not logged in");
-        const dataToSave = {
-            ...newIncome,
-            userId: user.uid,
-            createdAt: serverTimestamp()
-        };
-        await addDocToCollection('income', dataToSave);
+        await addDocToCollection('income', newIncome);
     };
 
     const addExpense = async (newExpense: Omit<Expense, 'id' | 'createdAt' | 'userId'>) => {
-        if (!user) throw new Error("User not logged in");
-        const dataToSave = {
-            ...newExpense,
-            userId: user.uid,
-            createdAt: serverTimestamp()
-        };
-        await addDocToCollection('expenses', dataToSave);
+        await addDocToCollection('expenses', newExpense);
     };
 
     const addSaving = async (newSaving: Omit<Saving, 'id' | 'createdAt' | 'userId'>) => {
-       if (!user) throw new Error("User not logged in");
-        const dataToSave = {
-            ...newSaving,
-            userId: user.uid,
-            createdAt: serverTimestamp()
-        };
-       await addDocToCollection('savings', dataToSave);
+       await addDocToCollection('savings', newSaving);
     }
     
     const addDebt = async (debt: Omit<Debt, 'id'>) => {
-        if (!user) throw new Error("User not logged in");
-        const dataToSave = {
-            ...debt,
-            userId: user.uid,
-            createdAt: serverTimestamp()
-        };
-        await addDocToCollection('debts', dataToSave);
+        await addDocToCollection('debts', debt);
     }
 
     const updateDebt = async (debt: Debt) => {
@@ -212,13 +193,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const addShopDue = async (shopDue: Omit<ShopDue, 'id'>) => {
-        if (!user) throw new Error("User not logged in");
-        const dataToSave = {
-            ...shopDue,
-            userId: user.uid,
-            createdAt: serverTimestamp()
-        };
-        await addDocToCollection('shopDues', dataToSave);
+        await addDocToCollection('shopDues', shopDue);
     }
 
     const updateShopDue = async (shopDue: ShopDue) => {
