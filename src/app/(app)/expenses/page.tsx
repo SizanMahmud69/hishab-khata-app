@@ -1,7 +1,7 @@
 
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button"
 import PageHeader from "@/components/page-header"
 import {
@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { expenseCategories } from "@/lib/data"
+import { expenseCategories, savingsDestinations } from "@/lib/data"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { useBudget } from "@/context/budget-context"
@@ -25,6 +25,7 @@ export default function ExpensesPage() {
     const { addExpense, addSaving, isLoading } = useBudget();
     const { toast } = useToast();
     const formRef = React.useRef<HTMLFormElement>(null);
+    const [selectedCategory, setSelectedCategory] = useState<string>("");
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -35,7 +36,7 @@ export default function ExpensesPage() {
         const description = formData.get('description') as string;
         const isSavingsCategory = category === 'সঞ্চয় ডিপোজিট';
 
-        if (!category || !amount || !date) {
+        if (!category || !amount || !date || (isSavingsCategory && !description)) {
             toast({
                 variant: "destructive",
                 title: "ফর্ম পূরণ আবশ্যক",
@@ -66,6 +67,7 @@ export default function ExpensesPage() {
         });
 
         formRef.current?.reset();
+        setSelectedCategory("");
     }
 
     if (isLoading) {
@@ -93,7 +95,7 @@ export default function ExpensesPage() {
                 </div>
                 <div className="grid w-full items-center gap-1.5">
                     <Label htmlFor="category">বিভাগ</Label>
-                    <Select name="category" required>
+                    <Select name="category" onValueChange={setSelectedCategory} required>
                         <SelectTrigger>
                             <SelectValue placeholder="একটি বিভাগ নির্বাচন করুন" />
                         </SelectTrigger>
@@ -112,7 +114,18 @@ export default function ExpensesPage() {
                 <Label htmlFor="description">
                   বিবরণ
                 </Label>
-                <Textarea id="description" name="description" placeholder="খরচের সংক্ষিপ্ত বিবরণ" />
+                {selectedCategory === 'সঞ্চয় ডিপোজিট' ? (
+                     <Select name="description" required>
+                        <SelectTrigger>
+                            <SelectValue placeholder="একটি মাধ্যম নির্বাচন করুন" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {savingsDestinations.map(dest => <SelectItem key={dest} value={dest}>{dest}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                ) : (
+                    <Textarea id="description" name="description" placeholder="খরচের সংক্ষিপ্ত বিবরণ" />
+                )}
               </div>
             </CardContent>
             <CardFooter>
