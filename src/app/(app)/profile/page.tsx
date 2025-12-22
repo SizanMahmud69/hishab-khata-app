@@ -5,7 +5,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useUser } from "@/firebase/provider";
-import { Star } from "lucide-react";
+import { Mail, Phone, CheckCircle, XCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function ProfilePage() {
   const { user } = useUser();
@@ -20,16 +21,40 @@ export default function ProfilePage() {
                     <AvatarFallback>{user?.displayName?.charAt(0) ?? 'U'}</AvatarFallback>
                 </Avatar>
             </div>
-            <CardContent className="text-center pt-20">
+            <CardContent className="text-center pt-20 px-4 sm:px-6">
                 <h2 className="text-2xl font-bold">{user?.displayName ?? 'ব্যবহারকারী'}</h2>
-                <p className="text-muted-foreground">{user?.email ?? 'user@example.com'}</p>
                 
-                <div className="mt-4 flex flex-col items-center gap-3">
-                    <Badge variant="secondary" className="bg-green-100 text-green-800 border border-green-200">Online</Badge>
-                    <div className="flex items-center gap-1 text-muted-foreground">
-                        <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                        <span className="font-medium">20 Reviews (4.65)</span>
+                <div className="mt-6 text-left space-y-4">
+                    <div className="flex items-center gap-4">
+                        <Mail className="w-5 h-5 text-muted-foreground" />
+                        <div className="flex-1">
+                             <p className="text-sm font-medium">ইমেইল</p>
+                             <div className="flex items-center gap-2">
+                                <p className="text-muted-foreground">{user?.email ?? 'ইমেইল পাওয়া যায়নি'}</p>
+                                {user?.emailVerified ? (
+                                    <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
+                                        <CheckCircle className="w-3 h-3 mr-1" />
+                                        ভেরিফাইড
+                                    </Badge>
+                                ) : (
+                                     <Badge variant="destructive" className="bg-red-100 text-red-800 border-red-200">
+                                        <XCircle className="w-3 h-3 mr-1" />
+                                        ভেরিফাইড নয়
+                                    </Badge>
+                                )}
+                             </div>
+                        </div>
                     </div>
+
+                    {user?.phoneNumber && (
+                         <div className="flex items-center gap-4">
+                            <Phone className="w-5 h-5 text-muted-foreground" />
+                            <div className="flex-1">
+                                <p className="text-sm font-medium">ফোন নম্বর</p>
+                                <p className="text-muted-foreground">{user.phoneNumber}</p>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </CardContent>
         </Card>
