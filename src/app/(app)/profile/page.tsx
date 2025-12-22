@@ -7,22 +7,55 @@ import { useUser } from "@/firebase/provider";
 import { Mail, Phone, UserCheck, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 export default function ProfilePage() {
   const { user } = useUser();
   const { toast } = useToast();
   const [isNidVerified, setIsNidVerified] = useState(false);
+  const [isVerificationDialogOpen, setIsVerificationDialogOpen] = useState(false);
 
-  const handleNidVerification = () => {
-    // This is a placeholder function.
-    // In a real app, this would trigger a flow to a third-party service
-    // or a backend that handles NID verification.
+  const handleNidSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const name = formData.get('name');
+    const nid = formData.get('nid');
+    const phone = formData.get('phone');
+
+    if (!name || !nid || !phone) {
+      toast({
+        variant: "destructive",
+        title: "ফর্ম পূরণ আবশ্যক",
+        description: "অনুগ্রহ করে সকল তথ্য পূরণ করুন।",
+      });
+      return;
+    }
+    
+    // This is a placeholder for actual NID verification logic.
     toast({
-      title: "এনআইডি ভেরিফিকেশন",
-      description: "এনআইডি ভেরিফিকেশন প্রক্রিয়া শীঘ্রই শুরু হবে।",
+      title: "আবেদন জমা হয়েছে",
+      description: "আপনার এনআইডি ভেরিফিকেশনের আবেদনটি প্রক্রিয়াধীন আছে।",
     });
-    // For demonstration, we can toggle the state after a delay.
-    setTimeout(() => setIsNidVerified(true), 3000);
+
+    setIsVerificationDialogOpen(false);
+    // Simulate verification for demonstration
+    setTimeout(() => {
+      setIsNidVerified(true);
+      toast({
+        title: "এনআইডি ভেরিফাইড!",
+        description: "আপনার অ্যাকাউন্টটি সফলভাবে ভেরিফাই করা হয়েছে।",
+      });
+    }, 5000);
   };
   
   return (
@@ -52,15 +85,13 @@ export default function ProfilePage() {
                 </div>
             </div>
 
-            {user?.phoneNumber && (
-                 <div className="flex items-center gap-4">
-                    <Phone className="w-6 h-6 text-muted-foreground" />
-                    <div className="flex-1">
-                        <p className="text-sm font-medium">ফোন নম্বর</p>
-                        <p className="text-muted-foreground">{user.phoneNumber}</p>
-                    </div>
+            <div className="flex items-center gap-4">
+                <Phone className="w-6 h-6 text-muted-foreground" />
+                <div className="flex-1">
+                    <p className="text-sm font-medium">ফোন নম্বর</p>
+                    <p className="text-muted-foreground">{user?.phoneNumber ?? 'ফোন নম্বর সেট করা নেই'}</p>
                 </div>
-            )}
+            </div>
         </CardContent>
       </Card>
 
@@ -90,10 +121,41 @@ export default function ProfilePage() {
                 )}
             </div>
              {!isNidVerified && (
-                <Button onClick={handleNidVerification}>
-                    <UserCheck className="mr-2 h-4 w-4" />
-                    এনআইডি ভেরিফাই করুন
-                </Button>
+                <Dialog open={isVerificationDialogOpen} onOpenChange={setIsVerificationDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <UserCheck className="mr-2 h-4 w-4" />
+                      এনআইডি ভেরিফাই করুন
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>এনআইডি ভেরিফিকেশন</DialogTitle>
+                      <DialogDescription>
+                        আপনার এনআইডি কার্ড অনুযায়ী সঠিক তথ্য প্রদান করুন।
+                      </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleNidSubmit}>
+                        <div className="grid gap-4 py-4">
+                          <div className="space-y-1.5">
+                            <Label htmlFor="name">পুরো নাম</Label>
+                            <Input id="name" name="name" placeholder="এনআইডি অনুযায়ী নাম" required />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label htmlFor="nid">এনআইডি নম্বর</Label>
+                            <Input id="nid" name="nid" type="number" placeholder="আপনার এনআইডি নম্বর" required />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label htmlFor="phone">ফোন নম্বর</Label>
+                            <Input id="phone" name="phone" placeholder="আপনার ফোন নম্বর" required />
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <Button type="submit">জমা দিন</Button>
+                        </DialogFooter>
+                    </form>
+                  </DialogContent>
+                </Dialog>
             )}
         </CardContent>
       </Card>
