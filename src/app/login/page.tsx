@@ -68,6 +68,15 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
+       <Link
+          href="/"
+          className="absolute left-4 top-4 md:left-8 md:top-8"
+        >
+          <Button variant="ghost">
+             <ArrowRight className="mr-2 h-4 w-4" />
+            হোমপেজে ফিরে যান
+          </Button>
+        </Link>
       <Card className="w-full max-w-sm">
         <CardHeader>
           <div className="flex items-center justify-center mb-4">
@@ -94,7 +103,15 @@ export default function LoginPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="password">পাসওয়ার্ড</Label>
+                <div className="flex items-center">
+                  <Label htmlFor="password">পাসওয়ার্ড</Label>
+                   <Link
+                    href="#"
+                    className="ml-auto inline-block text-sm underline"
+                  >
+                    পাসওয়ার্ড ভুলে গেছেন?
+                  </Link>
+                </div>
                 <Input 
                   id="password" 
                   type="password" 
@@ -116,6 +133,23 @@ export default function LoginPage() {
               নিবন্ধন করুন
             </Link>
           </div>
+           <div className="mt-4 px-8 text-center text-xs text-muted-foreground">
+              চালিয়ে যাওয়ার মাধ্যমে, আপনি আমাদের{" "}
+              <Link
+                href="/terms-and-conditions"
+                className="underline underline-offset-4 hover:text-primary"
+              >
+                ব্যবহারের শর্তাবলী
+              </Link>{" "}
+              এবং{" "}
+              <Link
+                href="/privacy-policy"
+                className="underline underline-offset-4 hover:text-primary"
+              >
+                গোপনীয়তা নীতিতে
+              </Link>
+              {" "}সম্মত হচ্ছেন।
+            </div>
         </CardContent>
       </Card>
     </div>
