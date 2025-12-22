@@ -10,7 +10,7 @@ import { useBudget } from "@/context/budget-context";
 
 export default function DashboardPage() {
     const { totalIncome, totalExpense, totalSavings } = useBudget();
-    const balance = totalIncome - totalExpense - totalSavings;
+    const balance = totalIncome - totalExpense;
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat("bn-BD", {

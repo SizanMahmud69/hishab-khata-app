@@ -39,7 +39,7 @@ const chartConfig = {
 
 export function OverviewPieChart() {
     const { totalIncome, totalExpense, totalSavings } = useBudget();
-    const balance = totalIncome - totalExpense - totalSavings > 0 ? totalIncome - totalExpense - totalSavings : 0;
+    const balance = totalIncome - totalExpense > 0 ? totalIncome - totalExpense : 0;
 
     const chartData = [
       { name: "আয়", value: totalIncome, fill: "hsl(var(--chart-1))" },
