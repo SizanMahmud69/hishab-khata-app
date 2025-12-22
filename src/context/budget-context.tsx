@@ -13,8 +13,8 @@ export interface Income {
     amount: number;
     date: string;
     description?: string;
-    createdAt?: any;
-    userId?: string;
+    createdAt: any;
+    userId: string;
 }
 
 export interface Expense {
@@ -110,31 +110,31 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                 const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Income));
                 setIncome(data);
                 onDataLoaded();
-            }, onDataLoaded),
+            }, (err) => { console.error(err); onDataLoaded(); }),
             onSnapshot(collection(firestore, basePath, 'expenses'), (snapshot) => {
                 const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense));
                 setExpenses(data);
                 onDataLoaded();
-            }, onDataLoaded),
+            }, (err) => { console.error(err); onDataLoaded(); }),
             onSnapshot(collection(firestore, basePath, 'savings'), (snapshot) => {
                 const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Saving));
                 setSavings(data);
                 onDataLoaded();
-            }, onDataLoaded),
+            }, (err) => { console.error(err); onDataLoaded(); }),
             onSnapshot(collection(firestore, basePath, 'debts'), (snapshot) => {
                 const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Debt));
                 setDebts(data);
                 onDataLoaded();
-            }, onDataLoaded),
+            }, (err) => { console.error(err); onDataLoaded(); }),
             onSnapshot(collection(firestore, basePath, 'shopDues'), (snapshot) => {
                 const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ShopDue));
                 setShopDues(data);
                 onDataLoaded();
-            }, onDataLoaded),
+            }, (err) => { console.error(err); onDataLoaded(); }),
             onSnapshot(doc(firestore, `users/${user.uid}/rewards`, 'summary'), (snapshot) => {
                 setRewardPoints(snapshot.data()?.points || 0);
                 onDataLoaded();
-            }, onDataLoaded)
+            }, (err) => { console.error(err); onDataLoaded(); })
         ];
         
         return () => unsubscribes.forEach(unsub => unsub());
@@ -162,27 +162,47 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const addDocToCollection = async (collectionName: string, data: object) => {
         if (!user) throw new Error("User not logged in");
         const collectionRef = getCollectionRef(collectionName);
-        await addDoc(collectionRef, {
-            ...data,
-            userId: user.uid,
-            createdAt: serverTimestamp()
-        });
+        await addDoc(collectionRef, data);
     };
     
     const addIncome = async (newIncome: Omit<Income, 'id' | 'createdAt' | 'userId'>) => {
-        await addDocToCollection('income', newIncome);
+        if (!user) throw new Error("User not logged in");
+        const dataToSave = {
+            ...newIncome,
+            userId: user.uid,
+            createdAt: serverTimestamp()
+        };
+        await addDocToCollection('income', dataToSave);
     };
 
     const addExpense = async (newExpense: Omit<Expense, 'id' | 'createdAt' | 'userId'>) => {
-        await addDocToCollection('expenses', newExpense);
+        if (!user) throw new Error("User not logged in");
+        const dataToSave = {
+            ...newExpense,
+            userId: user.uid,
+            createdAt: serverTimestamp()
+        };
+        await addDocToCollection('expenses', dataToSave);
     };
 
     const addSaving = async (newSaving: Omit<Saving, 'id' | 'createdAt' | 'userId'>) => {
-       await addDocToCollection('savings', newSaving);
+       if (!user) throw new Error("User not logged in");
+        const dataToSave = {
+            ...newSaving,
+            userId: user.uid,
+            createdAt: serverTimestamp()
+        };
+       await addDocToCollection('savings', dataToSave);
     }
     
     const addDebt = async (debt: Omit<Debt, 'id'>) => {
-        await addDocToCollection('debts', debt);
+        if (!user) throw new Error("User not logged in");
+        const dataToSave = {
+            ...debt,
+            userId: user.uid,
+            createdAt: serverTimestamp()
+        };
+        await addDocToCollection('debts', dataToSave);
     }
 
     const updateDebt = async (debt: Debt) => {
@@ -192,7 +212,13 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const addShopDue = async (shopDue: Omit<ShopDue, 'id'>) => {
-        await addDocToCollection('shopDues', shopDue);
+        if (!user) throw new Error("User not logged in");
+        const dataToSave = {
+            ...shopDue,
+            userId: user.uid,
+            createdAt: serverTimestamp()
+        };
+        await addDocToCollection('shopDues', dataToSave);
     }
 
     const updateShopDue = async (shopDue: ShopDue) => {
