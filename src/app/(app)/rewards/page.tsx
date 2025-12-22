@@ -24,8 +24,8 @@ import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const WITHDRAW_THRESHOLD = 1000;
-const CONVERSION_RATE = 1; // 1 point = 1 BDT
+const WITHDRAW_THRESHOLD = 100;
+const CONVERSION_RATE = 0.05; // 100 points = 5 BDT
 
 interface UserProfile {
     rewardPoints?: number;
@@ -47,21 +47,33 @@ export default function RewardsPage() {
     const rewardPoints = userProfile?.rewardPoints ?? 0;
 
     const canWithdraw = rewardPoints >= WITHDRAW_THRESHOLD;
-    const withdrawableAmount = Math.floor(rewardPoints) * CONVERSION_RATE;
+    const withdrawableAmount = Math.floor(rewardPoints / 100) * 5;
 
     const handleWithdraw = () => {
-        const withdrawnAmount = rewardPoints;
-        deductRewardPoints(withdrawnAmount);
+        const pointsToDeduct = Math.floor(rewardPoints / 100) * 100;
+        
+        if (pointsToDeduct <= 0) {
+             toast({
+                variant: "destructive",
+                title: "অপর্যাপ্ত পয়েন্ট",
+                description: `উইথড্র করার জন্য কমপক্ষে ${WITHDRAW_THRESHOLD} পয়েন্ট প্রয়োজন।`,
+            });
+            return;
+        }
+
+        const withdrawnTkAmount = (pointsToDeduct / 100) * 5;
+
+        deductRewardPoints(pointsToDeduct);
 
         createNotification({
             title: "উইথড্র সফল হয়েছে",
-            description: `${withdrawnAmount} পয়েন্ট আপনার অ্যাকাউন্ট থেকে সফলভাবে উইথড্র করা হয়েছে।`,
+            description: `${pointsToDeduct} পয়েন্টের বিনিময়ে ${withdrawnTkAmount} টাকা আপনার অ্যাকাউন্টে পাঠানো হয়েছে।`,
             link: "/rewards",
         });
 
         toast({
             title: "সফল!",
-            description: `আপনার উইথড্র সফল হয়েছে। ${withdrawnAmount} পয়েন্ট আপনার অ্যাকাউন্ট থেকে কেটে নেওয়া হয়েছে।`,
+            description: `আপনার উইথড্র সফল হয়েছে। ${pointsToDeduct} পয়েন্ট আপনার অ্যাকাউন্ট থেকে কেটে নেওয়া হয়েছে।`,
         });
         setIsDialogOpen(false);
     }
@@ -109,12 +121,13 @@ export default function RewardsPage() {
                 <div className="text-center space-y-2">
                     <p className="text-sm text-muted-foreground">মোট উইথড্র করার মতো পরিমাণ</p>
                     <p className="text-3xl font-bold">৳{withdrawableAmount}</p>
+                    <p className="text-xs text-muted-foreground">১০০ পয়েন্ট = ৫ টাকা</p>
                 </div>
             </CardContent>
             <CardFooter>
                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button className="w-full">
+                        <Button className="w-full" disabled={withdrawableAmount <= 0}>
                             উইথড্র করুন
                         </Button>
                     </DialogTrigger>
