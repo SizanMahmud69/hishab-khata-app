@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useBudget } from "@/context/budget-context";
@@ -99,3 +100,4 @@ function ProfileSkeleton() {
         </div>
     );
 }
+

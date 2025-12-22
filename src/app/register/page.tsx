@@ -1,3 +1,4 @@
+
 import Link from "next/link"
 import { BookMarked, ArrowRight } from "lucide-react"
 
@@ -27,11 +28,11 @@ export default function RegisterPage() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4">
-            <div className="grid gap-2">
+            <div className="grid w-full items-center gap-1.5">
               <Label htmlFor="full-name">পুরো নাম</Label>
               <Input id="full-name" placeholder="আপনার নাম" required />
             </div>
-            <div className="grid gap-2">
+            <div className="grid w-full items-center gap-1.5">
               <Label htmlFor="email">ইমেইল</Label>
               <Input
                 id="email"
@@ -40,7 +41,7 @@ export default function RegisterPage() {
                 required
               />
             </div>
-            <div className="grid gap-2">
+            <div className="grid w-full items-center gap-1.5">
               <Label htmlFor="password">পাসওয়ার্ড</Label>
               <Input id="password" type="password" required />
             </div>

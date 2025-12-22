@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -95,17 +96,17 @@ export default function RewardsPage() {
                         </DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="payment-method" className="text-right">
+                            <div className="grid w-full items-center gap-1.5">
+                                <Label htmlFor="payment-method">
                                     মাধ্যম
                                 </Label>
-                                <Input id="payment-method" defaultValue="বিকাশ" className="col-span-3" />
+                                <Input id="payment-method" defaultValue="বিকাশ" />
                             </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="account-number" className="text-right">
+                            <div className="grid w-full items-center gap-1.5">
+                                <Label htmlFor="account-number">
                                     অ্যাকাউন্ট নম্বর
                                 </Label>
-                                <Input id="account-number" placeholder="017********" className="col-span-3" />
+                                <Input id="account-number" placeholder="017********" />
                             </div>
                         </div>
                         <DialogFooter>

@@ -199,9 +199,9 @@ export default function DebtsPage() {
             </DialogHeader>
             <form onSubmit={handleAddNewDebt}>
                 <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label className="text-right">ধরন</Label>
-                        <RadioGroup defaultValue="lent" name="type" className="col-span-3 flex gap-4">
+                    <div className="space-y-1.5">
+                        <Label>ধরন</Label>
+                        <RadioGroup defaultValue="lent" name="type" className="flex gap-4">
                             <div className="flex items-center space-x-2">
                                 <RadioGroupItem value="lent" id="r-lent" />
                                 <Label htmlFor="r-lent">ধার দিয়েছি</Label>
@@ -212,33 +212,25 @@ export default function DebtsPage() {
                             </div>
                         </RadioGroup>
                     </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="person" className="text-right">ব্যক্তির নাম</Label>
-                        <Input id="person" name="person" placeholder="সোহেল" className="col-span-3" required />
+                    <div className="space-y-1.5">
+                        <Label htmlFor="person">ব্যক্তির নাম</Label>
+                        <Input id="person" name="person" placeholder="সোহেল" required />
                     </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="amount" className="text-right">
-                        পরিমাণ
-                        </Label>
-                        <Input id="amount" name="amount" type="number" placeholder="2000" className="col-span-3" required />
+                    <div className="space-y-1.5">
+                        <Label htmlFor="amount">পরিমাণ</Label>
+                        <Input id="amount" name="amount" type="number" placeholder="2000" required />
                     </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="debt-date" className="text-right">
-                        ধারের তারিখ
-                        </Label>
-                        <Input id="debt-date" name="date" type="date" defaultValue={new Date().toISOString().split('T')[0]} className="col-span-3" required />
+                    <div className="space-y-1.5">
+                        <Label htmlFor="debt-date">ধারের তারিখ</Label>
+                        <Input id="debt-date" name="date" type="date" defaultValue={new Date().toISOString().split('T')[0]} required />
                     </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="repayment-date" className="text-right">
-                        পরিশোধের তারিখ
-                        </Label>
-                        <Input id="repayment-date" name="repayment-date" type="date" className="col-span-3" />
+                    <div className="space-y-1.5">
+                        <Label htmlFor="repayment-date">পরিশোধের তারিখ</Label>
+                        <Input id="repayment-date" name="repayment-date" type="date" />
                     </div>
-                    <div className="grid grid-cols-4 items-start gap-4">
-                        <Label htmlFor="description" className="text-right pt-2">
-                            বিবরণ
-                        </Label>
-                        <Textarea id="description" name="description" placeholder="ধার সম্পর্কিত কোনো নোট" className="col-span-3" />
+                    <div className="space-y-1.5">
+                        <Label htmlFor="description">বিবরণ</Label>
+                        <Textarea id="description" name="description" placeholder="ধার সম্পর্কিত কোনো নোট" />
                     </div>
                 </div>
                 <DialogFooter>
@@ -370,8 +362,8 @@ export default function DebtsPage() {
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="payment-amount" className="text-right">
+                    <div className="space-y-1.5">
+                        <Label htmlFor="payment-amount">
                             পরিমাণ
                         </Label>
                         <Input 
@@ -380,17 +372,15 @@ export default function DebtsPage() {
                             value={paymentAmount}
                             onChange={(e) => setPaymentAmount(Number(e.target.value))}
                             max={selectedDebt ? selectedDebt.amount - selectedDebt.paidAmount : 0}
-                            className="col-span-3"
                         />
                     </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                         <Label className="text-right">স্লাইডার</Label>
+                    <div className="space-y-1.5">
+                         <Label>স্লাইডার</Label>
                          <Slider
                             value={[paymentAmount]}
                             max={selectedDebt ? selectedDebt.amount - selectedDebt.paidAmount : 0}
                             step={10}
                             onValueChange={(value) => setPaymentAmount(value[0])}
-                            className="col-span-3"
                         />
                     </div>
                      <p className="text-sm text-muted-foreground text-right col-span-4 pr-4">
