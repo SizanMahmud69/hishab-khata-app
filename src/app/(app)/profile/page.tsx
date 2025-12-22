@@ -1,34 +1,28 @@
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUser } from "@/firebase/provider";
-import { Mail, Phone, CheckCircle, XCircle, ShieldCheck } from "lucide-react";
-import { sendEmailVerification } from "firebase/auth";
+import { Mail, Phone, UserCheck, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 export default function ProfilePage() {
   const { user } = useUser();
   const { toast } = useToast();
+  const [isNidVerified, setIsNidVerified] = useState(false);
 
-  const handleVerification = async () => {
-    if (user && !user.emailVerified) {
-      try {
-        await sendEmailVerification(user);
-        toast({
-          title: "ভেরিফিকেশন ইমেইল পাঠানো হয়েছে",
-          description: "অনুগ্রহ করে আপনার ইমেইল চেক করুন এবং ভেরিফিকেশন লিঙ্কটিতে ক্লিক করুন।",
-        });
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "একটি সমস্যা হয়েছে",
-          description: "ইমেইল পাঠাতে সমস্যা হয়েছে। কিছুক্ষণ পর আবার চেষ্টা করুন।",
-        });
-      }
-    }
+  const handleNidVerification = () => {
+    // This is a placeholder function.
+    // In a real app, this would trigger a flow to a third-party service
+    // or a backend that handles NID verification.
+    toast({
+      title: "এনআইডি ভেরিফিকেশন",
+      description: "এনআইডি ভেরিফিকেশন প্রক্রিয়া শীঘ্রই শুরু হবে।",
+    });
+    // For demonstration, we can toggle the state after a delay.
+    setTimeout(() => setIsNidVerified(true), 3000);
   };
   
   return (
@@ -42,7 +36,6 @@ export default function ProfilePage() {
         </div>
         <CardContent className="text-center pt-20 pb-6 px-4 sm:px-6">
             <h2 className="text-3xl font-bold">{user?.displayName ?? 'ব্যবহারকারী'}</h2>
-            <p className="text-sm text-muted-foreground mt-1">@{user?.uid.substring(0, 8)}</p>
         </CardContent>
       </Card>
 
@@ -73,31 +66,34 @@ export default function ProfilePage() {
 
        <Card>
         <CardHeader>
-            <CardTitle>অ্যাকাউন্ট ভেরিফিকেশন</CardTitle>
-            <CardDescription>আপনার অ্যাকাউন্টের নিরাপত্তা নিশ্চিত করুন।</CardDescription>
+            <CardTitle>এনআইডি ভেরিফিকেশন</CardTitle>
+            <CardDescription>আপনার অ্যাকাউন্টের নিরাপত্তা এবং বিশ্বাসযোগ্যতা বাড়ান।</CardDescription>
         </CardHeader>
         <CardContent className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-                {user?.emailVerified ? (
+            <div className="flex items-center gap-3">
+                {isNidVerified ? (
                     <>
-                        <ShieldCheck className="w-6 h-6 text-green-500" />
+                        <UserCheck className="w-8 h-8 text-green-500" />
                         <div>
-                            <p className="font-semibold">ইমেইল ভেরিফাইড</p>
-                            <p className="text-sm text-muted-foreground">আপনার অ্যাকাউন্টটি সুরক্ষিত আছে।</p>
+                            <p className="font-semibold text-green-500">এনআইডি ভেরিফাইড</p>
+                            <p className="text-sm text-muted-foreground">আপনার অ্যাকাউন্টটি এখন সম্পূর্ণ ভেরিফাইড।</p>
                         </div>
                     </>
                 ) : (
                     <>
-                        <XCircle className="w-6 h-6 text-red-500" />
+                        <XCircle className="w-8 h-8 text-red-500" />
                         <div>
-                            <p className="font-semibold text-red-500">ইমেইল ভেরিফাইড নয়</p>
-                            <p className="text-sm text-muted-foreground">আপনার অ্যাকাউন্ট সুরক্ষিত করতে ইমেইল ভেরিফাই করুন।</p>
+                            <p className="font-semibold text-red-500">এনআইডি ভেরিফাইড নয়</p>
+                            <p className="text-sm text-muted-foreground">অতিরিক্ত সুবিধা পেতে আপনার এনআইডি ভেরিফাই করুন।</p>
                         </div>
                     </>
                 )}
             </div>
-             {!user?.emailVerified && (
-                <Button onClick={handleVerification}>ভেরিফাই করুন</Button>
+             {!isNidVerified && (
+                <Button onClick={handleNidVerification}>
+                    <UserCheck className="mr-2 h-4 w-4" />
+                    এনআইডি ভেরিফাই করুন
+                </Button>
             )}
         </CardContent>
       </Card>
