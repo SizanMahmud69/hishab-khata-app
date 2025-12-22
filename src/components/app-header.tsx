@@ -3,7 +3,7 @@ import Link from "next/link"
 import { type ReactNode, useState, useEffect } from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
-import { Bell, BookMarked, Menu, CalendarDays } from "lucide-react"
+import { Bell, BookMarked, Menu, CalendarDays, Check } from "lucide-react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet"
 import {
     DropdownMenu,
@@ -16,10 +16,41 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 
+interface Notification {
+    id: number;
+    title: string;
+    description: string;
+    read: boolean;
+}
+
+const initialNotifications: Notification[] = [
+    { id: 1, title: "আপনার বাজেট প্রায় শেষ।", description: "মাসিক খরচের সীমা অতিক্রম করতে চলেছে।", read: false },
+    { id: 2, title: "নতুন বিল যোগ হয়েছে।", description: "ইন্টারনেট বিল পরিশোধ করুন।", read: false },
+    { id: 3, title: "রিওয়ার্ড পয়েন্ট আপডেট!", description: "আপনি সফলভাবে ৫০ পয়েন্ট অর্জন করেছেন।", read: false },
+];
+
 export function AppHeader({children}: {children: ReactNode}) {
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [isCheckedIn, setIsCheckedIn] = useState(false);
-    const [notificationCount, setNotificationCount] = useState(3);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+
+    useEffect(() => {
+        const storedNotifications = localStorage.getItem('notifications');
+        if (storedNotifications) {
+            setNotifications(JSON.parse(storedNotifications));
+        } else {
+            setNotifications(initialNotifications);
+            localStorage.setItem('notifications', JSON.stringify(initialNotifications));
+        }
+    }, []);
+
+    useEffect(() => {
+        if(notifications.length > 0) {
+            localStorage.setItem('notifications', JSON.stringify(notifications));
+        }
+    }, [notifications]);
+    
+    const notificationCount = notifications.filter(n => !n.read).length;
 
     useEffect(() => {
         const checkStatus = () => {
@@ -34,11 +65,7 @@ export function AppHeader({children}: {children: ReactNode}) {
         };
 
         checkStatus();
-
-        // Listen for storage changes to update in real-time
         window.addEventListener('storage', checkStatus);
-        
-        // Also check when the window gains focus
         window.addEventListener('focus', checkStatus);
 
         return () => {
@@ -50,6 +77,11 @@ export function AppHeader({children}: {children: ReactNode}) {
     const handleLinkClick = () => {
         setIsSheetOpen(false);
     }
+
+    const markAsRead = (id: number) => {
+        setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    }
+
     return (
         <div className="flex min-h-screen w-full flex-col">
             <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4">
@@ -86,7 +118,7 @@ export function AppHeader({children}: {children: ReactNode}) {
                             <span className="sr-only">Check In</span>
                         </Link>
                     </Button>
-                    <DropdownMenu onOpenChange={(open) => !open && setNotificationCount(0)}>
+                    <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="relative">
                                 {notificationCount > 0 && (
@@ -101,22 +133,27 @@ export function AppHeader({children}: {children: ReactNode}) {
                         <DropdownMenuContent align="end" className="w-80">
                             <DropdownMenuLabel className="font-bold">নোটিফিকেশন</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="flex flex-col items-start gap-1">
-                                <p className="font-semibold">আপনার বাজেট প্রায় শেষ।</p>
-                                <p className="text-xs text-muted-foreground">মাসিক খরচের সীমা অতিক্রম করতে চলেছে।</p>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="flex flex-col items-start gap-1">
-                                <p className="font-semibold">নতুন বিল যোগ হয়েছে।</p>
-                                <p className="text-xs text-muted-foreground">ইন্টারনেট বিল পরিশোধ করুন।</p>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="flex flex-col items-start gap-1">
-                                <p className="font-semibold">রিওয়ার্ড পয়েন্ট আপডেট!</p>
-                                <p className="text-xs text-muted-foreground">আপনি সফলভাবে ৫০ পয়েন্ট অর্জন করেছেন।</p>
-                            </DropdownMenuItem>
+                             {notificationCount > 0 ? (
+                                notifications.filter(n => !n.read).map(notification => (
+                                    <DropdownMenuItem key={notification.id} className="flex items-start justify-between gap-2" onSelect={(e) => e.preventDefault()}>
+                                        <div className="flex flex-col gap-1">
+                                            <p className="font-semibold">{notification.title}</p>
+                                            <p className="text-xs text-muted-foreground">{notification.description}</p>
+                                        </div>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => markAsRead(notification.id)}>
+                                            <Check className="h-4 w-4" />
+                                            <span className="sr-only">Mark as read</span>
+                                        </Button>
+                                    </DropdownMenuItem>
+                                ))
+                             ) : (
+                                <DropdownMenuItem disabled>কোনো নতুন নোটিফিকেশন নেই।</DropdownMenuItem>
+                             )}
+
                             <DropdownMenuSeparator />
                             <DropdownMenuItem asChild className="p-0">
                                 <Button variant="outline" className="w-full">
-                                    <Link href="/history" className="w-full text-center">
+                                    <Link href="/notifications" className="w-full text-center">
                                         সমস্ত নোটিফিকেশন দেখুন
                                     </Link>
                                 </Button>

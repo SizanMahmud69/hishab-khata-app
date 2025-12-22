@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
   Award,
+  Bell,
   HandCoins,
   History,
   LayoutDashboard,
@@ -60,6 +61,11 @@ const menuItems = [
         label: "রিওয়ার্ড",
         icon: Award,
     },
+    {
+        href: "/notifications",
+        label: "নোটিফিকেশন",
+        icon: Bell,
+    }
 ]
 
 export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
