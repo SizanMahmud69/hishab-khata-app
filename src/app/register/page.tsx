@@ -16,8 +16,8 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast";
-import { getAuth, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { app } from "@/firebase/config";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { useAuth } from "@/firebase";
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState('');
@@ -26,11 +26,21 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
-  const auth = getAuth(app);
+  const auth = useAuth();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+
+    if (!auth) {
+        toast({
+            variant: "destructive",
+            title: "নিবন্ধন ব্যর্থ হয়েছে",
+            description: "প্রমাণীকরণ পরিষেবা উপলব্ধ নয়।",
+        });
+        setIsLoading(false);
+        return;
+    }
 
     if (password.length < 6) {
         toast({
