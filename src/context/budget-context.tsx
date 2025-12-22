@@ -89,7 +89,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                 createNotification({
                     title: "অভিনন্দন! সঞ্চয়ের মাইলফলক অর্জন",
                     description: `আপনি সফলভাবে ${new Intl.NumberFormat("bn-BD").format(milestone)} টাকার সঞ্চয়ের মাইলফলক অর্জন করেছেন!`,
-                    link: "/dashboard" 
+                    link: `/milestone?amount=${milestone}` 
                 });
                 notifiedMilestones.push(milestone);
             }
