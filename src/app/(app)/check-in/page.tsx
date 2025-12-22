@@ -89,7 +89,7 @@ export default function CheckInPage() {
     
     const rewardForToday = calculateReward(consecutiveDays + 1);
 
-    const handleCheckIn = async () => {
+    const handleCheckIn = () => {
         if (isCheckedInToday || !user || !firestore) {
             toast({
                 variant: "destructive",
@@ -110,7 +110,7 @@ export default function CheckInPage() {
 
         try {
             const collectionRef = collection(firestore, `users/${user.uid}/checkIns`);
-            await addDoc(collectionRef, {
+            addDoc(collectionRef, {
                 ...newCheckIn,
                 createdAt: serverTimestamp(),
             });
@@ -118,7 +118,7 @@ export default function CheckInPage() {
             addRewardPoints(points);
 
             const userDocRef = doc(firestore, `users/${user.uid}`);
-            await setDoc(userDocRef, {
+            setDoc(userDocRef, {
                 lastCheckIn: today.toISOString().split('T')[0],
                 checkInStreak: newConsecutiveDays
             }, { merge: true });
