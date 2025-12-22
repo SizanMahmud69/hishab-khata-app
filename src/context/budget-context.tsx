@@ -159,10 +159,15 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         return collection(firestore, `users/${user.uid}/${name}`);
     }
 
-    const addDocToCollection = async (collectionName: string, data: any) => {
+    const addDocToCollection = async (collectionName: string, data: object) => {
         if (!user) throw new Error("User not logged in");
-        await addDoc(getCollectionRef(collectionName), { ...data, userId: user.uid, createdAt: serverTimestamp() });
-    }
+        const collectionRef = getCollectionRef(collectionName);
+        await addDoc(collectionRef, {
+            ...data,
+            userId: user.uid,
+            createdAt: serverTimestamp()
+        });
+    };
     
     const addIncome = async (newIncome: Omit<Income, 'id' | 'createdAt' | 'userId'>) => {
         await addDocToCollection('income', newIncome);
@@ -181,7 +186,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const updateDebt = async (debt: Debt) => {
-        if (!user || !firestore) return;
+        if (!user || !firestore || !debt.id) return;
         const docRef = doc(firestore, `users/${user.uid}/debts`, debt.id);
         await updateDoc(docRef, { ...debt });
     }
@@ -191,7 +196,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const updateShopDue = async (shopDue: ShopDue) => {
-        if (!user || !firestore) return;
+        if (!user || !firestore || !shopDue.id) return;
         const docRef = doc(firestore, `users/${user.uid}/shopDues`, shopDue.id);
         await updateDoc(docRef, { ...shopDue });
     }
@@ -218,6 +223,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         if (!user || !firestore) return;
         const batch = writeBatch(firestore);
         newDebts.forEach(debt => {
+            if (!debt.id) return;
             const docRef = doc(firestore, `users/${user.uid}/debts`, debt.id);
             batch.set(docRef, debt);
         });
@@ -228,6 +234,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         if (!user || !firestore) return;
         const batch = writeBatch(firestore);
         newShopDues.forEach(due => {
+            if (!due.id) return;
             const docRef = doc(firestore, `users/${user.uid}/shopDues`, due.id);
             batch.set(docRef, due);
         });
@@ -272,3 +279,5 @@ export const useBudget = () => {
     }
     return context;
 };
+
+    
