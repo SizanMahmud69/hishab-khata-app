@@ -383,7 +383,7 @@ export default function DebtsPage() {
                             onValueChange={(value) => setPaymentAmount(value[0])}
                         />
                     </div>
-                     <p className="text-sm text-muted-foreground text-right col-span-4 pr-4">
+                     <p className="text-sm text-muted-foreground text-right pr-1">
                         বাকি আছে: {formatCurrency(selectedDebt ? selectedDebt.amount - selectedDebt.paidAmount : 0)}
                      </p>
                 </div>
@@ -426,3 +426,4 @@ function DebtsSkeleton() {
     
 
     
+
