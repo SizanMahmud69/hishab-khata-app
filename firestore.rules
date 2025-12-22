@@ -184,9 +184,9 @@ service cloud.firestore {
       
        /**
        * @description Controls access to a user's reward points.
-       * @path /users/{userId}/rewards/{rewardDoc}
+       * @path /users/{userId}/rewards/{rewardId}
        */
-      match /rewards/{rewardDoc} {
+      match /rewards/{rewardId} {
         allow get, list, create, update: if isOwner(userId);
         allow delete: if false; // Generally, users shouldn't delete reward docs
       }
@@ -213,8 +213,8 @@ service cloud.firestore {
        */
       match /shopDues/{dueId} {
         allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update: if isExistingOwner(userId);
+        allow create: if isOwner(userId) && isCreatingConsistentChild(userId);
+        allow update: if isExistingOwner(userId) && isUpdatingConsistentChild();
         allow delete: if isExistingOwner(userId);
       }
     }

@@ -82,6 +82,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             return;
         }
         if (!user || !firestore) {
+            // No user or firestore, so finish loading and clear data
             setIsDataLoading(false);
             setIncome([]);
             setExpenses([]);
@@ -94,6 +95,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
 
         setIsDataLoading(true);
         const basePath = `users/${user.uid}`;
+        const listeners: (() => void)[] = [];
         let activeListeners = 6;
         
         const onDataLoaded = () => {
@@ -103,16 +105,17 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             }
         };
 
-        const createSnapshotListener = (collectionName: string, setData: React.Dispatch<React.SetStateAction<any[]>>) => {
+        const createSnapshotListener = <T>(collectionName: string, setData: React.Dispatch<React.SetStateAction<T[]>>) => {
             const collectionRef = collection(firestore, basePath, collectionName);
-            return onSnapshot(collectionRef, (snapshot) => {
-                const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const listener = onSnapshot(collectionRef, (snapshot) => {
+                const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as T));
                 setData(data);
                 onDataLoaded();
             }, (err) => {
                 console.error(`Error fetching ${collectionName}:`, err);
                 onDataLoaded();
             });
+            listeners.push(listener);
         };
 
         const rewardsDocRef = doc(firestore, basePath, 'rewards', 'summary');
@@ -123,34 +126,26 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             console.error("Rewards fetch error: ", err);
             onDataLoaded();
         });
+        listeners.push(unsubRewards);
 
-        const unsubscribes = [
-            createSnapshotListener('income', setIncome),
-            createSnapshotListener('expenses', setExpenses),
-            createSnapshotListener('savings', setSavings),
-            createSnapshotListener('debts', setDebts),
-            createSnapshotListener('shopDues', setShopDues),
-            unsubRewards
-        ];
+        createSnapshotListener<Income>('income', setIncome);
+        createSnapshotListener<Expense>('expenses', setExpenses);
+        createSnapshotListener<Saving>('savings', setSavings);
+        createSnapshotListener<Debt>('debts', setDebts);
+        createSnapshotListener<ShopDue>('shopDues', setShopDues);
         
-        return () => unsubscribes.forEach(unsub => unsub());
+        return () => listeners.forEach(unsub => unsub());
 
     }, [user, firestore, isUserLoading]);
 
-    const getCollectionRef = (name: string) => {
+    const addDocToCollection = async (collectionName: string, data: Omit<any, 'id'>) => {
         if (!user || !firestore) throw new Error("User or firestore not available");
-        return collection(firestore, `users/${user.uid}/${name}`);
-    }
-
-    const addDocToCollection = async (collectionName: string, data: object) => {
-        if (!user) throw new Error("User not logged in");
-        const dataToSave = {
+        const collectionRef = collection(firestore, `users/${user.uid}/${collectionName}`);
+        await addDoc(collectionRef, {
             ...data,
             userId: user.uid,
             createdAt: serverTimestamp()
-        };
-        const collectionRef = getCollectionRef(collectionName);
-        await addDoc(collectionRef, dataToSave);
+        });
     };
     
     const addIncome = async (newIncome: Omit<Income, 'id' | 'createdAt' | 'userId'>) => {
@@ -176,14 +171,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const addShopDue = async (shopDue: Omit<ShopDue, 'id'>) => {
-        if (!user) throw new Error("User not logged in");
-        const dataToSave = {
-            ...shopDue,
-            userId: user.uid,
-            createdAt: serverTimestamp()
-        };
-        const collectionRef = getCollectionRef('shopDues');
-        await addDoc(collectionRef, dataToSave);
+        await addDocToCollection('shopDues', shopDue);
     }
 
     const updateShopDue = async (shopDue: ShopDue) => {
