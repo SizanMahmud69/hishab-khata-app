@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DashboardPage() {
     const { totalIncome, totalExpense, totalSavings, isLoading } = useBudget();
-    const balance = totalIncome - totalExpense;
+    const balance = totalIncome - totalExpense - totalSavings;
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat("bn-BD", {

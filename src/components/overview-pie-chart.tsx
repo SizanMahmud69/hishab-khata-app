@@ -27,6 +27,10 @@ const chartConfig = {
     label: "ব্যয়",
     color: "hsl(var(--destructive))",
   },
+  সঞ্চয়: {
+    label: "সঞ্চয়",
+    color: "hsl(var(--chart-2))",
+  },
   "বর্তমান ব্যালেন্স": {
     label: "বর্তমান ব্যালেন্স",
     color: "hsl(var(--chart-4))",
@@ -34,14 +38,15 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export function OverviewPieChart() {
-    const { totalIncome, totalExpense } = useBudget();
-    const balance = totalIncome - totalExpense > 0 ? totalIncome - totalExpense : 0;
+    const { totalIncome, totalExpense, totalSavings } = useBudget();
+    const balance = totalIncome - totalExpense - totalSavings > 0 ? totalIncome - totalExpense - totalSavings : 0;
 
     const chartData = [
       { name: "আয়", value: totalIncome, fill: "hsl(var(--chart-1))" },
       { name: "ব্যয়", value: totalExpense, fill: "hsl(var(--destructive))" },
+      { name: "সঞ্চয়", value: totalSavings, fill: "hsl(var(--chart-2))" },
       { name: "বর্তমান ব্যালেন্স", value: balance, fill: "hsl(var(--chart-4))" },
-    ]
+    ].filter(item => item.value > 0);
 
   return (
     <Card>
@@ -93,9 +98,9 @@ export function OverviewPieChart() {
             </Pie>
           </PieChart>
         </ChartContainer>
-        <div className="flex items-center justify-center space-x-4 text-sm text-muted-foreground mt-4">
+        <div className="flex items-center justify-center space-x-4 text-sm text-muted-foreground mt-4 flex-wrap gap-y-2">
             {chartData.map(item => (
-                item.value > 0 && <div key={item.name} className="flex items-center">
+                <div key={item.name} className="flex items-center">
                     <span className="w-2.5 h-2.5 rounded-full mr-1.5" style={{ backgroundColor: item.fill }}></span>
                     {item.name}
                 </div>
