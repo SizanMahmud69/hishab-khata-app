@@ -55,6 +55,10 @@
         "rewardPoints": {
           "type": "number",
           "description": "User's total reward points."
+        },
+        "nidRejectionReason": {
+          "type": "string",
+          "description": "Reason why the NID verification was rejected."
         }
       },
       "required": [
