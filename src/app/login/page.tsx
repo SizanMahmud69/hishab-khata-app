@@ -27,7 +27,7 @@ export default function LoginPage() {
   const { toast } = useToast();
   const auth = useAuth();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
@@ -41,34 +41,31 @@ export default function LoginPage() {
         return;
     }
 
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      toast({
-        title: "লগইন সফল হয়েছে!",
-        description: "আপনাকে ড্যাশবোর্ডে নিয়ে যাওয়া হচ্ছে।",
+    signInWithEmailAndPassword(auth, email, password)
+      .then(() => {
+        toast({
+          title: "লগইন সফল হয়েছে!",
+          description: "আপনাকে ড্যাশবোর্ডে নিয়ে যাওয়া হচ্ছে।",
+        });
+        router.push('/dashboard');
+      })
+      .catch((error: any) => {
+        let errorMessage = "লগইন করার সময় একটি সমস্যা হয়েছে।";
+        if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+          errorMessage = "আপনার দেওয়া ইমেইল অথবা পাসওয়ার্ড সঠিক নয়।";
+        } else if (error.code === 'auth/invalid-email') {
+          errorMessage = "অনুগ্রহ করে একটি সঠিক ইমেইল ঠিকানা দিন।";
+        }
+        
+        toast({
+          variant: "destructive",
+          title: "লগইন ব্যর্থ হয়েছে",
+          description: errorMessage,
+        });
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
-      router.push('/dashboard');
-    } catch (error: any) {
-      let errorMessage = "লগইন করার সময় একটি সমস্যা হয়েছে।";
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-        errorMessage = "আপনার দেওয়া ইমেইল অথবা পাসওয়ার্ড সঠিক নয়।";
-        // Log only the message to the console to avoid the overlay in dev mode
-        console.error(`Login failed: ${error.message}`);
-      } else if (error.code === 'auth/invalid-email') {
-        errorMessage = "অনুগ্রহ করে একটি সঠিক ইমেইল ঠিকানা দিন।";
-      } else {
-        // For other unexpected errors, log the full error
-        console.error(error);
-      }
-      
-      toast({
-        variant: "destructive",
-        title: "লগইন ব্যর্থ হয়েছে",
-        description: errorMessage,
-      });
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   return (
