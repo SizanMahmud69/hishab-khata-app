@@ -21,12 +21,13 @@ interface Notification {
     title: string;
     description: string;
     read: boolean;
+    link: string;
 }
 
 const initialNotifications: Notification[] = [
-    { id: 1, title: "আপনার বাজেট প্রায় শেষ।", description: "মাসিক খরচের সীমা অতিক্রম করতে চলেছে।", read: false },
-    { id: 2, title: "নতুন বিল যোগ হয়েছে।", description: "ইন্টারনেট বিল পরিশোধ করুন।", read: false },
-    { id: 3, title: "রিওয়ার্ড পয়েন্ট আপডেট!", description: "আপনি সফলভাবে ৫০ পয়েন্ট অর্জন করেছেন।", read: false },
+    { id: 1, title: "আপনার বাজেট প্রায় শেষ।", description: "মাসিক খরচের সীমা অতিক্রম করতে চলেছে।", read: false, link: "/expenses" },
+    { id: 2, title: "নতুন বিল যোগ হয়েছে।", description: "ইন্টারনেট বিল পরিশোধ করুন।", read: false, link: "/expenses" },
+    { id: 3, title: "রিওয়ার্ড পয়েন্ট আপডেট!", description: "আপনি সফলভাবে ৫০ পয়েন্ট অর্জন করেছেন।", read: false, link: "/rewards" },
 ];
 
 export function AppHeader({children}: {children: ReactNode}) {
@@ -85,18 +86,18 @@ export function AppHeader({children}: {children: ReactNode}) {
         setIsSheetOpen(false);
     }
     
-    const handleNotificationClick = (notification: Notification) => {
-        if (!notification.read) {
-            markAsRead(notification.id);
-        }
-        router.push('/notifications');
-    }
-
     const markAsRead = (id: number) => {
         const updatedNotifications = notifications.map(n => n.id === id ? { ...n, read: true } : n);
         setNotifications(updatedNotifications);
         localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
-        window.dispatchEvent(new Event('storage'));
+        window.dispatchEvent(new Event('storage')); // Trigger update for other components
+    }
+
+    const handleNotificationClick = (notification: Notification) => {
+        if (!notification.read) {
+            markAsRead(notification.id);
+        }
+        router.push(notification.link);
     }
 
     return (
@@ -165,10 +166,10 @@ export function AppHeader({children}: {children: ReactNode}) {
 
                             <DropdownMenuSeparator />
                             <DropdownMenuItem asChild className="p-0">
-                                <Button variant="outline" className="w-full">
-                                    <Link href="/notifications" className="w-full text-center">
+                                <Button variant="outline" className="w-full" onClick={() => router.push('/notifications')}>
+                                    <span className="w-full text-center">
                                         সমস্ত নোটিফিকেশন দেখুন
-                                    </Link>
+                                    </span>
                                 </Button>
                             </DropdownMenuItem>
                         </DropdownMenuContent>
