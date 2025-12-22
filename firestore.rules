@@ -55,22 +55,6 @@ service cloud.firestore {
     }
 
     /**
-     * On create, validates that the new user profile document contains an 'id' field
-     * that matches the user's own auth UID. This enforces data consistency.
-     */
-    function isCreatingOwnProfile(userId) {
-      return request.resource.data.id == userId;
-    }
-
-    /**
-     * On update, ensures the 'id' field of a user profile document cannot be changed.
-     * This prevents re-associating a profile with a different user.
-     */
-    function isUpdatingOwnProfile() {
-      return request.resource.data.id == resource.data.id;
-    }
-
-    /**
      * On create, validates that a new document in a user's subcollection
      * contains a 'userId' field that correctly points back to the user.
      */
@@ -103,8 +87,8 @@ service cloud.firestore {
     match /users/{userId} {
       allow get: if isOwner(userId);
       allow list: if false;
-      allow create: if isOwner(userId) && isCreatingOwnProfile(userId);
-      allow update: if isExistingOwner(userId) && isUpdatingOwnProfile();
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
 
       /**
@@ -216,5 +200,3 @@ service cloud.firestore {
     }
   }
 }
-
-    
