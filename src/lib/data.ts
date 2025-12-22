@@ -11,6 +11,16 @@ export interface Debt {
   status: 'unpaid' | 'paid' | 'partially-paid';
 }
 
+export interface ShopDue {
+  id: number;
+  customerName: string;
+  amount: number;
+  paidAmount: number;
+  date: string;
+  description?: string;
+  status: 'unpaid' | 'paid' | 'partially-paid';
+}
+
 export const monthlyIncome = [
   { source: 'মাসিক বেতন', amount: 50000, date: '2024-07-01', description: 'জুলাই মাসের বেতন' },
   { source: 'ফ্রিল্যান্সিং প্রকল্প', amount: 15000, date: '2024-07-15', description: 'ওয়েবসাইট ডিজাইন' },
@@ -36,6 +46,13 @@ export const debts: Debt[] = [
     { id: 3, person: 'নাসরিন', amount: 1500, paidAmount: 500, type: 'borrowed', date: '2024-07-20', status: 'partially-paid' },
     { id: 4, person: 'আরিফ', amount: 3000, paidAmount: 0, type: 'lent', date: '2024-06-25', status: 'unpaid' },
 ];
+
+export const initialShopDues: ShopDue[] = [
+    { id: 1, customerName: 'করিম স্টোর', amount: 1250, paidAmount: 500, date: '2024-07-25', status: 'partially-paid', description: 'মাসিক সদাই' },
+    { id: 2, customerName: 'রহমান সাহেব', amount: 780, paidAmount: 780, type: 'borrowed', date: '2024-07-22', status: 'paid' },
+    { id: 3, customerName: 'সালাম ব্রাদার্স', amount: 2100, paidAmount: 0, type: 'lent', date: '2024-07-28', status: 'unpaid', description: 'জরুরী মালপত্র' },
+];
+
 
 export const overviewChartData = [
   { name: 'Jan', income: 65000, expense: 40000 },

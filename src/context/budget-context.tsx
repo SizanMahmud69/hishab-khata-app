@@ -2,7 +2,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { dailyExpenses as initialExpenses, monthlyIncome as initialIncome, savingsTransactions as initialSavings, debts as initialDebts, type Debt } from '@/lib/data';
+import { dailyExpenses as initialExpenses, monthlyIncome as initialIncome, savingsTransactions as initialSavings, debts as initialDebts, type Debt, type ShopDue, initialShopDues } from '@/lib/data';
 
 interface Income {
     source: string;
@@ -31,7 +31,9 @@ interface BudgetContextType {
     expenses: Expense[];
     savings: Saving[];
     debts: Debt[];
+    shopDues: ShopDue[];
     setDebts: React.Dispatch<React.SetStateAction<Debt[]>>;
+    setShopDues: React.Dispatch<React.SetStateAction<ShopDue[]>>;
     addIncome: (income: Income) => void;
     addExpense: (expense: Expense) => void;
     addSaving: (saving: Saving) => void;
@@ -51,6 +53,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const [expenses, setExpenses] = useState<Expense[]>([]);
     const [savings, setSavings] = useState<Saving[]>([]);
     const [debts, setDebts] = useState<Debt[]>([]);
+    const [shopDues, setShopDues] = useState<ShopDue[]>([]);
     const [rewardPoints, setRewardPoints] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -65,6 +68,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             setExpenses(initialExpenses);
             setSavings(initialSavings);
             setDebts(initialDebts);
+            setShopDues(initialShopDues);
             setRewardPoints(120);
             setIsLoading(false);
         }, 1500);
@@ -106,7 +110,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     }
 
     return (
-        <BudgetContext.Provider value={{ income, expenses, savings, debts, setDebts, addIncome, addExpense, addSaving, totalIncome, totalExpense, totalSavings, rewardPoints, addRewardPoints, deductRewardPoints, isLoading }}>
+        <BudgetContext.Provider value={{ income, expenses, savings, debts, setDebts, shopDues, setShopDues, addIncome, addExpense, addSaving, totalIncome, totalExpense, totalSavings, rewardPoints, addRewardPoints, deductRewardPoints, isLoading }}>
             {children}
         </BudgetContext.Provider>
     );
