@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useUser, useFirestore, useMemoFirebase } from "@/firebase/provider";
 import { Mail, Phone, UserCheck, XCircle, CheckCircle, User as UserIcon, MapPin, Cake } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -36,6 +36,7 @@ interface UserProfile {
     nidNumber?: string;
     nidDob?: string;
     nidAddress?: string;
+    rewardPoints?: number;
 }
 
 export default function ProfilePage() {
@@ -124,6 +125,7 @@ export default function ProfilePage() {
                 <h2 className="text-3xl font-bold">{userProfile?.displayName ?? user?.displayName ?? 'ব্যবহারকারী'}</h2>
                 {userProfile?.isNidVerified && <CheckCircle className="w-7 h-7 text-green-500" />}
             </div>
+             <p className="text-sm text-muted-foreground mt-2">রিওয়ার্ড পয়েন্ট: {userProfile?.rewardPoints ?? 0}</p>
         </CardContent>
       </Card>
 
@@ -259,5 +261,3 @@ export default function ProfilePage() {
     </div>
   )
 }
-
-    

@@ -165,16 +165,6 @@ service cloud.firestore {
         allow update: if isExistingOwner(userId) && isUpdatingConsistentChild();
         allow delete: if isExistingOwner(userId);
       }
-      
-       /**
-       * @description Controls access to a user's reward points.
-       * @path /users/{userId}/rewards/{rewardId}
-       */
-      match /rewards/{rewardId} {
-        allow get, list: if isOwner(userId);
-        allow create, update: if isOwner(userId) && isCreatingConsistentChild(userId);
-        allow delete: if false; // Generally, users shouldn't delete reward docs
-      }
 
       /**
        * @description Controls access to a user's private loan records.

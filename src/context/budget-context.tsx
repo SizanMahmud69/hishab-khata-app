@@ -37,6 +37,10 @@ export interface Saving {
     userId?: string;
 }
 
+interface UserProfile {
+    rewardPoints?: number;
+}
+
 interface BudgetContextType {
     income: Income[];
     expenses: Expense[];
@@ -132,7 +136,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         setIsDataLoading(true);
         const basePath = `users/${user.uid}`;
         const listeners: (() => void)[] = [];
-        let activeListeners = 6;
+        let activeListeners = 6; // sub-collections + user doc
         
         const onDataLoaded = () => {
             activeListeners--;
@@ -154,18 +158,17 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             listeners.push(listener);
         };
 
-        const rewardsDocRef = doc(firestore, basePath, 'rewards', 'summary');
-        const unsubRewards = onSnapshot(rewardsDocRef, (snapshot) => {
-            setRewardPoints(snapshot.data()?.points || 0);
+        // Listener for the main user document to get reward points
+        const userDocRef = doc(firestore, basePath);
+        const unsubUser = onSnapshot(userDocRef, (snapshot) => {
+            const userData = snapshot.data() as UserProfile | undefined;
+            setRewardPoints(userData?.rewardPoints || 0);
             onDataLoaded();
         }, (err) => {
-            if (err.code === 'permission-denied') {
-                 setDoc(rewardsDocRef, { points: 0, userId: user.uid }, { merge: true });
-            }
-            console.error("Rewards fetch error: ", err);
+            console.error("User profile fetch error: ", err);
             onDataLoaded();
         });
-        listeners.push(unsubRewards);
+        listeners.push(unsubUser);
 
         createSnapshotListener<Income>('income', setIncome);
         createSnapshotListener<Expense>('expenses', setExpenses);
@@ -222,8 +225,8 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     
     const updateRewardPoints = async (points: number) => {
         if (!user || !firestore) return;
-        const rewardRef = doc(firestore, `users/${user.uid}/rewards`, 'summary');
-        await setDoc(rewardRef, { points: points, userId: user.uid }, { merge: true });
+        const userDocRef = doc(firestore, `users/${user.uid}`);
+        await setDoc(userDocRef, { rewardPoints: points }, { merge: true });
     }
 
     const addRewardPoints = (points: number) => {

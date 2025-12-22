@@ -51,6 +51,10 @@
         "nidAddress": {
           "type": "string",
           "description": "Address as per NID."
+        },
+        "rewardPoints": {
+          "type": "number",
+          "description": "User's total reward points."
         }
       },
       "required": [
