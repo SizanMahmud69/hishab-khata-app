@@ -10,9 +10,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Camera } from "lucide-react";
+import { useUser } from "@/firebase/auth/use-user";
 
 export default function ProfilePage() {
   const { isLoading } = useBudget();
+  const { user } = useUser();
 
   if (isLoading) {
     return <ProfileSkeleton />;
@@ -26,8 +28,8 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-6">
                     <div className="relative">
                         <Avatar className="h-24 w-24">
-                            <AvatarImage src="https://picsum.photos/seed/1/200/200" alt="User avatar" data-ai-hint="profile avatar" />
-                            <AvatarFallback>ইউ</AvatarFallback>
+                            <AvatarImage src={user?.photoURL ?? "https://picsum.photos/seed/1/200/200"} alt="User avatar" data-ai-hint="profile avatar" />
+                            <AvatarFallback>{user?.displayName?.charAt(0) ?? 'U'}</AvatarFallback>
                         </Avatar>
                         <Button variant="ghost" size="icon" className="absolute bottom-0 right-0 rounded-full h-8 w-8 bg-background/80 hover:bg-background">
                             <Camera className="h-4 w-4" />
@@ -35,21 +37,21 @@ export default function ProfilePage() {
                         </Button>
                     </div>
                     <div>
-                        <CardTitle className="text-3xl">ব্যবহারকারী</CardTitle>
-                        <CardDescription>user@example.com</CardDescription>
+                        <CardTitle className="text-3xl">{user?.displayName ?? 'ব্যবহারকারী'}</CardTitle>
+                        <CardDescription>{user?.email ?? 'user@example.com'}</CardDescription>
                     </div>
                 </div>
             </CardHeader>
             <CardContent className="space-y-4">
-                <div className="grid w-full items-center gap-1.5">
+                <div className="space-y-1.5">
                     <Label htmlFor="name">পুরো নাম</Label>
-                    <Input type="text" id="name" defaultValue="ব্যবহারকারী" />
+                    <Input type="text" id="name" defaultValue={user?.displayName ?? 'ব্যবহারকারী'} />
                 </div>
-                <div className="grid w-full items-center gap-1.5">
+                <div className="space-y-1.5">
                     <Label htmlFor="email">ইমেইল</Label>
-                    <Input type="email" id="email" defaultValue="user@example.com" disabled />
+                    <Input type="email" id="email" defaultValue={user?.email ?? ''} disabled />
                 </div>
-                <div className="grid w-full items-center gap-1.5">
+                <div className="space-y-1.5">
                     <Label htmlFor="phone">মোবাইল নম্বর</Label>
                     <Input type="tel" id="phone" placeholder="আপনার মোবাইল নম্বর দিন" />
                 </div>
