@@ -95,7 +95,7 @@ export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
             ))}
             </SidebarMenu>
         </ScrollArea>
-        <div className="mt-auto p-4">
+        <div className="mt-auto flex flex-col p-4 gap-2">
             <SidebarSeparator />
             <Link href="/profile" className="flex items-center gap-3 rounded-md px-2 py-3 transition-colors hover:bg-sidebar-accent" onClick={onLinkClick}>
                 <Avatar className="h-9 w-9">
@@ -107,16 +107,12 @@ export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
                     <p className="text-xs text-muted-foreground">{user?.email}</p>
                 </div>
             </Link>
-            <SidebarMenu>
-                <SidebarMenuItem>
-                    <SidebarMenuButton asChild tooltip="লগআউট" size="lg" onClick={handleLogout}>
-                        <Link href="/login">
-                            <LogOut />
-                            <span>লগআউট</span>
-                        </Link>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-            </SidebarMenu>
+            <SidebarMenuButton asChild tooltip="লগআউট" size="lg" onClick={handleLogout} className="w-full">
+                <Link href="/login">
+                    <LogOut />
+                    <span>লগআউট</span>
+                </Link>
+            </SidebarMenuButton>
         </div>
     </div>
   )
