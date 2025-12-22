@@ -118,91 +118,74 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
       
-      {isNidVerified && nidData && (
-        <Card>
-            <CardHeader>
-                <CardTitle>ভেরিফাইড এনআইডি তথ্য</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                 <div className="flex items-center gap-4">
-                    <User className="w-6 h-6 text-muted-foreground" />
-                    <div className="flex-1">
-                         <p className="text-sm font-medium">নাম (এনআইডি অনুযায়ী)</p>
-                         <p className="text-muted-foreground">{nidData.name}</p>
-                    </div>
-                </div>
-                <div className="flex items-center gap-4">
-                    <UserCheck className="w-6 h-6 text-muted-foreground" />
-                    <div className="flex-1">
-                        <p className="text-sm font-medium">এনআইডি নম্বর</p>
-                        <p className="text-muted-foreground">{nidData.nid}</p>
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
-      )}
-
        <Card>
         <CardHeader>
             <CardTitle>এনআইডি ভেরিফিকেশন</CardTitle>
-            <CardDescription>আপনার অ্যাকাউন্টের নিরাপত্তা এবং বিশ্বাসযোগ্যতা বাড়ান।</CardDescription>
+            {!isNidVerified && <CardDescription>আপনার অ্যাকাউন্টের নিরাপত্তা এবং বিশ্বাসযোগ্যতা বাড়ান।</CardDescription>}
         </CardHeader>
-        <CardContent className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-                {isNidVerified ? (
-                    <>
-                        <UserCheck className="w-8 h-8 text-green-500" />
-                        <div>
-                            <p className="font-semibold text-green-500">এনআইডি ভেরিফাইড</p>
-                            <p className="text-sm text-muted-foreground">আপনার অ্যাকাউন্টটি এখন সম্পূর্ণ ভেরিফাইড।</p>
+        <CardContent>
+            {isNidVerified && nidData ? (
+                 <div className="space-y-4">
+                     <div className="flex items-center gap-4">
+                        <User className="w-6 h-6 text-muted-foreground" />
+                        <div className="flex-1">
+                             <p className="text-sm font-medium">নাম (এনআইডি অনুযায়ী)</p>
+                             <p className="text-muted-foreground">{nidData.name}</p>
                         </div>
-                    </>
-                ) : (
-                     <>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <UserCheck className="w-6 h-6 text-muted-foreground" />
+                        <div className="flex-1">
+                            <p className="text-sm font-medium">এনআইডি নম্বর</p>
+                            <p className="text-muted-foreground">{nidData.nid}</p>
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
                         <XCircle className="w-8 h-8 text-red-500" />
                         <div>
                             <p className="font-semibold text-red-500">এনআইডি ভেরিফাইড নয়</p>
                             <p className="text-sm text-muted-foreground">অতিরিক্ত সুবিধা পেতে আপনার এনআইডি ভেরিফাই করুন।</p>
                         </div>
-                    </>
-                )}
-            </div>
-             {(!isNidVerified) && (
-                <Dialog open={isVerificationDialogOpen} onOpenChange={setIsVerificationDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button disabled={isVerificationPending}>
-                      <UserCheck className="mr-2 h-4 w-4" />
-                      {isVerificationPending ? 'প্রসেসিং...' : 'এনআইডি ভেরিফাই করুন'}
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                      <DialogTitle>এনআইডি ভেরিফিকেশন</DialogTitle>
-                      <DialogDescription>
-                        আপনার এনআইডি কার্ড অনুযায়ী সঠিক তথ্য প্রদান করুন।
-                      </DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={handleNidSubmit}>
-                        <div className="grid gap-4 py-4">
-                          <div className="space-y-1.5">
-                            <Label htmlFor="name">পুরো নাম (এনআইডি অনুযায়ী)</Label>
-                            <Input id="name" name="name" placeholder="আপনার পুরো নাম লিখুন" required />
-                          </div>
-                          <div className="space-y-1.5">
-                            <Label htmlFor="nid">এনআইডি নম্বর</Label>
-                            <Input id="nid" name="nid" type="number" placeholder="আপনার এনআইডি নম্বর" required />
-                          </div>
-                          <div className="space-y-1.5">
-                            <Label htmlFor="phone">ফোন নম্বর</Label>
-                            <Input id="phone" name="phone" placeholder="আপনার ফোন নম্বর" required />
-                          </div>
-                        </div>
-                        <DialogFooter>
-                          <Button type="submit">জমা দিন</Button>
-                        </DialogFooter>
-                    </form>
-                  </DialogContent>
-                </Dialog>
+                    </div>
+                     <Dialog open={isVerificationDialogOpen} onOpenChange={setIsVerificationDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button disabled={isVerificationPending}>
+                          <UserCheck className="mr-2 h-4 w-4" />
+                          {isVerificationPending ? 'প্রসেসিং...' : 'এনআইডি ভেরিফাই করুন'}
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[425px]">
+                        <DialogHeader>
+                          <DialogTitle>এনআইডি ভেরিফিকেশন</DialogTitle>
+                          <DialogDescription>
+                            আপনার এনআইডি কার্ড অনুযায়ী সঠিক তথ্য প্রদান করুন।
+                          </DialogDescription>
+                        </DialogHeader>
+                        <form onSubmit={handleNidSubmit}>
+                            <div className="grid gap-4 py-4">
+                              <div className="space-y-1.5">
+                                <Label htmlFor="name">পুরো নাম (এনআইডি অনুযায়ী)</Label>
+                                <Input id="name" name="name" placeholder="আপনার পুরো নাম লিখুন" required />
+                              </div>
+                              <div className="space-y-1.5">
+                                <Label htmlFor="nid">এনআইডি নম্বর</Label>
+                                <Input id="nid" name="nid" type="number" placeholder="আপনার এনআইডি নম্বর" required />
+                              </div>
+                              <div className="space-y-1.5">
+                                <Label htmlFor="phone">ফোন নম্বর</Label>
+                                <Input id="phone" name="phone" placeholder="আপনার ফোন নম্বর" required />
+                              </div>
+                            </div>
+                            <DialogFooter>
+                              <Button type="submit">জমা দিন</Button>
+                            </DialogFooter>
+                        </form>
+                      </DialogContent>
+                    </Dialog>
+                </div>
             )}
         </CardContent>
       </Card>
