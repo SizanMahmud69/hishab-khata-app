@@ -29,7 +29,7 @@ const chartConfig = {
   },
   সঞ্চয়: {
     label: "সঞ্চয়",
-    color: "hsl(var(--chart-2))",
+    color: "hsl(221, 83%, 53%)",
   },
   "বর্তমান ব্যালেন্স": {
     label: "বর্তমান ব্যালেন্স",
@@ -44,7 +44,7 @@ export function OverviewPieChart() {
     const chartData = [
       { name: "আয়", value: totalIncome, fill: "hsl(var(--chart-1))" },
       { name: "ব্যয়", value: totalExpense, fill: "hsl(var(--destructive))" },
-      { name: "সঞ্চয়", value: totalSavings, fill: "hsl(var(--chart-2))" },
+      { name: "সঞ্চয়", value: totalSavings, fill: "hsl(221, 83%, 53%)" },
       { name: "বর্তমান ব্যালেন্স", value: balance, fill: "hsl(var(--chart-4))" },
     ].filter(item => item.value > 0);
 
