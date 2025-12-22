@@ -13,7 +13,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 
 interface Notification {
@@ -33,7 +33,7 @@ export function AppHeader({children}: {children: ReactNode}) {
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [isCheckedIn, setIsCheckedIn] = useState(false);
     const [notifications, setNotifications] = useState<Notification[]>([]);
-    const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
+    const router = useRouter();
 
     useEffect(() => {
         const storedNotifications = localStorage.getItem('notifications');
@@ -86,10 +86,10 @@ export function AppHeader({children}: {children: ReactNode}) {
     }
     
     const handleNotificationClick = (notification: Notification) => {
-        setSelectedNotification(notification);
         if (!notification.read) {
             markAsRead(notification.id);
         }
+        router.push('/notifications');
     }
 
     const markAsRead = (id: number) => {
@@ -178,19 +178,6 @@ export function AppHeader({children}: {children: ReactNode}) {
             <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-background">
                 {children}
             </main>
-            <Dialog open={!!selectedNotification} onOpenChange={(isOpen) => !isOpen && setSelectedNotification(null)}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>{selectedNotification?.title}</DialogTitle>
-                        <DialogDescription>
-                            {selectedNotification?.description}
-                        </DialogDescription>
-                    </DialogHeader>
-                     <div className="mt-4 text-sm text-muted-foreground">
-                        নোটিফিকেশনটি পঠিত হিসেবে চিহ্নিত করা হয়েছে।
-                    </div>
-                </DialogContent>
-            </Dialog>
         </div>
     )
 }
