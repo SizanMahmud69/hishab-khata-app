@@ -2,24 +2,27 @@
 
 import type { ReactNode } from "react"
 import { AppHeader } from "@/components/app-header"
-import { BudgetClientProvider } from "@/context/budget-context-provider"
-import { useUser } from "@/firebase/provider";
+import { BudgetClientProvider, useBudget } from "@/context/budget-context-provider"
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useUser } from "@/firebase/provider";
 
 
-export default function AppLayout({ children }: { children: ReactNode }) {
-    const { user, isUserLoading } = useUser();
+function AppContent({ children }: { children: ReactNode }) {
+    const { user, isUserLoading: isAuthLoading } = useUser();
+    const { isLoading: isDataLoading } = useBudget();
     const router = useRouter();
 
     useEffect(() => {
-        if (!isUserLoading && !user) {
+        if (!isAuthLoading && !user) {
             router.push('/login');
         }
-    }, [user, isUserLoading, router]);
+    }, [user, isAuthLoading, router]);
 
-    if (isUserLoading || !user) {
+    const isLoading = isAuthLoading || !user || isDataLoading;
+
+    if (isLoading) {
         return (
              <div className="flex flex-col h-screen">
                 <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4">
@@ -45,11 +48,17 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             </div>
         );
     }
+
+    return <AppHeader>{children}</AppHeader>
+}
+
+
+export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <BudgetClientProvider>
-        <AppHeader>
+        <AppContent>
             {children}
-        </AppHeader>
+        </AppContent>
     </BudgetClientProvider>
   )
 }

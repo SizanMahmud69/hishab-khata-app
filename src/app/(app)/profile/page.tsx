@@ -1,24 +1,17 @@
 
 "use client";
 
-import { useBudget } from "@/context/budget-context";
 import PageHeader from "@/components/page-header";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Camera } from "lucide-react";
 import { useUser } from "@/firebase/auth/use-user";
 
 export default function ProfilePage() {
-  const { isLoading } = useBudget();
   const { user } = useUser();
-
-  if (isLoading) {
-    return <ProfileSkeleton />;
-  }
   
   return (
     <div className="flex-1 space-y-4">
@@ -63,43 +56,3 @@ export default function ProfilePage() {
     </div>
   )
 }
-
-function ProfileSkeleton() {
-    return (
-        <div className="flex-1 space-y-4">
-            <div className="grid gap-1 mb-6">
-                <Skeleton className="h-9 w-32" />
-                <Skeleton className="h-5 w-72" />
-            </div>
-            <Card className="max-w-2xl mx-auto">
-                <CardHeader>
-                    <div className="flex items-center gap-6">
-                        <Skeleton className="h-24 w-24 rounded-full" />
-                        <div className="space-y-2">
-                            <Skeleton className="h-9 w-40" />
-                            <Skeleton className="h-5 w-48" />
-                        </div>
-                    </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="space-y-1.5">
-                        <Skeleton className="h-5 w-20" />
-                        <Skeleton className="h-10 w-full" />
-                    </div>
-                    <div className="space-y-1.5">
-                        <Skeleton className="h-5 w-20" />
-                        <Skeleton className="h-10 w-full" />
-                    </div>
-                    <div className="space-y-1.5">
-                        <Skeleton className="h-5 w-20" />
-                        <Skeleton className="h-10 w-full" />
-                    </div>
-                </CardContent>
-                <CardFooter className="justify-end">
-                    <Skeleton className="h-10 w-32" />
-                </CardFooter>
-            </Card>
-        </div>
-    );
-}
-

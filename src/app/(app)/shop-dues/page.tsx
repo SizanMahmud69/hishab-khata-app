@@ -27,14 +27,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { type ShopDue } from "@/lib/data"
 import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
 
 export default function ShopDuesPage() {
-    const { shopDues, addShopDue, updateShopDue, isLoading } = useBudget();
+    const { shopDues, addShopDue, updateShopDue } = useBudget();
     const { toast } = useToast();
     const [selectedDue, setSelectedDue] = useState<ShopDue | null>(null);
     const [paymentAmount, setPaymentAmount] = useState<number>(0);
@@ -136,10 +135,6 @@ export default function ShopDuesPage() {
     const totalPaidAmount = shopDues.reduce((sum, due) => sum + due.paidAmount, 0);
     const totalRemainingDue = totalDueAmount - totalPaidAmount;
 
-
-    if (isLoading) {
-        return <DuesSkeleton />;
-    }
 
   return (
     <div className="flex-1 space-y-4">
@@ -290,27 +285,4 @@ export default function ShopDuesPage() {
         </Dialog>
     </div>
   )
-}
-
-function DuesSkeleton() {
-    return (
-        <div className="flex-1 space-y-4">
-            <div className="flex items-center justify-between mb-6">
-                <div className="grid gap-1">
-                    <Skeleton className="h-9 w-40" />
-                    <Skeleton className="h-5 w-72" />
-                </div>
-                <Skeleton className="h-10 w-40" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-                <Skeleton className="h-28 w-full" />
-                <Skeleton className="h-28 w-full" />
-            </div>
-            <div className="space-y-4">
-                <Skeleton className="h-24 w-full" />
-                <Skeleton className="h-24 w-full" />
-                <Skeleton className="h-24 w-full" />
-            </div>
-        </div>
-    );
 }

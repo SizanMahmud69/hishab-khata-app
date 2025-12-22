@@ -10,7 +10,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
 import { bn } from 'date-fns/locale';
-import { Skeleton } from '@/components/ui/skeleton';
 
 const MAX_STREAK_DAYS = 30;
 const BASE_REWARD = 5;
@@ -24,7 +23,7 @@ export default function CheckInPage() {
     const [lastCheckInDate, setLastCheckInDate] = useState<string | null>(null);
     const [consecutiveDays, setConsecutiveDays] = useState(0);
     const [history, setHistory] = useState<CheckInRecord[]>([]);
-    const { addRewardPoints, isLoading } = useBudget();
+    const { addRewardPoints } = useBudget();
     const { toast } = useToast();
     
     useEffect(() => {
@@ -105,10 +104,6 @@ export default function CheckInPage() {
         });
     }
 
-    if (isLoading) {
-        return <CheckInSkeleton />;
-    }
-
   return (
     <div className="flex-1 space-y-4">
       <PageHeader title="দৈনিক চেক-ইন" description="প্রতিদিন চেক-ইন করে রিওয়ার্ড পয়েন্ট অর্জন করুন।" />
@@ -182,46 +177,4 @@ export default function CheckInPage() {
 
     </div>
   )
-}
-
-function CheckInSkeleton() {
-    return (
-        <div className="flex-1 space-y-4">
-            <div className="grid gap-1 mb-6">
-                <Skeleton className="h-9 w-48" />
-                <Skeleton className="h-5 w-72" />
-            </div>
-            <Card className="max-w-md mx-auto">
-                <CardHeader>
-                    <Skeleton className="h-8 w-36" />
-                    <Skeleton className="h-5 w-64" />
-                </CardHeader>
-                <CardContent className="text-center p-8">
-                    <div className="flex flex-col items-center gap-4">
-                        <Skeleton className="w-16 h-16 rounded-full" />
-                        <div className="flex flex-col items-center gap-1">
-                            <Skeleton className="h-7 w-32" />
-                            <Skeleton className="h-9 w-40" />
-                            <Skeleton className="h-5 w-48" />
-                        </div>
-                        <Skeleton className="h-12 w-40 mt-4" />
-                    </div>
-                </CardContent>
-            </Card>
-
-            <Card className="max-w-md mx-auto">
-                <CardHeader>
-                    <Skeleton className="h-8 w-44" />
-                    <Skeleton className="h-5 w-56" />
-                </CardHeader>
-                <CardContent>
-                    <div className="space-y-4">
-                        <Skeleton className="h-10 w-full" />
-                        <Skeleton className="h-10 w-full" />
-                        <Skeleton className="h-10 w-full" />
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
-    );
 }

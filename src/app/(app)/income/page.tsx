@@ -19,12 +19,11 @@ import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { incomeSources, savingsDestinations } from "@/lib/data";
-import { Skeleton } from "@/components/ui/skeleton";
 
 const months = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
 
 export default function IncomePage() {
-    const { addIncome, isLoading } = useBudget();
+    const { addIncome } = useBudget();
     const { toast } = useToast();
     const formRef = React.useRef<HTMLFormElement>(null);
     const [selectedSource, setSelectedSource] = React.useState<string>("");
@@ -70,10 +69,6 @@ export default function IncomePage() {
         formRef.current?.reset();
         setSelectedSource("");
     }
-  
-  if (isLoading) {
-    return <FormSkeleton />;
-  }
 
   return (
     <div className="flex-1 space-y-4">
@@ -147,42 +142,4 @@ export default function IncomePage() {
       </Card>
     </div>
   )
-}
-
-function FormSkeleton() {
-    return (
-        <div className="flex-1 space-y-4">
-            <div className="grid gap-1 mb-6">
-                <Skeleton className="h-9 w-64" />
-                <Skeleton className="h-5 w-80" />
-            </div>
-            <Card className="max-w-2xl mx-auto">
-                <CardHeader>
-                    <Skeleton className="h-8 w-40" />
-                    <Skeleton className="h-5 w-60" />
-                </CardHeader>
-                <CardContent className="space-y-4 py-4">
-                    <div className="space-y-1.5">
-                        <Skeleton className="h-5 w-20" />
-                        <Skeleton className="h-10 w-full" />
-                    </div>
-                    <div className="space-y-1.5">
-                        <Skeleton className="h-5 w-20" />
-                        <Skeleton className="h-10 w-full" />
-                    </div>
-                    <div className="space-y-1.5">
-                        <Skeleton className="h-5 w-20" />
-                        <Skeleton className="h-10 w-full" />
-                    </div>
-                    <div className="space-y-1.5">
-                        <Skeleton className="h-5 w-20" />
-                        <Skeleton className="h-20 w-full" />
-                    </div>
-                </CardContent>
-                <CardFooter>
-                    <Skeleton className="h-10 w-full" />
-                </CardFooter>
-            </Card>
-        </div>
-    );
 }

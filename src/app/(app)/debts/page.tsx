@@ -28,7 +28,6 @@ import { Label } from "@/components/ui/label"
 import { type Debt } from "@/lib/data"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,7 +35,7 @@ import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
 
 export default function DebtsPage() {
-    const { debts, addDebt, updateDebt, isLoading, addExpense, addIncome, totalIncome, totalExpense } = useBudget();
+    const { debts, addDebt, updateDebt, addExpense, addIncome, totalIncome, totalExpense } = useBudget();
     const { toast } = useToast();
     const [selectedDebt, setSelectedDebt] = useState<Debt | null>(null);
     const [paymentAmount, setPaymentAmount] = useState<number>(0);
@@ -171,10 +170,6 @@ export default function DebtsPage() {
     const totalLent = lentDebts.reduce((sum, debt) => sum + debt.amount, 0);
     const totalBorrowed = borrowedDebts.reduce((sum, debt) => sum + debt.amount, 0);
 
-
-    if (isLoading) {
-        return <DebtsSkeleton />;
-    }
 
   return (
     <div className="flex-1 space-y-4">
@@ -391,30 +386,4 @@ export default function DebtsPage() {
         </Dialog>
     </div>
   )
-}
-
-function DebtsSkeleton() {
-    return (
-        <div className="flex-1 space-y-4">
-            <div className="flex items-center justify-between mb-6">
-                <div className="grid gap-1">
-                    <Skeleton className="h-9 w-40" />
-                    <Skeleton className="h-5 w-72" />
-                </div>
-                <Skeleton className="h-10 w-40" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-                <Skeleton className="h-28 w-full" />
-                <Skeleton className="h-28 w-full" />
-            </div>
-            <div className="space-y-4">
-                <Skeleton className="h-10 w-full" />
-                <div className="space-y-4 mt-4">
-                    <Skeleton className="h-24 w-full" />
-                    <Skeleton className="h-24 w-full" />
-                    <Skeleton className="h-24 w-full" />
-                </div>
-            </div>
-        </div>
-    );
 }

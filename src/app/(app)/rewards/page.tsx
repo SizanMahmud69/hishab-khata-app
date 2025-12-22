@@ -19,14 +19,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
-import { Skeleton } from '@/components/ui/skeleton';
 
 const WITHDRAW_THRESHOLD = 1000;
 const CONVERSION_RATE = 1; // 1 point = 1 BDT
 
 export default function RewardsPage() {
-    const { rewardPoints, deductRewardPoints, isLoading } = useBudget();
+    const { rewardPoints, deductRewardPoints } = useBudget();
     const { toast } = useToast();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -40,10 +38,6 @@ export default function RewardsPage() {
             description: `আপনার উইথড্র সফল হয়েছে। ${rewardPoints} পয়েন্ট আপনার অ্যাকাউন্ট থেকে কেটে নেওয়া হয়েছে।`,
         });
         setIsDialogOpen(false);
-    }
-    
-    if (isLoading) {
-        return <RewardsSkeleton />;
     }
 
   return (
@@ -127,17 +121,4 @@ export default function RewardsPage() {
       )}
     </div>
   )
-}
-
-function RewardsSkeleton() {
-    return (
-        <div className="flex-1 space-y-4">
-             <div className="grid gap-1 mb-6">
-                <Skeleton className="h-9 w-32" />
-                <Skeleton className="h-5 w-64" />
-            </div>
-            <Skeleton className="h-60 w-full" />
-            <Skeleton className="h-60 w-full mt-6" />
-        </div>
-    );
 }

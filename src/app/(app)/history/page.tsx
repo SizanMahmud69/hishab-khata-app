@@ -3,7 +3,6 @@
 
 import { useMemo } from "react";
 import PageHeader from "@/components/page-header";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useBudget } from "@/context/budget-context";
 import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, TrendingDown } from "lucide-react";
@@ -12,7 +11,7 @@ import { bn } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
 export default function HistoryPage() {
-  const { income, expenses, isLoading } = useBudget();
+  const { income, expenses } = useBudget();
 
   const transactions = useMemo(() => {
     if (!income || !expenses) return [];
@@ -35,22 +34,6 @@ export default function HistoryPage() {
       minimumFractionDigits: 0,
     }).format(amount);
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex-1 space-y-4">
-        <div className="grid gap-1 mb-6">
-          <Skeleton className="h-9 w-32" />
-          <Skeleton className="h-5 w-72" />
-        </div>
-        <div className="space-y-4">
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-24 w-full" />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex-1 space-y-4">
