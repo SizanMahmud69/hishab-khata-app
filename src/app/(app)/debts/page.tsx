@@ -198,7 +198,7 @@ export default function DebtsPage() {
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleAddNewDebt}>
-                <div className="grid gap-4 py-4">
+                <div className="grid gap-4 py-4 px-1 max-h-[70vh] overflow-y-auto">
                     <div className="space-y-1.5">
                         <Label>ধরন</Label>
                         <RadioGroup defaultValue="lent" name="type" className="flex gap-4">
@@ -233,7 +233,7 @@ export default function DebtsPage() {
                         <Textarea id="description" name="description" placeholder="ধার সম্পর্কিত কোনো নোট" />
                     </div>
                 </div>
-                <DialogFooter>
+                <DialogFooter className="pt-4">
                   <Button type="submit">সংরক্ষণ করুন</Button>
                 </DialogFooter>
             </form>
@@ -427,3 +427,6 @@ function DebtsSkeleton() {
 
     
 
+
+
+    
