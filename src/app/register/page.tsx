@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link"
-import { BookMarked, ArrowRight } from "lucide-react"
+import { BookMarked, ArrowRight, Loader2 } from "lucide-react"
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -212,6 +212,7 @@ export default function RegisterPage() {
                 />
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isLoading ? "লোড হচ্ছে..." : "নিবন্ধন করুন"}
                 {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
               </Button>
@@ -245,3 +246,5 @@ export default function RegisterPage() {
     </div>
   )
 }
+
+    
