@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { BookMarked, ShieldCheck, FileText, TrendingUp, TrendingDown, HandCoins, Store, Award, MoveRight } from 'lucide-react';
@@ -128,9 +129,13 @@ export default function Home() {
       </main>
 
       <footer className="py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
-        <div className="container mx-auto flex flex-col items-center justify-center gap-2 text-center text-sm text-muted-foreground sm:flex-row sm:justify-between">
-            <p>&copy; {new Date().getFullYear()} হিসাব খাতা. All rights reserved.</p>
-            <p>Developer: Sizan Mahmud &amp; Designer: Black Dimond</p>
+        <div className="container mx-auto flex flex-col items-center justify-center gap-4 text-center sm:flex-row sm:justify-between">
+            <p className='text-sm text-muted-foreground'>
+                &copy; {new Date().getFullYear()} <span className='font-bold text-primary'>হিসাব খাতা</span>. All rights reserved.
+            </p>
+            <div className='text-sm text-muted-foreground'>
+                Developer: <span className="font-semibold">Sizan Mahmud</span> &amp; Designer: <span className="font-semibold">Black Dimond</span>
+            </div>
         </div>
       </footer>
     </div>
