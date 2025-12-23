@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { BookMarked, ShieldCheck, FileText, TrendingUp, TrendingDown, HandCoins, Store, Award, MoveRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Image from 'next/image';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 const features = [
   {
@@ -36,6 +37,8 @@ const features = [
     description: "মাস শেষে আপনার আয়-ব্যয়ের 상세 রিপোর্ট দেখুন এবং বিশ্লেষণ করুন।",
   },
 ];
+
+const landingPageImage = PlaceHolderImages.find(p => p.id === 'finance-app-dashboard');
 
 
 export default function Home() {
@@ -83,14 +86,16 @@ export default function Home() {
                 </div>
             </div>
              <div className="hidden lg:block">
+             {landingPageImage && (
               <Image 
-                src="https://picsum.photos/seed/finance-app/600/500" 
+                src={landingPageImage.imageUrl}
                 alt="হিসাব খাতা অ্যাপ ড্যাশবোর্ড"
                 width={600}
                 height={500}
                 className="rounded-lg shadow-2xl"
-                data-ai-hint="finance app dashboard"
+                data-ai-hint={landingPageImage.imageHint}
               />
+            )}
             </div>
           </div>
         </section>
@@ -122,39 +127,6 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="border-t py-12 bg-secondary/50">
-        <div className="container">
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-            <div>
-              <Link href="/" className="flex items-center gap-2">
-                <BookMarked className="h-8 w-8 text-primary" />
-                <span className="font-bold text-lg">হিসাব খাতা</span>
-              </Link>
-              <p className="mt-4 text-muted-foreground">
-                আপনার আর্থিক ব্যবস্থাপনার বিশ্বস্ত সঙ্গী।
-              </p>
-            </div>
-            <div>
-              <h4 className="font-semibold text-lg">গুরুত্বপূর্ণ লিঙ্ক</h4>
-              <ul className="mt-4 space-y-2">
-                <li><Link href="/#features" className="text-muted-foreground hover:text-primary transition-colors">ফিচার</Link></li>
-                <li><Link href="/login" className="text-muted-foreground hover:text-primary transition-colors">লগইন</Link></li>
-                <li><Link href="/register" className="text-muted-foreground hover:text-primary transition-colors">রেজিস্ট্রেশন</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold text-lg">আইনি</h4>
-              <ul className="mt-4 space-y-2">
-                <li><Link href="/terms-and-conditions" className="text-muted-foreground hover:text-primary transition-colors">শর্তাবলী</Link></li>
-                <li><Link href="/privacy-policy" className="text-muted-foreground hover:text-primary transition-colors">গোপনীয়তা নীতি</Link></li>
-              </ul>
-            </div>
-          </div>
-          <div className="mt-8 border-t pt-8 text-center text-muted-foreground">
-            <p>&copy; {new Date().getFullYear()} হিসাব খাতা। সর্বসত্ত্ব সংরক্ষিত।</p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
