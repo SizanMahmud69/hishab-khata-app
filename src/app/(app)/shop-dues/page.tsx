@@ -152,7 +152,7 @@ export default function ShopDuesPage() {
 
             setIsPaymentDialogOpen(false);
             setSelectedDue(null);
-        } catch (error) => {
+        } catch (error) {
             console.error("Error confirming payment:", error);
             toast({ variant: "destructive", title: "ত্রুটি", description: "একটি সমস্যা হয়েছে।" });
         } finally {
@@ -443,4 +443,3 @@ export default function ShopDuesPage() {
   )
 }
 
-    
