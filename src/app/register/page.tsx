@@ -115,7 +115,7 @@ export default function RegisterPage() {
       console.error("Registration Error:", error);
       let errorMessage = "নিবন্ধন করার সময় একটি সমস্যা হয়েছে।";
       if (error.code === 'auth/email-already-in-use') {
-        errorMessage = "এই ইমেইল ঠিকানাটি ইতিমধ্যে ব্যবহৃত হয়েছে।";
+        errorMessage = "এই ইমেইল দিয়ে আগেই অ্যাকাউন্ট খোলা হয়েছে।";
       } else if (error.code === 'auth/invalid-email') {
         errorMessage = "অনুগ্রহ করে একটি সঠিক ইমেইল ঠিকানা দিন।";
       } else if (error.code === 'auth/weak-password') {
