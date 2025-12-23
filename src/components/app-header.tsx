@@ -16,6 +16,7 @@ import {
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { isToday, parseISO } from "date-fns"
+import { useBudget } from "@/context/budget-context"
 
 interface Notification {
     id: string;
@@ -55,8 +56,25 @@ export function AppHeader({children}: {children: ReactNode}) {
     const [isCheckedIn, setIsCheckedIn] = useState(false);
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const router = useRouter();
+    const { transactions } = useBudget(); // Assuming this context provides user data including lastCheckIn
 
     useEffect(() => {
+        const lastCheckIn = transactions.find(t => t.category === 'দৈনিক চেক-ইন');
+        if(lastCheckIn) {
+            const today = new Date().toDateString();
+            const lastCheckInDate = new Date(lastCheckIn.date).toDateString();
+            setIsCheckedIn(today === lastCheckInDate);
+        } else {
+             const storedLastCheckIn = localStorage.getItem('lastCheckInDate');
+             if (storedLastCheckIn) {
+                 const today = new Date().toDateString();
+                 const lastDate = new Date(storedLastCheckIn).toDateString();
+                 setIsCheckedIn(today === lastDate);
+             } else {
+                setIsCheckedIn(false);
+             }
+        }
+
         const checkDailyNotification = () => {
             const lastNotificationDate = localStorage.getItem('dailyCheckinNotificationDate');
             const todayStr = new Date().toDateString();
@@ -67,13 +85,7 @@ export function AppHeader({children}: {children: ReactNode}) {
                     n.title === "দৈনিক চেক-ইন" && isToday(parseISO(n.createdAt))
                 );
 
-                const lastCheckIn = localStorage.getItem('lastCheckInDate');
-                let checkedInToday = false;
-                if(lastCheckIn) {
-                    checkedInToday = new Date(lastCheckIn).toDateString() === todayStr;
-                }
-
-                if (!hasTodayCheckinNotification && !checkedInToday) {
+                if (!hasTodayCheckinNotification && !isCheckedIn) {
                     createNotification({
                         title: "দৈনিক চেক-ইন",
                         description: "আজকের চেক-ইন করে রিওয়ার্ড পয়েন্ট অর্জন করুন।",
@@ -101,9 +113,7 @@ export function AppHeader({children}: {children: ReactNode}) {
         return () => {
             window.removeEventListener('storage', handleStorageChange);
         }
-    }, []);
-
-    const notificationCount = notifications.filter(n => !n.read).length;
+    }, [transactions, isCheckedIn]);
 
     useEffect(() => {
         const checkStatus = () => {
@@ -118,14 +128,18 @@ export function AppHeader({children}: {children: ReactNode}) {
         };
 
         checkStatus();
+        const interval = setInterval(checkStatus, 60000); // Check every minute
         window.addEventListener('storage', checkStatus);
         window.addEventListener('focus', checkStatus);
 
         return () => {
+            clearInterval(interval);
             window.removeEventListener('storage', checkStatus);
             window.removeEventListener('focus', checkStatus);
         };
     }, []);
+
+    const notificationCount = notifications.filter(n => !n.read).length;
 
     const handleLinkClick = () => {
         setIsSheetOpen(false);
