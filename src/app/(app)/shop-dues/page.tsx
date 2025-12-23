@@ -1,16 +1,14 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
-import { PlusCircle, ShoppingBag, Banknote, Loader2, Settings, Plus, Trash2, ChevronDown } from "lucide-react"
-import { useBudget, type DebtNote } from "@/context/budget-context";
+import { useMemo } from "react";
+import { ShoppingBag, Banknote, PlusCircle, Settings } from "lucide-react"
+import { useBudget } from "@/context/budget-context";
 import { Button } from "@/components/ui/button"
 import PageHeader from "@/components/page-header"
 import {
     Card,
     CardContent,
-    CardDescription,
-    CardFooter,
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
@@ -18,37 +16,18 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { useToast } from "@/hooks/use-toast";
-import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { Slider } from "@/components/ui/slider";
-import { useShops } from "@/hooks/use-shops";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-
+import Link from "next/link";
+import ShopDueForm from "@/components/shop-due-form";
 
 export default function ShopDuesPage() {
-    const { debtNotes, addDebtNote, updateDebtNote } = useBudget();
-    const { toast } = useToast();
-    const [selectedDue, setSelectedDue] = useState<DebtNote | null>(null);
-    const [paymentAmount, setPaymentAmount] = useState<number>(0);
-    const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
-    const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const { shops, addShop: addNewShopToList, removeShop, isLoading: areShopsLoading } = useShops();
-    const [isAddShopDialogOpen, setIsAddShopDialogOpen] = useState(false);
-    const [isDeleteShopDialogOpen, setIsDeleteShopDialogOpen] = useState(false);
-    const [newShopName, setNewShopName] = useState("");
+    const { debtNotes } = useBudget();
 
-    const shopDues = debtNotes.filter(d => d.type === 'shopDue');
+    const shopDues = useMemo(() => debtNotes.filter(d => d.type === 'shopDue'), [debtNotes]);
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat("bn-BD", {
@@ -58,127 +37,20 @@ export default function ShopDuesPage() {
         }).format(amount)
     }
 
-    const handleAddNewDue = async (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        setIsSubmitting(true);
-        const formData = new FormData(event.currentTarget);
-        const shopName = formData.get('shopName') as string;
-        const amount = Number(formData.get('amount'));
-        const date = formData.get('date') as string;
-        const description = formData.get('description') as string;
-
-        if (!shopName || !amount || !date) {
-            toast({
-                variant: "destructive",
-                title: "ফর্ম পূরণ আবশ্যক",
-                description: "অনুগ্রহ করে সকল প্রয়োজনীয় তথ্য পূরণ করুন।",
-            });
-            setIsSubmitting(false);
-            return;
-        }
-
-        try {
-            const newDue: Omit<DebtNote, 'id' | 'userId' | 'createdAt'> = {
-                person: shopName,
-                type: 'shopDue',
-                amount,
-                date: new Date(date).toISOString(),
-                description,
-                paidAmount: 0,
-                status: 'unpaid'
-            };
-            
-            await addDebtNote(newDue);
-
-            toast({
-                title: "সফল!",
-                description: "নতুন দোকানের বাকি সফলভাবে যোগ করা হয়েছে।",
-            });
-
-            setIsAddDialogOpen(false);
-            (event.target as HTMLFormElement).reset();
-        } catch (error) {
-            console.error("Error adding new due:", error);
-            toast({ variant: "destructive", title: "ত্রুটি", description: "একটি সমস্যা হয়েছে।" });
-        } finally {
-            setIsSubmitting(false);
-        }
-    }
-
-    const openPaymentDialog = (due: DebtNote) => {
-        setSelectedDue(due);
-        setPaymentAmount(due.amount - due.paidAmount);
-        setIsPaymentDialogOpen(true);
-    }
-
-    const handlePaymentConfirm = async () => {
-        if (!selectedDue) return;
-
-        setIsSubmitting(true);
-        const remainingAmount = selectedDue.amount - selectedDue.paidAmount;
-        if (paymentAmount <= 0 || paymentAmount > remainingAmount) {
-            toast({
-                variant: "destructive",
-                title: "ভুল পরিমাণ",
-                description: `অনুগ্রহ করে সঠিক পরিমাণ লিখুন (সর্বোচ্চ: ${formatCurrency(remainingAmount)})।`,
-            });
-            setIsSubmitting(false);
-            return;
-        }
-
-        try {
-            const newPaidAmount = selectedDue.paidAmount + paymentAmount;
-            const newStatus = newPaidAmount >= selectedDue.amount ? 'paid' : 'partially-paid';
-            const updatedDue: DebtNote = { ...selectedDue, paidAmount: newPaidAmount, status: newStatus };
-            
-            await updateDebtNote(updatedDue);
-
-            toast({
-                title: "সফল!",
-                description: "পরিশোধের হিসাব সফলভাবে আপডেট করা হয়েছে।",
-            });
-
-            setIsPaymentDialogOpen(false);
-            setSelectedDue(null);
-        } catch (error) {
-            console.error("Error confirming payment:", error);
-            toast({ variant: "destructive", title: "ত্রুটি", description: "একটি সমস্যা হয়েছে।" });
-        } finally {
-            setIsSubmitting(false);
-        }
-    }
-    
-    const handleAddNewShop = () => {
-        if (newShopName.trim()) {
-            const success = addNewShopToList(newShopName.trim());
-            if (success) {
-                setNewShopName("");
-                toast({
-                    title: "সফল!",
-                    description: `"${newShopName.trim()}" দোকানে যোগ করা হয়েছে।`,
-                });
-                setIsAddShopDialogOpen(false);
-            } else {
-                 toast({
-                    variant: "destructive",
-                    title: "ব্যর্থ",
-                    description: "এই দোকানটি ইতিমধ্যে তালিকায় রয়েছে।",
-                });
+    const groupedDues = useMemo(() => {
+        const groups: { [key: string]: { totalDue: number; totalPaid: number; } } = {};
+        shopDues.forEach(due => {
+            if (!groups[due.person]) {
+                groups[due.person] = { totalDue: 0, totalPaid: 0 };
             }
-        }
-    }
-
-    const getStatusBadge = (status: 'unpaid' | 'paid' | 'partially-paid') => {
-        switch (status) {
-            case 'paid':
-                return <Badge className="bg-green-500 hover:bg-green-500/80">পরিশোধিত</Badge>;
-            case 'partially-paid':
-                return <Badge variant="outline" className="border-yellow-500 text-yellow-600">আংশিক</Badge>;
-            case 'unpaid':
-            default:
-                return <Badge variant="destructive">অপরিশোধিত</Badge>;
-        }
-    }
+            groups[due.person].totalDue += due.amount;
+            groups[due.person].totalPaid += due.paidAmount;
+        });
+        return Object.entries(groups).map(([shopName, totals]) => ({
+            shopName,
+            remainingDue: totals.totalDue - totals.totalPaid
+        }));
+    }, [shopDues]);
     
     const totalDueAmount = shopDues.reduce((sum, due) => sum + due.amount, 0);
     const totalPaidAmount = shopDues.reduce((sum, due) => sum + due.paidAmount, 0);
@@ -187,9 +59,9 @@ export default function ShopDuesPage() {
 
   return (
     <div className="flex-1 space-y-4">
-      <PageHeader title="আমার দোকানের বাকি" description="বিভিন্ন দোকানে আপনার বাকির হিসাব রাখুন।">
+      <PageHeader title="আমার দোকানের বাকি" description="বিভিন্ন দোকানে আপনার মোট বাকির একটি সারসংক্ষেপ।">
         <div className="flex items-center gap-2">
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <Dialog>
               <DialogTrigger asChild>
                 <Button>
                   <PlusCircle className="mr-2 h-4 w-4" />
@@ -203,90 +75,7 @@ export default function ShopDuesPage() {
                     দোকানের নাম এবং বাকির পরিমাণ লিখুন।
                   </DialogDescription>
                 </DialogHeader>
-                <form onSubmit={handleAddNewDue}>
-                    <div className="grid gap-4 py-4 px-1 max-h-[70vh] overflow-y-auto">
-                        <div className="space-y-1.5">
-                            <div className="flex items-center justify-between">
-                                <Label htmlFor="shopName">দোকানের নাম</Label>
-                                <div className="flex items-center">
-                                    <Dialog open={isAddShopDialogOpen} onOpenChange={setIsAddShopDialogOpen}>
-                                        <DialogTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-7 w-7">
-                                                <Plus className="h-4 w-4" />
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent>
-                                            <DialogHeader>
-                                                <DialogTitle>নতুন দোকান যোগ করুন</DialogTitle>
-                                            </DialogHeader>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="new-shop-name">দোকানের নাম</Label>
-                                                <Input
-                                                    id="new-shop-name"
-                                                    value={newShopName}
-                                                    onChange={(e) => setNewShopName(e.target.value)}
-                                                    placeholder="করিম স্টোর"
-                                                />
-                                            </div>
-                                            <DialogFooter>
-                                                <Button onClick={handleAddNewShop}>সংরক্ষণ করুন</Button>
-                                            </DialogFooter>
-                                        </DialogContent>
-                                    </Dialog>
-                                    <Dialog open={isDeleteShopDialogOpen} onOpenChange={setIsDeleteShopDialogOpen}>
-                                        <DialogTrigger asChild>
-                                             <Button variant="ghost" size="icon" className="h-7 w-7">
-                                                <Trash2 className="h-4 w-4 text-red-500" />
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent>
-                                            <DialogHeader>
-                                                <DialogTitle>দোকানের তালিকা পরিচালনা করুন</DialogTitle>
-                                                <DialogDescription>তালিকা থেকে দোকান মুছে ফেলুন।</DialogDescription>
-                                            </DialogHeader>
-                                            <div className="space-y-2 max-h-60 overflow-y-auto">
-                                                {shops.map(shop => (
-                                                    <div key={shop} className="flex items-center justify-between p-2 border rounded-md">
-                                                        <span>{shop}</span>
-                                                        <Button variant="ghost" size="icon" onClick={() => removeShop(shop)}>
-                                                            <Trash2 className="h-4 w-4 text-red-500" />
-                                                        </Button>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </DialogContent>
-                                    </Dialog>
-                                </div>
-                            </div>
-                            <Select name="shopName" required disabled={shops.length === 0}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder={shops.length > 0 ? "একটি দোকান নির্বাচন করুন" : "প্রথমে একটি দোকান যোগ করুন"} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {shops.map(shop => <SelectItem key={shop} value={shop}>{shop}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-1.5">
-                            <Label htmlFor="amount">পরিমাণ</Label>
-                            <Input id="amount" name="amount" type="number" placeholder="500" required />
-                        </div>
-                        <div className="space-y-1.5">
-                            <Label htmlFor="due-date">বাকির তারিখ</Label>
-                            <Input id="due-date" name="date" type="date" defaultValue={new Date().toISOString().split('T')[0]} required />
-                        </div>
-                        <div className="space-y-1.5">
-                            <Label htmlFor="description">বিবরণ</Label>
-                            <Textarea id="description" name="description" placeholder="বাকি সম্পর্কিত কোনো নোট" />
-                        </div>
-                    </div>
-                    <DialogFooter className="pt-4">
-                      <Button type="submit" disabled={isSubmitting}>
-                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        {isSubmitting ? 'প্রসেসিং...' : 'সংরক্ষণ করুন'}
-                      </Button>
-                    </DialogFooter>
-                </form>
+                <ShopDueForm />
               </DialogContent>
             </Dialog>
         </div>
@@ -316,56 +105,23 @@ export default function ShopDuesPage() {
       </div>
 
        <div className="space-y-3">
-        {shopDues.length > 0 ? (
-          shopDues.map((due) => (
-            <Collapsible key={due.id} asChild>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-semibold text-lg">{due.person}</p>
-                      <p className="text-sm text-muted-foreground">{new Date(due.date).toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-                    </div>
-                    <span className={cn("font-bold text-lg", due.status !== 'paid' ? 'text-red-500' : 'text-foreground')}>
-                      {formatCurrency(due.amount)}
-                    </span>
-                  </div>
-                </CardContent>
-
-                <CollapsibleContent>
-                  <div className="px-4 pb-4 space-y-2 text-sm text-muted-foreground">
-                    {due.status === 'partially-paid' && (
-                      <p>
-                        পরিশোধিত: {formatCurrency(due.paidAmount)} | বাকি: {formatCurrency(due.amount - due.paidAmount)}
-                      </p>
-                    )}
-                    {due.description && (
-                      <p className="border-t pt-2">নোট: {due.description}</p>
-                    )}
-                  </div>
-                </CollapsibleContent>
-
-                <CardFooter className="bg-muted/50 p-3 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    {getStatusBadge(due.status)}
-                    <CollapsibleTrigger asChild>
-                       <Button variant="ghost" size="sm" className="text-xs">
-                        বিস্তারিত দেখুন
-                        <ChevronDown className="h-4 w-4 ml-1" />
-                      </Button>
-                    </CollapsibleTrigger>
-                  </div>
-                  <Button
-                    size="sm"
-                    onClick={() => openPaymentDialog(due)}
-                    disabled={due.status === 'paid'}
-                    variant={due.status === 'paid' ? 'ghost' : 'outline'}
-                  >
-                    {due.status === 'paid' ? 'সম্পূর্ণ পরিশোধিত' : 'পরিশোধ করুন'}
-                  </Button>
-                </CardFooter>
-              </Card>
-            </Collapsible>
+        {groupedDues.length > 0 ? (
+          groupedDues.map(({ shopName, remainingDue }) => (
+            <Link key={shopName} href={`/shop-dues/${encodeURIComponent(shopName)}`} passHref>
+                <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
+                    <CardContent className="p-4 flex justify-between items-center">
+                        <p className="font-semibold text-lg">{shopName}</p>
+                        <div className="text-right">
+                           <p className={cn("font-bold text-lg", remainingDue > 0 ? 'text-red-500' : 'text-green-500')}>
+                                {formatCurrency(remainingDue)}
+                           </p>
+                           <p className="text-xs text-muted-foreground">
+                                {remainingDue > 0 ? 'বাকি' : 'পরিশোধিত'}
+                           </p>
+                        </div>
+                    </CardContent>
+                </Card>
+            </Link>
           ))
         ) : (
           <div className="text-center py-10 text-muted-foreground border rounded-lg">
@@ -373,52 +129,6 @@ export default function ShopDuesPage() {
           </div>
         )}
       </div>
-      
-        <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
-            <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                    <DialogTitle>পরিশোধ নিশ্চিত করুন</DialogTitle>
-                    <DialogDescription>
-                        {selectedDue?.person} কে পরিশোধ করার জন্য পরিমাণ লিখুন।
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                    <div className="space-y-1.5">
-                        <Label htmlFor="payment-amount">
-                            পরিমাণ
-                        </Label>
-                        <Input 
-                            id="payment-amount" 
-                            type="number" 
-                            value={paymentAmount}
-                            onChange={(e) => setPaymentAmount(Number(e.target.value))}
-                            max={selectedDue ? selectedDue.amount - selectedDue.paidAmount : 0}
-                        />
-                    </div>
-                    <div className="space-y-1.5">
-                         <Label>স্লাইডার</Label>
-                         <Slider
-                            value={[paymentAmount]}
-                            max={selectedDue ? selectedDue.amount - selectedDue.paidAmount : 0}
-                            step={10}
-                            onValueChange={(value) => setPaymentAmount(value[0])}
-                        />
-                    </div>
-                     <p className="text-sm text-muted-foreground text-right pr-1">
-                        বাকি আছে: {formatCurrency(selectedDue ? selectedDue.amount - selectedDue.paidAmount : 0)}
-                     </p>
-                </div>
-                <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsPaymentDialogOpen(false)}>বাতিল</Button>
-                    <Button type="submit" onClick={handlePaymentConfirm} disabled={isSubmitting}>
-                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        {isSubmitting ? 'প্রসেসিং...' : 'নিশ্চিত করুন'}
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
     </div>
   )
 }
-
-    
