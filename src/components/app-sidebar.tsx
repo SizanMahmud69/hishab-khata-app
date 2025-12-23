@@ -14,7 +14,6 @@ import {
   PlusCircle,
   Store,
   Banknote,
-  Settings,
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
@@ -27,7 +26,6 @@ import {
 import { ScrollArea } from "./ui/scroll-area"
 import { useUser } from "@/firebase"
 import { getAuth, signOut } from "firebase/auth"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion"
 
 const menuItems = [
     {
@@ -67,13 +65,6 @@ const menuItems = [
     },
 ]
 
-const settingsItems = [
-    {
-        href: "/settings/shops",
-        label: "দোকানের তালিকা",
-    }
-]
-
 export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
   const pathname = usePathname()
   const { user } = useUser();
@@ -106,31 +97,6 @@ export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
                 </SidebarMenuItem>
             ))}
             </SidebarMenu>
-            <Accordion type="single" collapsible className="w-full px-3">
-                <AccordionItem value="item-1" className="border-none">
-                    <AccordionTrigger className="hover:no-underline text-base font-normal hover:bg-sidebar-accent rounded-md px-2 py-2.5">
-                        <div className="flex items-center gap-2">
-                             <Settings />
-                            <span>সেটিংস</span>
-                        </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pl-6">
-                        <ul className="flex flex-col gap-1">
-                           {settingsItems.map((item) => (
-                             <li key={item.href}>
-                                <Link
-                                    href={item.href}
-                                    onClick={onLinkClick}
-                                    className={`flex items-center p-2 rounded-md hover:bg-sidebar-accent ${pathname === item.href ? 'bg-sidebar-accent font-medium' : ''}`}
-                                >
-                                    {item.label}
-                                </Link>
-                             </li>
-                           ))}
-                        </ul>
-                    </AccordionContent>
-                </AccordionItem>
-            </Accordion>
         </ScrollArea>
         <div className="mt-auto flex flex-col p-4 gap-2">
             <SidebarSeparator />
