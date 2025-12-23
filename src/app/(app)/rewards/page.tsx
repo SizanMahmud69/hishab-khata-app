@@ -12,7 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import { format, parseISO } from 'date-fns';
 import { bn } from 'date-fns/locale';
-import { type WithdrawalRequest } from './withdraw/page';
+import { type WithdrawalRequest } from '../withdraw/page';
 
 const WITHDRAW_THRESHOLD = 1000;
 
@@ -54,9 +54,10 @@ export default function RewardsPage() {
     
     const withdrawalsQuery = useMemoFirebase(() => {
         if (!user || !firestore) return null;
-        return query(collection(firestore, `users/${user.uid}/withdrawalRequests`), where("status", "==", "approved"), orderBy("processedAt", "desc"));
+        // Fetch all withdrawals and filter on the client
+        return query(collection(firestore, `users/${user.uid}/withdrawalRequests`), orderBy("requestedAt", "desc"));
     }, [user, firestore]);
-    const { data: withdrawals, isLoading: isWithdrawalsLoading } = useCollection<WithdrawalRequest>(withdrawalsQuery);
+    const { data: allWithdrawals, isLoading: isWithdrawalsLoading } = useCollection<WithdrawalRequest>(withdrawalsQuery);
 
     const pointHistory = useMemo((): PointHistoryItem[] => {
         const history: PointHistoryItem[] = [];
@@ -72,8 +73,10 @@ export default function RewardsPage() {
             });
         }
 
-        if (withdrawals) {
-            withdrawals.forEach(wd => {
+        if (allWithdrawals) {
+            // Filter for approved withdrawals on the client
+            const approvedWithdrawals = allWithdrawals.filter(wd => wd.status === "approved");
+            approvedWithdrawals.forEach(wd => {
                 if (wd.processedAt) {
                     history.push({
                         type: 'spent',
@@ -87,7 +90,7 @@ export default function RewardsPage() {
         
         return history.sort((a, b) => b.date.getTime() - a.date.getTime());
 
-    }, [checkIns, withdrawals]);
+    }, [checkIns, allWithdrawals]);
     
     const canWithdraw = rewardPoints >= WITHDRAW_THRESHOLD;
     const isLoading = isUserLoading || isCheckInsLoading || isWithdrawalsLoading;
@@ -182,5 +185,3 @@ export default function RewardsPage() {
     </div>
   )
 }
-
-    
