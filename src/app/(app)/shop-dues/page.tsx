@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { PlusCircle, ShoppingBag, Banknote, Loader2 } from "lucide-react"
+import { PlusCircle, ShoppingBag, Banknote, Loader2, Settings } from "lucide-react"
 import { useBudget, type DebtNote } from "@/context/budget-context";
 import { Button } from "@/components/ui/button"
 import PageHeader from "@/components/page-header"
@@ -30,6 +30,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
+import { useShops } from "@/hooks/use-shops";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import Link from "next/link";
 
 export default function ShopDuesPage() {
     const { debtNotes, addDebtNote, updateDebtNote } = useBudget();
@@ -39,6 +42,7 @@ export default function ShopDuesPage() {
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const { shops } = useShops();
 
     const shopDues = debtNotes.filter(d => d.type === 'shopDue');
 
@@ -160,48 +164,69 @@ export default function ShopDuesPage() {
   return (
     <div className="flex-1 space-y-4">
       <PageHeader title="আমার দোকানের বাকি" description="বিভিন্ন দোকানে আপনার বাকির হিসাব রাখুন।">
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              নতুন বাকি যোগ করুন
+        <div className="flex items-center gap-2">
+            <Button asChild variant="outline">
+                <Link href="/settings/shops"><Settings className="mr-2 h-4 w-4" /> দোকানের তালিকা</Link>
             </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>নতুন বাকির হিসাব</DialogTitle>
-              <DialogDescription>
-                দোকানের নাম এবং বাকির পরিমাণ লিখুন।
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleAddNewDue}>
-                <div className="grid gap-4 py-4 px-1 max-h-[70vh] overflow-y-auto">
-                    <div className="space-y-1.5">
-                        <Label htmlFor="shopName">দোকানের নাম</Label>
-                        <Input id="shopName" name="shopName" placeholder="করিম স্টোর" required />
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  নতুন বাকি যোগ করুন
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>নতুন বাকির হিসাব</DialogTitle>
+                  <DialogDescription>
+                    দোকানের নাম এবং বাকির পরিমাণ লিখুন।
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleAddNewDue}>
+                    <div className="grid gap-4 py-4 px-1 max-h-[70vh] overflow-y-auto">
+                        <div className="space-y-1.5">
+                            <Label htmlFor="shopName">দোকানের নাম</Label>
+                            {shops.length > 0 ? (
+                                <Select name="shopName" required>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="একটি দোকান নির্বাচন করুন" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {shops.map(shop => <SelectItem key={shop} value={shop}>{shop}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            ) : (
+                                <div>
+                                    <Input id="shopName" name="shopName" placeholder="করিম স্টোর" required />
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                        কোনো দোকান পাওয়া যায়নি। <Link href="/settings/shops" className="text-primary underline">সেটিংস</Link> থেকে যোগ করুন।
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="amount">পরিমাণ</Label>
+                            <Input id="amount" name="amount" type="number" placeholder="500" required />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="due-date">বাকির তারিখ</Label>
+                            <Input id="due-date" name="date" type="date" defaultValue={new Date().toISOString().split('T')[0]} required />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="description">বিবরণ</Label>
+                            <Textarea id="description" name="description" placeholder="বাকি সম্পর্কিত কোনো নোট" />
+                        </div>
                     </div>
-                    <div className="space-y-1.5">
-                        <Label htmlFor="amount">পরিমাণ</Label>
-                        <Input id="amount" name="amount" type="number" placeholder="500" required />
-                    </div>
-                    <div className="space-y-1.5">
-                        <Label htmlFor="due-date">বাকির তারিখ</Label>
-                        <Input id="due-date" name="date" type="date" defaultValue={new Date().toISOString().split('T')[0]} required />
-                    </div>
-                    <div className="space-y-1.5">
-                        <Label htmlFor="description">বিবরণ</Label>
-                        <Textarea id="description" name="description" placeholder="বাকি সম্পর্কিত কোনো নোট" />
-                    </div>
-                </div>
-                <DialogFooter className="pt-4">
-                  <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {isSubmitting ? 'প্রসেসিং...' : 'সংরক্ষণ করুন'}
-                  </Button>
-                </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+                    <DialogFooter className="pt-4">
+                      <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {isSubmitting ? 'প্রসেসিং...' : 'সংরক্ষণ করুন'}
+                      </Button>
+                    </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+        </div>
       </PageHeader>
       
       <div className="grid grid-cols-2 gap-4">
