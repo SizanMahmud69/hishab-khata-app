@@ -2,7 +2,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ShoppingBag, Banknote, PlusCircle, Eye, Loader2 } from "lucide-react"
+import { ShoppingBag, Banknote, PlusCircle, Eye, Loader2, Trash2 } from "lucide-react"
 import { useBudget, type DebtNote } from "@/context/budget-context";
 import { Button } from "@/components/ui/button"
 import PageHeader from "@/components/page-header"
@@ -47,6 +47,7 @@ export default function ShopDuesPage() {
     
     const [paymentShop, setPaymentShop] = useState<ShopDueSummary | null>(null);
     const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+    const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [paymentAmount, setPaymentAmount] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -170,11 +171,11 @@ export default function ShopDuesPage() {
     <div className="flex-1 space-y-4">
       <PageHeader title="আমার দোকানের বাকি" description="বিভিন্ন দোকানে আপনার মোট বাকির একটি সারসংক্ষেপ।">
         <div className="flex items-center gap-2">
-            <Dialog>
+            <Dialog onOpenChange={setIsAddDialogOpen} open={isAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
                   <PlusCircle className="mr-2 h-4 w-4" />
-                  নতুন বাকি যোগ করুন
+                  দোকান বাকি
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[425px]">
@@ -231,7 +232,7 @@ export default function ShopDuesPage() {
                 <CardFooter className="bg-muted/50 p-3 flex justify-between items-center">
                     {getStatusBadge(due.remainingDue, due.totalPaid)}
                     <div className="flex items-center gap-2">
-                         <Button variant="outline" size="icon" className="h-8 w-8" asChild>
+                         <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
                             <Link href={`/shop-dues/${encodeURIComponent(due.shopName)}`}>
                                 <Eye className="h-4 w-4" />
                             </Link>
