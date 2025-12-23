@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { PlusCircle, ShoppingBag, Banknote, Loader2, Settings, Plus, Trash2 } from "lucide-react"
+import { PlusCircle, ShoppingBag, Banknote, Loader2, Settings, Plus, Trash2, ChevronDown } from "lucide-react"
 import { useBudget, type DebtNote } from "@/context/budget-context";
 import { Button } from "@/components/ui/button"
 import PageHeader from "@/components/page-header"
@@ -32,7 +32,7 @@ import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
 import { useShops } from "@/hooks/use-shops";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 
 export default function ShopDuesPage() {
@@ -49,18 +49,6 @@ export default function ShopDuesPage() {
     const [newShopName, setNewShopName] = useState("");
 
     const shopDues = debtNotes.filter(d => d.type === 'shopDue');
-
-    const groupedDues = useMemo(() => {
-        return shopDues.reduce((acc, due) => {
-            const shopName = due.person;
-            if (!acc[shopName]) {
-                acc[shopName] = [];
-            }
-            acc[shopName].push(due);
-            return acc;
-        }, {} as Record<string, DebtNote[]>);
-    }, [shopDues]);
-
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat("bn-BD", {
@@ -327,74 +315,64 @@ export default function ShopDuesPage() {
         </Card>
       </div>
 
-       <Accordion type="single" collapsible className="w-full space-y-3">
-        {Object.entries(groupedDues).map(([shopName, dues]) => {
-          const totalShopDue = dues.reduce((sum, due) => sum + due.amount, 0);
-          const totalShopPaid = dues.reduce((sum, due) => sum + due.paidAmount, 0);
-          const remainingShopDue = totalShopDue - totalShopPaid;
+       <div className="space-y-3">
+        {shopDues.length > 0 ? (
+          shopDues.map((due) => (
+            <Collapsible key={due.id} asChild>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-semibold text-lg">{due.person}</p>
+                      <p className="text-sm text-muted-foreground">{new Date(due.date).toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                    </div>
+                    <span className={cn("font-bold text-lg", due.status !== 'paid' ? 'text-red-500' : 'text-foreground')}>
+                      {formatCurrency(due.amount)}
+                    </span>
+                  </div>
+                </CardContent>
 
-          return (
-            <AccordionItem value={shopName} key={shopName} className="border-b-0">
-                <Card className="overflow-hidden">
-                    <AccordionTrigger className="p-4 hover:no-underline text-left">
-                        <div className="flex justify-between items-center w-full">
-                           <div>
-                                <p className="font-semibold text-lg">{shopName}</p>
-                                <p className="text-sm text-muted-foreground">মোট লেনদেন: {dues.length}</p>
-                            </div>
-                            <div>
-                                {remainingShopDue > 0 ? (
-                                    <p className="font-bold text-red-500">{formatCurrency(remainingShopDue)}</p>
-                                ) : (
-                                    <p className="font-semibold text-green-500">পরিশোধিত</p>
-                                )}
-                            </div>
-                        </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="px-0 pb-0">
-                        <div className="space-y-2 p-4 pt-0">
-                        {dues.map(due => (
-                            <Card key={due.id} className="bg-muted/30">
-                                <CardContent className="p-3">
-                                   <div className="flex justify-between items-start">
-                                        <div>
-                                            <p className="text-sm text-muted-foreground">{new Date(due.date).toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-                                            {due.description && <p className="text-xs text-muted-foreground/80">{due.description}</p>}
-                                        </div>
-                                        <span className="font-semibold text-base">{formatCurrency(due.amount)}</span>
-                                   </div>
-                                    {due.status === 'partially-paid' && (
-                                        <div className="text-xs text-muted-foreground mt-2">
-                                            পরিশোধিত: {formatCurrency(due.paidAmount)} | বাকি: {formatCurrency(due.amount - due.paidAmount)}
-                                        </div>
-                                    )}
-                                </CardContent>
-                                <CardFooter className="bg-muted/50 p-2 flex items-center justify-between">
-                                     {getStatusBadge(due.status)}
-                                     <Button 
-                                        size="sm" 
-                                        onClick={() => openPaymentDialog(due)}
-                                        disabled={due.status === 'paid'}
-                                        variant={due.status === 'paid' ? 'ghost' : 'outline'}
-                                    >
-                                        {due.status === 'paid' ? 'সম্পূর্ণ পরিশোধিত' : 'পরিশোধ করুন'}
-                                    </Button>
-                                </CardFooter>
-                            </Card>
-                        ))}
-                        </div>
-                    </AccordionContent>
-                </Card>
-            </AccordionItem>
-          );
-        })}
-      </Accordion>
+                <CollapsibleContent>
+                  <div className="px-4 pb-4 space-y-2 text-sm text-muted-foreground">
+                    {due.status === 'partially-paid' && (
+                      <p>
+                        পরিশোধিত: {formatCurrency(due.paidAmount)} | বাকি: {formatCurrency(due.amount - due.paidAmount)}
+                      </p>
+                    )}
+                    {due.description && (
+                      <p className="border-t pt-2">নোট: {due.description}</p>
+                    )}
+                  </div>
+                </CollapsibleContent>
 
-      {Object.keys(groupedDues).length === 0 && (
-        <div className="text-center py-10 text-muted-foreground border rounded-lg">
+                <CardFooter className="bg-muted/50 p-3 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    {getStatusBadge(due.status)}
+                    <CollapsibleTrigger asChild>
+                       <Button variant="ghost" size="sm" className="text-xs">
+                        বিস্তারিত দেখুন
+                        <ChevronDown className="h-4 w-4 ml-1" />
+                      </Button>
+                    </CollapsibleTrigger>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={() => openPaymentDialog(due)}
+                    disabled={due.status === 'paid'}
+                    variant={due.status === 'paid' ? 'ghost' : 'outline'}
+                  >
+                    {due.status === 'paid' ? 'সম্পূর্ণ পরিশোধিত' : 'পরিশোধ করুন'}
+                  </Button>
+                </CardFooter>
+              </Card>
+            </Collapsible>
+          ))
+        ) : (
+          <div className="text-center py-10 text-muted-foreground border rounded-lg">
             <p>এখনও কোনো বাকি যোগ করা হয়নি।</p>
-        </div>
-      )}
+          </div>
+        )}
+      </div>
       
         <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
             <DialogContent className="sm:max-w-[425px]">
@@ -443,3 +421,4 @@ export default function ShopDuesPage() {
   )
 }
 
+    
