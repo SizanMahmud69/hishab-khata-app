@@ -78,5 +78,13 @@ service cloud.firestore {
         allow update: if isExistingOwner(userId) && canUpdateWithdrawalRequest(); 
       }
     }
+    
+    // Global app configuration
+    match /app_config/{configId} {
+      allow get: if isSignedIn();
+      allow list, create, update, delete: if false; // Read-only for clients
+    }
   }
 }
+
+    

@@ -15,8 +15,8 @@ import { format, parseISO } from 'date-fns';
 import { bn } from 'date-fns/locale';
 import { type WithdrawalRequest } from '../withdraw/page';
 import { Badge } from '@/components/ui/badge';
+import { useBudget } from '@/context/budget-context';
 
-const WITHDRAW_THRESHOLD = 1000;
 
 interface UserProfile {
     points?: number;
@@ -42,6 +42,7 @@ function RewardsPageContent() {
     const firestore = useFirestore();
     const searchParams = useSearchParams();
     const historyRef = useRef<HTMLDivElement>(null);
+    const { minWithdrawalPoints } = useBudget();
 
     const userDocRef = useMemoFirebase(() => {
         if (!user || !firestore) return null;
@@ -111,7 +112,7 @@ function RewardsPageContent() {
 
     }, [checkIns, allWithdrawals]);
     
-    const canWithdraw = rewardPoints >= WITHDRAW_THRESHOLD;
+    const canWithdraw = rewardPoints >= minWithdrawalPoints;
     const isLoading = isUserLoading || isCheckInsLoading || isWithdrawalsLoading;
     
     const getStatusText = (status?: 'pending' | 'approved' | 'rejected') => {
@@ -161,7 +162,7 @@ function RewardsPageContent() {
                     পয়েন্ট উইথড্র করুন
                 </CardTitle>
                 <CardDescription>
-                    অভিনন্দন! আপনার {WITHDRAW_THRESHOLD} এর বেশি পয়েন্ট জমা হয়েছে। আপনি এখন আপনার পয়েন্ট টাকাতে রূপান্তর করে উইথড্র করতে পারবেন।
+                    অভিনন্দন! আপনার {minWithdrawalPoints} এর বেশি পয়েন্ট জমা হয়েছে। আপনি এখন আপনার পয়েন্ট টাকাতে রূপান্তর করে উইথড্র করতে পারবেন।
                 </CardDescription>
             </CardHeader>
             <CardFooter>
@@ -177,7 +178,7 @@ function RewardsPageContent() {
             <Gift className="w-12 h-12 text-primary mb-3" />
             <p className="text-muted-foreground">পয়েন্ট দিয়ে আকর্ষণীয় অফার রিডিম করুন।</p>
             <p className="text-sm text-muted-foreground">
-                {WITHDRAW_THRESHOLD} পয়েন্ট অর্জন করলে উইথড্র অপশন দেখতে পাবেন।
+                {minWithdrawalPoints} পয়েন্ট অর্জন করলে উইথড্র অপশন দেখতে পাবেন।
             </p>
         </div>
       )}
@@ -197,7 +198,7 @@ function RewardsPageContent() {
                         <div className="flex items-center gap-3">
                              {item.type === 'earned' ? <ArrowUpCircle className="h-6 w-6 text-green-500" /> : item.type === 'refunded' ? <Undo2 className="h-6 w-6 text-blue-500" /> : <ArrowDownCircle className="h-6 w-6 text-red-500" />}
                              <div>
-                                <div className="flex items-center gap-2 font-semibold">
+                                <div className="font-semibold flex items-center gap-2">
                                   {item.source}
                                   {item.source === 'পয়েন্ট উইথড্র' && getStatusText(item.status)}
                                 </div>
@@ -225,3 +226,5 @@ export default function RewardsPage() {
         </React.Suspense>
     )
 }
+
+    

@@ -26,7 +26,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 
-const WITHDRAW_THRESHOLD = 1000;
 const CONVERSION_RATE = 5; // 100 points = 5 BDT
 
 interface UserProfile {
@@ -47,7 +46,7 @@ export interface WithdrawalRequest {
 }
 
 export default function WithdrawPage() {
-    const { deductRewardPoints } = useBudget();
+    const { deductRewardPoints, minWithdrawalPoints } = useBudget();
     const { toast } = useToast();
     const { user } = useUser();
     const firestore = useFirestore();
@@ -73,7 +72,7 @@ export default function WithdrawPage() {
 
     const { data: history, isLoading: isHistoryLoading } = useCollection<WithdrawalRequest>(withdrawalHistoryQuery);
 
-    const canWithdraw = rewardPoints >= WITHDRAW_THRESHOLD;
+    const canWithdraw = rewardPoints >= minWithdrawalPoints;
     const selectedAmountBdt = Math.floor(pointsToWithdraw / 100) * CONVERSION_RATE;
 
     const lastRejectedRequest = useMemo(() => {
@@ -125,11 +124,11 @@ export default function WithdrawPage() {
         
         const pointsToDeduct = Math.floor(pointsToWithdraw / 100) * 100;
         
-        if (pointsToDeduct < WITHDRAW_THRESHOLD) {
+        if (pointsToDeduct < minWithdrawalPoints) {
              toast({
                 variant: "destructive",
                 title: "অপর্যাপ্ত পয়েন্ট",
-                description: `উইথড্র করার জন্য কমপক্ষে ${WITHDRAW_THRESHOLD} পয়েন্ট প্রয়োজন।`,
+                description: `উইথড্র করার জন্য কমপক্ষে ${minWithdrawalPoints} পয়েন্ট প্রয়োজন।`,
             });
             setIsSubmitting(false);
             return;
@@ -290,7 +289,7 @@ export default function WithdrawPage() {
             <Gift className="w-16 h-16 text-primary mb-4" />
             <p className="font-semibold text-lg">অপর্যাপ্ত পয়েন্ট</p>
             <p className="text-muted-foreground">
-                উইথড্র করার জন্য আপনার কমপক্ষে {WITHDRAW_THRESHOLD} পয়েন্ট প্রয়োজন।
+                উইথড্র করার জন্য আপনার কমপক্ষে {minWithdrawalPoints} পয়েন্ট প্রয়োজন।
             </p>
         </Card>
       )}
@@ -352,3 +351,5 @@ export default function WithdrawPage() {
     </div>
   )
 }
+
+    

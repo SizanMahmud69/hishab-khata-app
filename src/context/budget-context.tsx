@@ -41,6 +41,10 @@ interface UserProfile {
     joinDate?: string;
 }
 
+interface AppConfig {
+    minWithdrawalPoints: number;
+}
+
 interface BudgetContextType {
     transactions: Transaction[];
     debtNotes: DebtNote[];
@@ -49,8 +53,9 @@ interface BudgetContextType {
     updateDebtNote: (debtNote: DebtNote) => Promise<void>;
     totalIncome: number;
     totalExpense: number;
-    totalSavings: number; // This can now be derived from transactions if needed, or kept separate
+    totalSavings: number;
     rewardPoints: number;
+    minWithdrawalPoints: number;
     addRewardPoints: (points: number) => void;
     deductRewardPoints: (points: number) => void;
     isLoading: boolean;
@@ -67,6 +72,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [debtNotes, setDebtNotes] = useState<DebtNote[]>([]);
     const [rewardPoints, setRewardPoints] = useState(0);
+    const [minWithdrawalPoints, setMinWithdrawalPoints] = useState(1000); // Default fallback
     const [isDataLoading, setIsDataLoading] = useState(true);
 
     const totalIncome = useMemo(() => transactions.filter(t => t.type === 'income').reduce((sum, item) => sum + item.amount, 0), [transactions]);
@@ -118,7 +124,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         setIsDataLoading(true);
         const basePath = `users/${user.uid}`;
         const listeners: (() => void)[] = [];
-        let activeListeners = 4; // transactions, debtNotes, user doc, withdrawalRequests
+        let activeListeners = 5; // transactions, debtNotes, user doc, withdrawalRequests, app_config
         
         const onDataLoaded = () => {
             activeListeners--;
@@ -126,6 +132,20 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                 setIsDataLoading(false);
             }
         };
+
+        // Listener for app config
+        const appConfigRef = doc(firestore, 'app_config', 'settings');
+        const unsubConfig = onSnapshot(appConfigRef, (doc) => {
+            if (doc.exists()) {
+                const configData = doc.data() as AppConfig;
+                setMinWithdrawalPoints(configData.minWithdrawalPoints || 1000);
+            }
+            onDataLoaded();
+        }, (err) => {
+            console.error("Error fetching app config:", err);
+            onDataLoaded();
+        });
+        listeners.push(unsubConfig);
         
         const withdrawalRequestsRef = collection(firestore, basePath, 'withdrawalRequests');
         const unsubWithdrawals = onSnapshot(withdrawalRequestsRef, async (snapshot) => {
@@ -287,7 +307,8 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             totalIncome, 
             totalExpense, 
             totalSavings, 
-            rewardPoints, 
+            rewardPoints,
+            minWithdrawalPoints,
             addRewardPoints, 
             deductRewardPoints, 
             isLoading 
@@ -304,3 +325,5 @@ export const useBudget = () => {
     }
     return context;
 };
+
+    

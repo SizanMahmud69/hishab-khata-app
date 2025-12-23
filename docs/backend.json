@@ -240,6 +240,19 @@
             "isRefunded": {"type": "boolean"}
         },
         "required": ["id", "userId", "status", "points", "amountBdt", "paymentMethod", "accountNumber", "requestedAt"]
+    },
+    "AppConfig": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "AppConfig",
+        "type": "object",
+        "description": "Stores global configuration for the application.",
+        "properties": {
+            "minWithdrawalPoints": {
+                "type": "number",
+                "description": "The minimum number of points a user must have to make a withdrawal request."
+            }
+        },
+        "required": ["minWithdrawalPoints"]
     }
   },
   "auth": {
@@ -305,7 +318,17 @@
               "schema": { "$ref": "#/backend/entities/WithdrawalRequest" },
               "description": "Stores a user's reward point withdrawal requests."
           }
+      },
+      {
+          "path": "/app_config/{configId}",
+          "definition": {
+              "entityName": "AppConfig",
+              "schema": { "$ref": "#/backend/entities/AppConfig" },
+              "description": "Stores global application settings. Should be publicly readable."
+          }
       }
     ]
   }
 }
+
+    
