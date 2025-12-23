@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { PlusCircle, ShoppingBag, Banknote, Loader2, Settings } from "lucide-react"
+import { PlusCircle, ShoppingBag, Banknote, Loader2, Settings, Plus } from "lucide-react"
 import { useBudget, type DebtNote } from "@/context/budget-context";
 import { Button } from "@/components/ui/button"
 import PageHeader from "@/components/page-header"
@@ -42,7 +42,9 @@ export default function ShopDuesPage() {
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const { shops } = useShops();
+    const { shops, addShop: addNewShopToList, isLoading: areShopsLoading } = useShops();
+    const [isAddShopDialogOpen, setIsAddShopDialogOpen] = useState(false);
+    const [newShopName, setNewShopName] = useState("");
 
     const shopDues = debtNotes.filter(d => d.type === 'shopDue');
 
@@ -143,6 +145,26 @@ export default function ShopDuesPage() {
             setIsSubmitting(false);
         }
     }
+    
+    const handleAddNewShop = () => {
+        if (newShopName.trim()) {
+            const success = addNewShopToList(newShopName.trim());
+            if (success) {
+                setNewShopName("");
+                toast({
+                    title: "সফল!",
+                    description: `"${newShopName.trim()}" দোকানে যোগ করা হয়েছে।`,
+                });
+                setIsAddShopDialogOpen(false);
+            } else {
+                 toast({
+                    variant: "destructive",
+                    title: "ব্যর্থ",
+                    description: "এই দোকানটি ইতিমধ্যে তালিকায় রয়েছে।",
+                });
+            }
+        }
+    }
 
     const getStatusBadge = (status: 'unpaid' | 'paid' | 'partially-paid') => {
         switch (status) {
@@ -185,8 +207,34 @@ export default function ShopDuesPage() {
                 <form onSubmit={handleAddNewDue}>
                     <div className="grid gap-4 py-4 px-1 max-h-[70vh] overflow-y-auto">
                         <div className="space-y-1.5">
-                            <Label htmlFor="shopName">দোকানের নাম</Label>
-                            {shops.length > 0 ? (
+                            <div className="flex items-center justify-between">
+                                <Label htmlFor="shopName">দোকানের নাম</Label>
+                                <Dialog open={isAddShopDialogOpen} onOpenChange={setIsAddShopDialogOpen}>
+                                    <DialogTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7">
+                                            <Plus className="h-4 w-4" />
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                        <DialogHeader>
+                                            <DialogTitle>নতুন দোকান যোগ করুন</DialogTitle>
+                                        </DialogHeader>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="new-shop-name">দোকানের নাম</Label>
+                                            <Input
+                                                id="new-shop-name"
+                                                value={newShopName}
+                                                onChange={(e) => setNewShopName(e.target.value)}
+                                                placeholder="করিম স্টোর"
+                                            />
+                                        </div>
+                                        <DialogFooter>
+                                            <Button onClick={handleAddNewShop}>সংরক্ষণ করুন</Button>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
+                            </div>
+                            {!areShopsLoading && shops.length > 0 ? (
                                 <Select name="shopName" required>
                                     <SelectTrigger>
                                         <SelectValue placeholder="একটি দোকান নির্বাচন করুন" />
@@ -196,12 +244,7 @@ export default function ShopDuesPage() {
                                     </SelectContent>
                                 </Select>
                             ) : (
-                                <div>
-                                    <Input id="shopName" name="shopName" placeholder="করিম স্টোর" required />
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                        কোনো দোকান পাওয়া যায়নি। <Link href="/settings/shops" className="text-primary underline">সেটিংস</Link> থেকে যোগ করুন।
-                                    </p>
-                                </div>
+                                <Input id="shopName" name="shopName" placeholder="করিম স্টোর" required />
                             )}
                         </div>
                         <div className="space-y-1.5">
@@ -338,3 +381,5 @@ export default function ShopDuesPage() {
     </div>
   )
 }
+
+    
