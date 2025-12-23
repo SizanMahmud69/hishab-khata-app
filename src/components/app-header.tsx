@@ -1,3 +1,4 @@
+
 "use client"
 import Link from "next/link"
 import { type ReactNode, useState, useEffect } from "react"
@@ -15,7 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { isToday, parseISO } from "date-fns"
+import { isToday, isBefore, startOfToday, parseISO } from "date-fns"
 import { useBudget } from "@/context/budget-context"
 
 interface Notification {
@@ -47,7 +48,11 @@ export const createNotification = (notification: Omit<Notification, 'id' | 'crea
         read: false,
     };
     const existingNotifications = getNotifications();
-    saveNotifications([newNotification, ...existingNotifications]);
+    // Avoid creating duplicate notifications
+    const isDuplicate = existingNotifications.some(n => n.title === newNotification.title && n.description === newNotification.description);
+    if (!isDuplicate) {
+        saveNotifications([newNotification, ...existingNotifications]);
+    }
 };
 
 
@@ -56,30 +61,24 @@ export function AppHeader({children}: {children: ReactNode}) {
     const [isCheckedIn, setIsCheckedIn] = useState(false);
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const router = useRouter();
-    const { transactions } = useBudget(); // Assuming this context provides user data including lastCheckIn
+    const { debtNotes } = useBudget(); 
 
     useEffect(() => {
-        const lastCheckIn = transactions.find(t => t.category === 'দৈনিক চেক-ইন');
-        if(lastCheckIn) {
+        const storedLastCheckIn = localStorage.getItem('lastCheckInDate');
+        if (storedLastCheckIn) {
             const today = new Date().toDateString();
-            const lastCheckInDate = new Date(lastCheckIn.date).toDateString();
-            setIsCheckedIn(today === lastCheckInDate);
+            const lastDate = new Date(storedLastCheckIn).toDateString();
+            setIsCheckedIn(today === lastDate);
         } else {
-             const storedLastCheckIn = localStorage.getItem('lastCheckInDate');
-             if (storedLastCheckIn) {
-                 const today = new Date().toDateString();
-                 const lastDate = new Date(storedLastCheckIn).toDateString();
-                 setIsCheckedIn(today === lastDate);
-             } else {
-                setIsCheckedIn(false);
-             }
+            setIsCheckedIn(false);
         }
 
-        const checkDailyNotification = () => {
+        const checkDailyNotifications = () => {
             const lastNotificationDate = localStorage.getItem('dailyCheckinNotificationDate');
             const todayStr = new Date().toDateString();
 
             if (lastNotificationDate !== todayStr) {
+                // Daily Check-in Notification
                 const allNotifications = getNotifications();
                 const hasTodayCheckinNotification = allNotifications.some(n => 
                     n.title === "দৈনিক চেক-ইন" && isToday(parseISO(n.createdAt))
@@ -91,12 +90,28 @@ export function AppHeader({children}: {children: ReactNode}) {
                         description: "আজকের চেক-ইন করে রিওয়ার্ড পয়েন্ট অর্জন করুন।",
                         link: "/check-in",
                     });
-                    localStorage.setItem('dailyCheckinNotificationDate', todayStr);
                 }
+
+                // Debt Repayment Reminders
+                const today = startOfToday();
+                debtNotes.forEach(debt => {
+                    if (debt.repaymentDate && debt.status !== 'paid') {
+                        const repaymentDate = parseISO(debt.repaymentDate);
+                        if (isBefore(repaymentDate, today) || isToday(repaymentDate)) {
+                             createNotification({
+                                title: "ধার পরিশোধের রিমাইন্ডার",
+                                description: `${debt.person}-এর সাথে আপনার একটি ধার লেনদেন রয়েছে যা পরিশোধের সময় হয়েছে।`,
+                                link: "/debts",
+                            });
+                        }
+                    }
+                });
+
+                localStorage.setItem('dailyCheckinNotificationDate', todayStr);
             }
         };
 
-        checkDailyNotification();
+        checkDailyNotifications();
         
         const data = getNotifications();
         setNotifications(data);
@@ -106,6 +121,15 @@ export function AppHeader({children}: {children: ReactNode}) {
             if (updatedStorage) {
                 setNotifications(JSON.parse(updatedStorage));
             }
+            // Also re-check check-in status from local storage
+            const lastCheckIn = localStorage.getItem('lastCheckInDate');
+            if(lastCheckIn) {
+                const today = new Date().toDateString();
+                const lastDate = new Date(lastCheckIn).toDateString();
+                setIsCheckedIn(today === lastDate);
+            } else {
+                setIsCheckedIn(false);
+            }
         };
 
         window.addEventListener('storage', handleStorageChange);
@@ -113,31 +137,8 @@ export function AppHeader({children}: {children: ReactNode}) {
         return () => {
             window.removeEventListener('storage', handleStorageChange);
         }
-    }, [transactions, isCheckedIn]);
+    }, [debtNotes, isCheckedIn]);
 
-    useEffect(() => {
-        const checkStatus = () => {
-            const lastCheckIn = localStorage.getItem('lastCheckInDate');
-            if (!lastCheckIn) {
-                setIsCheckedIn(false);
-                return;
-            }
-            const today = new Date().toDateString();
-            const lastCheckInDate = new Date(lastCheckIn).toDateString();
-            setIsCheckedIn(today === lastCheckInDate);
-        };
-
-        checkStatus();
-        const interval = setInterval(checkStatus, 60000); // Check every minute
-        window.addEventListener('storage', checkStatus);
-        window.addEventListener('focus', checkStatus);
-
-        return () => {
-            clearInterval(interval);
-            window.removeEventListener('storage', checkStatus);
-            window.removeEventListener('focus', checkStatus);
-        };
-    }, []);
 
     const notificationCount = notifications.filter(n => !n.read).length;
 
@@ -192,7 +193,7 @@ export function AppHeader({children}: {children: ReactNode}) {
                 <div className="flex items-center gap-2">
                      <Button variant="ghost" size="icon" asChild className="rounded-full">
                         <Link href="/check-in">
-                            <CalendarDays className={cn(
+                           <CalendarDays className={cn(
                                 "h-5 w-5",
                                 isCheckedIn ? "text-green-500" : "animate-glow"
                             )} />
@@ -219,7 +220,7 @@ export function AppHeader({children}: {children: ReactNode}) {
                                 notifications.filter(n => !n.read).map(notification => (
                                     <DropdownMenuItem key={notification.id} onSelect={() => handleNotificationClick(notification)}>
                                         <div className="flex items-center gap-3">
-                                            <span className="w-2.5 h-2.5 rounded-full bg-green-500 flex-shrink-0"></span>
+                                            {!notification.read && <span className="w-2.5 h-2.5 rounded-full bg-green-500 flex-shrink-0"></span>}
                                             <div className="flex flex-col">
                                                 <p className="font-semibold">{notification.title}</p>
                                                 <p className="text-xs text-muted-foreground">{notification.description}</p>

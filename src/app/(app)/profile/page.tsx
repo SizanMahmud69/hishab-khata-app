@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useUser, useFirestore, useMemoFirebase, useDoc } from "@/firebase";
 import { Mail, Phone, UserCheck, XCircle, CheckCircle, User as UserIcon, MapPin, Cake, AlertTriangle, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -23,8 +23,8 @@ import { Badge } from "@/components/ui/badge";
 import { doc, setDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { createNotification } from "@/components/app-header";
 
-// This interface now reflects the new 'User' entity in backend.json
 interface UserProfile {
     id: string;
     userId: string;
@@ -43,7 +43,7 @@ interface UserProfile {
     nidNumber?: string;
     nidDob?: string;
     nidAddress?: string;
-    nidRejectionReason?: string; // Custom field, not in schema but useful
+    nidRejectionReason?: string;
 }
 
 
@@ -60,6 +60,32 @@ export default function ProfilePage() {
   }, [user, firestore]);
 
   const { data: userProfile, isLoading } = useDoc<UserProfile>(userDocRef);
+
+  useEffect(() => {
+    if (userProfile && userProfile.verificationRequestId) {
+        const notificationKey = `nid-status-${userProfile.verificationRequestId}`;
+        const alreadyNotified = localStorage.getItem(notificationKey);
+
+        if (!alreadyNotified) {
+            if (userProfile.verificationStatus === 'verified') {
+                createNotification({
+                    title: 'এনআইডি ভেরিফিকেশন সফল হয়েছে',
+                    description: 'অভিনন্দন! আপনার অ্যাকাউন্ট এখন সম্পূর্ণ ভেরিফাইড।',
+                    link: '/profile'
+                });
+                localStorage.setItem(notificationKey, 'true');
+            } else if (userProfile.verificationStatus === 'rejected') {
+                createNotification({
+                    title: 'এনআইডি ভেরিফিকেশন সফল হয়নি',
+                    description: `আপনার আবেদনটি বাতিল করা হয়েছে। কারণ: ${userProfile.nidRejectionReason || 'অজানা'}`,
+                    link: '/profile'
+                });
+                localStorage.setItem(notificationKey, 'true');
+            }
+        }
+    }
+  }, [userProfile]);
+
 
   const handleNidSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();

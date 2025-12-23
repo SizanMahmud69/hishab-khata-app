@@ -126,37 +126,65 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                 setIsDataLoading(false);
             }
         };
-
-        // Refund points for rejected withdrawal requests
+        
         const withdrawalRequestsRef = collection(firestore, basePath, 'withdrawalRequests');
         const unsubWithdrawals = onSnapshot(withdrawalRequestsRef, async (snapshot) => {
             const requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WithdrawalRequest));
-            const rejectedAndNotRefunded = requests.filter(req => req.status === 'rejected' && !req.isRefunded);
+            const batch = writeBatch(firestore);
+            let totalRefundPoints = 0;
+            let refundOccurred = false;
 
-            if (rejectedAndNotRefunded.length > 0) {
-                const batch = writeBatch(firestore);
-                let totalRefundPoints = 0;
+            requests.forEach(req => {
+                const notificationKey = `wd-status-${req.id}`;
+                const alreadyNotified = localStorage.getItem(notificationKey);
+                
+                if (!alreadyNotified) {
+                    if (req.status === 'approved') {
+                        createNotification({
+                            title: 'উইথড্র অনুরোধ অনুমোদিত',
+                            description: `আপনার ${req.amountBdt} টাকার উইথড্র অনুরোধটি সফল হয়েছে।`,
+                            link: '/withdraw'
+                        });
+                        localStorage.setItem(notificationKey, 'true');
+                    } else if (req.status === 'rejected') {
+                        createNotification({
+                            title: 'উইথড্র অনুরোধ বাতিল হয়েছে',
+                            description: `আপনার উইথড্র অনুরোধটি বাতিল হয়েছে। কারণ: ${req.rejectionReason || 'অজানা'}`,
+                            link: '/withdraw'
+                        });
+                        localStorage.setItem(notificationKey, 'true');
+                    }
+                }
 
-                rejectedAndNotRefunded.forEach(req => {
+                // Handle refunds
+                if (req.status === 'rejected' && !req.isRefunded) {
                     totalRefundPoints += req.points;
                     const reqRef = doc(firestore, basePath, 'withdrawalRequests', req.id);
                     batch.update(reqRef, { isRefunded: true });
-                });
-
-                if (totalRefundPoints > 0) {
-                    const userRef = doc(firestore, basePath);
-                    batch.update(userRef, { points: increment(totalRefundPoints) });
+                    refundOccurred = true;
                 }
-                
+            });
+
+            if (refundOccurred && totalRefundPoints > 0) {
+                const userRef = doc(firestore, basePath);
+                batch.update(userRef, { points: increment(totalRefundPoints) });
                 await batch.commit();
-                 if (totalRefundPoints > 0) {
-                    createNotification({
+
+                const refundNotificationKey = `refund-${new Date().toISOString().split('T')[0]}`;
+                 const alreadyNotified = localStorage.getItem(refundNotificationKey);
+                if (!alreadyNotified) {
+                     createNotification({
                         title: "পয়েন্ট ফেরত দেওয়া হয়েছে",
-                        description: `আপনার বাতিল হওয়া উইথড্র অনুরোধের জন্য ${totalRefundPoints} পয়েন্ট ফেরত দেওয়া হয়েছে।`,
+                        description: `আপনার বাতিল হওয়া অনুরোধের জন্য ${totalRefundPoints} পয়েন্ট ফেরত দেওয়া হয়েছে।`,
                         link: "/withdraw"
                     });
+                    localStorage.setItem(refundNotificationKey, 'true');
                 }
+            } else if (!refundOccurred && batch.size > 0) {
+                // This case is unlikely but handles if a write was prepared but no refund
+                await batch.commit();
             }
+
             onDataLoaded();
         }, (err) => {
             console.error(`Error fetching withdrawalRequests:`, err);
@@ -224,7 +252,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         const userDocRef = doc(firestore, `users/${user.uid}`);
         
         try {
-            const currentPoints = rewardPoints; // Use state
+            const currentPoints = rewardPoints;
             
             let newPoints = 0;
             if (operation === 'add') {
