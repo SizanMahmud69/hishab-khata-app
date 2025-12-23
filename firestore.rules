@@ -12,13 +12,10 @@ service cloud.firestore {
     }
 
     function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+      // A user is the owner if they are signed in and their UID matches the document's userId.
+      return request.auth.uid == userId;
     }
 
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
-    }
-    
     function isUpdatingAllowedUserFields() {
       // A user cannot change their core identifiers or sensitive info.
       let protectedFields = ['id', 'userId', 'email', 'joinDate'];
@@ -44,11 +41,16 @@ service cloud.firestore {
     // ------------------------------------------------------------------------
 
     match /users/{userId} {
+      // A user can get their own document.
       allow get: if isOwner(userId);
-      allow list: if false; // Prevent listing all users
-      allow create: if isOwner(userId);
-      allow update: if isExistingOwner(userId) && isUpdatingAllowedUserFields();
-      allow delete: if false; // Generally users should not delete their own accounts this way.
+      // Nobody can list all users.
+      allow list: if false;
+      // A signed-in user can create their own user document.
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      // A user can update their own document, but not protected fields.
+      allow update: if isOwner(userId) && isUpdatingAllowedUserFields();
+      // Users should not be able to delete their own accounts this way.
+      allow delete: if false;
 
       // Sub-collection for all financial transactions (income/expense)
       match /transactions/{transactionId} {
@@ -75,16 +77,17 @@ service cloud.firestore {
         allow get, create, delete: if isOwner(userId);
         allow list: if isOwner(userId);
         // User cannot update status or rejection reasons. Only admin via console.
-        allow update: if isExistingOwner(userId) && canUpdateWithdrawalRequest(); 
+        allow update: if isOwner(userId) && canUpdateWithdrawalRequest(); 
       }
     }
     
     // Global app configuration
     match /app_config/{configId} {
       allow get: if isSignedIn();
-      allow list, create, update, delete: if false; // Read-only for clients
+      // Allow any signed-in user to create the config document (e.g., on first registration).
+      allow create: if isSignedIn();
+      // Prevent clients from listing, updating, or deleting config.
+      allow list, update, delete: if false; 
     }
   }
 }
-
-    
