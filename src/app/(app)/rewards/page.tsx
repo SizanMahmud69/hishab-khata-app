@@ -188,10 +188,10 @@ export default function RewardsPage() {
                         <div className="flex items-center gap-3">
                              {item.type === 'earned' ? <ArrowUpCircle className="h-6 w-6 text-green-500" /> : item.type === 'refunded' ? <Undo2 className="h-6 w-6 text-blue-500" /> : <ArrowDownCircle className="h-6 w-6 text-red-500" />}
                              <div>
-                                <p className="font-semibold flex items-center gap-2">
+                                <div className="font-semibold flex items-center gap-2">
                                   {item.source}
                                   {item.source === 'পয়েন্ট উইথড্র' && getStatusText(item.status)}
-                                </p>
+                                </div>
                                 <p className="text-sm text-muted-foreground">{format(item.date, "d MMMM, yyyy, h:mm a", { locale: bn })}</p>
                              </div>
                         </div>

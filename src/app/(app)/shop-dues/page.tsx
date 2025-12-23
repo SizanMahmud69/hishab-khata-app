@@ -220,9 +220,9 @@ export default function ShopDuesPage() {
                         )}>{formatCurrency(due.amount)}</span>
                    </div>
                     {due.status === 'partially-paid' && (
-                        <p className="text-xs text-muted-foreground mt-2">
+                        <div className="text-xs text-muted-foreground mt-2">
                             পরিশোধিত: {formatCurrency(due.paidAmount)} | বাকি: {formatCurrency(due.amount - due.paidAmount)}
-                        </p>
+                        </div>
                     )}
                 </CardContent>
                 <CardFooter className="bg-muted/50 p-3 flex items-center justify-between">
