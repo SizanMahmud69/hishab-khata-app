@@ -73,7 +73,12 @@ export default function WithdrawPage() {
 
     const lastRejectedRequest = useMemo(() => {
         if (!history) return null;
-        const sortedHistory = [...history].sort((a, b) => b.requestedAt.seconds - a.requestedAt.seconds);
+        const sortedHistory = [...history].sort((a, b) => {
+            if (a.requestedAt && b.requestedAt) {
+                return b.requestedAt.seconds - a.requestedAt.seconds;
+            }
+            return 0;
+        });
         return sortedHistory.find(req => req.status === 'rejected' && !req.isRefunded);
     }, [history]);
 
