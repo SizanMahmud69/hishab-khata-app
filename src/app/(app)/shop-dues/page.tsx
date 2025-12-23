@@ -2,7 +2,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ShoppingBag, Banknote, PlusCircle, Eye, Loader2, Trash2 } from "lucide-react"
+import { ShoppingBag, Banknote, PlusCircle, Eye, Loader2 } from "lucide-react"
 import { useBudget, type DebtNote } from "@/context/budget-context";
 import { Button } from "@/components/ui/button"
 import PageHeader from "@/components/page-header"
@@ -30,6 +30,9 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { format } from "date-fns";
+import { bn } from "date-fns/locale";
 
 
 interface ShopDueSummary {
@@ -42,7 +45,7 @@ interface ShopDueSummary {
 }
 
 export default function ShopDuesPage() {
-    const { debtNotes, updateDebtNote, addTransaction } = useBudget();
+    const { debtNotes, updateDebtNote, addTransaction, totalIncome, totalExpense } = useBudget();
     const { toast } = useToast();
     
     const [paymentShop, setPaymentShop] = useState<ShopDueSummary | null>(null);
@@ -51,6 +54,7 @@ export default function ShopDuesPage() {
     const [paymentAmount, setPaymentAmount] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    const balance = totalIncome - totalExpense;
 
     const shopDuesSummary = useMemo((): ShopDueSummary[] => {
         const duesByShop = debtNotes
@@ -114,6 +118,16 @@ export default function ShopDuesPage() {
                 variant: 'destructive',
                 title: 'ভুল পরিমাণ',
                 description: `অনুগ্রহ করে সঠিক পরিমাণ লিখুন (সর্বোচ্চ: ${formatCurrency(paymentShop.remainingDue)})।`,
+            });
+            setIsSubmitting(false);
+            return;
+        }
+
+        if (paymentAmount > balance) {
+            toast({
+                variant: "destructive",
+                title: "অপর্যাপ্ত ব্যালেন্স",
+                description: `আপনার বর্তমান ব্যালেন্স ${formatCurrency(balance)}। আপনি এর বেশি পরিশোধ করতে পারবেন না।`,
             });
             setIsSubmitting(false);
             return;
@@ -232,7 +246,7 @@ export default function ShopDuesPage() {
                 <CardFooter className="bg-muted/50 p-3 flex justify-between items-center">
                     {getStatusBadge(due.remainingDue, due.totalPaid)}
                     <div className="flex items-center gap-2">
-                         <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
                             <Link href={`/shop-dues/${encodeURIComponent(due.shopName)}`}>
                                 <Eye className="h-4 w-4" />
                             </Link>

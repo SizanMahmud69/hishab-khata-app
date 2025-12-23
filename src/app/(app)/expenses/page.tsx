@@ -22,11 +22,21 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from 'lucide-react';
 
 export default function ExpensesPage() {
-    const { addTransaction } = useBudget();
+    const { addTransaction, totalIncome, totalExpense } = useBudget();
     const { toast } = useToast();
     const formRef = React.useRef<HTMLFormElement>(null);
     const [selectedCategory, setSelectedCategory] = useState<string>("");
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const balance = totalIncome - totalExpense;
+
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat("bn-BD", {
+          style: "currency",
+          currency: "BDT",
+          minimumFractionDigits: 0,
+        }).format(amount)
+    }
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -42,6 +52,16 @@ export default function ExpensesPage() {
                 variant: "destructive",
                 title: "ফর্ম পূরণ আবশ্যক",
                 description: "অনুগ্রহ করে সকল প্রয়োজনীয় তথ্য পূরণ করুন।",
+            });
+            setIsSubmitting(false);
+            return;
+        }
+
+        if (amount > balance) {
+            toast({
+                variant: "destructive",
+                title: "অপর্যাপ্ত ব্যালেন্স",
+                description: `আপনার বর্তমান ব্যালেন্স ${formatCurrency(balance)}। আপনি এর বেশি খরচ করতে পারবেন না।`,
             });
             setIsSubmitting(false);
             return;
