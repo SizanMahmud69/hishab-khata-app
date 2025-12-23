@@ -160,7 +160,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                 if (req.status === 'rejected' && !req.isRefunded) {
                     totalRefundPoints += req.points;
                     const reqRef = doc(firestore, basePath, 'withdrawalRequests', req.id);
-                    batch.update(reqRef, { isRefunded: true });
+                    batch.update(reqRef, { isRefunded: true, processedAt: serverTimestamp() });
                     refundOccurred = true;
                 }
             });
@@ -176,7 +176,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                      createNotification({
                         title: "পয়েন্ট ফেরত দেওয়া হয়েছে",
                         description: `আপনার বাতিল হওয়া অনুরোধের জন্য ${totalRefundPoints} পয়েন্ট ফেরত দেওয়া হয়েছে।`,
-                        link: "/withdraw?section=history"
+                        link: "/rewards?section=history"
                     });
                     localStorage.setItem(refundNotificationKey, 'true');
                 }

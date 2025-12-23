@@ -1,7 +1,8 @@
 
 "use client";
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import PageHeader from "@/components/page-header"
 import { Banknote, Gift, Medal, Star, Trophy, ArrowUpCircle, ArrowDownCircle, History, Undo2 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -36,9 +37,11 @@ interface PointHistoryItem {
     status?: 'pending' | 'approved' | 'rejected';
 }
 
-export default function RewardsPage() {
+function RewardsPageContent() {
     const { user } = useUser();
     const firestore = useFirestore();
+    const searchParams = useSearchParams();
+    const historyRef = useRef<HTMLDivElement>(null);
 
     const userDocRef = useMemoFirebase(() => {
         if (!user || !firestore) return null;
@@ -59,6 +62,12 @@ export default function RewardsPage() {
         return query(collection(firestore, `users/${user.uid}/withdrawalRequests`), orderBy("requestedAt", "desc"));
     }, [user, firestore]);
     const { data: allWithdrawals, isLoading: isWithdrawalsLoading } = useCollection<WithdrawalRequest>(withdrawalsQuery);
+
+    useEffect(() => {
+        if (searchParams.get('section') === 'history' && historyRef.current && !isWithdrawalsLoading && !isCheckInsLoading) {
+            historyRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [searchParams, isWithdrawalsLoading, isCheckInsLoading]);
 
     const pointHistory = useMemo((): PointHistoryItem[] => {
         const history: PointHistoryItem[] = [];
@@ -173,7 +182,7 @@ export default function RewardsPage() {
         </div>
       )}
 
-       <Card>
+       <Card ref={historyRef}>
         <CardHeader>
             <CardTitle className='flex items-center gap-2'>
                 <History className='w-5 h-5' />
@@ -188,7 +197,7 @@ export default function RewardsPage() {
                         <div className="flex items-center gap-3">
                              {item.type === 'earned' ? <ArrowUpCircle className="h-6 w-6 text-green-500" /> : item.type === 'refunded' ? <Undo2 className="h-6 w-6 text-blue-500" /> : <ArrowDownCircle className="h-6 w-6 text-red-500" />}
                              <div>
-                                <div className="font-semibold flex items-center gap-2">
+                                <div className="flex items-center gap-2 font-semibold">
                                   {item.source}
                                   {item.source === 'পয়েন্ট উইথড্র' && getStatusText(item.status)}
                                 </div>
@@ -207,4 +216,12 @@ export default function RewardsPage() {
       </Card>
     </div>
   )
+}
+
+export default function RewardsPage() {
+    return (
+        <React.Suspense fallback={<div>লোড হচ্ছে...</div>}>
+            <RewardsPageContent />
+        </React.Suspense>
+    )
 }
