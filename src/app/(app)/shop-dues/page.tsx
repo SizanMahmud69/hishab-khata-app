@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { PlusCircle, ShoppingBag, Banknote, Loader2, Settings, Plus } from "lucide-react"
+import { PlusCircle, ShoppingBag, Banknote, Loader2, Settings, Plus, Trash2 } from "lucide-react"
 import { useBudget, type DebtNote } from "@/context/budget-context";
 import { Button } from "@/components/ui/button"
 import PageHeader from "@/components/page-header"
@@ -42,8 +42,9 @@ export default function ShopDuesPage() {
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const { shops, addShop: addNewShopToList, isLoading: areShopsLoading } = useShops();
+    const { shops, addShop: addNewShopToList, removeShop, isLoading: areShopsLoading } = useShops();
     const [isAddShopDialogOpen, setIsAddShopDialogOpen] = useState(false);
+    const [isDeleteShopDialogOpen, setIsDeleteShopDialogOpen] = useState(false);
     const [newShopName, setNewShopName] = useState("");
 
     const shopDues = debtNotes.filter(d => d.type === 'shopDue');
@@ -187,9 +188,6 @@ export default function ShopDuesPage() {
     <div className="flex-1 space-y-4">
       <PageHeader title="আমার দোকানের বাকি" description="বিভিন্ন দোকানে আপনার বাকির হিসাব রাখুন।">
         <div className="flex items-center gap-2">
-            <Button asChild variant="outline">
-                <Link href="/settings/shops"><Settings className="mr-2 h-4 w-4" /> দোকানের তালিকা</Link>
-            </Button>
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
@@ -209,30 +207,55 @@ export default function ShopDuesPage() {
                         <div className="space-y-1.5">
                             <div className="flex items-center justify-between">
                                 <Label htmlFor="shopName">দোকানের নাম</Label>
-                                <Dialog open={isAddShopDialogOpen} onOpenChange={setIsAddShopDialogOpen}>
-                                    <DialogTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-7 w-7">
-                                            <Plus className="h-4 w-4" />
-                                        </Button>
-                                    </DialogTrigger>
-                                    <DialogContent>
-                                        <DialogHeader>
-                                            <DialogTitle>নতুন দোকান যোগ করুন</DialogTitle>
-                                        </DialogHeader>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="new-shop-name">দোকানের নাম</Label>
-                                            <Input
-                                                id="new-shop-name"
-                                                value={newShopName}
-                                                onChange={(e) => setNewShopName(e.target.value)}
-                                                placeholder="করিম স্টোর"
-                                            />
-                                        </div>
-                                        <DialogFooter>
-                                            <Button onClick={handleAddNewShop}>সংরক্ষণ করুন</Button>
-                                        </DialogFooter>
-                                    </DialogContent>
-                                </Dialog>
+                                <div className="flex items-center">
+                                    <Dialog open={isAddShopDialogOpen} onOpenChange={setIsAddShopDialogOpen}>
+                                        <DialogTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-7 w-7">
+                                                <Plus className="h-4 w-4" />
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent>
+                                            <DialogHeader>
+                                                <DialogTitle>নতুন দোকান যোগ করুন</DialogTitle>
+                                            </DialogHeader>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="new-shop-name">দোকানের নাম</Label>
+                                                <Input
+                                                    id="new-shop-name"
+                                                    value={newShopName}
+                                                    onChange={(e) => setNewShopName(e.target.value)}
+                                                    placeholder="করিম স্টোর"
+                                                />
+                                            </div>
+                                            <DialogFooter>
+                                                <Button onClick={handleAddNewShop}>সংরক্ষণ করুন</Button>
+                                            </DialogFooter>
+                                        </DialogContent>
+                                    </Dialog>
+                                    <Dialog open={isDeleteShopDialogOpen} onOpenChange={setIsDeleteShopDialogOpen}>
+                                        <DialogTrigger asChild>
+                                             <Button variant="ghost" size="icon" className="h-7 w-7">
+                                                <Trash2 className="h-4 w-4 text-red-500" />
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent>
+                                            <DialogHeader>
+                                                <DialogTitle>দোকানের তালিকা পরিচালনা করুন</DialogTitle>
+                                                <DialogDescription>তালিকা থেকে দোকান মুছে ফেলুন।</DialogDescription>
+                                            </DialogHeader>
+                                            <div className="space-y-2 max-h-60 overflow-y-auto">
+                                                {shops.map(shop => (
+                                                    <div key={shop} className="flex items-center justify-between p-2 border rounded-md">
+                                                        <span>{shop}</span>
+                                                        <Button variant="ghost" size="icon" onClick={() => removeShop(shop)}>
+                                                            <Trash2 className="h-4 w-4 text-red-500" />
+                                                        </Button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </DialogContent>
+                                    </Dialog>
+                                </div>
                             </div>
                             {!areShopsLoading && shops.length > 0 ? (
                                 <Select name="shopName" required>
