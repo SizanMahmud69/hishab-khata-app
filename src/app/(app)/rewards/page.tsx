@@ -1,43 +1,23 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import PageHeader from "@/components/page-header"
 import { Banknote, Gift, Medal, Star, Trophy } from "lucide-react"
-import { useBudget } from "@/context/budget-context";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
-import { createNotification } from '@/components/app-header';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { paymentMethods } from '@/lib/data';
-import { Slider } from '@/components/ui/slider';
+import Link from 'next/link';
 
-const WITHDRAW_THRESHOLD = 100;
-const CONVERSION_RATE = 5; // 100 points = 5 BDT
+const WITHDRAW_THRESHOLD = 1000;
 
 interface UserProfile {
     points?: number;
 }
 
 export default function RewardsPage() {
-    const { deductRewardPoints } = useBudget();
-    const { toast } = useToast();
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
     const { user } = useUser();
     const firestore = useFirestore();
 
@@ -49,97 +29,7 @@ export default function RewardsPage() {
     const { data: userProfile, isLoading } = useDoc<UserProfile>(userDocRef);
     const rewardPoints = userProfile?.points ?? 0;
     
-    const [pointsToWithdraw, setPointsToWithdraw] = useState(rewardPoints);
-
     const canWithdraw = rewardPoints >= WITHDRAW_THRESHOLD;
-    const withdrawableAmountBdt = Math.floor(rewardPoints / 100) * CONVERSION_RATE;
-    const selectedAmountBdt = Math.floor(pointsToWithdraw / 100) * CONVERSION_RATE;
-
-    const handlePointsChange = (value: number) => {
-        if (value > rewardPoints) {
-            setPointsToWithdraw(rewardPoints);
-        } else if (value < 0) {
-            setPointsToWithdraw(0);
-        } else {
-            setPointsToWithdraw(value);
-        }
-    }
-    
-    const handleWithdraw = async (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        if (!user || !firestore) return;
-
-        const formData = new FormData(event.currentTarget);
-        const paymentMethod = formData.get('payment-method') as string;
-        const accountNumber = formData.get('account-number') as string;
-
-        if (!paymentMethod || !accountNumber) {
-             toast({
-                variant: "destructive",
-                title: "ফর্ম পূরণ আবশ্যক",
-                description: "অনুগ্রহ করে পেমেন্ট মাধ্যম এবং অ্যাকাউন্ট নম্বর দিন।",
-            });
-            return;
-        }
-        
-        const pointsToDeduct = Math.floor(pointsToWithdraw / 100) * 100;
-        
-        if (pointsToDeduct < WITHDRAW_THRESHOLD) {
-             toast({
-                variant: "destructive",
-                title: "অপর্যাপ্ত পয়েন্ট",
-                description: `উইথড্র করার জন্য কমপক্ষে ${WITHDRAW_THRESHOLD} পয়েন্ট প্রয়োজন।`,
-            });
-            return;
-        }
-
-        const withdrawnTkAmount = (pointsToDeduct / 100) * CONVERSION_RATE;
-
-        try {
-            // 1. Create a withdrawal request
-            const withdrawalRequestRef = collection(firestore, `users/${user.uid}/withdrawalRequests`);
-            await addDoc(withdrawalRequestRef, {
-                userId: user.uid,
-                status: 'pending',
-                points: pointsToDeduct,
-                amountBdt: withdrawnTkAmount,
-                paymentMethod: paymentMethod,
-                accountNumber: accountNumber,
-                requestedAt: serverTimestamp()
-            });
-
-            // 2. Deduct points from user's profile
-            await deductRewardPoints(pointsToDeduct);
-
-            createNotification({
-                title: "উইথড্র অনুরোধ সফল হয়েছে",
-                description: `${pointsToDeduct} পয়েন্টের বিনিময়ে ${withdrawnTkAmount} টাকা পাঠানোর অনুরোধ প্রক্রিয়াধীন আছে।`,
-                link: "/rewards",
-            });
-
-            toast({
-                title: "সফল!",
-                description: `আপনার উইথড্র অনুরোধ সফল হয়েছে। ${pointsToDeduct} পয়েন্ট আপনার অ্যাকাউন্ট থেকে কেটে নেওয়া হয়েছে।`,
-            });
-            setIsDialogOpen(false);
-
-        } catch (error) {
-            console.error("Withdrawal error: ", error);
-             toast({
-                variant: "destructive",
-                title: "ত্রুটি",
-                description: "আপনার উইথড্র অনুরোধ প্রক্রিয়া করার সময় একটি সমস্যা হয়েছে।",
-            });
-        }
-    }
-
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat("bn-BD", {
-          style: "currency",
-          currency: "BDT",
-          minimumFractionDigits: 0,
-        }).format(amount)
-    }
 
   if (isLoading) {
     return (
@@ -180,71 +70,12 @@ export default function RewardsPage() {
                     অভিনন্দন! আপনার {WITHDRAW_THRESHOLD} এর বেশি পয়েন্ট জমা হয়েছে। আপনি এখন আপনার পয়েন্ট টাকাতে রূপান্তর করে উইথড্র করতে পারবেন।
                 </CardDescription>
             </CardHeader>
-            <CardContent>
-                <div className="text-center space-y-2">
-                    <p className="text-sm text-muted-foreground">মোট উইথড্র করার মতো পরিমাণ</p>
-                    <p className="text-3xl font-bold">{formatCurrency(withdrawableAmountBdt)}</p>
-                    <p className="text-xs text-muted-foreground">১০০ পয়েন্ট = {CONVERSION_RATE} টাকা</p>
-                </div>
-            </CardContent>
             <CardFooter>
-                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button className="w-full" disabled={withdrawableAmountBdt <= 0}>
-                            উইথড্র করুন
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px]">
-                        <DialogHeader>
-                        <DialogTitle>উইথড্র কনফার্মেশন</DialogTitle>
-                        <DialogDescription>
-                            আপনার পেমেন্ট বিবরণ দিন। টাকা ২৪ ঘন্টার মধ্যে পাঠানো হবে।
-                        </DialogDescription>
-                        </DialogHeader>
-                        <form onSubmit={handleWithdraw}>
-                            <div className="grid gap-4 py-4">
-                                <div className="space-y-1.5">
-                                    <Label htmlFor="points-to-withdraw">কত পয়েন্ট উইথড্র করবেন?</Label>
-                                    <Input 
-                                        id="points-to-withdraw"
-                                        type="number"
-                                        value={pointsToWithdraw}
-                                        onChange={(e) => handlePointsChange(Number(e.target.value))}
-                                        max={rewardPoints}
-                                        min="0"
-                                    />
-                                    <Slider
-                                        value={[pointsToWithdraw]}
-                                        max={rewardPoints}
-                                        step={100}
-                                        onValueChange={(value) => handlePointsChange(value[0])}
-                                    />
-                                    <p className="text-sm text-muted-foreground text-center pt-1">
-                                        আপনি পাবেন: <span className="font-bold text-primary">{formatCurrency(selectedAmountBdt)}</span>
-                                    </p>
-                                </div>
-                                <div className="space-y-1.5">
-                                    <Label htmlFor="payment-method">মাধ্যম</Label>
-                                    <Select name="payment-method" required>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="একটি মাধ্যম নির্বাচন করুন" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {paymentMethods.map(method => <SelectItem key={method} value={method}>{method}</SelectItem>)}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-1.5">
-                                    <Label htmlFor="account-number">অ্যাকাউন্ট নম্বর</Label>
-                                    <Input id="account-number" name="account-number" placeholder="017********" required />
-                                </div>
-                            </div>
-                            <DialogFooter>
-                                <Button type="submit">নিশ্চিত করুন</Button>
-                            </DialogFooter>
-                        </form>
-                    </DialogContent>
-                </Dialog>
+                 <Button asChild className="w-full">
+                    <Link href="/withdraw">
+                        এখনই উইথড্র করুন
+                    </Link>
+                </Button>
             </CardFooter>
         </Card>
       ) : (

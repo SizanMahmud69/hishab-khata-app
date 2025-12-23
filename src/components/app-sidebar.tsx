@@ -1,3 +1,4 @@
+
 "use client"
 
 import Link from "next/link"
@@ -12,6 +13,7 @@ import {
   MinusCircle,
   PlusCircle,
   Store,
+  Banknote,
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
@@ -60,6 +62,11 @@ const menuItems = [
         href: "/rewards",
         label: "রিওয়ার্ড",
         icon: Award,
+    },
+    {
+        href: "/withdraw",
+        label: "উইথড্র",
+        icon: Banknote,
     },
     {
         href: "/notifications",
