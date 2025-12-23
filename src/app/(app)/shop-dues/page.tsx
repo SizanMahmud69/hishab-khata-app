@@ -257,18 +257,14 @@ export default function ShopDuesPage() {
                                     </Dialog>
                                 </div>
                             </div>
-                            {!areShopsLoading && shops.length > 0 ? (
-                                <Select name="shopName" required>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="একটি দোকান নির্বাচন করুন" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {shops.map(shop => <SelectItem key={shop} value={shop}>{shop}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                            ) : (
-                                <Input id="shopName" name="shopName" placeholder="করিম স্টোর" required />
-                            )}
+                            <Select name="shopName" required disabled={shops.length === 0}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder={shops.length > 0 ? "একটি দোকান নির্বাচন করুন" : "প্রথমে একটি দোকান যোগ করুন"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {shops.map(shop => <SelectItem key={shop} value={shop}>{shop}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div className="space-y-1.5">
                             <Label htmlFor="amount">পরিমাণ</Label>
