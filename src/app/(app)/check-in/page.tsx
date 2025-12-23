@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import PageHeader from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { CheckCircle, Gift, Star, History } from "lucide-react"
+import { CheckCircle, Gift, Star, History, Loader2 } from "lucide-react"
 import { useBudget } from "@/context/budget-context";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -28,6 +28,7 @@ export default function CheckInPage() {
     const { toast } = useToast();
     const { user } = useUser();
     const firestore = useFirestore();
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const checkInsQuery = useMemoFirebase(() => {
         if (!user || !firestore) return null;
@@ -89,7 +90,7 @@ export default function CheckInPage() {
     
     const rewardForToday = calculateReward(consecutiveDays + 1);
 
-    const handleCheckIn = () => {
+    const handleCheckIn = async () => {
         if (isCheckedInToday || !user || !firestore) {
             toast({
                 variant: "destructive",
@@ -99,6 +100,7 @@ export default function CheckInPage() {
             return;
         }
         
+        setIsSubmitting(true);
         const newConsecutiveDays = consecutiveDays + 1;
         const points = calculateReward(newConsecutiveDays);
         
@@ -110,15 +112,15 @@ export default function CheckInPage() {
 
         try {
             const collectionRef = collection(firestore, `users/${user.uid}/checkIns`);
-            addDoc(collectionRef, {
+            await addDoc(collectionRef, {
                 ...newCheckIn,
                 createdAt: serverTimestamp(),
             });
 
-            addRewardPoints(points);
+            await addRewardPoints(points);
 
             const userDocRef = doc(firestore, `users/${user.uid}`);
-            setDoc(userDocRef, {
+            await setDoc(userDocRef, {
                 lastCheckIn: today.toISOString().split('T')[0],
                 checkInStreak: newConsecutiveDays
             }, { merge: true });
@@ -134,6 +136,8 @@ export default function CheckInPage() {
                 title: "ত্রুটি",
                 description: "চেক-ইন করার সময় একটি সমস্যা হয়েছে।",
             });
+        } finally {
+            setIsSubmitting(false);
         }
     }
 
@@ -168,8 +172,9 @@ export default function CheckInPage() {
                         </div>
                         <p className="text-sm text-muted-foreground">আপনার বর্তমান ধারাবাহিকতা: {consecutiveDays} দিন।</p>
                      </div>
-                    <Button onClick={handleCheckIn} size="lg" className="mt-4">
-                        এখনই চেক-ইন করুন
+                    <Button onClick={handleCheckIn} size="lg" className="mt-4" disabled={isSubmitting}>
+                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {isSubmitting ? 'প্রসেসিং...' : 'এখনই চেক-ইন করুন'}
                     </Button>
                 </div>
             )}

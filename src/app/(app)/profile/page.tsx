@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUser, useFirestore, useMemoFirebase, useDoc } from "@/firebase";
-import { Mail, Phone, UserCheck, XCircle, CheckCircle, User as UserIcon, MapPin, Cake, AlertTriangle, Info } from "lucide-react";
+import { Mail, Phone, UserCheck, XCircle, CheckCircle, User as UserIcon, MapPin, Cake, AlertTriangle, Info, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import React, { useState, useEffect } from "react";
 import {
@@ -53,6 +53,7 @@ export default function ProfilePage() {
   const { toast } = useToast();
   
   const [isVerificationDialogOpen, setIsVerificationDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const userDocRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
@@ -91,6 +92,7 @@ export default function ProfilePage() {
     event.preventDefault();
     if (!user || !firestore) return;
 
+    setIsSubmitting(true);
     const formData = new FormData(event.currentTarget);
     const name = formData.get('name') as string;
     const nid = formData.get('nid') as string;
@@ -104,10 +106,9 @@ export default function ProfilePage() {
         title: "ফর্ম পূরণ আবশ্যক",
         description: "অনুগ্রহ করে সকল তথ্য পূরণ করুন।",
       });
+      setIsSubmitting(false);
       return;
     }
-    
-    setIsVerificationDialogOpen(false);
 
     try {
         const verificationRequestRef = collection(firestore, `users/${user.uid}/verificationRequests`);
@@ -122,7 +123,7 @@ export default function ProfilePage() {
             phone: phone,
         });
 
-        await setDoc(userDocRef, {
+        await setDoc(userDocRef!, {
             verificationStatus: 'pending',
             verificationRequestId: newRequestDoc.id,
             nidName: name,
@@ -137,6 +138,7 @@ export default function ProfilePage() {
           title: "আবেদন জমা হয়েছে",
           description: "আপনার এনআইডি ভেরিফিকেশনের আবেদনটি প্রক্রিয়াধীন আছে।",
         });
+        setIsVerificationDialogOpen(false);
 
     } catch (error) {
         console.error("Error submitting NID application:", error);
@@ -145,6 +147,8 @@ export default function ProfilePage() {
             title: "ত্রুটি",
             description: "আবেদন জমা দেওয়ার সময় একটি সমস্যা হয়েছে।",
         });
+    } finally {
+        setIsSubmitting(false);
     }
   };
 
@@ -253,7 +257,10 @@ export default function ProfilePage() {
                           </div>
                         </div>
                         <DialogFooter className="pt-4">
-                          <Button type="submit">জমা দিন</Button>
+                          <Button type="submit" disabled={isSubmitting}>
+                            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {isSubmitting ? 'জমা হচ্ছে...' : 'জমা দিন'}
+                          </Button>
                         </DialogFooter>
                     </form>
                   </DialogContent>

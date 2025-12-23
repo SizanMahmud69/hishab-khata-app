@@ -19,15 +19,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { useBudget } from "@/context/budget-context"
 import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from 'lucide-react';
 
 export default function ExpensesPage() {
     const { addTransaction } = useBudget();
     const { toast } = useToast();
     const formRef = React.useRef<HTMLFormElement>(null);
     const [selectedCategory, setSelectedCategory] = useState<string>("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        setIsSubmitting(true);
         const formData = new FormData(event.currentTarget);
         const category = formData.get('category') as string;
         const amount = parseFloat(formData.get('amount') as string);
@@ -40,24 +43,32 @@ export default function ExpensesPage() {
                 title: "ফর্ম পূরণ আবশ্যক",
                 description: "অনুগ্রহ করে সকল প্রয়োজনীয় তথ্য পূরণ করুন।",
             });
+            setIsSubmitting(false);
             return;
         }
 
-        await addTransaction({
-            type: 'expense',
-            category,
-            amount,
-            date: new Date(date).toISOString(),
-            description,
-        });
+        try {
+            await addTransaction({
+                type: 'expense',
+                category,
+                amount,
+                date: new Date(date).toISOString(),
+                description,
+            });
 
-        toast({
-            title: "সফল!",
-            description: "আপনার নতুন খরচ সফলভাবে যোগ করা হয়েছে।",
-        });
+            toast({
+                title: "সফল!",
+                description: "আপনার নতুন খরচ সফলভাবে যোগ করা হয়েছে।",
+            });
 
-        formRef.current?.reset();
-        setSelectedCategory("");
+            formRef.current?.reset();
+            setSelectedCategory("");
+        } catch (error) {
+            console.error("Error adding expense:", error);
+            toast({ variant: "destructive", title: "ত্রুটি", description: "একটি সমস্যা হয়েছে।" });
+        } finally {
+            setIsSubmitting(false);
+        }
     }
 
   return (
@@ -115,7 +126,10 @@ export default function ExpensesPage() {
               </div>
             </CardContent>
             <CardFooter>
-              <Button type="submit" className="w-full">সংরক্ষণ করুন</Button>
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isSubmitting ? 'প্রসেসিং...' : 'সংরক্ষণ করুন'}
+              </Button>
             </CardFooter>
         </form>
       </Card>

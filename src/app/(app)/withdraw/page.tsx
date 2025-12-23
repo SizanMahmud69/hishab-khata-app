@@ -3,7 +3,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import PageHeader from "@/components/page-header"
-import { Banknote, History, Gift, Info } from "lucide-react"
+import { Banknote, History, Gift, Info, Loader2 } from "lucide-react"
 import { useBudget } from "@/context/budget-context";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
@@ -50,6 +50,7 @@ export default function WithdrawPage() {
     const { toast } = useToast();
     const { user } = useUser();
     const firestore = useFirestore();
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const userDocRef = useMemoFirebase(() => {
         if (!user || !firestore) return null;
@@ -95,6 +96,8 @@ export default function WithdrawPage() {
     const handleWithdraw = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         if (!user || !firestore) return;
+        
+        setIsSubmitting(true);
 
         const formData = new FormData(event.currentTarget);
         const paymentMethod = formData.get('payment-method') as string;
@@ -106,6 +109,7 @@ export default function WithdrawPage() {
                 title: "ফর্ম পূরণ আবশ্যক",
                 description: "অনুগ্রহ করে পেমেন্ট মাধ্যম এবং অ্যাকাউন্ট নম্বর দিন।",
             });
+            setIsSubmitting(false);
             return;
         }
         
@@ -117,6 +121,7 @@ export default function WithdrawPage() {
                 title: "অপর্যাপ্ত পয়েন্ট",
                 description: `উইথড্র করার জন্য কমপক্ষে ${WITHDRAW_THRESHOLD} পয়েন্ট প্রয়োজন।`,
             });
+            setIsSubmitting(false);
             return;
         }
 
@@ -161,6 +166,8 @@ export default function WithdrawPage() {
                 title: "ত্রুটি",
                 description: "আপনার উইথড্র অনুরোধ প্রক্রিয়া করার সময় একটি সমস্যা হয়েছে।",
             });
+        } finally {
+            setIsSubmitting(false);
         }
     }
 
@@ -261,8 +268,9 @@ export default function WithdrawPage() {
                             </div>
                         </div>
                     </div>
-                    <Button type="submit" className="w-full" size="lg">
-                        অনুরোধ নিশ্চিত করুন
+                    <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
+                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {isSubmitting ? 'প্রসেসিং...' : 'অনুরোধ নিশ্চিত করুন'}
                     </Button>
                 </form>
             </CardContent>

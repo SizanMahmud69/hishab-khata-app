@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { PlusCircle, ShoppingBag, Banknote } from "lucide-react"
+import { PlusCircle, ShoppingBag, Banknote, Loader2 } from "lucide-react"
 import { useBudget, type DebtNote } from "@/context/budget-context";
 import { Button } from "@/components/ui/button"
 import PageHeader from "@/components/page-header"
@@ -38,6 +38,7 @@ export default function ShopDuesPage() {
     const [paymentAmount, setPaymentAmount] = useState<number>(0);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const shopDues = debtNotes.filter(d => d.type === 'shopDue');
 
@@ -51,6 +52,7 @@ export default function ShopDuesPage() {
 
     const handleAddNewDue = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        setIsSubmitting(true);
         const formData = new FormData(event.currentTarget);
         const shopName = formData.get('shopName') as string;
         const amount = Number(formData.get('amount'));
@@ -63,28 +65,36 @@ export default function ShopDuesPage() {
                 title: "ফর্ম পূরণ আবশ্যক",
                 description: "অনুগ্রহ করে সকল প্রয়োজনীয় তথ্য পূরণ করুন।",
             });
+            setIsSubmitting(false);
             return;
         }
 
-        const newDue: Omit<DebtNote, 'id' | 'userId' | 'createdAt'> = {
-            person: shopName,
-            type: 'shopDue',
-            amount,
-            date: new Date(date).toISOString(),
-            description,
-            paidAmount: 0,
-            status: 'unpaid'
-        };
-        
-        await addDebtNote(newDue);
+        try {
+            const newDue: Omit<DebtNote, 'id' | 'userId' | 'createdAt'> = {
+                person: shopName,
+                type: 'shopDue',
+                amount,
+                date: new Date(date).toISOString(),
+                description,
+                paidAmount: 0,
+                status: 'unpaid'
+            };
+            
+            await addDebtNote(newDue);
 
-        toast({
-            title: "সফল!",
-            description: "নতুন দোকানের বাকি সফলভাবে যোগ করা হয়েছে।",
-        });
+            toast({
+                title: "সফল!",
+                description: "নতুন দোকানের বাকি সফলভাবে যোগ করা হয়েছে।",
+            });
 
-        setIsAddDialogOpen(false);
-        (event.target as HTMLFormElement).reset();
+            setIsAddDialogOpen(false);
+            (event.target as HTMLFormElement).reset();
+        } catch (error) {
+            console.error("Error adding new due:", error);
+            toast({ variant: "destructive", title: "ত্রুটি", description: "একটি সমস্যা হয়েছে।" });
+        } finally {
+            setIsSubmitting(false);
+        }
     }
 
     const openPaymentDialog = (due: DebtNote) => {
@@ -96,6 +106,7 @@ export default function ShopDuesPage() {
     const handlePaymentConfirm = async () => {
         if (!selectedDue) return;
 
+        setIsSubmitting(true);
         const remainingAmount = selectedDue.amount - selectedDue.paidAmount;
         if (paymentAmount <= 0 || paymentAmount > remainingAmount) {
             toast({
@@ -103,22 +114,30 @@ export default function ShopDuesPage() {
                 title: "ভুল পরিমাণ",
                 description: `অনুগ্রহ করে সঠিক পরিমাণ লিখুন (সর্বোচ্চ: ${formatCurrency(remainingAmount)})।`,
             });
+            setIsSubmitting(false);
             return;
         }
 
-        const newPaidAmount = selectedDue.paidAmount + paymentAmount;
-        const newStatus = newPaidAmount >= selectedDue.amount ? 'paid' : 'partially-paid';
-        const updatedDue: DebtNote = { ...selectedDue, paidAmount: newPaidAmount, status: newStatus };
-        
-        await updateDebtNote(updatedDue);
+        try {
+            const newPaidAmount = selectedDue.paidAmount + paymentAmount;
+            const newStatus = newPaidAmount >= selectedDue.amount ? 'paid' : 'partially-paid';
+            const updatedDue: DebtNote = { ...selectedDue, paidAmount: newPaidAmount, status: newStatus };
+            
+            await updateDebtNote(updatedDue);
 
-        toast({
-            title: "সফল!",
-            description: "পরিশোধের হিসাব সফলভাবে আপডেট করা হয়েছে।",
-        });
+            toast({
+                title: "সফল!",
+                description: "পরিশোধের হিসাব সফলভাবে আপডেট করা হয়েছে।",
+            });
 
-        setIsPaymentDialogOpen(false);
-        setSelectedDue(null);
+            setIsPaymentDialogOpen(false);
+            setSelectedDue(null);
+        } catch (error) {
+            console.error("Error confirming payment:", error);
+            toast({ variant: "destructive", title: "ত্রুটি", description: "একটি সমস্যা হয়েছে।" });
+        } finally {
+            setIsSubmitting(false);
+        }
     }
 
     const getStatusBadge = (status: 'unpaid' | 'paid' | 'partially-paid') => {
@@ -175,7 +194,10 @@ export default function ShopDuesPage() {
                     </div>
                 </div>
                 <DialogFooter className="pt-4">
-                  <Button type="submit">সংরক্ষণ করুন</Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {isSubmitting ? 'প্রসেসিং...' : 'সংরক্ষণ করুন'}
+                  </Button>
                 </DialogFooter>
             </form>
           </DialogContent>
@@ -281,7 +303,10 @@ export default function ShopDuesPage() {
                 </div>
                 <DialogFooter>
                     <Button variant="outline" onClick={() => setIsPaymentDialogOpen(false)}>বাতিল</Button>
-                    <Button type="submit" onClick={handlePaymentConfirm}>নিশ্চিত করুন</Button>
+                    <Button type="submit" onClick={handlePaymentConfirm} disabled={isSubmitting}>
+                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {isSubmitting ? 'প্রসেসিং...' : 'নিশ্চিত করুন'}
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

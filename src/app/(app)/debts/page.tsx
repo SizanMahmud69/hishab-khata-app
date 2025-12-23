@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { PlusCircle, TrendingDown, TrendingUp } from "lucide-react"
+import { PlusCircle, TrendingDown, TrendingUp, Loader2 } from "lucide-react"
 import { useBudget, type DebtNote } from "@/context/budget-context";
 import { Button } from "@/components/ui/button"
 import PageHeader from "@/components/page-header"
@@ -40,6 +40,7 @@ export default function DebtsPage() {
     const [paymentAmount, setPaymentAmount] = useState<number>(0);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const balance = totalIncome - totalExpense;
 
@@ -53,6 +54,7 @@ export default function DebtsPage() {
 
     const handleAddNewDebt = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        setIsSubmitting(true);
         const formData = new FormData(event.currentTarget);
         const type = formData.get('type') as 'lent' | 'borrowed';
         const person = formData.get('person') as string;
@@ -67,6 +69,7 @@ export default function DebtsPage() {
                 title: "ফর্ম পূরণ আবশ্যক",
                 description: "অনুগ্রহ করে সকল প্রয়োজনীয় তথ্য পূরণ করুন।",
             });
+            setIsSubmitting(false);
             return;
         }
 
@@ -76,47 +79,55 @@ export default function DebtsPage() {
                 title: "অপর্যাপ্ত ব্যালেন্স",
                 description: `আপনি ${formatCurrency(amount)} ধার দিতে পারবেন না। আপনার বর্তমান ব্যালেন্স ${formatCurrency(balance)}।`,
             });
+            setIsSubmitting(false);
             return;
         }
 
-        const newDebtNote: Omit<DebtNote, 'id' | 'userId' | 'createdAt'> = {
-            type,
-            person,
-            amount,
-            date: new Date(date).toISOString(),
-            repaymentDate: repaymentDate ? new Date(repaymentDate).toISOString() : undefined,
-            description,
-            paidAmount: 0,
-            status: 'unpaid'
-        };
+        try {
+            const newDebtNote: Omit<DebtNote, 'id' | 'userId' | 'createdAt'> = {
+                type,
+                person,
+                amount,
+                date: new Date(date).toISOString(),
+                repaymentDate: repaymentDate ? new Date(repaymentDate).toISOString() : undefined,
+                description,
+                paidAmount: 0,
+                status: 'unpaid'
+            };
 
-        if (type === 'lent') {
-            await addTransaction({
-                type: 'expense',
-                category: 'ধার প্রদান',
-                amount: amount,
-                date: new Date(date).toISOString(),
-                description: `${person} কে ধার দেওয়া হলো`,
+            if (type === 'lent') {
+                await addTransaction({
+                    type: 'expense',
+                    category: 'ধার প্রদান',
+                    amount: amount,
+                    date: new Date(date).toISOString(),
+                    description: `${person} কে ধার দেওয়া হলো`,
+                });
+            } else {
+                await addTransaction({
+                    type: 'income',
+                    category: 'ধার গ্রহণ',
+                    amount: amount,
+                    date: new Date(date).toISOString(),
+                    description: `${person} এর থেকে ধার নেওয়া হলো`,
+                });
+            }
+            
+            await addDebtNote(newDebtNote);
+
+            toast({
+                title: "সফল!",
+                description: "নতুন ধারের হিসাব সফলভাবে যোগ করা হয়েছে।",
             });
-        } else {
-            await addTransaction({
-                type: 'income',
-                category: 'ধার গ্রহণ',
-                amount: amount,
-                date: new Date(date).toISOString(),
-                description: `${person} এর থেকে ধার নেওয়া হলো`,
-            });
+
+            setIsAddDialogOpen(false);
+            (event.target as HTMLFormElement).reset();
+        } catch (error) {
+            console.error("Error adding new debt:", error);
+            toast({ variant: "destructive", title: "ত্রুটি", description: "একটি সমস্যা হয়েছে।" });
+        } finally {
+            setIsSubmitting(false);
         }
-        
-        await addDebtNote(newDebtNote);
-
-        toast({
-            title: "সফল!",
-            description: "নতুন ধারের হিসাব সফলভাবে যোগ করা হয়েছে।",
-        });
-
-        setIsAddDialogOpen(false);
-        (event.target as HTMLFormElement).reset();
     }
 
     const openPaymentDialog = (debt: DebtNote) => {
@@ -127,7 +138,8 @@ export default function DebtsPage() {
 
     const handlePaymentConfirm = async () => {
         if (!selectedDebt) return;
-
+        
+        setIsSubmitting(true);
         const remainingAmount = selectedDebt.amount - selectedDebt.paidAmount;
         if (paymentAmount <= 0 || paymentAmount > remainingAmount) {
             toast({
@@ -135,22 +147,30 @@ export default function DebtsPage() {
                 title: "ভুল পরিমাণ",
                 description: `অনুগ্রহ করে সঠিক পরিমাণ লিখুন (সর্বোচ্চ: ${formatCurrency(remainingAmount)})।`,
             });
+            setIsSubmitting(false);
             return;
         }
 
-        const newPaidAmount = selectedDebt.paidAmount + paymentAmount;
-        const newStatus = newPaidAmount >= selectedDebt.amount ? 'paid' : 'partially-paid';
-        const updatedDebt = { ...selectedDebt, paidAmount: newPaidAmount, status: newStatus };
-        
-        await updateDebtNote(updatedDebt);
+        try {
+            const newPaidAmount = selectedDebt.paidAmount + paymentAmount;
+            const newStatus = newPaidAmount >= selectedDebt.amount ? 'paid' : 'partially-paid';
+            const updatedDebt = { ...selectedDebt, paidAmount: newPaidAmount, status: newStatus };
+            
+            await updateDebtNote(updatedDebt);
 
-        toast({
-            title: "সফল!",
-            description: "পরিশোধের হিসাব সফলভাবে আপডেট করা হয়েছে।",
-        });
+            toast({
+                title: "সফল!",
+                description: "পরিশোধের হিসাব সফলভাবে আপডেট করা হয়েছে।",
+            });
 
-        setIsPaymentDialogOpen(false);
-        setSelectedDebt(null);
+            setIsPaymentDialogOpen(false);
+            setSelectedDebt(null);
+        } catch (error) {
+            console.error("Error confirming payment:", error);
+            toast({ variant: "destructive", title: "ত্রুটি", description: "একটি সমস্যা হয়েছে।" });
+        } finally {
+            setIsSubmitting(false);
+        }
     }
 
     const getStatusBadge = (status: 'unpaid' | 'paid' | 'partially-paid') => {
@@ -226,7 +246,10 @@ export default function DebtsPage() {
                     </div>
                 </div>
                 <DialogFooter className="pt-4">
-                  <Button type="submit">সংরক্ষণ করুন</Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {isSubmitting ? 'প্রসেসিং...' : 'সংরক্ষণ করুন'}
+                  </Button>
                 </DialogFooter>
             </form>
           </DialogContent>
@@ -381,7 +404,10 @@ export default function DebtsPage() {
                 </div>
                 <DialogFooter>
                     <Button variant="outline" onClick={() => setIsPaymentDialogOpen(false)}>বাতিল</Button>
-                    <Button type="submit" onClick={handlePaymentConfirm}>নিশ্চিত করুন</Button>
+                    <Button type="submit" onClick={handlePaymentConfirm} disabled={isSubmitting}>
+                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {isSubmitting ? 'প্রসেসিং...' : 'নিশ্চিত করুন'}
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

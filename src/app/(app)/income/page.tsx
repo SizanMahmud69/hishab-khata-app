@@ -1,7 +1,7 @@
 
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button"
 import PageHeader from "@/components/page-header"
 import {
@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { incomeSources, savingsDestinations } from "@/lib/data";
+import { Loader2 } from "lucide-react";
 
 const months = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
 
@@ -27,9 +28,11 @@ export default function IncomePage() {
     const { toast } = useToast();
     const formRef = React.useRef<HTMLFormElement>(null);
     const [selectedSource, setSelectedSource] = React.useState<string>("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
     
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        setIsSubmitting(true);
         const formData = new FormData(event.currentTarget);
         const source = formData.get('source') as string;
         const amount = parseFloat(formData.get('amount') as string);
@@ -42,31 +45,39 @@ export default function IncomePage() {
                 title: "ফর্ম পূরণ আবশ্যক",
                 description: "অনুগ্রহ করে সকল তথ্য পূরণ করুন।",
             });
+            setIsSubmitting(false);
             return;
         }
 
-        let description = descriptionInput;
-        if (selectedSource === 'মাসিক বেতন') {
-            description = `${descriptionInput} মাসের বেতন`;
-        } else if (selectedSource === 'সঞ্চয় উত্তোলন') {
-            description = `${descriptionInput} থেকে উত্তোলন`;
+        try {
+            let description = descriptionInput;
+            if (selectedSource === 'মাসিক বেতন') {
+                description = `${descriptionInput} মাসের বেতন`;
+            } else if (selectedSource === 'সঞ্চয় উত্তোলন') {
+                description = `${descriptionInput} থেকে উত্তোলন`;
+            }
+
+            await addTransaction({
+                type: 'income',
+                category: source,
+                amount,
+                date: new Date(date).toISOString(),
+                description,
+            });
+
+            toast({
+                title: "সফল!",
+                description: "আপনার নতুন আয় সফলভাবে যোগ করা হয়েছে।",
+            });
+
+            formRef.current?.reset();
+            setSelectedSource("");
+        } catch (error) {
+            console.error("Error adding income:", error);
+            toast({ variant: "destructive", title: "ত্রুটি", description: "একটি সমস্যা হয়েছে।" });
+        } finally {
+            setIsSubmitting(false);
         }
-
-        await addTransaction({
-            type: 'income',
-            category: source,
-            amount,
-            date: new Date(date).toISOString(),
-            description,
-        });
-
-        toast({
-            title: "সফল!",
-            description: "আপনার নতুন আয় সফলভাবে যোগ করা হয়েছে।",
-        });
-
-        formRef.current?.reset();
-        setSelectedSource("");
     }
 
   return (
@@ -135,7 +146,10 @@ export default function IncomePage() {
               </div>
             </CardContent>
             <CardFooter>
-              <Button type="submit" className="w-full">সংরক্ষণ করুন</Button>
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isSubmitting ? 'প্রসেসিং...' : 'সংরক্ষণ করুন'}
+              </Button>
             </CardFooter>
         </form>
       </Card>
