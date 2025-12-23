@@ -2,7 +2,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ShoppingBag, Banknote, PlusCircle, Settings, ChevronDown, Loader2 } from "lucide-react"
+import { ShoppingBag, Banknote, PlusCircle, Trash2, ChevronDown, Loader2 } from "lucide-react"
 import { useBudget, type DebtNote } from "@/context/budget-context";
 import { Button } from "@/components/ui/button"
 import PageHeader from "@/components/page-header"
@@ -17,6 +17,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
