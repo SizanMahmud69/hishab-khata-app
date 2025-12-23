@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -6,12 +5,23 @@ import { useShops } from "@/hooks/use-shops";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Plus, Trash2, X } from "lucide-react";
+import { Loader2, PlusCircle, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Label } from "./ui/label";
 
 export function SettingsShops() {
     const { shops, addShop, removeShop, isLoading } = useShops();
     const [newShop, setNewShop] = useState("");
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
     const { toast } = useToast();
 
     const handleAddShop = () => {
@@ -23,6 +33,7 @@ export function SettingsShops() {
                     title: "সফল!",
                     description: `"${newShop.trim()}" দোকানে যোগ করা হয়েছে।`,
                 });
+                setIsDialogOpen(false); // Close dialog on success
             } else {
                  toast({
                     variant: "destructive",
@@ -41,17 +52,39 @@ export function SettingsShops() {
                     <CardDescription>আপনার নিয়মিত বাকি করা দোকানগুলোর নাম এখানে যোগ করুন।</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex w-full max-w-sm items-center space-x-2">
-                        <Input 
-                            type="text" 
-                            placeholder="দোকানের নাম" 
-                            value={newShop}
-                            onChange={(e) => setNewShop(e.target.value)}
-                        />
-                        <Button type="button" onClick={handleAddShop}>
-                            <Plus className="mr-2 h-4 w-4" /> যোগ করুন
+                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                      <DialogTrigger asChild>
+                         <Button>
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            নতুন যোগ করুন
                         </Button>
-                    </div>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[425px]">
+                        <DialogHeader>
+                          <DialogTitle>নতুন দোকান</DialogTitle>
+                          <DialogDescription>
+                            আপনার নতুন দোকানের নাম লিখুন।
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="name" className="text-right">
+                              নাম
+                            </Label>
+                            <Input
+                              id="name"
+                              value={newShop}
+                              onChange={(e) => setNewShop(e.target.value)}
+                              className="col-span-3"
+                              placeholder="করিম স্টোর"
+                            />
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <Button type="submit" onClick={handleAddShop}>সংরক্ষণ করুন</Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
                 </CardContent>
             </Card>
 
