@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link"
@@ -18,7 +19,7 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useAuth, useFirestore } from "@/firebase";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState('');
@@ -76,6 +77,16 @@ export default function RegisterPage() {
           displayName: fullName
         });
 
+        // Ensure app_config settings document exists
+        const configDocRef = doc(firestore, "app_config", "settings");
+        const configDocSnap = await getDoc(configDocRef);
+
+        if (!configDocSnap.exists()) {
+          await setDoc(configDocRef, {
+            minWithdrawalPoints: 1000 // Default value
+          });
+        }
+        
         // Create user document in Firestore
         const userDocRef = doc(firestore, "users", user.uid);
         await setDoc(userDocRef, {
