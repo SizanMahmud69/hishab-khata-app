@@ -1,7 +1,8 @@
 
 "use client";
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import PageHeader from "@/components/page-header"
 import { Banknote, History, Gift, Info, Loader2 } from "lucide-react"
 import { useBudget } from "@/context/budget-context";
@@ -51,6 +52,9 @@ export default function WithdrawPage() {
     const { user } = useUser();
     const firestore = useFirestore();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const searchParams = useSearchParams();
+    const historyRef = useRef<HTMLDivElement>(null);
+
 
     const userDocRef = useMemoFirebase(() => {
         if (!user || !firestore) return null;
@@ -82,6 +86,12 @@ export default function WithdrawPage() {
         });
         return sortedHistory.find(req => req.status === 'rejected' && !req.isRefunded);
     }, [history]);
+    
+    useEffect(() => {
+        if (searchParams.get('section') === 'history' && historyRef.current) {
+            historyRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [searchParams, isHistoryLoading]);
 
     const handlePointsChange = (value: number) => {
         if (value > rewardPoints) {
@@ -149,7 +159,7 @@ export default function WithdrawPage() {
             createNotification({
                 title: "উইথড্র অনুরোধ সফল হয়েছে",
                 description: `${pointsToDeduct} পয়েন্টের বিনিময়ে ${withdrawnTkAmount} টাকা পাঠানোর অনুরোধ প্রক্রিয়াধীন আছে।`,
-                link: "/withdraw",
+                link: "/withdraw?section=history",
             });
 
             toast({
@@ -285,7 +295,7 @@ export default function WithdrawPage() {
         </Card>
       )}
 
-      <Card>
+      <Card ref={historyRef}>
         <CardHeader>
             <CardTitle className='flex items-center gap-2'>
                 <History className='w-5 h-5' />

@@ -143,14 +143,14 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                         createNotification({
                             title: 'উইথড্র অনুরোধ অনুমোদিত',
                             description: `আপনার ${req.amountBdt} টাকার উইথড্র অনুরোধটি সফল হয়েছে।`,
-                            link: '/withdraw'
+                            link: '/withdraw?section=history'
                         });
                         localStorage.setItem(notificationKey, 'true');
                     } else if (req.status === 'rejected') {
                         createNotification({
                             title: 'উইথড্র অনুরোধ বাতিল হয়েছে',
                             description: `আপনার উইথড্র অনুরোধটি বাতিল হয়েছে। কারণ: ${req.rejectionReason || 'অজানা'}`,
-                            link: '/withdraw'
+                            link: '/withdraw?section=history'
                         });
                         localStorage.setItem(notificationKey, 'true');
                     }
@@ -176,7 +176,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                      createNotification({
                         title: "পয়েন্ট ফেরত দেওয়া হয়েছে",
                         description: `আপনার বাতিল হওয়া অনুরোধের জন্য ${totalRefundPoints} পয়েন্ট ফেরত দেওয়া হয়েছে।`,
-                        link: "/withdraw"
+                        link: "/withdraw?section=history"
                     });
                     localStorage.setItem(refundNotificationKey, 'true');
                 }
