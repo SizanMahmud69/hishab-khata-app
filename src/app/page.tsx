@@ -127,6 +127,12 @@ export default function Home() {
         </section>
       </main>
 
+      <footer className="py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
+        <div className="container mx-auto flex flex-col items-center justify-center gap-2 text-center text-sm text-muted-foreground sm:flex-row sm:justify-between">
+            <p>&copy; {new Date().getFullYear()} হিসাব খাতা. All rights reserved.</p>
+            <p>Developer: Sizan Mahmud &amp; Designer: Black Dimond</p>
+        </div>
+      </footer>
     </div>
   );
 }
