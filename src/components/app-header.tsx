@@ -218,9 +218,12 @@ export function AppHeader({children}: {children: ReactNode}) {
                              {notificationCount > 0 ? (
                                 notifications.filter(n => !n.read).map(notification => (
                                     <DropdownMenuItem key={notification.id} onSelect={() => handleNotificationClick(notification)}>
-                                        <div className="flex flex-col gap-1">
-                                            <p className="font-semibold">{notification.title}</p>
-                                            <p className="text-xs text-muted-foreground">{notification.description}</p>
+                                        <div className="flex items-center gap-3">
+                                            <span className="w-2.5 h-2.5 rounded-full bg-green-500 flex-shrink-0"></span>
+                                            <div className="flex flex-col">
+                                                <p className="font-semibold">{notification.title}</p>
+                                                <p className="text-xs text-muted-foreground">{notification.description}</p>
+                                            </div>
                                         </div>
                                     </DropdownMenuItem>
                                 ))

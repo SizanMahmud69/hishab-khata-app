@@ -84,30 +84,35 @@ export default function NotificationsPage() {
                 <CardHeader>
                     <CardTitle>এই মাসের নোটিফিকেশন</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-3">
                     {monthlyNotifications.length > 0 ? (
                         monthlyNotifications.map(notification => (
                             <div 
                                 key={notification.id} 
                                 className={cn(
-                                    "flex items-start justify-between gap-4 p-4 rounded-lg border cursor-pointer transition-colors", 
-                                    notification.read ? "bg-muted/50 hover:bg-muted" : "bg-card hover:bg-muted/50",
-                                    notification.link ? "cursor-pointer" : "cursor-default"
+                                    "flex items-start gap-4 p-4 rounded-lg border transition-colors", 
+                                    !notification.read && "bg-primary/5",
+                                    notification.link ? "cursor-pointer hover:bg-muted/50" : "cursor-default"
                                 )}
                                 onClick={() => handleNotificationClick(notification)}
                             >
-                                <div className="flex items-start gap-4">
-                                    <span className={cn("flex h-10 w-10 items-center justify-center rounded-full", notification.read ? "bg-muted-foreground/20" : "bg-primary/10")}>
+                                <div className="flex items-start gap-4 flex-1">
+                                    <span className={cn(
+                                        "flex h-10 w-10 items-center justify-center rounded-full flex-shrink-0", 
+                                        notification.read ? "bg-muted-foreground/10" : "bg-primary/10"
+                                    )}>
                                         <Bell className={cn("h-5 w-5", notification.read ? "text-muted-foreground" : "text-primary")} />
                                     </span>
-                                    <div>
+                                    <div className='flex-1'>
                                         <h4 className="font-semibold">{notification.title}</h4>
                                         <p className="text-sm text-muted-foreground">{notification.description}</p>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    {!notification.read && <Badge variant="default" className="h-5">নতুন</Badge>}
-                                </div>
+                                {!notification.read && (
+                                    <div className="flex items-center h-full">
+                                        <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+                                    </div>
+                                )}
                             </div>
                         ))
                     ) : (
