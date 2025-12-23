@@ -29,9 +29,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { format } from "date-fns";
-import { bn } from "date-fns/locale";
+import Link from "next/link";
+
 
 interface ShopDueSummary {
     shopName: string;
@@ -46,8 +45,7 @@ export default function ShopDuesPage() {
     const { debtNotes, updateDebtNote, addTransaction } = useBudget();
     const { toast } = useToast();
     
-    const [selectedShop, setSelectedShop] = useState<ShopDueSummary | null>(null);
-    const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+    const [paymentShop, setPaymentShop] = useState<ShopDueSummary | null>(null);
     const [isPaymentOpen, setIsPaymentOpen] = useState(false);
     const [paymentAmount, setPaymentAmount] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -90,33 +88,31 @@ export default function ShopDuesPage() {
     const totalPaidAmount = shopDuesSummary.reduce((sum, due) => sum + due.totalPaid, 0);
     const totalRemainingDue = totalDueAmount - totalPaidAmount;
 
-    const getStatusBadge = (remaining: number) => {
+    const getStatusBadge = (remaining: number, paid: number) => {
         if (remaining <= 0) {
              return <Badge className="bg-green-500 hover:bg-green-500/80">পরিশোধিত</Badge>;
+        }
+        if (paid > 0) {
+             return <Badge variant="outline" className="border-yellow-500 text-yellow-600">আংশিক</Badge>;
         }
         return <Badge variant="destructive">অপরিশোধিত</Badge>;
     }
     
-    const openDetailsDialog = (shop: ShopDueSummary) => {
-        setSelectedShop(shop);
-        setIsDetailsOpen(true);
-    }
-
     const openPaymentDialog = (shop: ShopDueSummary) => {
-        setSelectedShop(shop);
+        setPaymentShop(shop);
         setPaymentAmount(shop.remainingDue > 0 ? shop.remainingDue : 0);
         setIsPaymentOpen(true);
     }
     
     const handlePaymentConfirm = async () => {
-        if (!selectedShop) return;
+        if (!paymentShop) return;
 
         setIsSubmitting(true);
-        if (paymentAmount <= 0 || paymentAmount > selectedShop.remainingDue) {
+        if (paymentAmount <= 0 || paymentAmount > paymentShop.remainingDue) {
             toast({
                 variant: 'destructive',
                 title: 'ভুল পরিমাণ',
-                description: `অনুগ্রহ করে সঠিক পরিমাণ লিখুন (সর্বোচ্চ: ${formatCurrency(selectedShop.remainingDue)})।`,
+                description: `অনুগ্রহ করে সঠিক পরিমাণ লিখুন (সর্বোচ্চ: ${formatCurrency(paymentShop.remainingDue)})।`,
             });
             setIsSubmitting(false);
             return;
@@ -125,8 +121,11 @@ export default function ShopDuesPage() {
         let amountToSettle = paymentAmount;
 
         try {
-            for (const entry of selectedShop.entries) {
-                if (amountToSettle <= 0 || entry.status === 'paid') continue;
+            // Settle unpaid entries first
+            const sortedEntries = paymentShop.entries.filter(e => e.status !== 'paid').sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+            for (const entry of sortedEntries) {
+                if (amountToSettle <= 0) break;
 
                 const entryRemaining = entry.amount - entry.paidAmount;
                 const paymentForEntry = Math.min(amountToSettle, entryRemaining);
@@ -143,7 +142,7 @@ export default function ShopDuesPage() {
                 category: 'দোকান বাকি পরিশোধ',
                 amount: paymentAmount,
                 date: new Date().toISOString(),
-                description: `${selectedShop.shopName}-এর বাকি পরিশোধ`,
+                description: `${paymentShop.shopName}-এর বাকি পরিশোধ`,
             });
 
             toast({
@@ -152,7 +151,7 @@ export default function ShopDuesPage() {
             });
             
             setIsPaymentOpen(false);
-            setSelectedShop(null);
+            setPaymentShop(null);
 
         } catch (error) {
              console.error('Error confirming payment:', error);
@@ -230,10 +229,12 @@ export default function ShopDuesPage() {
                     </p>
                 </CardContent>
                 <CardFooter className="bg-muted/50 p-3 flex justify-between items-center">
-                    {getStatusBadge(due.remainingDue)}
+                    {getStatusBadge(due.remainingDue, due.totalPaid)}
                     <div className="flex items-center gap-2">
-                         <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => openDetailsDialog(due)}>
-                            <Eye className="h-4 w-4" />
+                         <Button variant="outline" size="icon" className="h-8 w-8" asChild>
+                            <Link href={`/shop-dues/${encodeURIComponent(due.shopName)}`}>
+                                <Eye className="h-4 w-4" />
+                            </Link>
                          </Button>
                          <Button size="sm" onClick={() => openPaymentDialog(due)} disabled={due.remainingDue <= 0}>
                             পরিশোধ করুন
@@ -248,36 +249,6 @@ export default function ShopDuesPage() {
           </div>
         )}
       </div>
-
-      {/* Details Dialog */}
-      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-        <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-                <DialogTitle>{selectedShop?.shopName} - বিস্তারিত হিসাব</DialogTitle>
-                <DialogDescription>এই দোকানের সমস্ত বাকির তালিকা।</DialogDescription>
-            </DialogHeader>
-            <div className="max-h-[60vh] overflow-y-auto">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>তারিখ</TableHead>
-                            <TableHead>বিবরণ</TableHead>
-                            <TableHead className="text-right">পরিমাণ</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {selectedShop?.entries.map(entry => (
-                            <TableRow key={entry.id}>
-                                <TableCell>{format(new Date(entry.date), "d MMM, yy", { locale: bn })}</TableCell>
-                                <TableCell>{entry.description || "-"}</TableCell>
-                                <TableCell className="text-right">{formatCurrency(entry.amount)}</TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </div>
-        </DialogContent>
-      </Dialog>
       
       {/* Payment Dialog */}
       <Dialog open={isPaymentOpen} onOpenChange={setIsPaymentOpen}>
@@ -285,7 +256,7 @@ export default function ShopDuesPage() {
           <DialogHeader>
             <DialogTitle>বাকি পরিশোধ</DialogTitle>
             <DialogDescription>
-              {selectedShop?.shopName}-এর বকেয়া পরিশোধ করুন।
+              {paymentShop?.shopName}-এর বকেয়া পরিশোধ করুন।
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -296,20 +267,20 @@ export default function ShopDuesPage() {
                 type="number"
                 value={paymentAmount}
                 onChange={(e) => setPaymentAmount(Number(e.target.value))}
-                max={selectedShop?.remainingDue}
+                max={paymentShop?.remainingDue}
               />
             </div>
             <div className="space-y-1.5">
               <Label>স্লাইডার</Label>
               <Slider
                 value={[paymentAmount]}
-                max={selectedShop?.remainingDue}
+                max={paymentShop?.remainingDue ?? 0}
                 step={10}
                 onValueChange={(value) => setPaymentAmount(value[0])}
               />
             </div>
             <p className="text-sm text-muted-foreground text-right pr-1">
-              মোট বাকি আছে: {formatCurrency(selectedShop?.remainingDue ?? 0)}
+              মোট বাকি আছে: {formatCurrency(paymentShop?.remainingDue ?? 0)}
             </p>
           </div>
           <DialogFooter>
