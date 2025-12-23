@@ -18,21 +18,14 @@ service cloud.firestore {
     function isExistingOwner(userId) {
       return isOwner(userId) && resource != null;
     }
-
-    function isCreatingConsistentChild(userId) {
-      return request.resource.data.userId == userId;
-    }
-    
-    function isUpdatingConsistentChild() {
-      return request.resource.data.userId == resource.data.userId;
-    }
     
     function isUpdatingAllowedUserFields() {
+      // A user cannot change their core identifiers or sensitive info.
       let protectedFields = ['id', 'userId', 'email', 'joinDate'];
-      let incomingKeys = request.resource.data.keys();
-
-      // Ensure no protected fields are being changed by the user.
-      return !incomingKeys.hasAny(protectedFields);
+      let allIncomingKeys = request.resource.data.keys();
+      
+      // Check that no protected fields are being changed.
+      return !allIncomingKeys.hasAny(protectedFields);
     }
     
     function canUpdateWithdrawalRequest() {
@@ -79,11 +72,10 @@ service cloud.firestore {
 
       // Sub-collection for reward point withdrawal requests
       match /withdrawalRequests/{requestId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId);
+        allow get, create, delete: if isOwner(userId);
+        allow list: if isOwner(userId);
         // User cannot update status or rejection reasons. Only admin via console.
         allow update: if isExistingOwner(userId) && canUpdateWithdrawalRequest(); 
-        allow delete: if isExistingOwner(userId);
       }
     }
   }
