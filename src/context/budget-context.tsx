@@ -4,8 +4,9 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo, useCallback } from 'react';
 import { useUser } from '@/firebase';
 import { useFirestore } from '@/firebase';
-import { collection, onSnapshot, addDoc, doc, updateDoc, serverTimestamp, setDoc, query, where, getDocs } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, doc, updateDoc, serverTimestamp, setDoc, query, where, getDocs, writeBatch, increment } from 'firebase/firestore';
 import { createNotification } from '@/components/app-header';
+import { type WithdrawalRequest } from '@/app/(app)/withdraw/page';
 
 // New unified Transaction interface
 export interface Transaction {
@@ -117,7 +118,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         setIsDataLoading(true);
         const basePath = `users/${user.uid}`;
         const listeners: (() => void)[] = [];
-        let activeListeners = 3; // transactions, debtNotes, user doc
+        let activeListeners = 4; // transactions, debtNotes, user doc, withdrawalRequests
         
         const onDataLoaded = () => {
             activeListeners--;
@@ -125,6 +126,43 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                 setIsDataLoading(false);
             }
         };
+
+        // Refund points for rejected withdrawal requests
+        const withdrawalRequestsRef = collection(firestore, basePath, 'withdrawalRequests');
+        const unsubWithdrawals = onSnapshot(withdrawalRequestsRef, async (snapshot) => {
+            const requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WithdrawalRequest));
+            const rejectedAndNotRefunded = requests.filter(req => req.status === 'rejected' && !req.isRefunded);
+
+            if (rejectedAndNotRefunded.length > 0) {
+                const batch = writeBatch(firestore);
+                let totalRefundPoints = 0;
+
+                rejectedAndNotRefunded.forEach(req => {
+                    totalRefundPoints += req.points;
+                    const reqRef = doc(firestore, basePath, 'withdrawalRequests', req.id);
+                    batch.update(reqRef, { isRefunded: true });
+                });
+
+                if (totalRefundPoints > 0) {
+                    const userRef = doc(firestore, basePath);
+                    batch.update(userRef, { points: increment(totalRefundPoints) });
+                }
+                
+                await batch.commit();
+                 if (totalRefundPoints > 0) {
+                    createNotification({
+                        title: "পয়েন্ট ফেরত দেওয়া হয়েছে",
+                        description: `আপনার বাতিল হওয়া উইথড্র অনুরোধের জন্য ${totalRefundPoints} পয়েন্ট ফেরত দেওয়া হয়েছে।`,
+                        link: "/withdraw"
+                    });
+                }
+            }
+            onDataLoaded();
+        }, (err) => {
+            console.error(`Error fetching withdrawalRequests:`, err);
+            onDataLoaded();
+        });
+        listeners.push(unsubWithdrawals);
 
         const createSnapshotListener = <T>(collectionName: string, setData: React.Dispatch<React.SetStateAction<T[]>>) => {
             const collectionRef = collection(firestore, basePath, collectionName);
@@ -186,7 +224,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         const userDocRef = doc(firestore, `users/${user.uid}`);
         
         try {
-            const currentPoints = rewardPoints; // Use component state
+            const currentPoints = rewardPoints; // Use state
             
             let newPoints = 0;
             if (operation === 'add') {
@@ -206,7 +244,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const deductRewardPoints = async (pointsToDeduct: number) => {
-        await updateRewardPoints(pointsToDeduct, 'deduct');
+       await updateRewardPoints(pointsToDeduct, 'deduct');
     };
     
     const isLoading = isUserLoading || isDataLoading;

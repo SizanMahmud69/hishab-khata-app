@@ -1,36 +1,29 @@
 
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import PageHeader from "@/components/page-header"
-import { Banknote, History, Gift } from "lucide-react"
+import { Banknote, History, Gift, Info } from "lucide-react"
 import { useBudget } from "@/context/budget-context";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { createNotification } from '@/components/app-header';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
-import { doc, addDoc, collection, serverTimestamp, query, orderBy } from 'firebase/firestore';
+import { doc, addDoc, collection, serverTimestamp, query, orderBy, writeBatch } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { paymentMethods } from '@/lib/data';
 import { Slider } from '@/components/ui/slider';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { bn } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+
 
 const WITHDRAW_THRESHOLD = 1000;
 const CONVERSION_RATE = 5; // 100 points = 5 BDT
@@ -39,21 +32,22 @@ interface UserProfile {
     points?: number;
 }
 
-interface WithdrawalRequest {
+export interface WithdrawalRequest {
     id: string;
-    status: 'pending' | 'completed' | 'failed';
+    status: 'pending' | 'approved' | 'rejected';
     points: number;
     amountBdt: number;
     paymentMethod: string;
     accountNumber: string;
     requestedAt: any;
     processedAt?: any;
+    rejectionReason?: string;
+    isRefunded?: boolean;
 }
 
 export default function WithdrawPage() {
     const { deductRewardPoints } = useBudget();
     const { toast } = useToast();
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
     const { user } = useUser();
     const firestore = useFirestore();
 
@@ -76,6 +70,12 @@ export default function WithdrawPage() {
 
     const canWithdraw = rewardPoints >= WITHDRAW_THRESHOLD;
     const selectedAmountBdt = Math.floor(pointsToWithdraw / 100) * CONVERSION_RATE;
+
+    const lastRejectedRequest = useMemo(() => {
+        if (!history) return null;
+        const sortedHistory = [...history].sort((a, b) => b.requestedAt.seconds - a.requestedAt.seconds);
+        return sortedHistory.find(req => req.status === 'rejected' && !req.isRefunded);
+    }, [history]);
 
     const handlePointsChange = (value: number) => {
         if (value > rewardPoints) {
@@ -118,18 +118,23 @@ export default function WithdrawPage() {
         const withdrawnTkAmount = (pointsToDeduct / 100) * CONVERSION_RATE;
 
         try {
-            const withdrawalRequestRef = collection(firestore, `users/${user.uid}/withdrawalRequests`);
-            await addDoc(withdrawalRequestRef, {
+            const batch = writeBatch(firestore);
+            
+            const withdrawalRequestRef = doc(collection(firestore, `users/${user.uid}/withdrawalRequests`));
+            batch.set(withdrawalRequestRef, {
                 userId: user.uid,
                 status: 'pending',
                 points: pointsToDeduct,
                 amountBdt: withdrawnTkAmount,
                 paymentMethod: paymentMethod,
                 accountNumber: accountNumber,
-                requestedAt: serverTimestamp()
+                requestedAt: serverTimestamp(),
+                isRefunded: false,
             });
 
-            await deductRewardPoints(pointsToDeduct);
+            batch.update(userDocRef!, { points: rewardPoints - pointsToDeduct });
+
+            await batch.commit();
 
             createNotification({
                 title: "উইথড্র অনুরোধ সফল হয়েছে",
@@ -141,7 +146,7 @@ export default function WithdrawPage() {
                 title: "সফল!",
                 description: `আপনার উইথড্র অনুরোধ সফল হয়েছে। ${pointsToDeduct} পয়েন্ট আপনার অ্যাকাউন্ট থেকে কেটে নেওয়া হয়েছে।`,
             });
-            setIsDialogOpen(false);
+            
             setPointsToWithdraw(rewardPoints - pointsToDeduct);
 
         } catch (error) {
@@ -162,12 +167,12 @@ export default function WithdrawPage() {
         }).format(amount)
     }
 
-    const getStatusBadge = (status: 'pending' | 'completed' | 'failed') => {
+    const getStatusBadge = (status: 'pending' | 'approved' | 'rejected') => {
         switch (status) {
-            case 'completed':
-                return <Badge className="bg-green-500 hover:bg-green-500/80">সম্পন্ন</Badge>;
-            case 'failed':
-                return <Badge variant="destructive">ব্যর্থ</Badge>;
+            case 'approved':
+                return <Badge className="bg-green-500 hover:bg-green-500/80">অনুমোদিত</Badge>;
+            case 'rejected':
+                return <Badge variant="destructive">বাতিল</Badge>;
             case 'pending':
             default:
                 return <Badge variant="outline" className="border-yellow-500 text-yellow-600">পেন্ডিং</Badge>;
@@ -188,6 +193,17 @@ export default function WithdrawPage() {
     <div className="flex-1 space-y-6">
       <PageHeader title="পয়েন্ট উইথড্র" description="আপনার অর্জিত পয়েন্ট টাকাতে রূপান্তর করুন।" />
       
+      {lastRejectedRequest && (
+        <Alert variant="destructive">
+            <Info className="h-4 w-4" />
+            <AlertTitle>আপনার উইথড্র অনুরোধ বাতিল হয়েছে</AlertTitle>
+            <AlertDescription>
+                আপনার সর্বশেষ উইথড্র অনুরোধটি বাতিল করা হয়েছে এবং পয়েন্ট আপনার অ্যাকাউন্টে ফেরত দেওয়া হয়েছে।
+                {lastRejectedRequest.rejectionReason && ` কারণ: ${lastRejectedRequest.rejectionReason}`}
+            </AlertDescription>
+        </Alert>
+      )}
+
       {canWithdraw ? (
         <Card className="border-primary">
             <CardHeader>
@@ -249,7 +265,7 @@ export default function WithdrawPage() {
       ) : (
         <Card className="flex flex-col items-center justify-center h-60 text-card-foreground">
             <Gift className="w-16 h-16 text-primary mb-4" />
-            <p className="font-semibold text-lg">ناکافی پوائنٹس</p>
+            <p className="font-semibold text-lg">অপর্যাপ্ত পয়েন্ট</p>
             <p className="text-muted-foreground">
                 উইথড্র করার জন্য আপনার কমপক্ষে {WITHDRAW_THRESHOLD} পয়েন্ট প্রয়োজন।
             </p>
@@ -267,36 +283,49 @@ export default function WithdrawPage() {
         <CardContent>
             {isHistoryLoading ? <Skeleton className="h-40 w-full" /> : 
             history && history.length > 0 ? (
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>তারিখ</TableHead>
-                            <TableHead>মাধ্যম</TableHead>
-                            <TableHead>পয়েন্ট</TableHead>
-                            <TableHead>টাকা</TableHead>
-                            <TableHead className='text-right'>স্ট্যাটাস</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {history.map((req) => (
-                            <TableRow key={req.id}>
-                                <TableCell className='font-medium'>
-                                    {req.requestedAt ? format(req.requestedAt.toDate(), "d MMM, yyyy", { locale: bn }) : '-'}
-                                </TableCell>
-                                <TableCell>{req.paymentMethod}</TableCell>
-                                <TableCell className='text-muted-foreground'>{req.points}</TableCell>
-                                <TableCell className='font-semibold'>{formatCurrency(req.amountBdt)}</TableCell>
-                                <TableCell className='text-right'>{getStatusBadge(req.status)}</TableCell>
+                <TooltipProvider>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>তারিখ</TableHead>
+                                <TableHead>মাধ্যম</TableHead>
+                                <TableHead>পয়েন্ট</TableHead>
+                                <TableHead>টাকা</TableHead>
+                                <TableHead className='text-right'>স্ট্যাটাস</TableHead>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
+                        </TableHeader>
+                        <TableBody>
+                            {history.map((req) => (
+                                <TableRow key={req.id}>
+                                    <TableCell className='font-medium'>
+                                        {req.requestedAt ? format(req.requestedAt.toDate(), "d MMM, yyyy", { locale: bn }) : '-'}
+                                    </TableCell>
+                                    <TableCell>{req.paymentMethod}</TableCell>
+                                    <TableCell className='text-muted-foreground'>{req.points}</TableCell>
+                                    <TableCell className='font-semibold'>{formatCurrency(req.amountBdt)}</TableCell>
+                                    <TableCell className='text-right flex justify-end items-center gap-2'>
+                                        {getStatusBadge(req.status)}
+                                        {req.status === 'rejected' && req.rejectionReason && (
+                                            <Tooltip>
+                                                <TooltipTrigger>
+                                                    <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p>{req.rejectionReason}</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        )}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TooltipProvider>
             ) : (
                 <p className='text-sm text-muted-foreground text-center py-4'>কোনো হিস্টোরি পাওয়া যায়নি।</p>
             )}
         </CardContent>
       </Card>
-
     </div>
   )
 }

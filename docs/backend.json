@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "User": {
@@ -228,13 +229,15 @@
         "properties": {
             "id": {"type": "string"},
             "userId": {"type": "string"},
-            "status": {"type": "string", "enum": ["pending", "completed", "failed"]},
+            "status": {"type": "string", "enum": ["pending", "approved", "rejected"]},
             "points": {"type": "number"},
             "amountBdt": {"type": "number"},
             "paymentMethod": {"type": "string"},
             "accountNumber": {"type": "string"},
             "requestedAt": {"type": "string", "format": "date-time"},
-            "processedAt": {"type": "string", "format": "date-time"}
+            "processedAt": {"type": "string", "format": "date-time"},
+            "rejectionReason": {"type": "string"},
+            "isRefunded": {"type": "boolean"}
         },
         "required": ["id", "userId", "status", "points", "amountBdt", "paymentMethod", "accountNumber", "requestedAt"]
     }

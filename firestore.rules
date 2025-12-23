@@ -28,14 +28,23 @@ service cloud.firestore {
     }
     
     function isUpdatingAllowedUserFields() {
-      // A user cannot change their core identifiers or sensitive info.
       let protectedFields = ['id', 'userId', 'email', 'joinDate'];
       let incomingKeys = request.resource.data.keys();
-      let existingKeys = resource.data.keys();
 
-      // Check that no protected fields are being changed by comparing them to existing resource
+      // Ensure no protected fields are being changed by the user.
       return !incomingKeys.hasAny(protectedFields);
     }
+    
+    function canUpdateWithdrawalRequest() {
+      // User can create, but cannot update status or other admin-only fields.
+      let userUpdatableFields = ['paymentMethod', 'accountNumber'];
+      let incomingKeys = request.resource.data.keys();
+      let existingKeys = resource.data.keys();
+      
+      // Check if user is trying to update a field they shouldn't
+      return incomingKeys.removeAll(userUpdatableFields).size() == existingKeys.removeAll(userUpdatableFields).size();
+    }
+
 
     // ------------------------------------------------------------------------
     // Collection Rules
@@ -46,20 +55,16 @@ service cloud.firestore {
       allow list: if false; // Prevent listing all users
       allow create: if isOwner(userId);
       allow update: if isExistingOwner(userId) && isUpdatingAllowedUserFields();
-      allow delete: if isExistingOwner(userId);
+      allow delete: if false; // Generally users should not delete their own accounts this way.
 
       // Sub-collection for all financial transactions (income/expense)
       match /transactions/{transactionId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && isCreatingConsistentChild(userId);
-        allow update, delete: if isExistingOwner(userId);
+        allow read, write: if isOwner(userId);
       }
 
       // Sub-collection for all debt records (lent, borrowed, shop dues)
       match /debtNotes/{debtNoteId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && isCreatingConsistentChild(userId);
-        allow update, delete: if isExistingOwner(userId);
+        allow read, write: if isOwner(userId);
       }
       
       // Sub-collection for daily check-ins
@@ -69,16 +74,16 @@ service cloud.firestore {
 
       // Sub-collection for NID verification requests
       match /verificationRequests/{requestId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update, delete: if isExistingOwner(userId); // Allow user to update/delete their own request if needed. Admin rules would be separate.
+        allow read, write: if isOwner(userId); 
       }
 
       // Sub-collection for reward point withdrawal requests
       match /withdrawalRequests/{requestId} {
         allow get, list: if isOwner(userId);
         allow create: if isOwner(userId);
-        allow update, delete: if isExistingOwner(userId); // Allow user to manage their requests.
+        // User cannot update status or rejection reasons. Only admin via console.
+        allow update: if isExistingOwner(userId) && canUpdateWithdrawalRequest(); 
+        allow delete: if isExistingOwner(userId);
       }
     }
   }
