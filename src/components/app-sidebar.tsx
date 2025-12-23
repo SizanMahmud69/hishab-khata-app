@@ -63,16 +63,6 @@ const menuItems = [
         label: "রিওয়ার্ড",
         icon: Award,
     },
-    {
-        href: "/withdraw",
-        label: "উইথড্র",
-        icon: Banknote,
-    },
-    {
-        href: "/notifications",
-        label: "নোটিফিকেশন",
-        icon: Bell,
-    }
 ]
 
 export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
