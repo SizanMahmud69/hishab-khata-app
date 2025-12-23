@@ -3,7 +3,7 @@
 
 import React, { useMemo } from 'react';
 import PageHeader from "@/components/page-header"
-import { Banknote, Gift, Medal, Star, Trophy, ArrowUpCircle, ArrowDownCircle, History } from "lucide-react"
+import { Banknote, Gift, Medal, Star, Trophy, ArrowUpCircle, ArrowDownCircle, History, Undo2 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { format, parseISO } from 'date-fns';
 import { bn } from 'date-fns/locale';
 import { type WithdrawalRequest } from '../withdraw/page';
+import { Badge } from '@/components/ui/badge';
 
 const WITHDRAW_THRESHOLD = 1000;
 
@@ -28,10 +29,11 @@ interface CheckInRecord {
 }
 
 interface PointHistoryItem {
-    type: 'earned' | 'spent';
+    type: 'earned' | 'spent' | 'refunded';
     source: string;
     points: number;
     date: Date;
+    status?: 'pending' | 'approved' | 'rejected';
 }
 
 export default function RewardsPage() {
@@ -54,7 +56,6 @@ export default function RewardsPage() {
     
     const withdrawalsQuery = useMemoFirebase(() => {
         if (!user || !firestore) return null;
-        // Fetch all withdrawals and filter on the client
         return query(collection(firestore, `users/${user.uid}/withdrawalRequests`), orderBy("requestedAt", "desc"));
     }, [user, firestore]);
     const { data: allWithdrawals, isLoading: isWithdrawalsLoading } = useCollection<WithdrawalRequest>(withdrawalsQuery);
@@ -72,17 +73,26 @@ export default function RewardsPage() {
                 });
             });
         }
-
+        
         if (allWithdrawals) {
-            // Filter for approved withdrawals on the client
-            const approvedWithdrawals = allWithdrawals.filter(wd => wd.status === "approved");
-            approvedWithdrawals.forEach(wd => {
-                if (wd.processedAt) {
+            allWithdrawals.forEach(wd => {
+                if (wd.requestedAt) {
                     history.push({
                         type: 'spent',
                         source: 'পয়েন্ট উইথড্র',
                         points: wd.points,
-                        date: wd.processedAt.toDate()
+                        date: wd.requestedAt.toDate(),
+                        status: wd.status,
+                    });
+                }
+                
+                if (wd.status === 'rejected' && wd.isRefunded && wd.processedAt) {
+                    history.push({
+                        type: 'refunded',
+                        source: 'পয়েন্ট রিফান্ড',
+                        points: wd.points,
+                        date: wd.processedAt.toDate(),
+                        status: 'approved' // To show it as a completed transaction
                     });
                 }
             });
@@ -94,6 +104,16 @@ export default function RewardsPage() {
     
     const canWithdraw = rewardPoints >= WITHDRAW_THRESHOLD;
     const isLoading = isUserLoading || isCheckInsLoading || isWithdrawalsLoading;
+    
+    const getStatusText = (status?: 'pending' | 'approved' | 'rejected') => {
+        switch (status) {
+            case 'pending': return <Badge variant="outline" className="border-yellow-500 text-yellow-600">পেন্ডিং</Badge>;
+            case 'approved': return <Badge className="bg-green-500 hover:bg-green-500/80">সম্পন্ন</Badge>;
+            case 'rejected': return <Badge variant="destructive">বাতিল</Badge>;
+            default: return null;
+        }
+    };
+
 
   if (isLoading) {
     return (
@@ -166,14 +186,17 @@ export default function RewardsPage() {
                 pointHistory.map((item, index) => (
                     <div key={index} className="flex items-center justify-between p-3 rounded-lg border">
                         <div className="flex items-center gap-3">
-                             {item.type === 'earned' ? <ArrowUpCircle className="h-6 w-6 text-green-500" /> : <ArrowDownCircle className="h-6 w-6 text-red-500" />}
+                             {item.type === 'earned' ? <ArrowUpCircle className="h-6 w-6 text-green-500" /> : item.type === 'refunded' ? <Undo2 className="h-6 w-6 text-blue-500" /> : <ArrowDownCircle className="h-6 w-6 text-red-500" />}
                              <div>
-                                <p className="font-semibold">{item.source}</p>
-                                <p className="text-sm text-muted-foreground">{format(item.date, "d MMMM, yyyy", { locale: bn })}</p>
+                                <p className="font-semibold flex items-center gap-2">
+                                  {item.source}
+                                  {item.source === 'পয়েন্ট উইথড্র' && getStatusText(item.status)}
+                                </p>
+                                <p className="text-sm text-muted-foreground">{format(item.date, "d MMMM, yyyy, h:mm a", { locale: bn })}</p>
                              </div>
                         </div>
-                         <p className={`font-bold ${item.type === 'earned' ? 'text-green-500' : 'text-red-500'}`}>
-                           {item.type === 'earned' ? '+' : '-'}{item.points}
+                         <p className={`font-bold ${item.type === 'earned' || item.type === 'refunded' ? 'text-green-500' : 'text-red-500'}`}>
+                           {item.type === 'earned' || item.type === 'refunded' ? '+' : '-'}{item.points}
                          </p>
                     </div>
                 ))
