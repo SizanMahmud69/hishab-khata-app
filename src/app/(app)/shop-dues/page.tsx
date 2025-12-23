@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { PlusCircle, ShoppingBag, Banknote, Loader2, Settings, Plus, Trash2 } from "lucide-react"
 import { useBudget, type DebtNote } from "@/context/budget-context";
 import { Button } from "@/components/ui/button"
@@ -32,7 +32,8 @@ import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
 import { useShops } from "@/hooks/use-shops";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import Link from "next/link";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+
 
 export default function ShopDuesPage() {
     const { debtNotes, addDebtNote, updateDebtNote } = useBudget();
@@ -48,6 +49,18 @@ export default function ShopDuesPage() {
     const [newShopName, setNewShopName] = useState("");
 
     const shopDues = debtNotes.filter(d => d.type === 'shopDue');
+
+    const groupedDues = useMemo(() => {
+        return shopDues.reduce((acc, due) => {
+            const shopName = due.person;
+            if (!acc[shopName]) {
+                acc[shopName] = [];
+            }
+            acc[shopName].push(due);
+            return acc;
+        }, {} as Record<string, DebtNote[]>);
+    }, [shopDues]);
+
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat("bn-BD", {
@@ -139,7 +152,7 @@ export default function ShopDuesPage() {
 
             setIsPaymentDialogOpen(false);
             setSelectedDue(null);
-        } catch (error) {
+        } catch (error) => {
             console.error("Error confirming payment:", error);
             toast({ variant: "destructive", title: "ত্রুটি", description: "একটি সমস্যা হয়েছে।" });
         } finally {
@@ -314,45 +327,74 @@ export default function ShopDuesPage() {
         </Card>
       </div>
 
-      <div className="space-y-3">
-        {shopDues.map((due) => (
-            <Card key={due.id}>
-                <CardContent className="p-4">
-                   <div className="flex justify-between items-start">
-                        <div>
-                            <p className="font-semibold">{due.person}</p>
-                            <p className="text-sm text-muted-foreground">{new Date(due.date).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+       <Accordion type="single" collapsible className="w-full space-y-3">
+        {Object.entries(groupedDues).map(([shopName, dues]) => {
+          const totalShopDue = dues.reduce((sum, due) => sum + due.amount, 0);
+          const totalShopPaid = dues.reduce((sum, due) => sum + due.paidAmount, 0);
+          const remainingShopDue = totalShopDue - totalShopPaid;
+
+          return (
+            <AccordionItem value={shopName} key={shopName} className="border-b-0">
+                <Card className="overflow-hidden">
+                    <AccordionTrigger className="p-4 hover:no-underline text-left">
+                        <div className="flex justify-between items-center w-full">
+                           <div>
+                                <p className="font-semibold text-lg">{shopName}</p>
+                                <p className="text-sm text-muted-foreground">মোট লেনদেন: {dues.length}</p>
+                            </div>
+                            <div>
+                                {remainingShopDue > 0 ? (
+                                    <p className="font-bold text-red-500">{formatCurrency(remainingShopDue)}</p>
+                                ) : (
+                                    <p className="font-semibold text-green-500">পরিশোধিত</p>
+                                )}
+                            </div>
                         </div>
-                        <span className={cn(
-                            "font-bold text-base",
-                            due.status !== 'paid' ? 'text-red-500' : 'text-green-500'
-                        )}>{formatCurrency(due.amount)}</span>
-                   </div>
-                    {due.status === 'partially-paid' && (
-                        <div className="text-xs text-muted-foreground mt-2">
-                            পরিশোধিত: {formatCurrency(due.paidAmount)} | বাকি: {formatCurrency(due.amount - due.paidAmount)}
+                    </AccordionTrigger>
+                    <AccordionContent className="px-0 pb-0">
+                        <div className="space-y-2 p-4 pt-0">
+                        {dues.map(due => (
+                            <Card key={due.id} className="bg-muted/30">
+                                <CardContent className="p-3">
+                                   <div className="flex justify-between items-start">
+                                        <div>
+                                            <p className="text-sm text-muted-foreground">{new Date(due.date).toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                                            {due.description && <p className="text-xs text-muted-foreground/80">{due.description}</p>}
+                                        </div>
+                                        <span className="font-semibold text-base">{formatCurrency(due.amount)}</span>
+                                   </div>
+                                    {due.status === 'partially-paid' && (
+                                        <div className="text-xs text-muted-foreground mt-2">
+                                            পরিশোধিত: {formatCurrency(due.paidAmount)} | বাকি: {formatCurrency(due.amount - due.paidAmount)}
+                                        </div>
+                                    )}
+                                </CardContent>
+                                <CardFooter className="bg-muted/50 p-2 flex items-center justify-between">
+                                     {getStatusBadge(due.status)}
+                                     <Button 
+                                        size="sm" 
+                                        onClick={() => openPaymentDialog(due)}
+                                        disabled={due.status === 'paid'}
+                                        variant={due.status === 'paid' ? 'ghost' : 'outline'}
+                                    >
+                                        {due.status === 'paid' ? 'সম্পূর্ণ পরিশোধিত' : 'পরিশোধ করুন'}
+                                    </Button>
+                                </CardFooter>
+                            </Card>
+                        ))}
                         </div>
-                    )}
-                </CardContent>
-                <CardFooter className="bg-muted/50 p-3 flex items-center justify-between">
-                     {getStatusBadge(due.status)}
-                     <Button 
-                        size="sm" 
-                        onClick={() => openPaymentDialog(due)}
-                        disabled={due.status === 'paid'}
-                        variant={due.status === 'paid' ? 'ghost' : 'outline'}
-                    >
-                        {due.status === 'paid' ? 'সম্পূর্ণ পরিশোধিত' : 'পরিশোধ করুন'}
-                    </Button>
-                </CardFooter>
-            </Card>
-        ))}
-         {shopDues.length === 0 && (
-            <div className="text-center py-10 text-muted-foreground border rounded-lg">
-                <p>এখনও কোনো বাকি যোগ করা হয়নি।</p>
-            </div>
-        )}
-    </div>
+                    </AccordionContent>
+                </Card>
+            </AccordionItem>
+          );
+        })}
+      </Accordion>
+
+      {Object.keys(groupedDues).length === 0 && (
+        <div className="text-center py-10 text-muted-foreground border rounded-lg">
+            <p>এখনও কোনো বাকি যোগ করা হয়নি।</p>
+        </div>
+      )}
       
         <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
             <DialogContent className="sm:max-w-[425px]">
