@@ -3,7 +3,7 @@
 
 import React, { useState, useMemo } from 'react';
 import PageHeader from "@/components/page-header"
-import { Banknote, History } from "lucide-react"
+import { Banknote, History, Gift } from "lucide-react"
 import { useBudget } from "@/context/budget-context";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
