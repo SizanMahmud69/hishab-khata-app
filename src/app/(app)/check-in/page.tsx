@@ -124,16 +124,11 @@ export default function CheckInPage() {
 
             const userDocRef = doc(firestore, `users/${user.uid}`);
             
-            updateDoc(userDocRef, userUpdateData).catch(error => {
-                 errorEmitter.emit(
-                    'permission-error',
-                    new FirestorePermissionError({
-                        path: userDocRef.path,
-                        operation: 'update',
-                        requestResourceData: userUpdateData
-                    })
-                )
-            });
+            await updateDoc(userDocRef, userUpdateData);
+            
+            localStorage.setItem('lastCheckInDate', today.toDateString());
+            window.dispatchEvent(new Event('storage'));
+
 
             toast({
                 title: "অভিনন্দন!",
@@ -141,11 +136,24 @@ export default function CheckInPage() {
             });
         } catch (error) {
             console.error("Error adding check-in:", error);
-            toast({
-                variant: "destructive",
-                title: "ত্রুটি",
-                description: "চেক-ইন করার সময় একটি সমস্যা হয়েছে।",
-            });
+            const userDocRef = doc(firestore, `users/${user.uid}`);
+             if (error instanceof FirestorePermissionError) {
+                errorEmitter.emit('permission-error', error);
+            } else {
+                errorEmitter.emit(
+                    'permission-error',
+                    new FirestorePermissionError({
+                        path: userDocRef.path,
+                        operation: 'update',
+                        requestResourceData: userUpdateData
+                    })
+                )
+                 toast({
+                    variant: "destructive",
+                    title: "ত্রুটি",
+                    description: "চেক-ইন করার সময় একটি সমস্যা হয়েছে।",
+                });
+            }
         } finally {
             setIsSubmitting(false);
         }

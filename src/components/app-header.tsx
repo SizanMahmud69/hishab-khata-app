@@ -64,14 +64,18 @@ export function AppHeader({children}: {children: ReactNode}) {
     const { debtNotes } = useBudget(); 
 
     useEffect(() => {
-        const storedLastCheckIn = localStorage.getItem('lastCheckInDate');
-        if (storedLastCheckIn) {
-            const today = new Date().toDateString();
-            const lastDate = new Date(storedLastCheckIn).toDateString();
-            setIsCheckedIn(today === lastDate);
-        } else {
-            setIsCheckedIn(false);
-        }
+        const checkStatus = () => {
+            const storedLastCheckIn = localStorage.getItem('lastCheckInDate');
+            if (storedLastCheckIn) {
+                const today = new Date().toDateString();
+                const lastDate = new Date(storedLastCheckIn).toDateString();
+                setIsCheckedIn(today === lastDate);
+            } else {
+                setIsCheckedIn(false);
+            }
+        };
+
+        checkStatus();
 
         const checkDailyNotifications = () => {
             const lastNotificationDate = localStorage.getItem('dailyCheckinNotificationDate');
@@ -121,15 +125,7 @@ export function AppHeader({children}: {children: ReactNode}) {
             if (updatedStorage) {
                 setNotifications(JSON.parse(updatedStorage));
             }
-            // Also re-check check-in status from local storage
-            const lastCheckIn = localStorage.getItem('lastCheckInDate');
-            if(lastCheckIn) {
-                const today = new Date().toDateString();
-                const lastDate = new Date(lastCheckIn).toDateString();
-                setIsCheckedIn(today === lastDate);
-            } else {
-                setIsCheckedIn(false);
-            }
+            checkStatus(); // Re-check check-in status on any storage change
         };
 
         window.addEventListener('storage', handleStorageChange);
@@ -137,7 +133,7 @@ export function AppHeader({children}: {children: ReactNode}) {
         return () => {
             window.removeEventListener('storage', handleStorageChange);
         }
-    }, [debtNotes, isCheckedIn]);
+    }, [debtNotes]); // Removed isCheckedIn from dependency array
 
 
     const notificationCount = notifications.filter(n => !n.read).length;
@@ -173,15 +169,6 @@ export function AppHeader({children}: {children: ReactNode}) {
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="left" className="p-0">
-                            <SheetHeader className="p-4 border-b">
-                              <SheetTitle asChild>
-                                <Link href="/dashboard" className="flex items-center gap-2 font-bold" onClick={handleLinkClick}>
-                                    <BookMarked className="h-6 w-6 text-primary" />
-                                    <span>হিসাব খাতা</span>
-                                </Link>
-                              </SheetTitle>
-                              <SheetDescription className="sr-only">অ্যাপ্লিকেশনের প্রধান নেভিগেশন মেনু।</SheetDescription>
-                            </SheetHeader>
                             <AppSidebar onLinkClick={handleLinkClick} />
                         </SheetContent>
                     </Sheet>
