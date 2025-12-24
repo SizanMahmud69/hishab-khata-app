@@ -285,6 +285,7 @@
       "description": "Represents a successful referral made by a user.",
       "properties": {
         "id": { "type": "string" },
+        "userId": { "type": "string" },
         "referredUserId": { "type": "string", "description": "The UID of the user who was referred." },
         "referredUserName": { "type": "string", "description": "The name of the user who was referred." },
         "bonusPoints": { "type": "number", "description": "Points awarded to the referrer for this referral." },
@@ -384,5 +385,3 @@
     ]
   }
 }
-
-    

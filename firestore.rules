@@ -36,10 +36,9 @@ service cloud.firestore {
       allow get: if isOwner(userId);
       // Allow querying for a single user by referral code during registration
       allow list: if request.query.limit <= 1;
-      // A signed-in user can create their own user document.
-      allow create: if isSignedIn();
-      // A user can update their own document. A signed-in user (the new referred user)
+      // A signed-in user can create their own user document. A signed-in user (the new referred user)
       // can also update the referrer's points.
+      allow create: if isSignedIn();
       allow update: if isOwner(userId) || isSignedIn();
       // Users should not be able to delete their own accounts this way.
       allow delete: if false;
@@ -84,7 +83,7 @@ service cloud.firestore {
       
       // Sub-collection for referral records
       match /referrals/{referralId} {
-        allow get, list: if request.auth.uid == userId;
+        allow read: if isOwner(userId);
         // Only the system (via a new user signup) can create these records
         allow create: if isSignedIn();
         allow update, delete: if false;
@@ -101,5 +100,3 @@ service cloud.firestore {
     }
   }
 }
-
-    

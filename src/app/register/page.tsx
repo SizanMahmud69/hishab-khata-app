@@ -11,10 +11,11 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useAuth, useFirestore } from "@/firebase";
-import { doc, setDoc, serverTimestamp, getDoc, query, collection, where, getDocs, writeBatch, increment, limit } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp, getDoc, query, collection, where, getDocs, writeBatch, increment, limit, addDoc } from "firebase/firestore";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BudgetClientProvider, useBudget } from "@/context/budget-context-provider";
 import { useDebounce } from "react-use";
+import { createNotification } from "@/components/app-header";
 
 
 function RegisterPageContent() {
@@ -24,7 +25,7 @@ function RegisterPageContent() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [referralCode, setReferralCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [referrerName, setReferrerName] = useState<string | null>(null);
+  const [referrer, setReferrer] = useState<{ id: string, name: string } | null>(null);
   const [isCheckingReferral, setIsCheckingReferral] = useState(false);
   
   const router = useRouter();
@@ -35,7 +36,7 @@ function RegisterPageContent() {
 
   const checkReferralCode = useCallback(async (code: string) => {
     if (!code.trim() || !firestore) {
-        setReferrerName(null);
+        setReferrer(null);
         return;
     }
     setIsCheckingReferral(true);
@@ -45,13 +46,13 @@ function RegisterPageContent() {
         const querySnapshot = await getDocs(q);
         if (!querySnapshot.empty) {
             const referrerDoc = querySnapshot.docs[0];
-            setReferrerName(referrerDoc.data().name);
+            setReferrer({ id: referrerDoc.id, name: referrerDoc.data().name });
         } else {
-            setReferrerName(null);
+            setReferrer(null);
         }
     } catch (error) {
         console.error("Error checking referral code:", error);
-        setReferrerName(null);
+        setReferrer(null);
     } finally {
         setIsCheckingReferral(false);
     }
@@ -97,26 +98,16 @@ function RegisterPageContent() {
     }
 
     try {
-      // Find referrer if code is provided
-      let referrer: { id: string, name: string } | null = null;
-      if (referralCode.trim()) {
-        const usersRef = collection(firestore, "users");
-        const q = query(usersRef, where("referralCode", "==", referralCode.trim()), limit(1));
-        const querySnapshot = await getDocs(q);
-        if (!querySnapshot.empty) {
-            const referrerDoc = querySnapshot.docs[0];
-            referrer = { id: referrerDoc.id, name: referrerDoc.data().name };
-        } else {
-            toast({
-                variant: "destructive",
-                title: "অবৈধ রেফার কোড",
-                description: "প্রদত্ত রেফার কোডটি সঠিক নয়।",
-            });
-            setIsLoading(false);
-            return;
-        }
+      if (referralCode.trim() && !referrer) {
+        toast({
+            variant: "destructive",
+            title: "অবৈধ রেফার কোড",
+            description: "প্রদত্ত রেফার কোডটি সঠিক নয়। অনুগ্রহ করে আবার চেষ্টা করুন।",
+        });
+        setIsLoading(false);
+        return;
       }
-
+      
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       
@@ -162,20 +153,51 @@ function RegisterPageContent() {
         // 2. If referred, update referrer
         if (referrer) {
             const referrerDocRef = doc(firestore, "users", referrer.id);
-            // Add bonus points to referrer
             batch.update(referrerDocRef, { points: increment(referrerBonusPoints) });
 
-            // Add a record to the referrer's `referrals` subcollection
             const referralRecordRef = doc(collection(firestore, `users/${referrer.id}/referrals`));
             batch.set(referralRecordRef, {
+                userId: referrer.id,
                 referredUserId: user.uid,
                 referredUserName: fullName,
                 bonusPoints: referrerBonusPoints,
                 createdAt: serverTimestamp(),
             });
+            
+             // Create notification for the referrer
+            const referrerNotifRef = doc(collection(firestore, `users/${referrer.id}/notifications`));
+            batch.set(referrerNotifRef, {
+                userId: referrer.id,
+                title: "রেফারেল বোনাস!",
+                description: `${fullName} আপনার কোড ব্যবহার করে যোগ দিয়েছেন। আপনি ${referrerBonusPoints} পয়েন্ট পেয়েছেন।`,
+                link: `/congratulations?title=রেফারেল বোনাস&description=আপনি সফলভাবে একজনকে রেফার করেছেন!&points=${referrerBonusPoints}`,
+                read: false,
+                createdAt: serverTimestamp(),
+            });
+        }
+
+        // Add welcome bonus to the new user's referrals sub-collection for history tracking
+        if (referrer) {
+             const newUserReferralRecordRef = doc(collection(firestore, `users/${user.uid}/referrals`));
+             batch.set(newUserReferralRecordRef, {
+                userId: user.uid,
+                referredUserId: user.uid, // Self-reference for their own bonus
+                referredUserName: "স্বাগতম বোনাস",
+                bonusPoints: referredUserBonusPoints,
+                createdAt: serverTimestamp(),
+            });
         }
         
         await batch.commit();
+
+        if (referrer) {
+            await createNotification({
+                id: `welcome-bonus-${user.uid}`,
+                title: 'স্বাগতম বোনাস!',
+                description: `রেফার কোড ব্যবহার করার জন্য আপনি ${referredUserBonusPoints} পয়েন্ট পেয়েছেন।`,
+                link: `/congratulations?title=স্বাগতম বোনাস&description=আমাদের অ্যাপে আপনাকে স্বাগতম!&points=${referredUserBonusPoints}`,
+            }, user.uid, firestore);
+        }
       }
 
       toast({
@@ -286,13 +308,15 @@ function RegisterPageContent() {
                     {isCheckingReferral ? (
                         <div className="flex items-center text-muted-foreground">
                             <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                            Checking...
+                            যাচাই করা হচ্ছে...
                         </div>
-                    ) : referrerName ? (
+                    ) : referrer ? (
                         <div className="flex items-center text-green-600 font-medium">
                             <CheckCircle className="mr-1 h-3 w-3" />
-                            Referred by: {referrerName}
+                            রেফার করেছেন: {referrer.name}
                         </div>
+                    ) : referralCode && !isCheckingReferral ? (
+                       <div className="text-destructive">অবৈধ রেফার কোড</div>
                     ) : null}
                 </div>
               </div>
@@ -340,5 +364,3 @@ export default function RegisterPage() {
         </BudgetClientProvider>
     )
 }
-
-    

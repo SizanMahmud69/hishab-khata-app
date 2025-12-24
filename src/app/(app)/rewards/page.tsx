@@ -4,7 +4,7 @@
 import React, { useMemo, useRef, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import PageHeader from "@/components/page-header"
-import { Banknote, Gift, Medal, Star, Trophy, ArrowUpCircle, ArrowDownCircle, History, Undo2 } from "lucide-react"
+import { Banknote, Gift, Medal, Star, Trophy, ArrowUpCircle, ArrowDownCircle, History, Undo2, Users } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
@@ -28,6 +28,14 @@ interface CheckInRecord {
     points: number;
     createdAt: any;
 }
+
+interface Referral {
+    id: string;
+    referredUserName: string;
+    bonusPoints: number;
+    createdAt: any; // Firestore Timestamp
+}
+
 
 interface PointHistoryItem {
     type: 'earned' | 'spent' | 'refunded';
@@ -63,12 +71,19 @@ function RewardsPageContent() {
         return query(collection(firestore, `users/${user.uid}/withdrawalRequests`), orderBy("requestedAt", "desc"));
     }, [user, firestore]);
     const { data: allWithdrawals, isLoading: isWithdrawalsLoading } = useCollection<WithdrawalRequest>(withdrawalsQuery);
+    
+    const referralsQuery = useMemoFirebase(() => {
+        if (!user || !firestore) return null;
+        return query(collection(firestore, `users/${user.uid}/referrals`), orderBy("createdAt", "desc"));
+    }, [user, firestore]);
+    const { data: referrals, isLoading: areReferralsLoading } = useCollection<Referral>(referralsQuery);
+
 
     useEffect(() => {
-        if (searchParams.get('section') === 'history' && historyRef.current && !isWithdrawalsLoading && !isCheckInsLoading) {
+        if (searchParams.get('section') === 'history' && historyRef.current && !isWithdrawalsLoading && !isCheckInsLoading && !areReferralsLoading) {
             historyRef.current.scrollIntoView({ behavior: 'smooth' });
         }
-    }, [searchParams, isWithdrawalsLoading, isCheckInsLoading]);
+    }, [searchParams, isWithdrawalsLoading, isCheckInsLoading, areReferralsLoading]);
 
     const pointHistory = useMemo((): PointHistoryItem[] => {
         const history: PointHistoryItem[] = [];
@@ -82,6 +97,19 @@ function RewardsPageContent() {
                     date: parseISO(ci.date)
                 });
             });
+        }
+        
+        if (referrals) {
+            referrals.forEach(ref => {
+                 if (ref.createdAt) {
+                    history.push({
+                        type: 'earned',
+                        source: 'রেফারেল বোনাস',
+                        points: ref.bonusPoints,
+                        date: ref.createdAt.toDate(),
+                    });
+                }
+            })
         }
         
         if (allWithdrawals) {
@@ -110,10 +138,10 @@ function RewardsPageContent() {
         
         return history.sort((a, b) => b.date.getTime() - a.date.getTime());
 
-    }, [checkIns, allWithdrawals]);
+    }, [checkIns, allWithdrawals, referrals]);
     
     const canWithdraw = rewardPoints >= minWithdrawalPoints;
-    const isLoading = isUserLoading || isCheckInsLoading || isWithdrawalsLoading;
+    const isLoading = isUserLoading || isCheckInsLoading || isWithdrawalsLoading || areReferralsLoading;
     
     const getStatusText = (status?: 'pending' | 'approved' | 'rejected') => {
         switch (status) {
@@ -123,6 +151,16 @@ function RewardsPageContent() {
             default: return null;
         }
     };
+
+    const getSourceIcon = (source: string) => {
+        switch (source) {
+            case 'দৈনিক চেক-ইন': return <Star className="h-6 w-6 text-yellow-500" />;
+            case 'রেফারেল বোনাস': return <Users className="h-6 w-6 text-blue-500" />;
+            case 'পয়েন্ট উইথড্র': return <ArrowDownCircle className="h-6 w-6 text-red-500" />;
+            case 'পয়েন্ট রিফান্ড': return <Undo2 className="h-6 w-6 text-blue-500" />;
+            default: return <Gift className="h-6 w-6 text-gray-500" />;
+        }
+    }
 
 
   if (isLoading) {
@@ -196,7 +234,7 @@ function RewardsPageContent() {
                 pointHistory.map((item, index) => (
                     <div key={index} className="flex items-center justify-between p-3 rounded-lg border">
                         <div className="flex items-center gap-3">
-                             {item.type === 'earned' ? <ArrowUpCircle className="h-6 w-6 text-green-500" /> : item.type === 'refunded' ? <Undo2 className="h-6 w-6 text-blue-500" /> : <ArrowDownCircle className="h-6 w-6 text-red-500" />}
+                             {getSourceIcon(item.source)}
                              <div>
                                 <div className="font-semibold flex items-center gap-2">
                                   {item.source}
@@ -226,5 +264,3 @@ export default function RewardsPage() {
         </React.Suspense>
     )
 }
-
-    

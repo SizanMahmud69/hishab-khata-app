@@ -1,8 +1,9 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo, useCallback } from 'react';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { collection, onSnapshot, addDoc, doc, updateDoc, serverTimestamp, setDoc, query, getDocs, writeBatch, increment, arrayUnion } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, doc, updateDoc, serverTimestamp, setDoc, query, getDocs, writeBatch, increment, arrayUnion, orderBy } from 'firebase/firestore';
 import { createNotification } from '@/components/app-header';
 import { type WithdrawalRequest } from '@/app/(app)/withdraw/page';
 
@@ -46,9 +47,20 @@ interface AppConfig {
     referredUserBonusPoints: number;
 }
 
+interface Referral {
+    id: string;
+    userId: string;
+    referredUserId: string;
+    referredUserName: string;
+    bonusPoints: number;
+    createdAt: any;
+}
+
+
 interface BudgetContextType {
     transactions: Transaction[];
     debtNotes: DebtNote[];
+    referrals: Referral[];
     addTransaction: (transaction: Omit<Transaction, 'id' | 'createdAt' | 'userId'>) => Promise<void>;
     addDebtNote: (debtNote: Omit<DebtNote, 'id' | 'createdAt' | 'userId'>) => Promise<void>;
     updateDebtNote: (debtNote: DebtNote) => Promise<void>;
@@ -74,6 +86,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [debtNotes, setDebtNotes] = useState<DebtNote[]>([]);
+    const [referrals, setReferrals] = useState<Referral[]>([]);
     const [rewardPoints, setRewardPoints] = useState(0);
     const [minWithdrawalPoints, setMinWithdrawalPoints] = useState(1000);
     const [referrerBonusPoints, setReferrerBonusPoints] = useState(100);
@@ -125,6 +138,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             setIsDataLoading(false);
             setTransactions([]);
             setDebtNotes([]);
+            setReferrals([]);
             setRewardPoints(0);
             return;
         }
@@ -132,7 +146,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         setIsDataLoading(true);
         const basePath = `users/${user.uid}`;
         const listeners: (() => void)[] = [];
-        let activeListeners = 4; // transactions, debtNotes, user doc, app_config
+        let activeListeners = 5; // transactions, debtNotes, user doc, app_config, referrals
         
         const onDataLoaded = () => {
             activeListeners--;
@@ -207,7 +221,8 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
 
         const createSnapshotListener = <T>(collectionName: string, setData: React.Dispatch<React.SetStateAction<T[]>>) => {
             const collectionRef = collection(firestore, basePath, collectionName);
-            const listener = onSnapshot(collectionRef, (snapshot) => {
+            const q = query(collectionRef, orderBy("createdAt", "desc"));
+            const listener = onSnapshot(q, (snapshot) => {
                 const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as T));
                 setData(data);
                 onDataLoaded();
@@ -230,6 +245,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
 
         createSnapshotListener<Transaction>('transactions', setTransactions);
         createSnapshotListener<DebtNote>('debtNotes', setDebtNotes);
+        createSnapshotListener<Referral>('referrals', setReferrals);
         
         return () => listeners.forEach(unsub => unsub());
 
@@ -292,6 +308,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         <BudgetContext.Provider value={{ 
             transactions, 
             debtNotes,
+            referrals,
             addTransaction, 
             addDebtNote, 
             updateDebtNote, 
@@ -318,5 +335,3 @@ export const useBudget = () => {
     }
     return context;
 };
-
-    
