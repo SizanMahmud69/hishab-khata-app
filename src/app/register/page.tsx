@@ -112,7 +112,6 @@ export default function RegisterPage() {
       router.push('/dashboard');
 
     } catch (error: any) {
-      console.error("Registration Error:", error);
       let errorMessage = "নিবন্ধন করার সময় একটি সমস্যা হয়েছে।";
       if (error.code === 'auth/email-already-in-use') {
         errorMessage = "এই ইমেইল দিয়ে আগেই অ্যাকাউন্ট খোলা হয়েছে।";
@@ -246,5 +245,3 @@ export default function RegisterPage() {
     </div>
   )
 }
-
-    
