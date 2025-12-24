@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils"
 import { isToday, isBefore, startOfToday, parseISO, format as formatDate } from "date-fns"
 import { useBudget } from "@/context/budget-context"
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from "@/firebase"
-import { collection, query, where, addDoc, serverTimestamp, doc, updateDoc, writeBatch, getDocs, setDoc, orderBy } from 'firebase/firestore'
+import { collection, query, where, addDoc, serverTimestamp, doc, updateDoc, writeBatch, getDocs, setDoc, orderBy, getDoc } from 'firebase/firestore'
 
 interface Notification {
     id: string;
@@ -53,7 +53,8 @@ export const createNotification = async (notification: Omit<Notification, 'creat
         const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
         const q = query(notificationsRef, 
             where("title", "==", notification.title), 
-            where("description", "==", notification.description)
+            where("description", "==", notification.description),
+            where("createdAt", ">=", twentyFourHoursAgo)
         );
 
         const querySnapshot = await getDocs(q);
