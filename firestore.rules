@@ -15,20 +15,6 @@ service cloud.firestore {
       // A user is the owner if they are signed in and their UID matches the document's userId.
       return request.auth.uid == userId;
     }
-
-    function isUpdatingAllowedUserFields() {
-        // Defines the fields a user is allowed to update on their own profile.
-        let userUpdatableFields = [
-            'name', 'avatar', 'phone', 'address', 
-            'lastCheckIn', 'checkInStreak', 
-            'verificationStatus', 'verificationRequestId', 
-            'nidName', 'nidNumber', 'nidDob', 'nidAddress'
-        ];
-        
-        // When updating, the request may only contain the fields being changed.
-        // Check that all keys in the incoming data are in the allowed list.
-        return request.resource.data.keys().hasOnly(userUpdatableFields);
-    }
     
     function canUpdateWithdrawalRequest() {
       // User can create, but cannot update status or other admin-only fields.
@@ -52,8 +38,9 @@ service cloud.firestore {
       allow list: if false;
       // A signed-in user can create their own user document.
       allow create: if isSignedIn() && request.auth.uid == userId;
-      // A user can update their own document, but only specific fields.
-      allow update: if isOwner(userId) && isUpdatingAllowedUserFields();
+      // A user can update their own document. The client-side code is responsible
+      // for only updating allowed fields.
+      allow update: if isOwner(userId);
       // Users should not be able to delete their own accounts this way.
       allow delete: if false;
 

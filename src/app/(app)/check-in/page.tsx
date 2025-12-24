@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { format, isToday, isYesterday, parseISO, subDays } from 'date-fns';
 import { bn } from 'date-fns/locale';
 import { useUser, useFirestore, useCollection, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
-import { collection, addDoc, serverTimestamp, query, orderBy, limit, setDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, orderBy, limit, updateDoc, doc } from 'firebase/firestore';
 
 const MAX_STREAK_DAYS = 30;
 const BASE_REWARD = 5;
@@ -124,7 +124,7 @@ export default function CheckInPage() {
 
             const userDocRef = doc(firestore, `users/${user.uid}`);
             
-            setDoc(userDocRef, userUpdateData, { merge: true }).catch(error => {
+            updateDoc(userDocRef, userUpdateData).catch(error => {
                  errorEmitter.emit(
                     'permission-error',
                     new FirestorePermissionError({
