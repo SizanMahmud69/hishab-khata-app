@@ -4,7 +4,7 @@ import { type ReactNode, useState, useEffect, useMemo } from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
 import { Bell, BookMarked, Menu, CalendarCheck, CalendarPlus } from "lucide-react"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils"
 import { isToday, isBefore, startOfToday, parseISO } from "date-fns"
 import { useBudget } from "@/context/budget-context"
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from "@/firebase"
-import { collection, query, where, addDoc, serverTimestamp, doc, updateDoc, writeBatch, orderBy, getDocs } from 'firebase/firestore'
+import { collection, query, where, addDoc, serverTimestamp, doc, updateDoc, writeBatch, orderBy, getDocs, setDoc } from 'firebase/firestore'
 
 interface Notification {
     id: string;
@@ -33,27 +33,48 @@ interface UserProfile {
     lastCheckIn?: string; // YYYY-MM-DD
 }
 
-export const createNotification = async (notification: Omit<Notification, 'id' | 'createdAt' | 'read'>, userId: string, firestore: any) => {
+export const createNotification = async (notification: Omit<Notification, 'createdAt' | 'read'>, userId: string, firestore: any) => {
     if (!userId || !firestore) return;
 
     try {
         const notificationsRef = collection(firestore, `users/${userId}/notifications`);
 
-        // Check for duplicates in the last 24 hours to avoid spamming
-        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        // If an ID is provided, check if a notification with that ID already exists.
+        if (notification.id) {
+            const docRef = doc(firestore, `users/${userId}/notifications`, notification.id);
+            const docSnap = await getDocs(query(collection(firestore, `users/${userId}/notifications`), where('id', '==', notification.id)));
+            if (!docSnap.empty) {
+                return; // Notification with this ID already exists, so we don't create it.
+            }
+        }
+        
+        // Generic check for duplicates in the last 24 hours to avoid spamming for notifications without a specific ID
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
         const q = query(notificationsRef, 
             where("title", "==", notification.title), 
             where("description", "==", notification.description),
-            where("createdAt", ">=", twentyFourHoursAgo)
+            where("createdAt", ">=", twentyFourHoursAgo.toISOString())
         );
+
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
-             await addDoc(notificationsRef, {
-                ...notification,
-                createdAt: new Date().toISOString(),
-                read: false,
-            });
+            if (notification.id) {
+                // Use the provided ID to set the document
+                const docRef = doc(firestore, `users/${userId}/notifications`, notification.id);
+                await setDoc(docRef, {
+                    ...notification,
+                    createdAt: new Date().toISOString(),
+                    read: false,
+                });
+            } else {
+                // Let firestore generate an ID
+                await addDoc(notificationsRef, {
+                    ...notification,
+                    createdAt: new Date().toISOString(),
+                    read: false,
+                });
+            }
         }
     } catch(e) {
         console.error("Error creating notification:", e)
@@ -104,6 +125,7 @@ export function AppHeader({children}: {children: ReactNode}) {
                 // Daily Check-in Notification if not already checked in
                 if (!isCheckedIn) {
                     createNotification({
+                        id: `check-in-${todayStr}`,
                         title: "দৈনিক চেক-ইন",
                         description: "আজকের চেক-ইন করে রিওয়ার্ড পয়েন্ট অর্জন করুন।",
                         link: "/check-in",
@@ -117,6 +139,7 @@ export function AppHeader({children}: {children: ReactNode}) {
                         const repaymentDate = parseISO(debt.repaymentDate);
                         if (isBefore(repaymentDate, today) || isToday(repaymentDate)) {
                              createNotification({
+                                id: `debt-reminder-${debt.id}`,
                                 title: "ধার পরিশোধের রিমাইন্ডার",
                                 description: `${debt.person}-এর সাথে আপনার একটি ধার লেনদেন রয়েছে যা পরিশোধের সময় হয়েছে।`,
                                 link: "/debts",

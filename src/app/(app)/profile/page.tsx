@@ -71,29 +71,26 @@ export default function ProfilePage() {
 
 
   useEffect(() => {
-    if (userProfileData && userProfileData.verificationRequestId) {
+    if (userProfileData && userProfileData.verificationRequestId && user && firestore) {
         const notificationKey = `nid-status-${userProfileData.verificationRequestId}`;
-        const alreadyNotified = localStorage.getItem(notificationKey);
-
-        if (!alreadyNotified) {
-            if (userProfileData.verificationStatus === 'verified') {
-                createNotification({
-                    title: 'এনআইডি ভেরিফিকেশন সফল হয়েছে',
-                    description: 'অভিনন্দন! আপনার অ্যাকাউন্ট এখন সম্পূর্ণ ভেরিফাইড।',
-                    link: '/profile'
-                });
-                localStorage.setItem(notificationKey, 'true');
-            } else if (userProfileData.verificationStatus === 'rejected') {
-                createNotification({
-                    title: 'এনআইডি ভেরিফিকেশন সফল হয়নি',
-                    description: `আপনার আবেদনটি বাতিল করা হয়েছে। কারণ: ${userProfileData.nidRejectionReason || 'অজানা'}`,
-                    link: '/profile'
-                });
-                localStorage.setItem(notificationKey, 'true');
-            }
+        
+        if (userProfileData.verificationStatus === 'verified') {
+            createNotification({
+                id: notificationKey,
+                title: 'এনআইডি ভেরিফিকেশন সফল হয়েছে',
+                description: 'অভিনন্দন! আপনার অ্যাকাউন্ট এখন সম্পূর্ণ ভেরিফাইড।',
+                link: '/profile'
+            }, user.uid, firestore);
+        } else if (userProfileData.verificationStatus === 'rejected') {
+            createNotification({
+                id: notificationKey,
+                title: 'এনআইডি ভেরিফিকেশন সফল হয়নি',
+                description: `আপনার আবেদনটি বাতিল করা হয়েছে। কারণ: ${userProfileData.nidRejectionReason || 'অজানা'}`,
+                link: '/profile'
+            }, user.uid, firestore);
         }
     }
-  }, [userProfileData]);
+  }, [userProfileData, user, firestore]);
 
 
   const handleNidSubmit = async (event: React.FormEvent<HTMLFormElement>) => {

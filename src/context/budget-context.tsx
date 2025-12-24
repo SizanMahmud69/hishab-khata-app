@@ -92,6 +92,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             SAVINGS_MILESTONES.forEach(milestone => {
                 if (totalSavings >= milestone && !notifiedMilestones.includes(milestone)) {
                     createNotification({
+                        id: `milestone-${milestone}`,
                         title: "অভিনন্দন! সঞ্চয়ের মাইলফলক অর্জন",
                         description: `আপনি সফলভাবে ${new Intl.NumberFormat("bn-BD").format(milestone)} টাকার সঞ্চয়ের মাইলফলক অর্জন করেছেন!`,
                         link: `/milestone?amount=${milestone}` 
@@ -157,27 +158,20 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             let refundOccurred = false;
 
             for (const req of requests) {
-                const notificationKey = `wd-status-${req.id}`;
-                const notificationExistsQuery = query(collection(firestore, `users/${user.uid}/notifications`), where("id", "==", notificationKey));
-                const notificationSnapshot = await getDocs(notificationExistsQuery);
-                const alreadyNotified = !notificationSnapshot.empty;
-
-                if (!alreadyNotified) {
-                    if (req.status === 'approved') {
-                        await createNotification({
-                            id: notificationKey,
-                            title: 'উইথড্র অনুরোধ অনুমোদিত',
-                            description: `আপনার ${req.amountBdt} টাকার উইথড্র অনুরোধটি সফল হয়েছে।`,
-                            link: '/withdraw?section=history'
-                        }, user.uid, firestore);
-                    } else if (req.status === 'rejected') {
-                        await createNotification({
-                            id: notificationKey,
-                            title: 'উইথড্র অনুরোধ বাতিল হয়েছে',
-                            description: `আপনার উইথড্র অনুরোধটি বাতিল হয়েছে। কারণ: ${req.rejectionReason || 'অজানা'}`,
-                            link: '/withdraw?section=history'
-                        }, user.uid, firestore);
-                    }
+                if (req.status === 'approved') {
+                    await createNotification({
+                        id: `wd-status-${req.id}`,
+                        title: 'উইথড্র অনুরোধ অনুমোদিত',
+                        description: `আপনার ${req.amountBdt} টাকার উইথড্র অনুরোধটি সফল হয়েছে।`,
+                        link: '/withdraw?section=history'
+                    }, user.uid, firestore);
+                } else if (req.status === 'rejected') {
+                    await createNotification({
+                        id: `wd-status-${req.id}`,
+                        title: 'উইথড্র অনুরোধ বাতিল হয়েছে',
+                        description: `আপনার উইথড্র অনুরোধটি বাতিল হয়েছে। কারণ: ${req.rejectionReason || 'অজানা'}`,
+                        link: '/withdraw?section=history'
+                    }, user.uid, firestore);
                 }
 
                 if (req.status === 'rejected' && !req.isRefunded) {
