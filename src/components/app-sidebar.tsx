@@ -138,19 +138,6 @@ export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
             </SidebarMenuItem>
              <SidebarMenuItem>
                 <SidebarMenuButton
-                    asChild
-                    isActive={pathname === "/support"}
-                    tooltip="সাপোর্ট"
-                    size="lg"
-                >
-                    <Link href="#" onClick={onLinkClick}>
-                        <LifeBuoy />
-                        <span className="text-base">সাপোর্ট</span>
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-             <SidebarMenuItem>
-                <SidebarMenuButton
                     onClick={handleLogout}
                     tooltip="লগ-আউট"
                     size="lg"
