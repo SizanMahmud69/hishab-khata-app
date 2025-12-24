@@ -25,6 +25,7 @@ service cloud.firestore {
             'nidName', 'nidNumber', 'nidDob', 'nidAddress'
         ];
         
+        // When updating, the request may only contain the fields being changed.
         // Check that all keys in the incoming data are in the allowed list.
         return request.resource.data.keys().hasOnly(userUpdatableFields);
     }
