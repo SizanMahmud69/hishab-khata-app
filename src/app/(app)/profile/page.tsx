@@ -60,32 +60,40 @@ export default function ProfilePage() {
     return doc(firestore, 'users', user.uid);
   }, [user, firestore]);
 
-  const { data: userProfile, isLoading } = useDoc<UserProfile>(userDocRef);
+  const { data, isLoading } = useDoc<UserProfile>(userDocRef);
+  const [userProfileData, setUserProfileData] = useState<UserProfile | null>(null);
 
   useEffect(() => {
-    if (userProfile && userProfile.verificationRequestId) {
-        const notificationKey = `nid-status-${userProfile.verificationRequestId}`;
+    if (data) {
+        setUserProfileData(data);
+    }
+  }, [data]);
+
+
+  useEffect(() => {
+    if (userProfileData && userProfileData.verificationRequestId) {
+        const notificationKey = `nid-status-${userProfileData.verificationRequestId}`;
         const alreadyNotified = localStorage.getItem(notificationKey);
 
         if (!alreadyNotified) {
-            if (userProfile.verificationStatus === 'verified') {
+            if (userProfileData.verificationStatus === 'verified') {
                 createNotification({
                     title: 'এনআইডি ভেরিফিকেশন সফল হয়েছে',
                     description: 'অভিনন্দন! আপনার অ্যাকাউন্ট এখন সম্পূর্ণ ভেরিফাইড।',
                     link: '/profile'
                 });
                 localStorage.setItem(notificationKey, 'true');
-            } else if (userProfile.verificationStatus === 'rejected') {
+            } else if (userProfileData.verificationStatus === 'rejected') {
                 createNotification({
                     title: 'এনআইডি ভেরিফিকেশন সফল হয়নি',
-                    description: `আপনার আবেদনটি বাতিল করা হয়েছে। কারণ: ${userProfile.nidRejectionReason || 'অজানা'}`,
+                    description: `আপনার আবেদনটি বাতিল করা হয়েছে। কারণ: ${userProfileData.nidRejectionReason || 'অজানা'}`,
                     link: '/profile'
                 });
                 localStorage.setItem(notificationKey, 'true');
             }
         }
     }
-  }, [userProfile]);
+  }, [userProfileData]);
 
 
   const handleNidSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -153,42 +161,42 @@ export default function ProfilePage() {
   };
 
   const VerificationStatus = () => {
-    if (userProfile?.verificationStatus === 'verified') {
+    if (userProfileData?.verificationStatus === 'verified') {
       return (
         <div className="space-y-4">
           <div className="flex items-start gap-4">
             <UserIcon className="w-6 h-6 text-muted-foreground mt-1" />
             <div className="flex-1">
               <p className="text-sm font-medium">নাম (এনআইডি অনুযায়ী)</p>
-              <p className="text-muted-foreground">{userProfile.nidName}</p>
+              <p className="text-muted-foreground">{userProfileData.nidName}</p>
             </div>
           </div>
           <div className="flex items-start gap-4">
             <UserCheck className="w-6 h-6 text-muted-foreground mt-1" />
             <div className="flex-1">
               <p className="text-sm font-medium">এনআইডি নম্বর</p>
-              <p className="text-muted-foreground">{userProfile.nidNumber}</p>
+              <p className="text-muted-foreground">{userProfileData.nidNumber}</p>
             </div>
           </div>
           <div className="flex items-start gap-4">
             <Cake className="w-6 h-6 text-muted-foreground mt-1" />
             <div className="flex-1">
               <p className="text-sm font-medium">জন্ম তারিখ</p>
-              <p className="text-muted-foreground">{userProfile.nidDob ? new Date(userProfile.nidDob).toLocaleDateString('bn-BD') : 'N/A'}</p>
+              <p className="text-muted-foreground">{userProfileData.nidDob ? new Date(userProfileData.nidDob).toLocaleDateString('bn-BD') : 'N/A'}</p>
             </div>
           </div>
           <div className="flex items-start gap-4">
             <MapPin className="w-6 h-6 text-muted-foreground mt-1" />
             <div className="flex-1">
               <p className="text-sm font-medium">ঠিকানা (এনআইডি অনুযায়ী)</p>
-              <p className="text-muted-foreground">{userProfile.nidAddress}</p>
+              <p className="text-muted-foreground">{userProfileData.nidAddress}</p>
             </div>
           </div>
         </div>
       );
     }
 
-    if (userProfile?.verificationStatus === 'pending') {
+    if (userProfileData?.verificationStatus === 'pending') {
         return (
              <Alert className="bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-700">
                 <AlertTriangle className="h-4 w-4 text-yellow-500" />
@@ -202,12 +210,12 @@ export default function ProfilePage() {
 
     return (
         <div>
-            {userProfile?.verificationStatus === 'rejected' && userProfile?.nidRejectionReason && (
+            {userProfileData?.verificationStatus === 'rejected' && userProfileData?.nidRejectionReason && (
                  <Alert variant="destructive" className="mb-4">
                     <Info className="h-4 w-4" />
                     <AlertTitle>আবেদন বাতিল হয়েছে</AlertTitle>
                     <AlertDescription>
-                       কারণ: {userProfile.nidRejectionReason}
+                       কারণ: {userProfileData.nidRejectionReason}
                     </AlertDescription>
                 </Alert>
             )}
@@ -270,7 +278,7 @@ export default function ProfilePage() {
     )
   }
   
-  if (isLoading) {
+  if (isLoading || !userProfileData) {
       return (
           <div className="flex-1 space-y-6">
               <Skeleton className="h-48 w-full" />
@@ -286,17 +294,17 @@ export default function ProfilePage() {
         <div className="h-24 bg-primary/20" />
         <div className="relative -mt-16 flex justify-center">
              <Avatar className="h-32 w-32 border-4 border-background shadow-lg">
-                <AvatarImage src={userProfile?.avatar ?? user?.photoURL ?? `https://i.pravatar.cc/150?u=${user?.email}`} alt="User avatar" data-ai-hint="profile avatar" />
-                <AvatarFallback className="text-4xl">{userProfile?.name?.charAt(0) ?? user?.displayName?.charAt(0) ?? 'U'}</AvatarFallback>
+                <AvatarImage src={userProfileData?.avatar ?? user?.photoURL ?? `https://i.pravatar.cc/150?u=${user?.email}`} alt="User avatar" data-ai-hint="profile avatar" />
+                <AvatarFallback className="text-4xl">{userProfileData?.name?.charAt(0) ?? user?.displayName?.charAt(0) ?? 'U'}</AvatarFallback>
             </Avatar>
         </div>
         <CardContent className="text-center pt-6 pb-6 px-4 sm:px-6">
             <div className="flex items-center justify-center gap-2">
-                <h2 className="text-3xl font-bold">{userProfile?.name ?? user?.displayName ?? 'ব্যবহারকারী'}</h2>
-                 {userProfile?.verificationStatus === 'verified' && <Badge className="bg-green-100 text-green-800 border-green-300 hover:bg-green-100/80"><CheckCircle className="w-3.5 h-3.5 mr-1.5" />ভেরিফাইড</Badge>}
-                 {userProfile?.verificationStatus === 'pending' && <Badge variant="outline" className="text-yellow-600 border-yellow-400">প্রসেসিং...</Badge>}
+                <h2 className="text-3xl font-bold">{userProfileData?.name ?? user?.displayName ?? 'ব্যবহারকারী'}</h2>
+                 {userProfileData?.verificationStatus === 'verified' && <Badge className="bg-green-100 text-green-800 border-green-300 hover:bg-green-100/80"><CheckCircle className="w-3.5 h-3.5 mr-1.5" />ভেরিফাইড</Badge>}
+                 {userProfileData?.verificationStatus === 'pending' && <Badge variant="outline" className="text-yellow-600 border-yellow-400">প্রসেসিং...</Badge>}
             </div>
-             <p className="text-sm text-muted-foreground mt-2">{userProfile?.userId ?? 'আইডি পাওয়া যায়নি'}</p>
+             <p className="text-sm text-muted-foreground mt-2">{userProfileData?.userId ?? 'আইডি পাওয়া যায়নি'}</p>
         </CardContent>
       </Card>
 
@@ -310,7 +318,7 @@ export default function ProfilePage() {
                 <div className="flex-1">
                      <p className="text-sm font-medium">ইমেইল</p>
                      <div className="flex items-center gap-2">
-                        <p className="text-muted-foreground">{userProfile?.email ?? user?.email ?? 'ইমেইল পাওয়া যায়নি'}</p>
+                        <p className="text-muted-foreground">{userProfileData?.email ?? user?.email ?? 'ইমেইল পাওয়া যায়নি'}</p>
                         {user?.emailVerified && 
                             <Badge className="bg-green-100 text-green-800 border-green-300">ভেরিফাইড</Badge>
                         }
@@ -322,14 +330,14 @@ export default function ProfilePage() {
                 <Phone className="w-6 h-6 text-muted-foreground mt-1" />
                 <div className="flex-1">
                     <p className="text-sm font-medium">ফোন নম্বর</p>
-                    <p className="text-muted-foreground">{userProfile?.phone ?? user?.phoneNumber ?? 'ফোন নম্বর সেট করা নেই'}</p>
+                    <p className="text-muted-foreground">{userProfileData?.phone ?? user?.phoneNumber ?? 'ফোন নম্বর সেট করা নেই'}</p>
                 </div>
             </div>
              <div className="flex items-start gap-4">
                 <MapPin className="w-6 h-6 text-muted-foreground mt-1" />
                 <div className="flex-1">
                     <p className="text-sm font-medium">ঠিকানা</p>
-                    <p className="text-muted-foreground">{userProfile?.address ?? 'ঠিকানা সেট করা নেই'}</p>
+                    <p className="text-muted-foreground">{userProfileData?.address ?? 'ঠিকানা সেট করা নেই'}</p>
                 </div>
             </div>
         </CardContent>
@@ -338,7 +346,7 @@ export default function ProfilePage() {
        <Card>
         <CardHeader>
             <CardTitle>এনআইডি ভেরিফিকেশন</CardTitle>
-            {userProfile?.verificationStatus !== 'verified' && <CardDescription>আপনার অ্যাকাউন্টের নিরাপত্তা এবং বিশ্বাসযোগ্যতা বাড়ান।</CardDescription>}
+            {userProfileData?.verificationStatus !== 'verified' && <CardDescription>আপনার অ্যাকাউন্টের নিরাপত্তা এবং বিশ্বাসযোগ্যতা বাড়ান।</CardDescription>}
         </CardHeader>
         <CardContent>
             <VerificationStatus />
