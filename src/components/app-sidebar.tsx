@@ -74,28 +74,6 @@ const menuItems = [
 
 export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
   const pathname = usePathname()
-  const auth = useAuth()
-  const router = useRouter()
-  const { toast } = useToast()
-
-  const handleLogout = async () => {
-    if (!auth) return
-    try {
-      await signOut(auth)
-      toast({
-        title: "লগ-আউট সফল হয়েছে",
-        description: "আপনাকে লগইন পেজে নিয়ে যাওয়া হচ্ছে।",
-      })
-      router.push("/login")
-    } catch (error) {
-      console.error("Logout error:", error)
-      toast({
-        variant: "destructive",
-        title: "লগ-আউট ব্যর্থ হয়েছে",
-        description: "লগ-আউট করার সময় একটি সমস্যা হয়েছে।",
-      })
-    }
-  }
 
   return (
     <Sidebar>
@@ -118,36 +96,6 @@ export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
           ))}
         </SidebarMenu>
       </SidebarContent>
-
-      <SidebarSeparator />
-
-      <SidebarFooter>
-        <SidebarMenu>
-           <SidebarMenuItem>
-                <SidebarMenuButton
-                    asChild
-                    isActive={pathname === "/profile"}
-                    tooltip="প্রোফাইল"
-                    size="lg"
-                >
-                    <Link href="/profile" onClick={onLinkClick}>
-                        <User />
-                        <span className="text-base">প্রোফাইল</span>
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-             <SidebarMenuItem>
-                <SidebarMenuButton
-                    onClick={handleLogout}
-                    tooltip="লগ-আউট"
-                    size="lg"
-                >
-                    <LogOut />
-                    <span className="text-base">লগ-আউট</span>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
     </Sidebar>
   )
 }
