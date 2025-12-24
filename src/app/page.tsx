@@ -69,7 +69,7 @@ export default function Home() {
                 <div className="blur-[106px] h-56 bg-gradient-to-br from-primary to-purple-400 dark:from-blue-700"></div>
                 <div className="blur-[106px] h-32 bg-gradient-to-r from-cyan-400 to-sky-300 dark:to-indigo-600"></div>
             </div>
-          <div className="container grid lg:grid-cols-2 items-center gap-12 py-20 lg:py-32">
+          <div className="container grid lg:grid-cols-2 items-center gap-12 py-20">
             <div className='text-center lg:text-left'>
                 <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl bg-gradient-to-br from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
                   আপনার আর্থিক ব্যবস্থাপনার সহজ সমাধান
