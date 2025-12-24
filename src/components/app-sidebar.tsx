@@ -5,17 +5,14 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import {
   Award,
-  Bell,
   HandCoins,
   History,
   LayoutDashboard,
-  LifeBuoy,
-  LogOut,
   MinusCircle,
   PlusCircle,
-  Settings,
   Store,
   User,
+  LogOut,
 } from "lucide-react"
 
 import {
@@ -23,12 +20,10 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   Sidebar,
-  SidebarHeader,
   SidebarContent,
   SidebarFooter,
   SidebarSeparator,
 } from "@/components/ui/sidebar"
-import { ScrollArea } from "./ui/scroll-area"
 import { useAuth } from "@/firebase"
 import { signOut } from "firebase/auth"
 import { useToast } from "@/hooks/use-toast"
@@ -74,6 +69,26 @@ const menuItems = [
 
 export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
   const pathname = usePathname()
+  const router = useRouter();
+  const { toast } = useToast();
+  const auth = useAuth();
+
+  const handleLogout = () => {
+    if (!auth) return;
+    signOut(auth).then(() => {
+        toast({
+            title: "লগ-আউট সফল হয়েছে",
+            description: "আপনাকে আবার দেখা পাওয়ার অপেক্ষায়।",
+        });
+        router.push('/login');
+    }).catch((error) => {
+        toast({
+            variant: "destructive",
+            title: "লগ-আউট ব্যর্থ হয়েছে",
+            description: "একটি সমস্যা হয়েছে, অনুগ্রহ করে আবার চেষ্টা করুন।",
+        });
+    });
+  };
 
   return (
     <Sidebar>
@@ -84,7 +99,6 @@ export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
               <SidebarMenuButton
                 asChild
                 isActive={pathname === item.href}
-                tooltip={item.label}
                 size="lg"
               >
                 <Link href={item.href} onClick={onLinkClick}>
@@ -96,6 +110,32 @@ export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
           ))}
         </SidebarMenu>
       </SidebarContent>
+      <SidebarSeparator />
+      <SidebarFooter>
+        <SidebarMenu>
+            <SidebarMenuItem>
+                 <SidebarMenuButton
+                    asChild
+                    isActive={pathname === "/profile"}
+                    size="lg"
+                 >
+                    <Link href="/profile" onClick={onLinkClick}>
+                        <User />
+                        <span>প্রোফাইল</span>
+                    </Link>
+                 </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+                <SidebarMenuButton
+                    onClick={handleLogout}
+                    size="lg"
+                >
+                    <LogOut />
+                    <span>লগ-আউট</span>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   )
 }
