@@ -188,8 +188,8 @@ export default function DebtsPage() {
     const lentDebts = debtNotes.filter(d => d.type === 'lent');
     const borrowedDebts = debtNotes.filter(d => d.type === 'borrowed');
 
-    const totalLent = lentDebts.reduce((sum, debt) => sum + debt.amount, 0);
-    const totalBorrowed = borrowedDebts.reduce((sum, debt) => sum + debt.amount, 0);
+    const totalLent = lentDebts.reduce((sum, debt) => sum + (debt.amount - debt.paidAmount), 0);
+    const totalBorrowed = borrowedDebts.reduce((sum, debt) => sum + (debt.amount - debt.paidAmount), 0);
 
 
   return (
