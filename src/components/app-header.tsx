@@ -195,7 +195,7 @@ export function AppHeader({children}: {children: ReactNode}) {
                         <Link href="/check-in">
                            <CalendarDays className={cn(
                                 "h-5 w-5",
-                                isCheckedIn ? "text-green-500" : "animate-glow"
+                                isCheckedIn ? "text-green-500" : "animate-glow text-primary"
                             )} />
                             <span className="sr-only">Check In</span>
                         </Link>
