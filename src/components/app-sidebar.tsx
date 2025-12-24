@@ -26,6 +26,7 @@ import {
 import { ScrollArea } from "./ui/scroll-area"
 import { useUser } from "@/firebase"
 import { getAuth, signOut } from "firebase/auth"
+import { Button } from "./ui/button"
 
 const menuItems = [
     {
@@ -100,22 +101,21 @@ export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
         </ScrollArea>
         <div className="mt-auto flex flex-col p-4 gap-2">
             <SidebarSeparator />
-            <Link href="/profile" className="flex items-center gap-3 rounded-md px-2 py-3 transition-colors hover:bg-sidebar-accent" onClick={onLinkClick}>
-                <Avatar className="h-9 w-9">
-                <AvatarImage src={user?.photoURL ?? `https://i.pravatar.cc/150?u=${user?.email}`} alt="User Avatar" data-ai-hint="profile avatar" />
-                <AvatarFallback>{user?.displayName?.charAt(0) ?? 'U'}</AvatarFallback>
-                </Avatar>
-                <div>
-                    <p className="font-medium">{user?.displayName ?? 'ব্যবহারকারী'}</p>
-                    <p className="text-xs text-muted-foreground">{user?.email}</p>
-                </div>
-            </Link>
-            <SidebarMenuButton asChild tooltip="লগআউট" size="lg" onClick={handleLogout} className="w-full">
-                <Link href="/login">
-                    <LogOut />
-                    <span>লগআউট</span>
+            <div className="flex justify-between items-center">
+                <Link href="/profile" className="flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-sidebar-accent flex-1" onClick={onLinkClick}>
+                    <Avatar className="h-9 w-9">
+                    <AvatarImage src={user?.photoURL ?? `https://i.pravatar.cc/150?u=${user?.email}`} alt="User Avatar" data-ai-hint="profile avatar" />
+                    <AvatarFallback>{user?.displayName?.charAt(0) ?? 'U'}</AvatarFallback>
+                    </Avatar>
+                    <div className="overflow-hidden">
+                        <p className="font-medium truncate">{user?.displayName ?? 'ব্যবহারকারী'}</p>
+                        <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                    </div>
                 </Link>
-            </SidebarMenuButton>
+                <Button variant="ghost" size="icon" onClick={handleLogout} className="shrink-0">
+                    <LogOut className="h-5 w-5" />
+                </Button>
+            </div>
         </div>
     </div>
   )
