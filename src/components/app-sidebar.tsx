@@ -8,26 +8,25 @@ import {
   HandCoins,
   History,
   LayoutDashboard,
+  LogOut,
   MinusCircle,
   PlusCircle,
   Store,
   User,
-  LogOut,
 } from "lucide-react"
 
 import {
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
   Sidebar,
   SidebarContent,
   SidebarFooter,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
   SidebarSeparator,
 } from "@/components/ui/sidebar"
 import { useAuth } from "@/firebase"
 import { signOut } from "firebase/auth"
 import { useToast } from "@/hooks/use-toast"
-import { Button } from "./ui/button"
 
 const menuItems = [
     {
@@ -80,6 +79,7 @@ export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
             title: "লগ-আউট সফল হয়েছে",
             description: "আপনাকে আবার দেখা পাওয়ার অপেক্ষায়।",
         });
+        if (onLinkClick) onLinkClick();
         router.push('/login');
     }).catch((error) => {
         toast({
