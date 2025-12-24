@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils"
 import { isToday, isBefore, startOfToday, parseISO } from "date-fns"
 import { useBudget } from "@/context/budget-context"
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from "@/firebase"
-import { collection, query, where, addDoc, serverTimestamp, doc, updateDoc, writeBatch, orderBy } from 'firebase/firestore'
+import { collection, query, where, addDoc, serverTimestamp, doc, updateDoc, writeBatch, orderBy, getDocs } from 'firebase/firestore'
 
 interface Notification {
     id: string;
