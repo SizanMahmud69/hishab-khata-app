@@ -7,9 +7,11 @@ import {
   DocumentData,
   FirestoreError,
   DocumentSnapshot,
+  Query
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { useCollection, type UseCollectionResult } from './use-collection';
 
 /** Utility type to add an 'id' field to a given type T. */
 type WithId<T> = T & { id: string };
@@ -39,11 +41,11 @@ export interface UseDocResult<T> {
  * @returns {UseDocResult<T>} Object with data, isLoading, error.
  */
 export function useDoc<T = any>(
-  memoizedDocRef: DocumentReference<DocumentData> | null | undefined,
-): UseDocResult<T> {
+  memoizedDocRef: DocumentReference<DocumentData> | Query<DocumentData> | null | undefined,
+): UseCollectionResult<T> {
   type StateDataType = WithId<T> | null;
 
-  const [data, setData] = useState<StateDataType>(null);
+  const [data, setData] = useState<StateDataType[] | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
@@ -60,10 +62,10 @@ export function useDoc<T = any>(
     // Optional: setData(null); // Clear previous data instantly
 
     const unsubscribe = onSnapshot(
-      memoizedDocRef,
+      memoizedDocRef as any,
       (snapshot: DocumentSnapshot<DocumentData>) => {
         if (snapshot.exists()) {
-          setData({ ...(snapshot.data() as T), id: snapshot.id });
+          setData([{ ...(snapshot.data() as T), id: snapshot.id }]);
         } else {
           // Document does not exist
           setData(null);
@@ -74,7 +76,7 @@ export function useDoc<T = any>(
       (error: FirestoreError) => {
         const contextualError = new FirestorePermissionError({
           operation: 'get',
-          path: memoizedDocRef.path,
+          path: (memoizedDocRef as DocumentReference).path,
         })
 
         setError(contextualError)
