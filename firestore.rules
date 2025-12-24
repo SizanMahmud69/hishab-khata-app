@@ -19,7 +19,7 @@ service cloud.firestore {
     function isUpdatingAllowedUserFields() {
       // A user cannot change their core identifiers or sensitive info.
       // Define fields that are allowed to be updated by the user.
-      let allowedUpdates = ['name', 'avatar', 'phone', 'address', 'lastCheckIn', 'checkInStreak', 'verificationStatus', 'verificationRequestId', 'nidName', 'nidNumber', 'nidDob', 'nidAddress', 'nidRejectionReason'];
+      let allowedUpdates = ['name', 'avatar', 'phone', 'address', 'lastCheckIn', 'checkInStreak', 'verificationStatus', 'verificationRequestId', 'nidName', 'nidNumber', 'nidDob', 'nidAddress'];
       let allIncomingKeys = request.resource.data.keys();
       
       // Ensure that only allowed fields are being updated.
@@ -65,7 +65,8 @@ service cloud.firestore {
       
       // Sub-collection for daily check-ins
       match /checkIns/{checkInId} {
-        allow read, write: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow get, create, delete, update: if isOwner(userId);
       }
 
       // Sub-collection for NID verification requests
