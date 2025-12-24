@@ -95,7 +95,7 @@ export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
 
   return (
     <Sidebar>
-       <SidebarHeader>
+       <SidebarHeader className="bg-sidebar-accent">
         <Link href="/dashboard" className="flex items-center gap-2 font-bold text-lg" onClick={onLinkClick}>
             <BookMarked className="h-7 w-7 text-primary" />
             <span>হিসাব খাতা</span>
