@@ -311,9 +311,8 @@ export default function ProfilePage() {
                      <p className="text-sm font-medium">ইমেইল</p>
                      <div className="flex items-center gap-2">
                         <p className="text-muted-foreground">{userProfile?.email ?? user?.email ?? 'ইমেইল পাওয়া যায়নি'}</p>
-                        {user?.emailVerified ? 
-                            <Badge className="bg-green-100 text-green-800 border-green-300">ভেরিফাইড</Badge> : 
-                            <Badge variant="destructive">ভেরিফাইড নয়</Badge>
+                        {user?.emailVerified && 
+                            <Badge className="bg-green-100 text-green-800 border-green-300">ভেরিফাইড</Badge>
                         }
                      </div>
                 </div>
