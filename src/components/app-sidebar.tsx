@@ -13,16 +13,13 @@ import {
   PlusCircle,
   Store,
 } from "lucide-react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarSeparator,
 } from "@/components/ui/sidebar"
 import { ScrollArea } from "./ui/scroll-area"
-import { useUser } from "@/firebase"
 
 const menuItems = [
     {
@@ -64,7 +61,6 @@ const menuItems = [
 
 export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
   const pathname = usePathname()
-  const { user } = useUser();
 
   return (
     <div className="flex h-full flex-col">
@@ -87,19 +83,6 @@ export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
             ))}
             </SidebarMenu>
         </ScrollArea>
-        <div className="mt-auto flex flex-col p-4 gap-2">
-            <SidebarSeparator />
-            <Link href="/profile" className="flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-sidebar-accent" onClick={onLinkClick}>
-                <Avatar className="h-9 w-9">
-                <AvatarImage src={user?.photoURL ?? `https://i.pravatar.cc/150?u=${user?.email}`} alt="User Avatar" data-ai-hint="profile avatar" />
-                <AvatarFallback>{user?.displayName?.charAt(0) ?? 'U'}</AvatarFallback>
-                </Avatar>
-                <div className="overflow-hidden">
-                    <p className="font-medium truncate">{user?.displayName ?? 'ব্যবহারকারী'}</p>
-                    <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-                </div>
-            </Link>
-        </div>
     </div>
   )
 }
