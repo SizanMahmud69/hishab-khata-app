@@ -20,7 +20,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge";
-import { doc, setDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, addDoc, collection, serverTimestamp, getDocs, query, where, orderBy, limit } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { createNotification } from "@/components/app-header";
@@ -37,9 +37,7 @@ interface UserProfile {
     joinDate?: string;
     lastCheckIn?: string;
     checkInStreak?: number;
-    verificationStatus?: 'pending' | 'verified' | 'rejected' | 'none';
     verificationRequestId?: string;
-    nidRejectionReason?: string;
 }
 
 // Corresponds to the new VerificationRequest entity
@@ -48,6 +46,8 @@ interface VerificationRequest {
     userId: string;
     status: 'pending' | 'approved' | 'rejected';
     submittedAt: any;
+    reviewedAt?: any;
+    rejectionReason?: string;
     nidName: string;
     nidNumber: string;
     nidDob: string;
@@ -69,47 +69,45 @@ export default function ProfilePage() {
     return doc(firestore, 'users', user.uid);
   }, [user, firestore]);
 
-  const { data: userProfileData, isLoading } = useDoc<UserProfile>(userDocRef);
+  const { data: userProfileData, isLoading: isUserLoading } = useDoc<UserProfile>(userDocRef);
 
-  // This will hold the details of the verification request if one exists and is fetched.
-  const [verificationRequest, setVerificationRequest] = useState<VerificationRequest | null>(null);
-  const [isVerificationRequestLoading, setIsVerificationRequestLoading] = useState(false);
-  
-  const verificationRequestDocRef = useMemoFirebase(() => {
-      if (!user || !firestore || !userProfileData?.verificationRequestId) return null;
-      return doc(firestore, `users/${user.uid}/verificationRequests`, userProfileData.verificationRequestId);
-  }, [user, firestore, userProfileData?.verificationRequestId]);
+  const latestVerificationRequestQuery = useMemoFirebase(() => {
+      if (!user || !firestore) return null;
+      return query(
+          collection(firestore, `users/${user.uid}/verificationRequests`),
+          orderBy("submittedAt", "desc"),
+          limit(1)
+      );
+  }, [user, firestore]);
 
-  const { data: fetchedVerificationRequest, isLoading: isRequestDocLoading } = useDoc<VerificationRequest>(verificationRequestDocRef);
+  const { data: latestRequest, isLoading: isRequestLoading } = useDoc<VerificationRequest>(
+      latestVerificationRequestQuery ? (latestVerificationRequestQuery as any) : null
+  );
 
-  useEffect(() => {
-      if (fetchedVerificationRequest) {
-          setVerificationRequest(fetchedVerificationRequest);
-      }
-  }, [fetchedVerificationRequest]);
-
+  const verificationRequest = latestRequest;
+  const verificationStatus = verificationRequest?.status;
 
   useEffect(() => {
-    if (userProfileData && userProfileData.verificationRequestId && user && firestore) {
-        const notificationKey = `nid-status-${userProfileData.verificationRequestId}`;
+    if (verificationRequest && user && firestore) {
+        const notificationKey = `nid-status-${verificationRequest.id}`;
         
-        if (userProfileData.verificationStatus === 'verified') {
+        if (verificationStatus === 'approved') {
             createNotification({
                 id: notificationKey,
                 title: 'এনআইডি ভেরিফিকেশন সফল হয়েছে',
                 description: 'অভিনন্দন! আপনার অ্যাকাউন্ট এখন সম্পূর্ণ ভেরিফাইড।',
                 link: '/profile'
             }, user.uid, firestore);
-        } else if (userProfileData.verificationStatus === 'rejected') {
+        } else if (verificationStatus === 'rejected') {
             createNotification({
                 id: notificationKey,
                 title: 'এনআইডি ভেরিফিকেশন সফল হয়নি',
-                description: `আপনার আবেদনটি বাতিল করা হয়েছে। কারণ: ${userProfileData.nidRejectionReason || 'অজানা'}`,
+                description: `আপনার আবেদনটি বাতিল করা হয়েছে। কারণ: ${verificationRequest.rejectionReason || 'অজানা'}`,
                 link: '/profile'
             }, user.uid, firestore);
         }
     }
-  }, [userProfileData, user, firestore]);
+  }, [verificationRequest, verificationStatus, user, firestore]);
 
 
   const handleNidSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -150,9 +148,7 @@ export default function ProfilePage() {
         const newRequestDoc = await addDoc(verificationRequestRef, requestData);
 
         await setDoc(userDocRef, {
-            verificationStatus: 'pending',
             verificationRequestId: newRequestDoc.id,
-            nidRejectionReason: '', // Clear previous reason
             phone: phone,
         }, { merge: true });
 
@@ -175,16 +171,16 @@ export default function ProfilePage() {
   };
 
   const VerificationStatus = () => {
-    if (userProfileData?.verificationStatus === 'verified') {
-      if(isRequestDocLoading || !verificationRequest) {
-          return (
-             <div className="space-y-4">
-                <Skeleton className="h-6 w-3/4" />
-                <Skeleton className="h-6 w-1/2" />
-                <Skeleton className="h-6 w-2/3" />
-            </div>
-          )
-      }
+    if (isRequestLoading) {
+      return (
+        <div className="space-y-4">
+          <Skeleton className="h-6 w-3/4" />
+          <Skeleton className="h-6 w-1/2" />
+        </div>
+      )
+    }
+
+    if (verificationStatus === 'approved' && verificationRequest) {
       return (
         <div className="space-y-4">
           <div className="flex items-start gap-4">
@@ -219,7 +215,7 @@ export default function ProfilePage() {
       );
     }
 
-    if (userProfileData?.verificationStatus === 'pending') {
+    if (verificationStatus === 'pending') {
         return (
              <Alert className="bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-700">
                 <AlertTriangle className="h-4 w-4 text-yellow-500" />
@@ -231,14 +227,15 @@ export default function ProfilePage() {
         )
     }
 
+    // This covers 'rejected' status and the case where no request has been made yet
     return (
         <div>
-            {userProfileData?.verificationStatus === 'rejected' && userProfileData?.nidRejectionReason && (
+            {verificationStatus === 'rejected' && verificationRequest?.rejectionReason && (
                  <Alert variant="destructive" className="mb-4">
                     <Info className="h-4 w-4" />
                     <AlertTitle>আবেদন বাতিল হয়েছে</AlertTitle>
                     <AlertDescription>
-                       কারণ: {userProfileData.nidRejectionReason}
+                       কারণ: {verificationRequest.rejectionReason}
                     </AlertDescription>
                 </Alert>
             )}
@@ -301,7 +298,7 @@ export default function ProfilePage() {
     )
   }
   
-  if (isLoading || !userProfileData) {
+  if (isUserLoading || !userProfileData) {
       return (
           <div className="flex-1 space-y-6">
               <Skeleton className="h-48 w-full" />
@@ -324,8 +321,8 @@ export default function ProfilePage() {
         <CardContent className="text-center pt-6 pb-6 px-4 sm:px-6">
             <div className="flex items-center justify-center gap-2">
                 <h2 className="text-3xl font-bold">{userProfileData?.name ?? user?.displayName ?? 'ব্যবহারকারী'}</h2>
-                 {userProfileData?.verificationStatus === 'verified' && <Badge className="bg-green-100 text-green-800 border-green-300 hover:bg-green-100/80"><CheckCircle className="w-3.5 h-3.5 mr-1.5" />ভেরিফাইড</Badge>}
-                 {userProfileData?.verificationStatus === 'pending' && <Badge variant="outline" className="text-yellow-600 border-yellow-400">প্রসেসিং...</Badge>}
+                 {verificationStatus === 'approved' && <Badge className="bg-green-100 text-green-800 border-green-300 hover:bg-green-100/80"><CheckCircle className="w-3.5 h-3.5 mr-1.5" />ভেরিফাইড</Badge>}
+                 {verificationStatus === 'pending' && <Badge variant="outline" className="text-yellow-600 border-yellow-400">প্রসেসিং...</Badge>}
             </div>
              <p className="text-sm text-muted-foreground mt-2">{userProfileData?.userId ?? 'আইডি পাওয়া যায়নি'}</p>
         </CardContent>
@@ -369,7 +366,7 @@ export default function ProfilePage() {
        <Card>
         <CardHeader>
             <CardTitle>এনআইডি ভেরিফিকেশন</CardTitle>
-            {userProfileData?.verificationStatus !== 'verified' && <CardDescription>আপনার অ্যাকাউন্টের নিরাপত্তা এবং বিশ্বাসযোগ্যতা বাড়ান।</CardDescription>}
+            {verificationStatus !== 'approved' && <CardDescription>আপনার অ্যাকাউন্টের নিরাপত্তা এবং বিশ্বাসযোগ্যতা বাড়ান।</CardDescription>}
         </CardHeader>
         <CardContent>
             <VerificationStatus />
@@ -378,3 +375,5 @@ export default function ProfilePage() {
     </div>
   )
 }
+
+    

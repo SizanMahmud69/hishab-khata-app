@@ -54,18 +54,9 @@
           "type": "number",
           "description": "The user's current daily check-in streak."
         },
-        "verificationStatus": {
-          "type": "string",
-          "enum": ["pending", "verified", "rejected", "none"],
-          "description": "The current status of the user's NID verification."
-        },
         "verificationRequestId": {
           "type": "string",
           "description": "ID of the current or last verification request document in the sub-collection."
-        },
-        "nidRejectionReason": {
-          "type": "string",
-          "description": "Reason provided by admin if the NID verification was rejected."
         },
         "shops": {
           "type": "array",
@@ -385,3 +376,5 @@
     ]
   }
 }
+
+    
