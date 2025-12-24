@@ -1,14 +1,16 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import PageHeader from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { Bell } from 'lucide-react';
+import { Bell, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
 import { isThisMonth, parseISO } from 'date-fns';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, orderBy, doc, updateDoc, writeBatch } from 'firebase/firestore';
 
 interface Notification {
     id: string;
@@ -20,42 +22,26 @@ interface Notification {
 }
 
 export default function NotificationsPage() {
-    const [notifications, setNotifications] = useState<Notification[]>([]);
     const router = useRouter();
-    
-    const updateLocalStorageAndState = (updatedNotifications: Notification[]) => {
-        setNotifications(updatedNotifications);
-        localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
-        window.dispatchEvent(new Event('storage')); // Trigger storage event for header to update
-    }
+    const { user } = useUser();
+    const firestore = useFirestore();
 
-    useEffect(() => {
-        const storedNotifications = localStorage.getItem('notifications');
-        if (storedNotifications) {
-            setNotifications(JSON.parse(storedNotifications));
-        }
+    const notificationsQuery = useMemoFirebase(() => {
+        if (!user || !firestore) return null;
+        return query(collection(firestore, `users/${user.uid}/notifications`), orderBy("createdAt", "desc"));
+    }, [user, firestore]);
 
-        const handleStorageChange = () => {
-            const updatedStorage = localStorage.getItem('notifications');
-            if (updatedStorage) {
-                setNotifications(JSON.parse(updatedStorage));
-            }
-        };
-
-        window.addEventListener('storage', handleStorageChange);
-
-        return () => {
-            window.removeEventListener('storage', handleStorageChange);
-        }
-    }, []);
+    const { data: notifications, isLoading } = useCollection<Notification>(notificationsQuery);
 
     const monthlyNotifications = useMemo(() => {
+        if (!notifications) return [];
         return notifications.filter(n => n.createdAt && isThisMonth(parseISO(n.createdAt)));
     }, [notifications]);
-
-    const markAsRead = (id: string) => {
-        const updated = notifications.map(n => n.id === id ? { ...n, read: true } : n);
-        updateLocalStorageAndState(updated);
+    
+    const markAsRead = async (id: string) => {
+        if (!user || !firestore) return;
+        const notificationRef = doc(firestore, `users/${user.uid}/notifications`, id);
+        await updateDoc(notificationRef, { read: true });
     }
 
     const handleNotificationClick = (notification: Notification) => {
@@ -67,15 +53,24 @@ export default function NotificationsPage() {
         }
     }
 
-    const markAllAsRead = () => {
-        const updated = notifications.map(n => ({ ...n, read: true }));
-        updateLocalStorageAndState(updated);
+    const markAllAsRead = async () => {
+        if (!user || !firestore || !monthlyNotifications) return;
+        
+        const unreadNotifications = monthlyNotifications.filter(n => !n.read);
+        if (unreadNotifications.length === 0) return;
+
+        const batch = writeBatch(firestore);
+        unreadNotifications.forEach(notification => {
+            const docRef = doc(firestore, `users/${user.uid}/notifications`, notification.id);
+            batch.update(docRef, { read: true });
+        });
+        await batch.commit();
     }
 
     return (
         <div className="flex-1 space-y-4">
             <PageHeader title="নোটিফিকেশন" description="আপনার সকল গুরুত্বপূর্ণ আপডেট এবং বার্তা।">
-                <Button onClick={markAllAsRead} disabled={monthlyNotifications.every(n => n.read)}>
+                <Button onClick={markAllAsRead} disabled={isLoading || monthlyNotifications.every(n => n.read)}>
                     সবগুলো পঠিত করুন
                 </Button>
             </PageHeader>
@@ -85,7 +80,11 @@ export default function NotificationsPage() {
                     <CardTitle>এই মাসের নোটিফিকেশন</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                    {monthlyNotifications.length > 0 ? (
+                    {isLoading ? (
+                        <div className="flex items-center justify-center p-8">
+                            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                        </div>
+                    ) : monthlyNotifications.length > 0 ? (
                         monthlyNotifications.map(notification => (
                             <div 
                                 key={notification.id} 

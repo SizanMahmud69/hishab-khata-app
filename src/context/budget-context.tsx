@@ -1,10 +1,8 @@
-
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo, useCallback } from 'react';
-import { useUser } from '@/firebase';
-import { useFirestore } from '@/firebase';
-import { collection, onSnapshot, addDoc, doc, updateDoc, serverTimestamp, setDoc, query, where, getDocs, writeBatch, increment } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { collection, onSnapshot, addDoc, doc, updateDoc, serverTimestamp, setDoc, query, getDocs, writeBatch, increment, arrayUnion } from 'firebase/firestore';
 import { createNotification } from '@/components/app-header';
 import { type WithdrawalRequest } from '@/app/(app)/withdraw/page';
 
@@ -39,6 +37,7 @@ export interface DebtNote {
 interface UserProfile {
     points?: number;
     joinDate?: string;
+    notifiedMilestones?: number[];
 }
 
 interface AppConfig {
@@ -75,37 +74,39 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const [minWithdrawalPoints, setMinWithdrawalPoints] = useState(1000); // Default fallback
     const [isDataLoading, setIsDataLoading] = useState(true);
 
+    const userDocRef = useMemoFirebase(() => {
+        if (!user || !firestore) return null;
+        return doc(firestore, `users/${user.uid}`);
+    }, [user, firestore]);
+    const { data: userProfile } = useDoc<UserProfile>(userDocRef);
+
     const totalIncome = useMemo(() => transactions.filter(t => t.type === 'income').reduce((sum, item) => sum + item.amount, 0), [transactions]);
     const totalExpense = useMemo(() => transactions.filter(t => t.type === 'expense').reduce((sum, item) => sum + item.amount, 0), [transactions]);
     const totalSavings = useMemo(() => transactions.filter(t => t.category === 'সঞ্চয় ডিপোজিট').reduce((sum, t) => sum + t.amount, 0), [transactions]);
 
-    const checkSavingsMilestones = useCallback((currentSavings: number, previousSavings: number) => {
-        if (typeof window === 'undefined') return;
-
-        const notifiedMilestonesStr = localStorage.getItem('notifiedSavingsMilestones') || '[]';
-        const notifiedMilestones: number[] = JSON.parse(notifiedMilestonesStr);
-
-        SAVINGS_MILESTONES.forEach(milestone => {
-            if (currentSavings >= milestone && previousSavings < milestone && !notifiedMilestones.includes(milestone)) {
-                createNotification({
-                    title: "অভিনন্দন! সঞ্চয়ের মাইলফলক অর্জন",
-                    description: `আপনি সফলভাবে ${new Intl.NumberFormat("bn-BD").format(milestone)} টাকার সঞ্চয়ের মাইলফলক অর্জন করেছেন!`,
-                    link: `/milestone?amount=${milestone}` 
-                });
-                notifiedMilestones.push(milestone);
-            }
-        });
-
-        localStorage.setItem('notifiedSavingsMilestones', JSON.stringify(notifiedMilestones));
-    }, []);
 
     useEffect(() => {
-        const previousSavings = parseFloat(localStorage.getItem('previousTotalSavings') || '0');
-        if(totalSavings > previousSavings) {
-             checkSavingsMilestones(totalSavings, previousSavings);
+        if (totalSavings > 0 && userProfile && user && firestore) {
+            const notifiedMilestones = userProfile.notifiedMilestones || [];
+            
+            SAVINGS_MILESTONES.forEach(milestone => {
+                if (totalSavings >= milestone && !notifiedMilestones.includes(milestone)) {
+                    createNotification({
+                        title: "অভিনন্দন! সঞ্চয়ের মাইলফলক অর্জন",
+                        description: `আপনি সফলভাবে ${new Intl.NumberFormat("bn-BD").format(milestone)} টাকার সঞ্চয়ের মাইলফলক অর্জন করেছেন!`,
+                        link: `/milestone?amount=${milestone}` 
+                    }, user.uid, firestore);
+
+                    // Update user doc in firestore
+                    if (userDocRef) {
+                        updateDoc(userDocRef, {
+                            notifiedMilestones: arrayUnion(milestone)
+                        });
+                    }
+                }
+            });
         }
-        localStorage.setItem('previousTotalSavings', totalSavings.toString());
-    }, [totalSavings, checkSavingsMilestones]);
+    }, [totalSavings, userProfile, user, firestore, userDocRef]);
 
 
      useEffect(() => {
@@ -124,7 +125,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         setIsDataLoading(true);
         const basePath = `users/${user.uid}`;
         const listeners: (() => void)[] = [];
-        let activeListeners = 5; // transactions, debtNotes, user doc, withdrawalRequests, app_config
+        let activeListeners = 4; // transactions, debtNotes, user doc, app_config
         
         const onDataLoaded = () => {
             activeListeners--;
@@ -147,6 +148,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         });
         listeners.push(unsubConfig);
         
+        // Listener for withdrawal requests to handle notifications and refunds
         const withdrawalRequestsRef = collection(firestore, basePath, 'withdrawalRequests');
         const unsubWithdrawals = onSnapshot(withdrawalRequestsRef, async (snapshot) => {
             const requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WithdrawalRequest));
@@ -154,61 +156,50 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             let totalRefundPoints = 0;
             let refundOccurred = false;
 
-            requests.forEach(req => {
+            for (const req of requests) {
                 const notificationKey = `wd-status-${req.id}`;
-                const alreadyNotified = localStorage.getItem(notificationKey);
-                
+                const notificationExistsQuery = query(collection(firestore, `users/${user.uid}/notifications`), where("id", "==", notificationKey));
+                const notificationSnapshot = await getDocs(notificationExistsQuery);
+                const alreadyNotified = !notificationSnapshot.empty;
+
                 if (!alreadyNotified) {
                     if (req.status === 'approved') {
-                        createNotification({
+                        await createNotification({
+                            id: notificationKey,
                             title: 'উইথড্র অনুরোধ অনুমোদিত',
                             description: `আপনার ${req.amountBdt} টাকার উইথড্র অনুরোধটি সফল হয়েছে।`,
                             link: '/withdraw?section=history'
-                        });
-                        localStorage.setItem(notificationKey, 'true');
+                        }, user.uid, firestore);
                     } else if (req.status === 'rejected') {
-                        createNotification({
+                        await createNotification({
+                            id: notificationKey,
                             title: 'উইথড্র অনুরোধ বাতিল হয়েছে',
                             description: `আপনার উইথড্র অনুরোধটি বাতিল হয়েছে। কারণ: ${req.rejectionReason || 'অজানা'}`,
                             link: '/withdraw?section=history'
-                        });
-                        localStorage.setItem(notificationKey, 'true');
+                        }, user.uid, firestore);
                     }
                 }
 
-                // Handle refunds
                 if (req.status === 'rejected' && !req.isRefunded) {
                     totalRefundPoints += req.points;
                     const reqRef = doc(firestore, basePath, 'withdrawalRequests', req.id);
                     batch.update(reqRef, { isRefunded: true, processedAt: serverTimestamp() });
                     refundOccurred = true;
                 }
-            });
+            }
 
             if (refundOccurred && totalRefundPoints > 0) {
                 const userRef = doc(firestore, basePath);
                 batch.update(userRef, { points: increment(totalRefundPoints) });
                 await batch.commit();
 
-                const refundNotificationKey = `refund-${new Date().toISOString().split('T')[0]}`;
-                 const alreadyNotified = localStorage.getItem(refundNotificationKey);
-                if (!alreadyNotified) {
-                     createNotification({
-                        title: "পয়েন্ট ফেরত দেওয়া হয়েছে",
-                        description: `আপনার বাতিল হওয়া অনুরোধের জন্য ${totalRefundPoints} পয়েন্ট ফেরত দেওয়া হয়েছে।`,
-                        link: "/rewards?section=history"
-                    });
-                    localStorage.setItem(refundNotificationKey, 'true');
-                }
-            } else if (!refundOccurred && batch.size > 0) {
-                // This case is unlikely but handles if a write was prepared but no refund
-                await batch.commit();
+                await createNotification({
+                    id: `refund-${new Date().toISOString()}`,
+                    title: "পয়েন্ট ফেরত দেওয়া হয়েছে",
+                    description: `আপনার বাতিল হওয়া অনুরোধের জন্য ${totalRefundPoints} পয়েন্ট ফেরত দেওয়া হয়েছে।`,
+                    link: "/rewards?section=history"
+                }, user.uid, firestore);
             }
-
-            onDataLoaded();
-        }, (err) => {
-            console.error(`Error fetching withdrawalRequests:`, err);
-            onDataLoaded();
         });
         listeners.push(unsubWithdrawals);
 
@@ -225,8 +216,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             listeners.push(listener);
         };
 
-        const userDocRef = doc(firestore, basePath);
-        const unsubUser = onSnapshot(userDocRef, (snapshot) => {
+        const userDocListener = onSnapshot(userDocRef!, (snapshot) => {
             const userData = snapshot.data() as UserProfile | undefined;
             setRewardPoints(userData?.points || 0);
             onDataLoaded();
@@ -234,14 +224,14 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             console.error("User profile fetch error: ", err);
             onDataLoaded();
         });
-        listeners.push(unsubUser);
+        listeners.push(userDocListener);
 
         createSnapshotListener<Transaction>('transactions', setTransactions);
         createSnapshotListener<DebtNote>('debtNotes', setDebtNotes);
         
         return () => listeners.forEach(unsub => unsub());
 
-    }, [user, firestore, isUserLoading]);
+    }, [user, firestore, isUserLoading, userDocRef]);
     
     const addDocToCollection = async (collectionName: string, data: any) => {
         if (!user || !firestore) throw new Error("User or firestore not available");
@@ -269,7 +259,6 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     
     const updateRewardPoints = async (points: number, operation: 'add' | 'deduct') => {
         if (!user || !firestore) return;
-        const userDocRef = doc(firestore, `users/${user.uid}`);
         
         try {
             const currentPoints = rewardPoints;
@@ -281,7 +270,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                 newPoints = Math.max(0, currentPoints - points);
             }
             
-            await setDoc(userDocRef, { points: newPoints }, { merge: true });
+            await setDoc(userDocRef!, { points: newPoints }, { merge: true });
         } catch (e) {
             console.error("Error updating points: ", e);
         }
@@ -325,5 +314,3 @@ export const useBudget = () => {
     }
     return context;
 };
-
-    

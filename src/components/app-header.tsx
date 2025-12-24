@@ -1,7 +1,6 @@
-
 "use client"
 import Link from "next/link"
-import { type ReactNode, useState, useEffect } from "react"
+import { type ReactNode, useState, useEffect, useMemo } from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
 import { Bell, BookMarked, Menu, CalendarCheck, CalendarPlus } from "lucide-react"
@@ -18,6 +17,8 @@ import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { isToday, isBefore, startOfToday, parseISO } from "date-fns"
 import { useBudget } from "@/context/budget-context"
+import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from "@/firebase"
+import { collection, query, where, addDoc, serverTimestamp, doc, updateDoc, writeBatch, orderBy } from 'firebase/firestore'
 
 interface Notification {
     id: string;
@@ -25,75 +26,88 @@ interface Notification {
     description: string;
     read: boolean;
     link?: string;
-    createdAt: string;
+    createdAt: string; // ISO String from serverTimestamp
 }
 
-const getNotifications = (): Notification[] => {
-    if (typeof window === 'undefined') return [];
-    const stored = localStorage.getItem('notifications');
-    return stored ? JSON.parse(stored) : [];
+interface UserProfile {
+    lastCheckIn?: string; // YYYY-MM-DD
 }
 
-const saveNotifications = (notifications: Notification[]) => {
-    if (typeof window === 'undefined') return;
-    localStorage.setItem('notifications', JSON.stringify(notifications));
-    window.dispatchEvent(new Event('storage'));
-}
+export const createNotification = async (notification: Omit<Notification, 'id' | 'createdAt' | 'read'>, userId: string, firestore: any) => {
+    if (!userId || !firestore) return;
 
-export const createNotification = (notification: Omit<Notification, 'id' | 'createdAt' | 'read'>) => {
-    const newNotification: Notification = {
-        ...notification,
-        id: new Date().getTime().toString(),
-        createdAt: new Date().toISOString(),
-        read: false,
-    };
-    const existingNotifications = getNotifications();
-    // Avoid creating duplicate notifications
-    const isDuplicate = existingNotifications.some(n => n.title === newNotification.title && n.description === newNotification.description);
-    if (!isDuplicate) {
-        saveNotifications([newNotification, ...existingNotifications]);
+    try {
+        const notificationsRef = collection(firestore, `users/${userId}/notifications`);
+
+        // Check for duplicates in the last 24 hours to avoid spamming
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        const q = query(notificationsRef, 
+            where("title", "==", notification.title), 
+            where("description", "==", notification.description),
+            where("createdAt", ">=", twentyFourHoursAgo)
+        );
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+             await addDoc(notificationsRef, {
+                ...notification,
+                createdAt: new Date().toISOString(),
+                read: false,
+            });
+        }
+    } catch(e) {
+        console.error("Error creating notification:", e)
     }
 };
 
 
 export function AppHeader({children}: {children: ReactNode}) {
     const [isSheetOpen, setIsSheetOpen] = useState(false);
-    const [isCheckedIn, setIsCheckedIn] = useState(false);
-    const [notifications, setNotifications] = useState<Notification[]>([]);
     const router = useRouter();
-    const { debtNotes } = useBudget(); 
+    const { debtNotes } = useBudget();
+    const { user } = useUser();
+    const firestore = useFirestore();
+
+    const userDocRef = useMemoFirebase(() => {
+        if (!user || !firestore) return null;
+        return doc(firestore, `users/${user.uid}`);
+    }, [user, firestore]);
+
+    const { data: userProfile } = useDoc<UserProfile>(userDocRef);
+
+    const notificationsQuery = useMemoFirebase(() => {
+        if (!user || !firestore) return null;
+        return query(collection(firestore, `users/${user.uid}/notifications`), orderBy("createdAt", "desc"));
+    }, [user, firestore]);
+
+    const { data: notifications } = useCollection<Notification>(notificationsQuery);
+    
+    const isCheckedIn = useMemo(() => {
+        if (!userProfile?.lastCheckIn) return false;
+        try {
+            const lastDate = parseISO(userProfile.lastCheckIn);
+            return isToday(lastDate);
+        } catch {
+            return false;
+        }
+    }, [userProfile]);
+
 
     useEffect(() => {
-        const checkStatus = () => {
-            const storedLastCheckIn = localStorage.getItem('lastCheckInDate');
-            if (storedLastCheckIn) {
-                const today = new Date().toDateString();
-                const lastDate = new Date(storedLastCheckIn).toDateString();
-                setIsCheckedIn(today === lastDate);
-            } else {
-                setIsCheckedIn(false);
-            }
-        };
-
-        checkStatus();
+        if (!user || !firestore) return;
 
         const checkDailyNotifications = () => {
-            const lastNotificationDate = localStorage.getItem('dailyCheckinNotificationDate');
+            const lastNotificationDate = localStorage.getItem('dailyNotificationCheckDate');
             const todayStr = new Date().toDateString();
 
             if (lastNotificationDate !== todayStr) {
-                // Daily Check-in Notification
-                const allNotifications = getNotifications();
-                const hasTodayCheckinNotification = allNotifications.some(n => 
-                    n.title === "দৈনিক চেক-ইন" && isToday(parseISO(n.createdAt))
-                );
-
-                if (!hasTodayCheckinNotification) {
+                // Daily Check-in Notification if not already checked in
+                if (!isCheckedIn) {
                     createNotification({
                         title: "দৈনিক চেক-ইন",
                         description: "আজকের চেক-ইন করে রিওয়ার্ড পয়েন্ট অর্জন করুন।",
                         link: "/check-in",
-                    });
+                    }, user.uid, firestore);
                 }
 
                 // Debt Repayment Reminders
@@ -106,49 +120,33 @@ export function AppHeader({children}: {children: ReactNode}) {
                                 title: "ধার পরিশোধের রিমাইন্ডার",
                                 description: `${debt.person}-এর সাথে আপনার একটি ধার লেনদেন রয়েছে যা পরিশোধের সময় হয়েছে।`,
                                 link: "/debts",
-                            });
+                            }, user.uid, firestore);
                         }
                     }
                 });
-
-                localStorage.setItem('dailyCheckinNotificationDate', todayStr);
+                
+                localStorage.setItem('dailyNotificationCheckDate', todayStr);
             }
         };
 
         checkDailyNotifications();
-        
-        const data = getNotifications();
-        setNotifications(data);
 
-        const handleStorageChange = () => {
-            const updatedStorage = localStorage.getItem('notifications');
-            if (updatedStorage) {
-                setNotifications(JSON.parse(updatedStorage));
-            }
-            checkStatus(); // Re-check check-in status on any storage change
-        };
-
-        window.addEventListener('storage', handleStorageChange);
-        window.addEventListener('checkin-success', checkStatus);
+    }, [debtNotes, user, firestore, isCheckedIn]);
 
 
-        return () => {
-            window.removeEventListener('storage', handleStorageChange);
-            window.removeEventListener('checkin-success', checkStatus);
-        }
-    }, [debtNotes]);
-
-
-    const notificationCount = notifications.filter(n => !n.read).length;
+    const notificationCount = useMemo(() => {
+        if (!notifications) return 0;
+        return notifications.filter(n => !n.read).length;
+    }, [notifications]);
 
     const handleLinkClick = () => {
         setIsSheetOpen(false);
     }
     
-    const markAsRead = (id: string) => {
-        const allNotifications = getNotifications();
-        const updatedNotifications = allNotifications.map(n => n.id === id ? { ...n, read: true } : n);
-        saveNotifications(updatedNotifications);
+    const markAsRead = async (id: string) => {
+        if (!user || !firestore) return;
+        const notificationRef = doc(firestore, `users/${user.uid}/notifications`, id);
+        await updateDoc(notificationRef, { read: true });
     }
 
     const handleNotificationClick = (notification: Notification) => {
@@ -159,6 +157,12 @@ export function AppHeader({children}: {children: ReactNode}) {
             router.push(notification.link);
         }
     }
+    
+    const unreadNotifications = useMemo(() => {
+        if (!notifications) return [];
+        return notifications.filter(n => !n.read);
+    }, [notifications]);
+
 
     return (
         <div className="flex min-h-screen w-full flex-col">
@@ -210,8 +214,8 @@ export function AppHeader({children}: {children: ReactNode}) {
                         <DropdownMenuContent align="end" className="w-80">
                             <DropdownMenuLabel className="font-bold">নোটিফিকেশন</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                             {notificationCount > 0 ? (
-                                notifications.filter(n => !n.read).map(notification => (
+                             {unreadNotifications.length > 0 ? (
+                                unreadNotifications.map(notification => (
                                     <DropdownMenuItem key={notification.id} onSelect={() => handleNotificationClick(notification)}>
                                         <div className="flex items-center gap-3">
                                             {!notification.read && <span className="w-2.5 h-2.5 rounded-full bg-green-500 flex-shrink-0"></span>}

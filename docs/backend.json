@@ -1,4 +1,3 @@
-
 {
   "entities": {
     "User": {
@@ -41,23 +40,23 @@
           "description": "User's total reward points."
         },
         "joinDate": {
-            "type": "string",
-            "format": "date-time",
-            "description": "The ISO 8601 timestamp when the user registered."
+          "type": "string",
+          "format": "date-time",
+          "description": "The ISO 8601 timestamp when the user registered."
         },
         "lastCheckIn": {
-            "type": "string",
-            "format": "date",
-            "description": "The date of the user's last daily check-in."
+          "type": "string",
+          "format": "date",
+          "description": "The date of the user's last daily check-in."
         },
         "checkInStreak": {
-            "type": "number",
-            "description": "The user's current daily check-in streak."
+          "type": "number",
+          "description": "The user's current daily check-in streak."
         },
         "verificationStatus": {
-            "type": "string",
-            "enum": ["pending", "verified", "rejected", "none"],
-            "description": "The current status of the user's NID verification."
+          "type": "string",
+          "enum": ["pending", "verified", "rejected", "none"],
+          "description": "The current status of the user's NID verification."
         },
         "verificationRequestId": {
           "type": "string",
@@ -79,6 +78,20 @@
         "nidAddress": {
           "type": "string",
           "description": "Address as per NID, submitted for verification."
+        },
+        "shops": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of shop names added by the user."
+        },
+        "notifiedMilestones": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "List of savings milestones for which the user has been notified."
         }
       },
       "required": ["id", "email", "name"]
@@ -98,13 +111,13 @@
           "description": "The UID of the user who owns this transaction."
         },
         "type": {
-            "type": "string",
-            "enum": ["income", "expense"],
-            "description": "The type of transaction."
+          "type": "string",
+          "enum": ["income", "expense"],
+          "description": "The type of transaction."
         },
         "category": {
-            "type": "string",
-            "description": "The category of the transaction (e.g., 'Salary', 'Food')."
+          "type": "string",
+          "description": "The category of the transaction (e.g., 'Salary', 'Food')."
         },
         "amount": {
           "type": "number",
@@ -129,48 +142,48 @@
       "description": "Represents a debt record, either money lent or borrowed.",
       "properties": {
         "id": {
-            "type": "string",
-            "description": "Unique identifier for the debt note."
+          "type": "string",
+          "description": "Unique identifier for the debt note."
         },
         "userId": {
-            "type": "string",
-            "description": "The UID of the user who owns this debt note."
+          "type": "string",
+          "description": "The UID of the user who owns this debt note."
         },
         "type": {
-            "type": "string",
-            "enum": ["lent", "borrowed", "shopDue"],
-            "description": "The type of debt."
+          "type": "string",
+          "enum": ["lent", "borrowed", "shopDue"],
+          "description": "The type of debt."
         },
         "person": {
-            "type": "string",
-            "description": "Name of the person or shop involved in the debt."
+          "type": "string",
+          "description": "Name of the person or shop involved in the debt."
         },
         "amount": {
-            "type": "number",
-            "description": "The total amount of the debt."
+          "type": "number",
+          "description": "The total amount of the debt."
         },
         "paidAmount": {
-            "type": "number",
-            "description": "The amount that has been paid back."
+          "type": "number",
+          "description": "The amount that has been paid back."
         },
         "status": {
-            "type": "string",
-            "enum": ["unpaid", "partially-paid", "paid"],
-            "description": "The current status of the debt."
+          "type": "string",
+          "enum": ["unpaid", "partially-paid", "paid"],
+          "description": "The current status of the debt."
         },
         "date": {
-            "type": "string",
-            "format": "date-time",
-            "description": "The date the debt was created."
+          "type": "string",
+          "format": "date-time",
+          "description": "The date the debt was created."
         },
         "repaymentDate": {
-            "type": "string",
-            "format": "date-time",
-            "description": "The expected repayment date."
+          "type": "string",
+          "format": "date-time",
+          "description": "The expected repayment date."
         },
         "description": {
-            "type": "string",
-            "description": "A brief description of the debt."
+          "type": "string",
+          "description": "A brief description of the debt."
         }
       },
       "required": ["id", "userId", "type", "person", "amount", "paidAmount", "status", "date"]
@@ -207,52 +220,68 @@
       "type": "object",
       "description": "Represents a user's NID verification request.",
       "properties": {
-          "id": {"type": "string"},
-          "userId": {"type": "string"},
-          "status": {"type": "string", "enum": ["pending", "approved", "rejected"]},
-          "submittedAt": {"type": "string", "format": "date-time"},
-          "reviewedAt": {"type": "string", "format": "date-time"},
-          "rejectionReason": {"type": "string"},
-          "nidName": {"type": "string"},
-          "nidNumber": {"type": "string"},
-          "nidDob": {"type": "string", "format": "date"},
-          "nidAddress": {"type": "string"},
-          "phone": {"type": "string"}
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "submittedAt": { "type": "string", "format": "date-time" },
+        "reviewedAt": { "type": "string", "format": "date-time" },
+        "rejectionReason": { "type": "string" },
+        "nidName": { "type": "string" },
+        "nidNumber": { "type": "string" },
+        "nidDob": { "type": "string", "format": "date" },
+        "nidAddress": { "type": "string" },
+        "phone": { "type": "string" }
       },
       "required": ["id", "userId", "status", "submittedAt"]
     },
     "WithdrawalRequest": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "title": "WithdrawalRequest",
-        "type": "object",
-        "description": "Represents a user's request to withdraw reward points.",
-        "properties": {
-            "id": {"type": "string"},
-            "userId": {"type": "string"},
-            "status": {"type": "string", "enum": ["pending", "approved", "rejected"]},
-            "points": {"type": "number"},
-            "amountBdt": {"type": "number"},
-            "paymentMethod": {"type": "string"},
-            "accountNumber": {"type": "string"},
-            "requestedAt": {"type": "string", "format": "date-time"},
-            "processedAt": {"type": "string", "format": "date-time"},
-            "rejectionReason": {"type": "string"},
-            "isRefunded": {"type": "boolean"}
-        },
-        "required": ["id", "userId", "status", "points", "amountBdt", "paymentMethod", "accountNumber", "requestedAt"]
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "WithdrawalRequest",
+      "type": "object",
+      "description": "Represents a user's request to withdraw reward points.",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "points": { "type": "number" },
+        "amountBdt": { "type": "number" },
+        "paymentMethod": { "type": "string" },
+        "accountNumber": { "type": "string" },
+        "requestedAt": { "type": "string", "format": "date-time" },
+        "processedAt": { "type": "string", "format": "date-time" },
+        "rejectionReason": { "type": "string" },
+        "isRefunded": { "type": "boolean" }
+      },
+      "required": ["id", "userId", "status", "points", "amountBdt", "paymentMethod", "accountNumber", "requestedAt"]
     },
     "AppConfig": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "title": "AppConfig",
-        "type": "object",
-        "description": "Stores global configuration for the application.",
-        "properties": {
-            "minWithdrawalPoints": {
-                "type": "number",
-                "description": "The minimum number of points a user must have to make a withdrawal request."
-            }
-        },
-        "required": ["minWithdrawalPoints"]
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AppConfig",
+      "type": "object",
+      "description": "Stores global configuration for the application.",
+      "properties": {
+        "minWithdrawalPoints": {
+          "type": "number",
+          "description": "The minimum number of points a user must have to make a withdrawal request."
+        }
+      },
+      "required": ["minWithdrawalPoints"]
+    },
+    "Notification": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Notification",
+      "type": "object",
+      "description": "Represents a notification for a user.",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "link": { "type": "string" },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "title", "description", "read", "createdAt"]
     }
   },
   "auth": {
@@ -306,29 +335,35 @@
       {
         "path": "/users/{userId}/verificationRequests/{requestId}",
         "definition": {
-            "entityName": "VerificationRequest",
-            "schema": { "$ref": "#/backend/entities/VerificationRequest" },
-            "description": "Stores a user's NID verification requests."
+          "entityName": "VerificationRequest",
+          "schema": { "$ref": "#/backend/entities/VerificationRequest" },
+          "description": "Stores a user's NID verification requests."
         }
       },
       {
-          "path": "/users/{userId}/withdrawalRequests/{requestId}",
-          "definition": {
-              "entityName": "WithdrawalRequest",
-              "schema": { "$ref": "#/backend/entities/WithdrawalRequest" },
-              "description": "Stores a user's reward point withdrawal requests."
-          }
+        "path": "/users/{userId}/withdrawalRequests/{requestId}",
+        "definition": {
+          "entityName": "WithdrawalRequest",
+          "schema": { "$ref": "#/backend/entities/WithdrawalRequest" },
+          "description": "Stores a user's reward point withdrawal requests."
+        }
       },
       {
-          "path": "/app_config/{configId}",
-          "definition": {
-              "entityName": "AppConfig",
-              "schema": { "$ref": "#/backend/entities/AppConfig" },
-              "description": "Stores global application settings. Should be publicly readable."
-          }
+        "path": "/app_config/{configId}",
+        "definition": {
+          "entityName": "AppConfig",
+          "schema": { "$ref": "#/backend/entities/AppConfig" },
+          "description": "Stores global application settings. Should be publicly readable."
+        }
+      },
+      {
+        "path": "/users/{userId}/notifications/{notificationId}",
+        "definition": {
+            "entityName": "Notification",
+            "schema": { "$ref": "#/backend/entities/Notification" },
+            "description": "Stores notifications for a user."
+        }
       }
     ]
   }
 }
-
-    

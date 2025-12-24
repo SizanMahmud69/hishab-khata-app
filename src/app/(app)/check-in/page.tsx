@@ -125,10 +125,6 @@ export default function CheckInPage() {
             const userDocRef = doc(firestore, `users/${user.uid}`);
             
             await updateDoc(userDocRef, userUpdateData);
-            
-            localStorage.setItem('lastCheckInDate', today.toDateString());
-            window.dispatchEvent(new Event('storage'));
-
 
             toast({
                 title: "অভিনন্দন!",

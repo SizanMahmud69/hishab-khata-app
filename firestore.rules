@@ -71,6 +71,11 @@ service cloud.firestore {
         // User cannot update status or rejection reasons. Only admin via console.
         allow update: if isOwner(userId) && canUpdateWithdrawalRequest(); 
       }
+      
+      // Sub-collection for notifications
+      match /notifications/{notificationId} {
+        allow read, write: if isOwner(userId);
+      }
     }
     
     // Global app configuration
