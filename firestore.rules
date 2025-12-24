@@ -37,11 +37,10 @@ service cloud.firestore {
       // Nobody can list all users.
       allow list: if false;
       // A signed-in user can create their own user document.
-      // Or another user (the referrer) can trigger the creation.
       allow create: if isSignedIn();
-      // A user can update their own document. The client-side code is responsible
-      // for only updating allowed fields.
-      allow update: if isOwner(userId) || isSignedIn(); // Allow referrer to update points
+      // A user can update their own document. A signed-in user (the new referred user)
+      // can also update the referrer's points.
+      allow update: if isOwner(userId) || isSignedIn();
       // Users should not be able to delete their own accounts this way.
       allow delete: if false;
 
@@ -62,7 +61,8 @@ service cloud.firestore {
 
       // Sub-collection for NID verification requests
       match /verificationRequests/{requestId} {
-        allow get, create, list: if isOwner(userId);
+        allow get, create: if isOwner(userId);
+        allow list: if isOwner(userId);
         // Only admin should be able to update (approve/reject) or delete requests.
         allow update, delete: if false; 
       }
