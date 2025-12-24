@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useAuth, useFirestore } from "@/firebase";
-import { doc, setDoc, serverTimestamp, getDoc, query, collection, where, getDocs, writeBatch, increment } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp, getDoc, query, collection, where, getDocs, writeBatch, increment, limit } from "firebase/firestore";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BudgetClientProvider, useBudget } from "@/context/budget-context-provider";
 import { useDebounce } from "react-use";
@@ -41,7 +41,7 @@ function RegisterPageContent() {
     setIsCheckingReferral(true);
     try {
         const usersRef = collection(firestore, "users");
-        const q = query(usersRef, where("referralCode", "==", code.trim()));
+        const q = query(usersRef, where("referralCode", "==", code.trim()), limit(1));
         const querySnapshot = await getDocs(q);
         if (!querySnapshot.empty) {
             const referrerDoc = querySnapshot.docs[0];
@@ -101,7 +101,7 @@ function RegisterPageContent() {
       let referrer: { id: string, name: string } | null = null;
       if (referralCode.trim()) {
         const usersRef = collection(firestore, "users");
-        const q = query(usersRef, where("referralCode", "==", referralCode.trim()));
+        const q = query(usersRef, where("referralCode", "==", referralCode.trim()), limit(1));
         const querySnapshot = await getDocs(q);
         if (!querySnapshot.empty) {
             const referrerDoc = querySnapshot.docs[0];
@@ -186,7 +186,7 @@ function RegisterPageContent() {
 
     } catch (error: any) {
       console.error(error);
-      let errorMessage = "নিবন্ধন করার সময় একটি সমস্যা হয়েছে।";
+      let errorMessage = "নিবন্ধন করার সময় একটি সমস্যা হচ্ছে।";
       if (error.code === 'auth/email-already-in-use') {
         errorMessage = "এই ইমেইল দিয়ে আগেই অ্যাকাউন্ট খোলা হয়েছে।";
       } else if (error.code === 'auth/invalid-email') {
@@ -340,3 +340,5 @@ export default function RegisterPage() {
         </BudgetClientProvider>
     )
 }
+
+    

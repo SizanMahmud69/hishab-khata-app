@@ -34,8 +34,8 @@ service cloud.firestore {
     match /users/{userId} {
       // A user can get their own document.
       allow get: if isOwner(userId);
-      // Nobody can list all users.
-      allow list: if false;
+      // Allow querying for a single user by referral code during registration
+      allow list: if request.query.limit <= 1;
       // A signed-in user can create their own user document.
       allow create: if isSignedIn();
       // A user can update their own document. A signed-in user (the new referred user)
@@ -101,3 +101,5 @@ service cloud.firestore {
     }
   }
 }
+
+    
