@@ -5,6 +5,12 @@
       "description": "A clean and modern dashboard interface for a financial application, showing charts and recent transactions.",
       "imageUrl": "https://images.unsplash.com/photo-1653933686802-86d21b59b03b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxkYXNoYm9hcmQlMjB1aXxlbnwwfHx8fDE3NjY1MTUxNzZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "dashboard ui"
+    },
+    {
+      "id": "auth-page-background",
+      "description": "An abstract, professional background image suitable for a login or registration page.",
+      "imageUrl": "https://images.unsplash.com/photo-1554189097-9e3739359539?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxhYnN0cmFjdCUyMGJhY2tncm91bmR8ZW58MHx8fHwxNzE2NTgxODg3fDA&ixlib=rb-4.0.3&q=80&w=1080",
+      "imageHint": "abstract background"
     }
   ]
 }

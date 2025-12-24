@@ -2,24 +2,20 @@
 "use client";
 
 import Link from "next/link"
+import Image from "next/image";
 import { BookMarked, ArrowRight, Loader2 } from "lucide-react"
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useAuth, useFirestore } from "@/firebase";
 import { doc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
+import { CardDescription, CardTitle } from "@/components/ui/card";
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState('');
@@ -129,11 +125,14 @@ export default function RegisterPage() {
       setIsLoading(false);
     }
   };
+  
+  const authPageImage = PlaceHolderImages.find(p => p.id === 'auth-page-background');
 
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-        <Link
+    <div className="w-full lg:grid lg:min-h-dvh lg:grid-cols-2">
+      <div className="flex items-center justify-center py-12 px-4 relative">
+         <Link
           href="/"
           className="absolute left-4 top-4 md:left-8 md:top-8"
         >
@@ -142,18 +141,17 @@ export default function RegisterPage() {
             হোমপেজে ফিরে যান
           </Button>
         </Link>
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <div className="flex items-center justify-center mb-4">
-            <BookMarked className="h-10 w-10 text-primary" />
+        <div className="mx-auto grid w-[350px] gap-6">
+          <div className="grid gap-2 text-center">
+             <div className="flex items-center justify-center mb-4">
+                <BookMarked className="h-10 w-10 text-primary" />
+            </div>
+            <CardTitle className="text-3xl font-bold">নতুন অ্যাকাউন্ট তৈরি করুন</CardTitle>
+            <CardDescription className="text-muted-foreground">
+                আপনার তথ্য দিয়ে নিবন্ধন সম্পন্ন করুন।
+            </CardDescription>
           </div>
-          <CardTitle className="text-2xl text-center">নতুন অ্যাকাউন্ট তৈরি করুন</CardTitle>
-          <CardDescription className="text-center">
-            আপনার তথ্য দিয়ে নিবন্ধন সম্পন্ন করুন।
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleRegister}>
+           <form onSubmit={handleRegister} className="overflow-y-auto max-h-[calc(100vh-250px)] px-2">
             <div className="grid gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="full-name">পুরো নাম</Label>
@@ -223,25 +221,20 @@ export default function RegisterPage() {
               লগইন করুন
             </Link>
           </div>
-           <div className="mt-4 px-8 text-center text-xs text-muted-foreground">
-              নিবন্ধন করার মাধ্যমে, আপনি আমাদের{" "}
-              <Link
-                href="/terms-and-conditions"
-                className="underline underline-offset-4 hover:text-primary"
-              >
-                ব্যবহারের শর্তাবলী
-              </Link>{" "}
-              এবং{" "}
-              <Link
-                href="/privacy-policy"
-                className="underline underline-offset-4 hover:text-primary"
-              >
-                গোপনীয়তা নীতিতে
-              </Link>
-              {" "}সম্মত হচ্ছেন।
-            </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+       <div className="hidden bg-muted lg:block">
+        {authPageImage && (
+            <Image
+                src={authPageImage.imageUrl}
+                alt="Image"
+                width="1920"
+                height="1080"
+                className="h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+                data-ai-hint={authPageImage.imageHint}
+            />
+        )}
+      </div>
     </div>
   )
 }
