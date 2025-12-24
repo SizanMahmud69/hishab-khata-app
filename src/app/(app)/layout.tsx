@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { ReactNode } from "react"
@@ -49,7 +50,21 @@ function AppContent({ children }: { children: ReactNode }) {
         );
     }
 
-    return <AppHeader>{children}</AppHeader>
+    return (
+        <div className="flex flex-col min-h-screen">
+            <AppHeader>{children}</AppHeader>
+             <footer className="py-4 mt-auto w-full shrink-0 items-center px-4 md:px-6 border-t">
+                <div className="container mx-auto flex flex-col items-center justify-center gap-2 text-center sm:flex-row sm:justify-between">
+                    <p className='text-xs text-muted-foreground'>
+                        © 2025 <span className='font-bold text-primary'>হিসাব খাতা</span>. All rights reserved.
+                    </p>
+                    <div className='text-xs text-muted-foreground'>
+                        Developer: <span className="font-semibold">Sizan Mahmud</span> & Designer: <span className="font-semibold">Black Dimond</span>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    )
 }
 
 
