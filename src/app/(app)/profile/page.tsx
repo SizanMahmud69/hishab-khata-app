@@ -4,7 +4,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useUser, useFirestore, useMemoFirebase, useCollection } from "@/firebase";
+import { useUser, useFirestore, useMemoFirebase, useCollection, useDoc } from "@/firebase";
 import { Mail, Phone, UserCheck, XCircle, CheckCircle, User as UserIcon, MapPin, Cake, AlertTriangle, Info, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import React, { useState, useEffect, useMemo } from "react";
@@ -69,7 +69,7 @@ export default function ProfilePage() {
     return doc(firestore, 'users', user.uid);
   }, [user, firestore]);
 
-  const { data: userProfileData, isLoading: isUserLoading } = useCollection<UserProfile>(userDocRef as any);
+  const { data: userProfileData, isLoading: isUserLoading } = useDoc<UserProfile>(userDocRef);
 
   const latestVerificationRequestQuery = useMemoFirebase(() => {
       if (!user || !firestore) return null;
@@ -307,26 +307,24 @@ export default function ProfilePage() {
           </div>
       )
   }
-
-  const currentUserProfile = Array.isArray(userProfileData) ? userProfileData[0] : userProfileData;
-
+  
   return (
     <div className="flex-1 space-y-6">
       <Card className="overflow-hidden">
         <div className="h-24 bg-primary/20" />
         <div className="relative -mt-16 flex justify-center">
              <Avatar className="h-32 w-32 border-4 border-background shadow-lg">
-                <AvatarImage src={currentUserProfile?.avatar ?? user?.photoURL ?? `https://i.pravatar.cc/150?u=${user?.email}`} alt="User avatar" data-ai-hint="profile avatar" />
-                <AvatarFallback className="text-4xl">{currentUserProfile?.name?.charAt(0) ?? user?.displayName?.charAt(0) ?? 'U'}</AvatarFallback>
+                <AvatarImage src={userProfileData?.avatar ?? user?.photoURL ?? `https://i.pravatar.cc/150?u=${user?.email}`} alt="User avatar" data-ai-hint="profile avatar" />
+                <AvatarFallback className="text-4xl">{userProfileData?.name?.charAt(0) ?? user?.displayName?.charAt(0) ?? 'U'}</AvatarFallback>
             </Avatar>
         </div>
         <CardContent className="text-center pt-6 pb-6 px-4 sm:px-6">
             <div className="flex items-center justify-center gap-2">
-                <h2 className="text-3xl font-bold">{currentUserProfile?.name ?? user?.displayName ?? 'ব্যবহারকারী'}</h2>
+                <h2 className="text-3xl font-bold">{userProfileData?.name ?? user?.displayName ?? 'ব্যবহারকারী'}</h2>
                  {verificationStatus === 'approved' && <Badge className="bg-green-100 text-green-800 border-green-300 hover:bg-green-100/80"><CheckCircle className="w-3.5 h-3.5 mr-1.5" />ভেরিফাইড</Badge>}
                  {verificationStatus === 'pending' && <Badge variant="outline" className="text-yellow-600 border-yellow-400">প্রসেসিং...</Badge>}
             </div>
-             <p className="text-sm text-muted-foreground mt-2">{currentUserProfile?.userId ?? 'আইডি পাওয়া যায়নি'}</p>
+             <p className="text-sm text-muted-foreground mt-2">{userProfileData?.userId ?? 'আইডি পাওয়া যায়নি'}</p>
         </CardContent>
       </Card>
 
@@ -340,7 +338,7 @@ export default function ProfilePage() {
                 <div className="flex-1">
                      <p className="text-sm font-medium">ইমেইল</p>
                      <div className="flex items-center gap-2">
-                        <p className="text-muted-foreground">{currentUserProfile?.email ?? user?.email ?? 'ইমেইল পাওয়া যায়নি'}</p>
+                        <p className="text-muted-foreground">{userProfileData?.email ?? user?.email ?? 'ইমেইল পাওয়া যায়নি'}</p>
                         {user?.emailVerified && 
                             <Badge className="bg-green-100 text-green-800 border-green-300">ভেরিফাইড</Badge>
                         }
@@ -352,14 +350,14 @@ export default function ProfilePage() {
                 <Phone className="w-6 h-6 text-muted-foreground mt-1" />
                 <div className="flex-1">
                     <p className="text-sm font-medium">ফোন নম্বর</p>
-                    <p className="text-muted-foreground">{currentUserProfile?.phone ?? user?.phoneNumber ?? 'ফোন নম্বর সেট করা নেই'}</p>
+                    <p className="text-muted-foreground">{userProfileData?.phone ?? user?.phoneNumber ?? 'ফোন নম্বর সেট করা নেই'}</p>
                 </div>
             </div>
              <div className="flex items-start gap-4">
                 <MapPin className="w-6 h-6 text-muted-foreground mt-1" />
                 <div className="flex-1">
                     <p className="text-sm font-medium">ঠিকানা</p>
-                    <p className="text-muted-foreground">{currentUserProfile?.address ?? 'ঠিকানা সেট করা নেই'}</p>
+                    <p className="text-muted-foreground">{userProfileData?.address ?? 'ঠিকানা সেট করা নেই'}</p>
                 </div>
             </div>
         </CardContent>
