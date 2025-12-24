@@ -81,9 +81,6 @@ export default function Home() {
                   <Button asChild size="lg">
                     <Link href="/register">আজই শুরু করুন <MoveRight className='ml-2 h-5 w-5'/></Link>
                   </Button>
-                  <Button asChild variant="outline" size="lg">
-                    <Link href="#features">ফিচারগুলো দেখুন</Link>
-                  </Button>
                 </div>
             </div>
              <div className="hidden lg:block">
