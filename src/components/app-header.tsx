@@ -5,7 +5,7 @@ import { type ReactNode, useState, useEffect } from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
 import { Bell, BookMarked, Menu, CalendarDays } from "lucide-react"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -129,11 +129,14 @@ export function AppHeader({children}: {children: ReactNode}) {
         };
 
         window.addEventListener('storage', handleStorageChange);
+        window.addEventListener('checkin-success', checkStatus);
+
 
         return () => {
             window.removeEventListener('storage', handleStorageChange);
+            window.removeEventListener('checkin-success', checkStatus);
         }
-    }, [debtNotes]); // Removed isCheckedIn from dependency array
+    }, [debtNotes]);
 
 
     const notificationCount = notifications.filter(n => !n.read).length;
@@ -169,6 +172,9 @@ export function AppHeader({children}: {children: ReactNode}) {
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="left" className="p-0">
+                             <SheetHeader>
+                                <SheetTitle className="sr-only">মেনু</SheetTitle>
+                            </SheetHeader>
                             <AppSidebar onLinkClick={handleLinkClick} />
                         </SheetContent>
                     </Sheet>
