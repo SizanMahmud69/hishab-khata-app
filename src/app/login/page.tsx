@@ -62,13 +62,9 @@ export default function LoginPage() {
       });
   };
 
-  const authPageImage = PlaceHolderImages.find(p => p.id === 'auth-page-background');
-
-
   return (
-     <div className="w-full lg:grid lg:min-h-dvh lg:grid-cols-2">
-      <div className="flex items-center justify-center py-12 px-4 relative">
-         <Link
+     <div className="flex min-h-screen items-center justify-center bg-background p-4">
+       <Link
           href="/"
           className="absolute left-4 top-4 md:left-8 md:top-8"
         >
@@ -77,8 +73,8 @@ export default function LoginPage() {
             হোমপেজে ফিরে যান
           </Button>
         </Link>
-        <div className="mx-auto grid w-[350px] gap-6">
-          <div className="grid gap-2 text-center">
+      <Card className="w-full max-w-sm">
+        <CardHeader className="text-center">
             <div className="flex items-center justify-center mb-4">
                 <BookMarked className="h-10 w-10 text-primary" />
             </div>
@@ -86,7 +82,8 @@ export default function LoginPage() {
             <CardDescription className="text-muted-foreground">
                 আপনার অ্যাকাউন্টে প্রবেশ করতে ইমেইল ও পাসওয়ার্ড দিন।
             </CardDescription>
-          </div>
+        </CardHeader>
+        <CardContent>
           <form onSubmit={handleLogin}>
             <div className="grid gap-4">
               <div className="space-y-1.5">
@@ -132,21 +129,8 @@ export default function LoginPage() {
               নিবন্ধন করুন
             </Link>
           </div>
-        </div>
-      </div>
-      <div className="hidden bg-muted lg:block">
-        {authPageImage && (
-            <Image
-                src={authPageImage.imageUrl}
-                alt="Image"
-                width="1920"
-                height="1080"
-                className="h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
-                data-ai-hint={authPageImage.imageHint}
-            />
-        )}
-      </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
-
