@@ -8,6 +8,7 @@ import {
   HandCoins,
   History,
   LayoutDashboard,
+  LifeBuoy,
   LogOut,
   MinusCircle,
   PlusCircle,
@@ -18,7 +19,6 @@ import {
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -109,10 +109,8 @@ export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
-      </SidebarContent>
-      <SidebarSeparator />
-      <SidebarFooter>
-        <SidebarMenu>
+        <SidebarSeparator />
+         <SidebarMenu>
             <SidebarMenuItem>
                  <SidebarMenuButton
                     asChild
@@ -126,6 +124,17 @@ export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
                  </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
+                 <SidebarMenuButton
+                    asChild
+                    size="lg"
+                 >
+                    <Link href="#" onClick={onLinkClick}>
+                        <LifeBuoy />
+                        <span>সাপোর্ট</span>
+                    </Link>
+                 </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
                 <SidebarMenuButton
                     onClick={handleLogout}
                     size="lg"
@@ -135,7 +144,7 @@ export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
                 </SidebarMenuButton>
             </SidebarMenuItem>
         </SidebarMenu>
-      </SidebarFooter>
+      </SidebarContent>
     </Sidebar>
   )
 }
