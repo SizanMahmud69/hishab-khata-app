@@ -13,10 +13,10 @@ import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useAuth, useFirestore } from "@/firebase";
 import { doc, setDoc, serverTimestamp, getDoc, query, collection, where, getDocs, writeBatch, increment } from "firebase/firestore";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useBudget } from "@/context/budget-context";
+import { BudgetClientProvider, useBudget } from "@/context/budget-context-provider";
 
 
-export default function RegisterPage() {
+function RegisterPageContent() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -285,4 +285,11 @@ export default function RegisterPage() {
   )
 }
 
-    
+
+export default function RegisterPage() {
+    return (
+        <BudgetClientProvider>
+            <RegisterPageContent />
+        </BudgetClientProvider>
+    )
+}
