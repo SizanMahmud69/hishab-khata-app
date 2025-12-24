@@ -4,7 +4,7 @@ import { type ReactNode, useState, useEffect, useMemo } from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
 import { Bell, BookMarked, Menu, CalendarCheck, CalendarPlus } from "lucide-react"
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -49,11 +49,11 @@ export const createNotification = async (notification: Omit<Notification, 'creat
         }
         
         // Generic check for duplicates in the last 24 hours to avoid spamming for notifications without a specific ID
-        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
         const q = query(notificationsRef, 
             where("title", "==", notification.title), 
             where("description", "==", notification.description),
-            where("createdAt", ">=", twentyFourHoursAgo.toISOString())
+            where("createdAt", ">=", twentyFourHoursAgo)
         );
 
         const querySnapshot = await getDocs(q);
