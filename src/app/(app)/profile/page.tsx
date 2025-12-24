@@ -296,7 +296,7 @@ export default function ProfilePage() {
                  {userProfile?.verificationStatus === 'verified' && <Badge className="bg-green-100 text-green-800 border-green-300 hover:bg-green-100/80"><CheckCircle className="w-3.5 h-3.5 mr-1.5" />ভেরিফাইড</Badge>}
                  {userProfile?.verificationStatus === 'pending' && <Badge variant="outline" className="text-yellow-600 border-yellow-400">প্রসেসিং...</Badge>}
             </div>
-             <p className="text-sm text-muted-foreground mt-2">রিওয়ার্ড পয়েন্ট: {userProfile?.points ?? 0}</p>
+             <p className="text-sm text-muted-foreground mt-2">{userProfile?.userId ?? 'আইডি পাওয়া যায়নি'}</p>
         </CardContent>
       </Card>
 
