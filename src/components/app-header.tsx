@@ -15,10 +15,10 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { isToday, isBefore, startOfToday, parseISO } from "date-fns"
+import { isToday, isBefore, startOfToday, parseISO, format as formatDate } from "date-fns"
 import { useBudget } from "@/context/budget-context"
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from "@/firebase"
-import { collection, query, where, addDoc, serverTimestamp, doc, updateDoc, writeBatch, orderBy, getDocs, setDoc } from 'firebase/firestore'
+import { collection, query, where, addDoc, serverTimestamp, doc, updateDoc, writeBatch, getDocs, setDoc } from 'firebase/firestore'
 
 interface Notification {
     id: string;
@@ -43,8 +43,10 @@ export const createNotification = async (notification: Omit<Notification, 'creat
         if (notification.id) {
             const docRef = doc(firestore, `users/${userId}/notifications`, notification.id);
             const docSnap = await getDocs(query(collection(firestore, `users/${userId}/notifications`), where('id', '==', notification.id)));
-            if (!docSnap.empty) {
-                return; // Notification with this ID already exists, so we don't create it.
+             const docSnapManual = await getDoc(docRef);
+
+            if (docSnapManual.exists()) {
+                return; // Notification with this ID already exists
             }
         }
         
@@ -116,40 +118,34 @@ export function AppHeader({children}: {children: ReactNode}) {
 
     useEffect(() => {
         if (!user || !firestore) return;
-
+        
         const checkDailyNotifications = () => {
-            const lastNotificationDate = localStorage.getItem('dailyNotificationCheckDate');
-            const todayStr = new Date().toDateString();
-
-            if (lastNotificationDate !== todayStr) {
-                // Daily Check-in Notification if not already checked in
-                if (!isCheckedIn) {
-                    createNotification({
-                        id: `check-in-${todayStr}`,
-                        title: "দৈনিক চেক-ইন",
-                        description: "আজকের চেক-ইন করে রিওয়ার্ড পয়েন্ট অর্জন করুন।",
-                        link: "/check-in",
-                    }, user.uid, firestore);
-                }
-
-                // Debt Repayment Reminders
-                const today = startOfToday();
-                debtNotes.forEach(debt => {
-                    if (debt.repaymentDate && debt.status !== 'paid') {
-                        const repaymentDate = parseISO(debt.repaymentDate);
-                        if (isBefore(repaymentDate, today) || isToday(repaymentDate)) {
-                             createNotification({
-                                id: `debt-reminder-${debt.id}`,
-                                title: "ধার পরিশোধের রিমাইন্ডার",
-                                description: `${debt.person}-এর সাথে আপনার একটি ধার লেনদেন রয়েছে যা পরিশোধের সময় হয়েছে।`,
-                                link: "/debts",
-                            }, user.uid, firestore);
-                        }
-                    }
-                });
-                
-                localStorage.setItem('dailyNotificationCheckDate', todayStr);
+            const todayStr = formatDate(new Date(), 'yyyy-MM-dd');
+            // Daily Check-in Notification if not already checked in
+            if (!isCheckedIn) {
+                createNotification({
+                    id: `check-in-${todayStr}`,
+                    title: "দৈনিক চেক-ইন",
+                    description: "আজকের চেক-ইন করে রিওয়ার্ড পয়েন্ট অর্জন করুন।",
+                    link: "/check-in",
+                }, user.uid, firestore);
             }
+
+            // Debt Repayment Reminders
+            const today = startOfToday();
+            debtNotes.forEach(debt => {
+                if (debt.repaymentDate && debt.status !== 'paid') {
+                    const repaymentDate = parseISO(debt.repaymentDate);
+                    if (isBefore(repaymentDate, today) || isToday(repaymentDate)) {
+                         createNotification({
+                            id: `debt-reminder-${debt.id}`,
+                            title: "ধার পরিশোধের রিমাইন্ডার",
+                            description: `${debt.person}-এর সাথে আপনার একটি ধার লেনদেন রয়েছে যা পরিশোধের সময় হয়েছে।`,
+                            link: "/debts",
+                        }, user.uid, firestore);
+                    }
+                }
+            });
         };
 
         checkDailyNotifications();

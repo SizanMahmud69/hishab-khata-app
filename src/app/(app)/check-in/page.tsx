@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format, isToday, isYesterday, parseISO, subDays } from 'date-fns';
 import { bn } from 'date-fns/locale';
-import { useUser, useFirestore, useCollection, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase, FirestorePermissionError } from '@/firebase';
 import { collection, addDoc, serverTimestamp, query, orderBy, limit, updateDoc, doc } from 'firebase/firestore';
 
 const MAX_STREAK_DAYS = 30;
@@ -136,14 +136,6 @@ export default function CheckInPage() {
              if (error instanceof FirestorePermissionError) {
                 errorEmitter.emit('permission-error', error);
             } else {
-                errorEmitter.emit(
-                    'permission-error',
-                    new FirestorePermissionError({
-                        path: userDocRef.path,
-                        operation: 'update',
-                        requestResourceData: userUpdateData
-                    })
-                )
                  toast({
                     variant: "destructive",
                     title: "ত্রুটি",
