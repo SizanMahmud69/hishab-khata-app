@@ -5,6 +5,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import {
   Award,
+  BookMarked,
   HandCoins,
   History,
   LayoutDashboard,
@@ -19,6 +20,8 @@ import {
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -92,6 +95,12 @@ export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
 
   return (
     <Sidebar>
+       <SidebarHeader>
+        <Link href="/dashboard" className="flex items-center gap-2 font-bold text-lg" onClick={onLinkClick}>
+            <BookMarked className="h-7 w-7 text-primary" />
+            <span>হিসাব খাতা</span>
+        </Link>
+      </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
           {menuItems.map((item) => (
@@ -109,42 +118,33 @@ export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
-        <SidebarSeparator />
-         <SidebarMenu>
-            <SidebarMenuItem>
-                 <SidebarMenuButton
-                    asChild
-                    isActive={pathname === "/profile"}
-                    size="lg"
-                 >
-                    <Link href="/profile" onClick={onLinkClick}>
-                        <User />
-                        <span>প্রোফাইল</span>
-                    </Link>
-                 </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-                 <SidebarMenuButton
-                    asChild
-                    size="lg"
-                 >
-                    <Link href="#" onClick={onLinkClick}>
-                        <LifeBuoy />
-                        <span>সাপোর্ট</span>
-                    </Link>
-                 </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-                <SidebarMenuButton
-                    onClick={handleLogout}
-                    size="lg"
-                >
-                    <LogOut />
-                    <span>লগ-আউট</span>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-        </SidebarMenu>
       </SidebarContent>
+        <SidebarSeparator />
+        <SidebarFooter>
+            <SidebarMenu>
+                 <SidebarMenuItem>
+                    <SidebarMenuButton
+                        asChild
+                        isActive={pathname === "/profile"}
+                        size="lg"
+                    >
+                        <Link href="/profile" onClick={onLinkClick}>
+                            <User />
+                            <span>প্রোফাইল</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                    <SidebarMenuButton
+                        onClick={handleLogout}
+                        size="lg"
+                    >
+                        <LogOut />
+                        <span>লগ-আউট</span>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
+        </SidebarFooter>
     </Sidebar>
   )
 }
