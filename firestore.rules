@@ -18,11 +18,12 @@ service cloud.firestore {
 
     function isUpdatingAllowedUserFields() {
       // A user cannot change their core identifiers or sensitive info.
-      let protectedFields = ['id', 'userId', 'email', 'joinDate'];
+      // Define fields that are allowed to be updated by the user.
+      let allowedUpdates = ['name', 'avatar', 'phone', 'address', 'lastCheckIn', 'checkInStreak', 'verificationStatus', 'verificationRequestId', 'nidName', 'nidNumber', 'nidDob', 'nidAddress', 'nidRejectionReason'];
       let allIncomingKeys = request.resource.data.keys();
       
-      // Check that no protected fields are being changed.
-      return !allIncomingKeys.hasAny(protectedFields);
+      // Ensure that only allowed fields are being updated.
+      return allIncomingKeys.hasOnly(allowedUpdates);
     }
     
     function canUpdateWithdrawalRequest() {
@@ -47,7 +48,7 @@ service cloud.firestore {
       allow list: if false;
       // A signed-in user can create their own user document.
       allow create: if isSignedIn() && request.auth.uid == userId;
-      // A user can update their own document, but not protected fields.
+      // A user can update their own document, but only specific fields.
       allow update: if isOwner(userId) && isUpdatingAllowedUserFields();
       // Users should not be able to delete their own accounts this way.
       allow delete: if false;
