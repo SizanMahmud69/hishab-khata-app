@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "User": {
@@ -60,24 +61,11 @@
         },
         "verificationRequestId": {
           "type": "string",
-          "description": "ID of the current or last verification request document."
+          "description": "ID of the current or last verification request document in the sub-collection."
         },
-        "nidName": {
+        "nidRejectionReason": {
           "type": "string",
-          "description": "Name as per NID, submitted for verification."
-        },
-        "nidNumber": {
-          "type": "string",
-          "description": "NID card number, submitted for verification."
-        },
-        "nidDob": {
-          "type": "string",
-          "description": "Date of birth from NID, submitted for verification.",
-          "format": "date"
-        },
-        "nidAddress": {
-          "type": "string",
-          "description": "Address as per NID, submitted for verification."
+          "description": "Reason provided by admin if the NID verification was rejected."
         },
         "shops": {
           "type": "array",
@@ -232,7 +220,7 @@
         "nidAddress": { "type": "string" },
         "phone": { "type": "string" }
       },
-      "required": ["id", "userId", "status", "submittedAt"]
+      "required": ["id", "userId", "status", "submittedAt", "nidName", "nidNumber", "nidDob", "nidAddress", "phone"]
     },
     "WithdrawalRequest": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -337,7 +325,7 @@
         "definition": {
           "entityName": "VerificationRequest",
           "schema": { "$ref": "#/backend/entities/VerificationRequest" },
-          "description": "Stores a user's NID verification requests."
+          "description": "Stores a user's NID verification requests. Admins can update status from the console."
         }
       },
       {

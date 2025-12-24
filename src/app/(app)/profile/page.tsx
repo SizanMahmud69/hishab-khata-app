@@ -39,11 +39,20 @@ interface UserProfile {
     checkInStreak?: number;
     verificationStatus?: 'pending' | 'verified' | 'rejected' | 'none';
     verificationRequestId?: string;
-    nidName?: string;
-    nidNumber?: string;
-    nidDob?: string;
-    nidAddress?: string;
     nidRejectionReason?: string;
+}
+
+// Corresponds to the new VerificationRequest entity
+interface VerificationRequest {
+    id: string;
+    userId: string;
+    status: 'pending' | 'approved' | 'rejected';
+    submittedAt: any;
+    nidName: string;
+    nidNumber: string;
+    nidDob: string;
+    nidAddress: string;
+    phone: string;
 }
 
 
@@ -60,14 +69,24 @@ export default function ProfilePage() {
     return doc(firestore, 'users', user.uid);
   }, [user, firestore]);
 
-  const { data, isLoading } = useDoc<UserProfile>(userDocRef);
-  const [userProfileData, setUserProfileData] = useState<UserProfile | null>(null);
+  const { data: userProfileData, isLoading } = useDoc<UserProfile>(userDocRef);
+
+  // This will hold the details of the verification request if one exists and is fetched.
+  const [verificationRequest, setVerificationRequest] = useState<VerificationRequest | null>(null);
+  const [isVerificationRequestLoading, setIsVerificationRequestLoading] = useState(false);
+  
+  const verificationRequestDocRef = useMemoFirebase(() => {
+      if (!user || !firestore || !userProfileData?.verificationRequestId) return null;
+      return doc(firestore, `users/${user.uid}/verificationRequests`, userProfileData.verificationRequestId);
+  }, [user, firestore, userProfileData?.verificationRequestId]);
+
+  const { data: fetchedVerificationRequest, isLoading: isRequestDocLoading } = useDoc<VerificationRequest>(verificationRequestDocRef);
 
   useEffect(() => {
-    if (data) {
-        setUserProfileData(data);
-    }
-  }, [data]);
+      if (fetchedVerificationRequest) {
+          setVerificationRequest(fetchedVerificationRequest);
+      }
+  }, [fetchedVerificationRequest]);
 
 
   useEffect(() => {
@@ -95,7 +114,7 @@ export default function ProfilePage() {
 
   const handleNidSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!user || !firestore) return;
+    if (!user || !firestore || !userDocRef) return;
 
     setIsSubmitting(true);
     const formData = new FormData(event.currentTarget);
@@ -114,29 +133,27 @@ export default function ProfilePage() {
       setIsSubmitting(false);
       return;
     }
+    
+    const requestData = {
+        userId: user.uid,
+        status: 'pending',
+        submittedAt: serverTimestamp(),
+        nidName: name,
+        nidNumber: nid,
+        nidDob: dob,
+        nidAddress: address,
+        phone: phone,
+    };
 
     try {
         const verificationRequestRef = collection(firestore, `users/${user.uid}/verificationRequests`);
-        const newRequestDoc = await addDoc(verificationRequestRef, {
-            userId: user.uid,
-            status: 'pending',
-            submittedAt: serverTimestamp(),
-            nidName: name,
-            nidNumber: nid,
-            nidDob: dob,
-            nidAddress: address,
-            phone: phone,
-        });
+        const newRequestDoc = await addDoc(verificationRequestRef, requestData);
 
-        await setDoc(userDocRef!, {
+        await setDoc(userDocRef, {
             verificationStatus: 'pending',
             verificationRequestId: newRequestDoc.id,
-            nidName: name,
-            nidNumber: nid,
-            nidDob: dob,
-            nidAddress: address,
-            phone: phone,
             nidRejectionReason: '', // Clear previous reason
+            phone: phone,
         }, { merge: true });
 
         toast({
@@ -159,34 +176,43 @@ export default function ProfilePage() {
 
   const VerificationStatus = () => {
     if (userProfileData?.verificationStatus === 'verified') {
+      if(isRequestDocLoading || !verificationRequest) {
+          return (
+             <div className="space-y-4">
+                <Skeleton className="h-6 w-3/4" />
+                <Skeleton className="h-6 w-1/2" />
+                <Skeleton className="h-6 w-2/3" />
+            </div>
+          )
+      }
       return (
         <div className="space-y-4">
           <div className="flex items-start gap-4">
             <UserIcon className="w-6 h-6 text-muted-foreground mt-1" />
             <div className="flex-1">
               <p className="text-sm font-medium">নাম (এনআইডি অনুযায়ী)</p>
-              <p className="text-muted-foreground">{userProfileData.nidName}</p>
+              <p className="text-muted-foreground">{verificationRequest.nidName}</p>
             </div>
           </div>
           <div className="flex items-start gap-4">
             <UserCheck className="w-6 h-6 text-muted-foreground mt-1" />
             <div className="flex-1">
               <p className="text-sm font-medium">এনআইডি নম্বর</p>
-              <p className="text-muted-foreground">{userProfileData.nidNumber}</p>
+              <p className="text-muted-foreground">{verificationRequest.nidNumber}</p>
             </div>
           </div>
           <div className="flex items-start gap-4">
             <Cake className="w-6 h-6 text-muted-foreground mt-1" />
             <div className="flex-1">
               <p className="text-sm font-medium">জন্ম তারিখ</p>
-              <p className="text-muted-foreground">{userProfileData.nidDob ? new Date(userProfileData.nidDob).toLocaleDateString('bn-BD') : 'N/A'}</p>
+              <p className="text-muted-foreground">{verificationRequest.nidDob ? new Date(verificationRequest.nidDob).toLocaleDateString('bn-BD') : 'N/A'}</p>
             </div>
           </div>
           <div className="flex items-start gap-4">
             <MapPin className="w-6 h-6 text-muted-foreground mt-1" />
             <div className="flex-1">
               <p className="text-sm font-medium">ঠিকানা (এনআইডি অনুযায়ী)</p>
-              <p className="text-muted-foreground">{userProfileData.nidAddress}</p>
+              <p className="text-muted-foreground">{verificationRequest.nidAddress}</p>
             </div>
           </div>
         </div>

@@ -61,7 +61,9 @@ service cloud.firestore {
 
       // Sub-collection for NID verification requests
       match /verificationRequests/{requestId} {
-        allow read, write: if isOwner(userId); 
+        allow get, create: if isOwner(userId);
+        // Only admin should be able to update (approve/reject) or delete requests.
+        allow update, delete, list: if false; 
       }
 
       // Sub-collection for reward point withdrawal requests
@@ -74,9 +76,7 @@ service cloud.firestore {
       
       // Sub-collection for notifications
       match /notifications/{notificationId} {
-        allow read: if isOwner(userId);
-        allow create, update: if isOwner(userId);
-        allow delete: if false;
+        allow read, write: if isOwner(userId);
       }
     }
     
