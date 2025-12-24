@@ -4,7 +4,7 @@ import Link from "next/link"
 import { type ReactNode, useState, useEffect } from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
-import { Bell, BookMarked, Menu, CalendarDays } from "lucide-react"
+import { Bell, BookMarked, Menu, CalendarCheck, CalendarPlus } from "lucide-react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import {
     DropdownMenu,
@@ -88,7 +88,7 @@ export function AppHeader({children}: {children: ReactNode}) {
                     n.title === "দৈনিক চেক-ইন" && isToday(parseISO(n.createdAt))
                 );
 
-                if (!hasTodayCheckinNotification && !isCheckedIn) {
+                if (!hasTodayCheckinNotification) {
                     createNotification({
                         title: "দৈনিক চেক-ইন",
                         description: "আজকের চেক-ইন করে রিওয়ার্ড পয়েন্ট অর্জন করুন।",
@@ -186,7 +186,11 @@ export function AppHeader({children}: {children: ReactNode}) {
                 <div className="flex items-center gap-2">
                      <Button variant="ghost" size="icon" asChild className={cn("rounded-full", !isCheckedIn && "animate-glow")}>
                         <Link href="/check-in">
-                           <CalendarDays className={cn("h-5 w-5", isCheckedIn ? "text-green-500" : "text-primary")} />
+                           {isCheckedIn ? (
+                                <CalendarCheck className="h-5 w-5 text-green-500" />
+                            ) : (
+                                <CalendarPlus className="h-5 w-5 text-primary" />
+                            )}
                             <span className="sr-only">Check In</span>
                         </Link>
                     </Button>
