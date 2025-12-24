@@ -77,12 +77,14 @@ service cloud.firestore {
       
       // Sub-collection for notifications
       match /notifications/{notificationId} {
-        allow read, write: if isOwner(userId);
+        allow create, update: if isOwner(userId);
+        allow read: if isOwner(userId);
+        allow delete: if false;
       }
       
       // Sub-collection for referral records
       match /referrals/{referralId} {
-        allow get, list: if isOwner(userId);
+        allow get, list: if request.auth.uid == userId;
         // Only the system (via a new user signup) can create these records
         allow create: if isSignedIn();
         allow update, delete: if false;
