@@ -134,7 +134,7 @@ export default function Home() {
                 &copy; {new Date().getFullYear()} <span className='font-bold text-primary'>হিসাব খাতা</span>. All rights reserved.
             </p>
             <div className='text-sm text-muted-foreground'>
-                Developer: <span className="font-semibold">Sizan Mahmud</span> &amp; Designer: <span className="font-semibold">Black Dimond</span>
+                Developer: <span className="font-semibold">Sizan Mahmud</span> & Designer: <span className="font-semibold">Black Dimond</span>
             </div>
         </div>
       </footer>

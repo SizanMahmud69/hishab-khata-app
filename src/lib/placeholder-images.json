@@ -1,3 +1,10 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "finance-app-dashboard",
+      "description": "A clean and modern dashboard interface for a financial application, showing charts and recent transactions.",
+      "imageUrl": "https://images.unsplash.com/photo-1653933686802-86d21b59b03b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxkYXNoYm9hcmQlMjB1aXxlbnwwfHx8fDE3NjY1MTUxNzZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "dashboard ui"
+    }
+  ]
 }
