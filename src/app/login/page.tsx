@@ -100,7 +100,7 @@ export default function LoginPage() {
                 <div className="flex items-center">
                   <Label htmlFor="password">পাসওয়ার্ড</Label>
                    <Link
-                    href="#"
+                    href="/forgot-password"
                     className="ml-auto inline-block text-sm underline"
                   >
                     পাসওয়ার্ড ভুলে গেছেন?
