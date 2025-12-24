@@ -65,8 +65,7 @@ service cloud.firestore {
       
       // Sub-collection for daily check-ins
       match /checkIns/{checkInId} {
-        allow list: if isOwner(userId);
-        allow get, create, delete, update: if isOwner(userId);
+        allow list, get, create, delete, update: if isOwner(userId);
       }
 
       // Sub-collection for NID verification requests

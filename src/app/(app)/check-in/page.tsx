@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format, isToday, isYesterday, parseISO, subDays } from 'date-fns';
 import { bn } from 'date-fns/locale';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { collection, addDoc, serverTimestamp, query, orderBy, limit, setDoc, doc } from 'firebase/firestore';
 
 const MAX_STREAK_DAYS = 30;
@@ -108,22 +108,32 @@ export default function CheckInPage() {
         const newCheckIn = {
             date: today.toISOString(),
             points: points,
+            createdAt: serverTimestamp(),
+        };
+
+        const userUpdateData = {
+            lastCheckIn: today.toISOString().split('T')[0],
+            checkInStreak: newConsecutiveDays
         };
 
         try {
             const collectionRef = collection(firestore, `users/${user.uid}/checkIns`);
-            await addDoc(collectionRef, {
-                ...newCheckIn,
-                createdAt: serverTimestamp(),
-            });
+            await addDoc(collectionRef, newCheckIn);
 
             await addRewardPoints(points);
 
             const userDocRef = doc(firestore, `users/${user.uid}`);
-            await setDoc(userDocRef, {
-                lastCheckIn: today.toISOString().split('T')[0],
-                checkInStreak: newConsecutiveDays
-            }, { merge: true });
+            
+            setDoc(userDocRef, userUpdateData, { merge: true }).catch(error => {
+                 errorEmitter.emit(
+                    'permission-error',
+                    new FirestorePermissionError({
+                        path: userDocRef.path,
+                        operation: 'update',
+                        requestResourceData: userUpdateData
+                    })
+                )
+            });
 
             toast({
                 title: "অভিনন্দন!",
