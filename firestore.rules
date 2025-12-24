@@ -17,13 +17,16 @@ service cloud.firestore {
     }
 
     function isUpdatingAllowedUserFields() {
-      // A user cannot change their core identifiers or sensitive info.
-      // Define fields that are allowed to be updated by the user.
-      let allowedUpdates = ['name', 'avatar', 'phone', 'address', 'lastCheckIn', 'checkInStreak', 'verificationStatus', 'verificationRequestId', 'nidName', 'nidNumber', 'nidDob', 'nidAddress'];
-      let allIncomingKeys = request.resource.data.keys();
-      
-      // Ensure that only allowed fields are being updated.
-      return allIncomingKeys.hasOnly(allowedUpdates);
+        // Defines the fields a user is allowed to update on their own profile.
+        let userUpdatableFields = [
+            'name', 'avatar', 'phone', 'address', 
+            'lastCheckIn', 'checkInStreak', 
+            'verificationStatus', 'verificationRequestId', 
+            'nidName', 'nidNumber', 'nidDob', 'nidAddress'
+        ];
+        
+        // Check that all keys in the incoming data are in the allowed list.
+        return request.resource.data.keys().hasOnly(userUpdatableFields);
     }
     
     function canUpdateWithdrawalRequest() {
