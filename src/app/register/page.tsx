@@ -13,9 +13,8 @@ import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useAuth, useFirestore } from "@/firebase";
 import { doc, setDoc, serverTimestamp, getDoc, query, collection, where, getDocs, writeBatch, increment } from "firebase/firestore";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useBudget } from "@/context/budget-context";
 
-const REFERRER_BONUS = 100;
-const REFERRED_USER_BONUS = 50;
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState('');
@@ -28,6 +27,7 @@ export default function RegisterPage() {
   const { toast } = useToast();
   const auth = useAuth();
   const firestore = useFirestore();
+  const { referrerBonusPoints, referredUserBonusPoints } = useBudget();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,7 +96,11 @@ export default function RegisterPage() {
         const configDocRef = doc(firestore, "app_config", "settings");
         const configDocSnap = await getDoc(configDocRef);
         if (!configDocSnap.exists()) {
-          await setDoc(configDocRef, { minWithdrawalPoints: 1000 });
+          await setDoc(configDocRef, { 
+            minWithdrawalPoints: 1000,
+            referrerBonusPoints: 100,
+            referredUserBonusPoints: 50,
+           });
         }
         
         const userDocRef = doc(firestore, "users", user.uid);
@@ -113,11 +117,11 @@ export default function RegisterPage() {
             avatar: user.photoURL || `https://i.pravatar.cc/150?u=${user.email}`,
             phone: user.phoneNumber || '',
             address: '',
-            points: referrer ? REFERRED_USER_BONUS : 0, // Bonus for referred user
+            points: referrer ? referredUserBonusPoints : 0, // Bonus for referred user
             joinDate: serverTimestamp(),
             lastCheckIn: null,
             checkInStreak: 0,
-            verificationStatus: 'none',
+            verificationRequestId: null,
             referralCode: ownReferralCode,
             referredBy: referrer ? referrer.id : null,
         });
@@ -126,14 +130,14 @@ export default function RegisterPage() {
         if (referrer) {
             const referrerDocRef = doc(firestore, "users", referrer.id);
             // Add bonus points to referrer
-            batch.update(referrerDocRef, { points: increment(REFERRER_BONUS) });
+            batch.update(referrerDocRef, { points: increment(referrerBonusPoints) });
 
             // Add a record to the referrer's `referrals` subcollection
             const referralRecordRef = doc(collection(firestore, `users/${referrer.id}/referrals`));
             batch.set(referralRecordRef, {
                 referredUserId: user.uid,
                 referredUserName: fullName,
-                bonusPoints: REFERRER_BONUS,
+                bonusPoints: referrerBonusPoints,
                 createdAt: serverTimestamp(),
             });
         }
@@ -280,3 +284,5 @@ export default function RegisterPage() {
     </div>
   )
 }
+
+    

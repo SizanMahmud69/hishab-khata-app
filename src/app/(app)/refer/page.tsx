@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { bn } from 'date-fns/locale';
+import { useBudget } from '@/context/budget-context';
 
 interface UserProfile {
     userId: string;
@@ -24,13 +25,13 @@ interface Referral {
     createdAt: any; // Firestore Timestamp
 }
 
-const REFERRER_BONUS = 100;
-const REFERRED_USER_BONUS = 50;
 
 export default function ReferPage() {
     const { toast } = useToast();
     const { user } = useUser();
     const firestore = useFirestore();
+    const { referrerBonusPoints, referredUserBonusPoints } = useBudget();
+
 
     const userDocRef = useMemoFirebase(() => {
         if (!user || !firestore) return null;
@@ -111,7 +112,7 @@ export default function ReferPage() {
                 <CardContent className="space-y-3 text-muted-foreground">
                     <p>১. আপনার বন্ধুদের সাথে আপনার ইউনিক রেফারেল কোড শেয়ার করুন।</p>
                     <p>২. আপনার বন্ধু নিবন্ধন করার সময় আপনার কোডটি ব্যবহার করবে।</p>
-                    <p>৩. সফল নিবন্ধনের পর, আপনি <span className="font-bold text-primary">{REFERRER_BONUS}</span> বোনাস পয়েন্ট এবং আপনার বন্ধু <span className="font-bold text-primary">{REFERRED_USER_BONUS}</span> সাইন-আপ বোনাস পয়েন্ট পাবেন।</p>
+                    <p>৩. সফল নিবন্ধনের পর, আপনি <span className="font-bold text-primary">{referrerBonusPoints}</span> বোনাস পয়েন্ট এবং আপনার বন্ধু <span className="font-bold text-primary">{referredUserBonusPoints}</span> সাইন-আপ বোনাস পয়েন্ট পাবেন।</p>
                 </CardContent>
             </Card>
             
@@ -154,3 +155,5 @@ export default function ReferPage() {
         </div>
     );
 }
+
+    

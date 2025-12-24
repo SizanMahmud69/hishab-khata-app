@@ -42,6 +42,8 @@ interface UserProfile {
 
 interface AppConfig {
     minWithdrawalPoints: number;
+    referrerBonusPoints: number;
+    referredUserBonusPoints: number;
 }
 
 interface BudgetContextType {
@@ -55,6 +57,8 @@ interface BudgetContextType {
     totalSavings: number;
     rewardPoints: number;
     minWithdrawalPoints: number;
+    referrerBonusPoints: number;
+    referredUserBonusPoints: number;
     addRewardPoints: (points: number) => void;
     deductRewardPoints: (points: number) => void;
     isLoading: boolean;
@@ -71,7 +75,9 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [debtNotes, setDebtNotes] = useState<DebtNote[]>([]);
     const [rewardPoints, setRewardPoints] = useState(0);
-    const [minWithdrawalPoints, setMinWithdrawalPoints] = useState(1000); // Default fallback
+    const [minWithdrawalPoints, setMinWithdrawalPoints] = useState(1000);
+    const [referrerBonusPoints, setReferrerBonusPoints] = useState(100);
+    const [referredUserBonusPoints, setReferredUserBonusPoints] = useState(50);
     const [isDataLoading, setIsDataLoading] = useState(true);
 
     const userDocRef = useMemoFirebase(() => {
@@ -141,6 +147,8 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             if (doc.exists()) {
                 const configData = doc.data() as AppConfig;
                 setMinWithdrawalPoints(configData.minWithdrawalPoints || 1000);
+                setReferrerBonusPoints(configData.referrerBonusPoints || 100);
+                setReferredUserBonusPoints(configData.referredUserBonusPoints || 50);
             }
             onDataLoaded();
         }, (err) => {
@@ -292,6 +300,8 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             totalSavings, 
             rewardPoints,
             minWithdrawalPoints,
+            referrerBonusPoints,
+            referredUserBonusPoints,
             addRewardPoints, 
             deductRewardPoints, 
             isLoading 
@@ -308,3 +318,5 @@ export const useBudget = () => {
     }
     return context;
 };
+
+    

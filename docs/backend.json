@@ -250,9 +250,17 @@
         "minWithdrawalPoints": {
           "type": "number",
           "description": "The minimum number of points a user must have to make a withdrawal request."
+        },
+        "referrerBonusPoints": {
+          "type": "number",
+          "description": "Points awarded to the user who refers a new user."
+        },
+        "referredUserBonusPoints": {
+          "type": "number",
+          "description": "Points awarded to the new user who signs up with a referral code."
         }
       },
-      "required": ["minWithdrawalPoints"]
+      "required": ["minWithdrawalPoints", "referrerBonusPoints", "referredUserBonusPoints"]
     },
     "Notification": {
       "$schema": "http://json-schema.org/draft-07/schema#",
