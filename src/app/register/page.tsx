@@ -2,8 +2,8 @@
 "use client";
 
 import Link from "next/link"
-import { BookMarked, ArrowRight, Loader2 } from "lucide-react"
-import { useState } from "react";
+import { BookMarked, ArrowRight, Loader2, CheckCircle } from "lucide-react"
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,6 +14,7 @@ import { useAuth, useFirestore } from "@/firebase";
 import { doc, setDoc, serverTimestamp, getDoc, query, collection, where, getDocs, writeBatch, increment } from "firebase/firestore";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BudgetClientProvider, useBudget } from "@/context/budget-context-provider";
+import { useDebounce } from "react-use";
 
 
 function RegisterPageContent() {
@@ -23,11 +24,43 @@ function RegisterPageContent() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [referralCode, setReferralCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [referrerName, setReferrerName] = useState<string | null>(null);
+  const [isCheckingReferral, setIsCheckingReferral] = useState(false);
+  
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
   const firestore = useFirestore();
   const { referrerBonusPoints, referredUserBonusPoints } = useBudget();
+
+  const checkReferralCode = useCallback(async (code: string) => {
+    if (!code.trim() || !firestore) {
+        setReferrerName(null);
+        return;
+    }
+    setIsCheckingReferral(true);
+    try {
+        const usersRef = collection(firestore, "users");
+        const q = query(usersRef, where("referralCode", "==", code.trim()));
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+            const referrerDoc = querySnapshot.docs[0];
+            setReferrerName(referrerDoc.data().name);
+        } else {
+            setReferrerName(null);
+        }
+    } catch (error) {
+        console.error("Error checking referral code:", error);
+        setReferrerName(null);
+    } finally {
+        setIsCheckingReferral(false);
+    }
+  }, [firestore]);
+
+  useDebounce(() => {
+    checkReferralCode(referralCode)
+  }, 500, [referralCode]);
+
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -152,6 +185,7 @@ function RegisterPageContent() {
       router.push('/dashboard');
 
     } catch (error: any) {
+      console.error(error);
       let errorMessage = "নিবন্ধন করার সময় একটি সমস্যা হয়েছে।";
       if (error.code === 'auth/email-already-in-use') {
         errorMessage = "এই ইমেইল দিয়ে আগেই অ্যাকাউন্ট খোলা হয়েছে।";
@@ -248,6 +282,19 @@ function RegisterPageContent() {
                   onChange={(e) => setReferralCode(e.target.value)}
                   disabled={isLoading}
                 />
+                <div className="h-4 px-1 text-xs">
+                    {isCheckingReferral ? (
+                        <div className="flex items-center text-muted-foreground">
+                            <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                            Checking...
+                        </div>
+                    ) : referrerName ? (
+                        <div className="flex items-center text-green-600 font-medium">
+                            <CheckCircle className="mr-1 h-3 w-3" />
+                            Referred by: {referrerName}
+                        </div>
+                    ) : null}
+                </div>
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
