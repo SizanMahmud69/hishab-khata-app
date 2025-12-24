@@ -11,15 +11,18 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useAuth, useFirestore } from "@/firebase";
-import { doc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp, getDoc, query, collection, where, getDocs, writeBatch, increment } from "firebase/firestore";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+const REFERRER_BONUS = 100;
+const REFERRED_USER_BONUS = 50;
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [referralId, setReferralId] = useState('');
+  const [referralCode, setReferralCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
@@ -61,6 +64,26 @@ export default function RegisterPage() {
     }
 
     try {
+      // Find referrer if code is provided
+      let referrer: { id: string, name: string } | null = null;
+      if (referralCode.trim()) {
+        const usersRef = collection(firestore, "users");
+        const q = query(usersRef, where("referralCode", "==", referralCode.trim()));
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+            const referrerDoc = querySnapshot.docs[0];
+            referrer = { id: referrerDoc.id, name: referrerDoc.data().name };
+        } else {
+            toast({
+                variant: "destructive",
+                title: "অবৈধ রেফার কোড",
+                description: "প্রদত্ত রেফার কোডটি সঠিক নয়।",
+            });
+            setIsLoading(false);
+            return;
+        }
+      }
+
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       
@@ -69,17 +92,20 @@ export default function RegisterPage() {
           displayName: fullName
         });
 
+        // Ensure app config exists
         const configDocRef = doc(firestore, "app_config", "settings");
         const configDocSnap = await getDoc(configDocRef);
-
         if (!configDocSnap.exists()) {
-          await setDoc(configDocRef, {
-            minWithdrawalPoints: 1000
-          });
+          await setDoc(configDocRef, { minWithdrawalPoints: 1000 });
         }
         
         const userDocRef = doc(firestore, "users", user.uid);
-        await setDoc(userDocRef, {
+        const ownReferralCode = `#${fullName.split(' ')[0].toLowerCase()}-${Math.random().toString(36).substr(2, 4)}`;
+
+        const batch = writeBatch(firestore);
+
+        // 1. Set new user's document
+        batch.set(userDocRef, {
             id: user.uid,
             userId: `#hishab-${Math.random().toString(36).substr(2, 4)}`,
             name: fullName,
@@ -87,12 +113,32 @@ export default function RegisterPage() {
             avatar: user.photoURL || `https://i.pravatar.cc/150?u=${user.email}`,
             phone: user.phoneNumber || '',
             address: '',
-            points: 0,
+            points: referrer ? REFERRED_USER_BONUS : 0, // Bonus for referred user
             joinDate: serverTimestamp(),
             lastCheckIn: null,
             checkInStreak: 0,
             verificationStatus: 'none',
+            referralCode: ownReferralCode,
+            referredBy: referrer ? referrer.id : null,
         });
+
+        // 2. If referred, update referrer
+        if (referrer) {
+            const referrerDocRef = doc(firestore, "users", referrer.id);
+            // Add bonus points to referrer
+            batch.update(referrerDocRef, { points: increment(REFERRER_BONUS) });
+
+            // Add a record to the referrer's `referrals` subcollection
+            const referralRecordRef = doc(collection(firestore, `users/${referrer.id}/referrals`));
+            batch.set(referralRecordRef, {
+                referredUserId: user.uid,
+                referredUserName: fullName,
+                bonusPoints: REFERRER_BONUS,
+                createdAt: serverTimestamp(),
+            });
+        }
+        
+        await batch.commit();
       }
 
       toast({
@@ -190,12 +236,12 @@ export default function RegisterPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="referral-id">রেফার আইডি (ঐচ্ছিক)</Label>
+                <Label htmlFor="referral-code">রেফার কোড (ঐচ্ছিক)</Label>
                 <Input 
-                  id="referral-id" 
-                  placeholder="রেফারেল আইডি"
-                  value={referralId}
-                  onChange={(e) => setReferralId(e.target.value)}
+                  id="referral-code" 
+                  placeholder="রেফারেল কোড"
+                  value={referralCode}
+                  onChange={(e) => setReferralCode(e.target.value)}
                   disabled={isLoading}
                 />
               </div>

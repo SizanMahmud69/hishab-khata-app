@@ -15,6 +15,7 @@ import {
   PlusCircle,
   Store,
   User,
+  Users,
 } from "lucide-react"
 
 import {
@@ -66,6 +67,11 @@ const menuItems = [
         href: "/rewards",
         label: "রিওয়ার্ড",
         icon: Award,
+    },
+    {
+        href: "/refer",
+        label: "রেফার",
+        icon: Users,
     },
 ]
 

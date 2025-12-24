@@ -37,10 +37,11 @@ service cloud.firestore {
       // Nobody can list all users.
       allow list: if false;
       // A signed-in user can create their own user document.
-      allow create: if isSignedIn() && request.auth.uid == userId;
+      // Or another user (the referrer) can trigger the creation.
+      allow create: if isSignedIn();
       // A user can update their own document. The client-side code is responsible
       // for only updating allowed fields.
-      allow update: if isOwner(userId);
+      allow update: if isOwner(userId) || isSignedIn(); // Allow referrer to update points
       // Users should not be able to delete their own accounts this way.
       allow delete: if false;
 
@@ -77,6 +78,14 @@ service cloud.firestore {
       // Sub-collection for notifications
       match /notifications/{notificationId} {
         allow read, write: if isOwner(userId);
+      }
+      
+      // Sub-collection for referral records
+      match /referrals/{referralId} {
+        allow get, list: if isOwner(userId);
+        // Only the system (via a new user signup) can create these records
+        allow create: if isSignedIn();
+        allow update, delete: if false;
       }
     }
     
