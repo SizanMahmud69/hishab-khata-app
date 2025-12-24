@@ -129,6 +129,23 @@ export default function LoginPage() {
               নিবন্ধন করুন
             </Link>
           </div>
+           <div className="mt-4 px-8 text-center text-xs text-muted-foreground">
+            চালিয়ে যাওয়ার মাধ্যমে, আপনি আমাদের{" "}
+            <Link
+              href="/terms-and-conditions"
+              className="underline underline-offset-4 hover:text-primary"
+            >
+              ব্যবহারের শর্তাবলী
+            </Link>{" "}
+            এবং{" "}
+            <Link
+              href="/privacy-policy"
+              className="underline underline-offset-4 hover:text-primary"
+            >
+              গোপনীয়তা নীতিতে
+            </Link>
+            {" "}সম্মত হচ্ছেন।
+          </div>
         </CardContent>
       </Card>
     </div>
