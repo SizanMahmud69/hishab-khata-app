@@ -191,12 +191,9 @@ export function AppHeader({children}: {children: ReactNode}) {
                     </Link>
                 </div>
                 <div className="flex items-center gap-2">
-                     <Button variant="ghost" size="icon" asChild className="rounded-full">
+                     <Button variant="ghost" size="icon" asChild className={cn("rounded-full", !isCheckedIn && "animate-glow")}>
                         <Link href="/check-in">
-                           <CalendarDays className={cn(
-                                "h-5 w-5",
-                                isCheckedIn ? "text-green-500" : "animate-glow text-primary"
-                            )} />
+                           <CalendarDays className={cn("h-5 w-5", isCheckedIn ? "text-green-500" : "text-primary")} />
                             <span className="sr-only">Check In</span>
                         </Link>
                     </Button>
