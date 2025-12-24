@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -100,7 +101,7 @@ const SidebarContent = React.forwardRef<
       ref={ref}
       data-sidebar="content"
       className={cn(
-        "flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-2",
+        "flex-1 min-h-0 overflow-y-auto overflow-x-hidden",
         className
       )}
       {...props}
