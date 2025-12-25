@@ -32,7 +32,7 @@ function RegisterPageContent() {
   const { toast } = useToast();
   const auth = useAuth();
   const firestore = useFirestore();
-  const { referrerBonusPoints, referredUserBonusPoints } = useBudget();
+  const { referrerBonusPoints, referredUserBonusPoints, bdtPer100Points } = useBudget();
 
   const checkReferralCode = useCallback(async (code: string) => {
     if (!code.trim() || !firestore) {
@@ -124,6 +124,7 @@ function RegisterPageContent() {
             minWithdrawalPoints: 1000,
             referrerBonusPoints: 100,
             referredUserBonusPoints: 50,
+            bdtPer100Points: 5,
            });
         }
         
@@ -364,3 +365,5 @@ export default function RegisterPage() {
         </BudgetClientProvider>
     )
 }
+
+    

@@ -258,9 +258,13 @@
         "referredUserBonusPoints": {
           "type": "number",
           "description": "Points awarded to the new user who signs up with a referral code."
+        },
+        "bdtPer100Points": {
+            "type": "number",
+            "description": "The amount of BDT equivalent to 100 reward points."
         }
       },
-      "required": ["minWithdrawalPoints", "referrerBonusPoints", "referredUserBonusPoints"]
+      "required": ["minWithdrawalPoints", "referrerBonusPoints", "referredUserBonusPoints", "bdtPer100Points"]
     },
     "Notification": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -385,3 +389,5 @@
     ]
   }
 }
+
+    

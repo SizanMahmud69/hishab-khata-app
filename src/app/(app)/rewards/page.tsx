@@ -46,14 +46,12 @@ interface PointHistoryItem {
     status?: 'pending' | 'approved' | 'rejected';
 }
 
-const CONVERSION_RATE = 5; // 100 points = 5 BDT
-
 function RewardsPageContent() {
     const { user } = useUser();
     const firestore = useFirestore();
     const searchParams = useSearchParams();
     const historyRef = useRef<HTMLDivElement>(null);
-    const { minWithdrawalPoints } = useBudget();
+    const { minWithdrawalPoints, bdtPer100Points } = useBudget();
 
     const userDocRef = useMemoFirebase(() => {
         if (!user || !firestore) return null;
@@ -145,7 +143,7 @@ function RewardsPageContent() {
     
     const canWithdraw = rewardPoints >= minWithdrawalPoints;
     const isLoading = isUserLoading || isCheckInsLoading || isWithdrawalsLoading || areReferralsLoading;
-    const equivalentAmountBdt = Math.floor(rewardPoints / 100) * CONVERSION_RATE;
+    const equivalentAmountBdt = Math.floor(rewardPoints / 100) * bdtPer100Points;
     
     const getStatusText = (status?: 'pending' | 'approved' | 'rejected') => {
         switch (status) {
@@ -192,9 +190,12 @@ function RewardsPageContent() {
             <Trophy className="absolute -top-4 -left-4 w-16 h-16 text-yellow-200 opacity-20 transform -rotate-12" />
             <Medal className="absolute -bottom-6 -right-4 w-20 h-20 text-yellow-200 opacity-20 transform rotate-12" />
             <div className="text-6xl font-bold text-white drop-shadow-lg">{rewardPoints}</div>
+            <p className="text-sm font-medium text-yellow-200 mt-2">(১০০ পয়েন্ট = ৳ {bdtPer100Points})</p>
             <p className="text-lg font-semibold text-yellow-100 mt-1">≈ ৳ {equivalentAmountBdt}</p>
-            <p className="text-center text-yellow-200 font-medium mt-4">নিয়মিত অ্যাপ ব্যবহার করে আরও পয়েন্ট অর্জন করুন।</p>
         </CardContent>
+        <CardFooter className='flex flex-col items-center justify-center p-4 bg-black/10'>
+            <p className="text-center text-yellow-200 font-medium text-sm">নিয়মিত অ্যাপ ব্যবহার করে আরও পয়েন্ট অর্জন করুন।</p>
+        </CardFooter>
       </Card>
       
       {canWithdraw ? (
@@ -269,3 +270,5 @@ export default function RewardsPage() {
         </React.Suspense>
     )
 }
+
+    

@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -26,8 +27,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 
-const CONVERSION_RATE = 5; // 100 points = 5 BDT
-
 interface UserProfile {
     points?: number;
 }
@@ -46,7 +45,7 @@ export interface WithdrawalRequest {
 }
 
 export default function WithdrawPage() {
-    const { deductRewardPoints, minWithdrawalPoints } = useBudget();
+    const { deductRewardPoints, minWithdrawalPoints, bdtPer100Points } = useBudget();
     const { toast } = useToast();
     const { user } = useUser();
     const firestore = useFirestore();
@@ -73,7 +72,7 @@ export default function WithdrawPage() {
     const { data: history, isLoading: isHistoryLoading } = useCollection<WithdrawalRequest>(withdrawalHistoryQuery);
 
     const canWithdraw = rewardPoints >= minWithdrawalPoints;
-    const selectedAmountBdt = Math.floor(pointsToWithdraw / 100) * CONVERSION_RATE;
+    const selectedAmountBdt = Math.floor(pointsToWithdraw / 100) * bdtPer100Points;
 
     const lastRejectedRequest = useMemo(() => {
         if (!history) return null;
@@ -134,7 +133,7 @@ export default function WithdrawPage() {
             return;
         }
 
-        const withdrawnTkAmount = (pointsToDeduct / 100) * CONVERSION_RATE;
+        const withdrawnTkAmount = (pointsToDeduct / 100) * bdtPer100Points;
 
         try {
             const batch = writeBatch(firestore);
@@ -159,7 +158,7 @@ export default function WithdrawPage() {
                 title: "উইথড্র অনুরোধ সফল হয়েছে",
                 description: `${pointsToDeduct} পয়েন্টের বিনিময়ে ${withdrawnTkAmount} টাকা পাঠানোর অনুরোধ প্রক্রিয়াধীন আছে।`,
                 link: "/withdraw?section=history",
-            });
+            }, user.uid, firestore);
 
             toast({
                 title: "সফল!",
