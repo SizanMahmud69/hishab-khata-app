@@ -191,7 +191,7 @@ export function AppHeader({children}: {children: ReactNode}) {
                     </Sheet>
                     <Link href="/dashboard" className="flex items-center gap-2 font-bold" onClick={handleLinkClick}>
                         <BookMarked className="h-6 w-6 text-primary" />
-                        <span className="hidden sm:inline">হিসাব খাতা</span>
+                        <span>হিসাব খাতা</span>
                     </Link>
                 </div>
                 <div className="flex items-center gap-2">
