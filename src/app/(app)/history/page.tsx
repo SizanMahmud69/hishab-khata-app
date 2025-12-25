@@ -19,6 +19,8 @@ export default function HistoryPage() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [tempDate, setTempDate] = useState<DateRange | undefined>(undefined);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [isStartCalendarOpen, setIsStartCalendarOpen] = useState(false);
+  const [isEndCalendarOpen, setIsEndCalendarOpen] = useState(false);
 
 
   const sortedTransactions = useMemo(() => {
@@ -84,7 +86,7 @@ export default function HistoryPage() {
           <PopoverContent className="w-auto p-4 space-y-4">
               <div className="text-center font-semibold">তারিখ অনুযায়ী ফিল্টার</div>
               <div className="flex flex-col sm:flex-row items-center gap-4">
-                <Popover>
+                <Popover open={isStartCalendarOpen} onOpenChange={setIsStartCalendarOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant={"outline"}
@@ -101,12 +103,15 @@ export default function HistoryPage() {
                     <Calendar
                       mode="single"
                       selected={tempDate?.from}
-                      onSelect={(date) => setTempDate(prev => ({...prev, from: date}))}
+                      onSelect={(date) => {
+                        setTempDate(prev => ({...prev, from: date}));
+                        setIsStartCalendarOpen(false);
+                      }}
                       initialFocus
                     />
                   </PopoverContent>
                 </Popover>
-                <Popover>
+                <Popover open={isEndCalendarOpen} onOpenChange={setIsEndCalendarOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant={"outline"}
@@ -123,7 +128,10 @@ export default function HistoryPage() {
                     <Calendar
                       mode="single"
                       selected={tempDate?.to}
-                      onSelect={(date) => setTempDate(prev => ({...prev, to: date}))}
+                      onSelect={(date) => {
+                        setTempDate(prev => ({...prev, to: date}));
+                        setIsEndCalendarOpen(false);
+                      }}
                       initialFocus
                     />
                   </PopoverContent>
@@ -192,3 +200,5 @@ export default function HistoryPage() {
     </div>
   );
 }
+
+    
