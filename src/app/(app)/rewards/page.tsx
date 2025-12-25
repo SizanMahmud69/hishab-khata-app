@@ -2,14 +2,14 @@
 
 "use client";
 
-import React, { useMemo, useRef, useEffect } from 'react';
+import React, { useMemo, useRef, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import PageHeader from "@/components/page-header"
 import { Banknote, Gift, Medal, Star, Trophy, ArrowUpCircle, ArrowDownCircle, History, Undo2, Users } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
-import { doc, collection, query, where, orderBy } from 'firebase/firestore';
+import { doc, collection, query, where, orderBy, writeBatch, serverTimestamp, increment } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import { format, parseISO } from 'date-fns';
@@ -17,6 +17,7 @@ import { bn } from 'date-fns/locale';
 import { type WithdrawalRequest } from '../withdraw/page';
 import { Badge } from '@/components/ui/badge';
 import { useBudget } from '@/context/budget-context';
+import { createNotification } from '@/components/app-header';
 
 
 interface UserProfile {
@@ -52,6 +53,7 @@ function RewardsPageContent() {
     const searchParams = useSearchParams();
     const historyRef = useRef<HTMLDivElement>(null);
     const { minWithdrawalPoints, bdtPer100Points } = useBudget();
+    const [processedRefunds, setProcessedRefunds] = useState<Set<string>>(new Set());
 
     const userDocRef = useMemoFirebase(() => {
         if (!user || !firestore) return null;
@@ -78,6 +80,53 @@ function RewardsPageContent() {
         return query(collection(firestore, `users/${user.uid}/referrals`), orderBy("createdAt", "desc"));
     }, [user, firestore]);
     const { data: referrals, isLoading: areReferralsLoading } = useCollection<Referral>(referralsQuery);
+
+    
+    useEffect(() => {
+        const processRefunds = async () => {
+            if (!allWithdrawals || !firestore || !user || !userDocRef) return;
+
+            const unrefundedRequests = allWithdrawals.filter(
+                req => req.status === 'rejected' && !req.isRefunded && !processedRefunds.has(req.id)
+            );
+            
+            if (unrefundedRequests.length === 0) return;
+
+            const batch = writeBatch(firestore);
+            
+            for (const req of unrefundedRequests) {
+                const reqRef = doc(firestore, `users/${user.uid}/withdrawalRequests`, req.id);
+                batch.update(reqRef, { isRefunded: true, processedAt: serverTimestamp() });
+                setProcessedRefunds(prev => new Set(prev).add(req.id));
+            }
+             batch.update(userDocRef, { 
+                points: increment(unrefundedRequests.reduce((sum, req) => sum + req.points, 0)) 
+            });
+
+
+            try {
+                await batch.commit();
+                for (const req of unrefundedRequests) {
+                     createNotification({
+                        id: `refund-${req.id}`,
+                        title: "পয়েন্ট ফেরত দেওয়া হয়েছে",
+                        description: `আপনার বাতিল হওয়া অনুরোধের জন্য ${req.points} পয়েন্ট ফেরত দেওয়া হয়েছে।`,
+                        link: "/rewards?section=history"
+                    }, user.uid, firestore);
+                }
+            } catch (error) {
+                console.error("Error processing refunds:", error);
+                 setProcessedRefunds(prev => {
+                    const newSet = new Set(prev);
+                    unrefundedRequests.forEach(req => newSet.delete(req.id));
+                    return newSet;
+                });
+            }
+        };
+
+        processRefunds();
+
+    }, [allWithdrawals, firestore, user, userDocRef, processedRefunds]);
 
 
     useEffect(() => {
@@ -270,3 +319,5 @@ export default function RewardsPage() {
         </React.Suspense>
     )
 }
+
+    

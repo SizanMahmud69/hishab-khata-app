@@ -127,14 +127,6 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const totalExpense = useMemo(() => (transactions || []).filter(t => t.type === 'expense').reduce((sum, item) => sum + item.amount, 0), [transactions]);
     const totalSavings = useMemo(() => (transactions || []).filter(t => t.category === 'সঞ্চয় ডিপোজিট').reduce((sum, t) => sum + t.amount, 0), [transactions]);
 
-    // For handling refunds
-    const withdrawalHistoryQuery = useMemoFirebase(() => {
-        if (!user || !firestore) return null;
-        return query(collection(firestore, `users/${user.uid}/withdrawalRequests`), orderBy("requestedAt", "desc"));
-    }, [user, firestore]);
-    const { data: withdrawalHistory } = useCollection<WithdrawalRequest>(withdrawalHistoryQuery);
-    const [processedRefunds, setProcessedRefunds] = useState<Set<string>>(new Set());
-
 
     useEffect(() => {
         if (totalSavings > 0 && userProfile && user && firestore) {
@@ -192,50 +184,6 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
 
     }, [user, firestore]);
     
-     useEffect(() => {
-        const processRefunds = async () => {
-            if (!withdrawalHistory || !firestore || !user || !userDocRef) return;
-
-            const unrefundedRequests = withdrawalHistory.filter(
-                req => req.status === 'rejected' && !req.isRefunded && !processedRefunds.has(req.id)
-            );
-            
-            if (unrefundedRequests.length === 0) return;
-
-            const batch = writeBatch(firestore);
-
-            for (const req of unrefundedRequests) {
-                const reqRef = doc(firestore, `users/${user.uid}/withdrawalRequests`, req.id);
-                batch.update(reqRef, { isRefunded: true, processedAt: serverTimestamp() });
-                batch.update(userDocRef, { points: increment(req.points) });
-                setProcessedRefunds(prev => new Set(prev).add(req.id));
-            }
-
-            try {
-                await batch.commit();
-                for (const req of unrefundedRequests) {
-                     createNotification({
-                        id: `refund-${req.id}`,
-                        title: "পয়েন্ট ফেরত দেওয়া হয়েছে",
-                        description: `আপনার বাতিল হওয়া অনুরোধের জন্য ${req.points} পয়েন্ট ফেরত দেওয়া হয়েছে।`,
-                        link: "/rewards?section=history"
-                    }, user.uid, firestore);
-                }
-            } catch (error) {
-                console.error("Error processing refunds:", error);
-                // Revert state if commit fails
-                 setProcessedRefunds(prev => {
-                    const newSet = new Set(prev);
-                    unrefundedRequests.forEach(req => newSet.delete(req.id));
-                    return newSet;
-                });
-            }
-        };
-
-        processRefunds();
-
-    }, [withdrawalHistory, firestore, user, userDocRef, processedRefunds]);
-
     const addDocToCollection = async (collectionName: string, data: any) => {
         if (!user || !firestore) throw new Error("User or firestore not available");
         const collectionRef = collection(firestore, `users/${user.uid}/${collectionName}`);
@@ -314,3 +262,5 @@ export const useBudget = () => {
     }
     return context;
 };
+
+    

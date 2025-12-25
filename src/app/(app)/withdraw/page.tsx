@@ -85,35 +85,6 @@ export default function WithdrawPage() {
         }
     }, [searchParams, isHistoryLoading]);
 
-     useEffect(() => {
-        const handleRefund = async () => {
-            if (lastRejectedRequest && firestore && user && userDocRef) {
-                try {
-                    const batch = writeBatch(firestore);
-                    const reqRef = doc(firestore, `users/${user.uid}/withdrawalRequests`, lastRejectedRequest.id);
-                    
-                    batch.update(reqRef, { isRefunded: true, processedAt: serverTimestamp() });
-                    batch.update(userDocRef, { points: increment(lastRejectedRequest.points) });
-
-                    await batch.commit();
-
-                    createNotification({
-                        id: `refund-${lastRejectedRequest.id}`,
-                        title: "পয়েন্ট ফেরত দেওয়া হয়েছে",
-                        description: `আপনার বাতিল হওয়া অনুরোধের জন্য ${lastRejectedRequest.points} পয়েন্ট ফেরত দেওয়া হয়েছে।`,
-                        link: "/rewards?section=history"
-                    }, user.uid, firestore);
-
-                } catch (error) {
-                    console.error("Error processing refund:", error);
-                }
-            }
-        };
-
-        handleRefund();
-    }, [lastRejectedRequest, firestore, user, userDocRef]);
-
-
     const handlePointsChange = (value: number) => {
         if (value > rewardPoints) {
             setPointsToWithdraw(rewardPoints);
@@ -173,7 +144,7 @@ export default function WithdrawPage() {
                 isRefunded: false,
             });
 
-            batch.update(userDocRef!, { points: rewardPoints - pointsToDeduct });
+            batch.update(userDocRef!, { points: increment(-pointsToDeduct) });
 
             await batch.commit();
 
@@ -241,7 +212,7 @@ export default function WithdrawPage() {
             <Info className="h-4 w-4" />
             <AlertTitle>আপনার উইথড্র অনুরোধ বাতিল হয়েছে</AlertTitle>
             <AlertDescription>
-                আপনার সর্বশেষ উইথড্র অনুরোধটি বাতিল করা হয়েছে এবং পয়েন্ট আপনার অ্যাকাউন্টে ফেরত দেওয়া হয়েছে।
+                আপনার সর্বশেষ উইথড্র অনুরোধটি বাতিল করা হয়েছে। আপনার পয়েন্ট শীঘ্রই ফেরত দেওয়া হবে।
                 {lastRejectedRequest.rejectionReason && ` কারণ: ${lastRejectedRequest.rejectionReason}`}
             </AlertDescription>
         </Alert>
