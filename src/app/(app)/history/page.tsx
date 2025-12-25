@@ -86,7 +86,7 @@ export default function HistoryPage() {
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {tempDate?.from ? format(tempDate.from, "d MMM, yyyy", { locale: bn }) : <span>শুরুর তারিখ</span>}
+                      {tempDate?.from ? format(tempDate.from, "dd/MM/yyyy") : <span>শুরুর তারিখ</span>}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -110,7 +110,7 @@ export default function HistoryPage() {
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {tempDate?.to ? format(tempDate.to, "d MMM, yyyy", { locale: bn }) : <span>শেষের তারিখ</span>}
+                      {tempDate?.to ? format(tempDate.to, "dd/MM/yyyy") : <span>শেষের তারিখ</span>}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -140,13 +140,13 @@ export default function HistoryPage() {
                 <CardContent className="p-3 text-center text-sm text-muted-foreground">
                     ফিল্টার চালু আছে: 
                     <span className="font-semibold mx-1">
-                         {format(dateRange.from, "d MMM, yyyy", { locale: bn })}
+                         {format(dateRange.from, "dd/MM/yyyy")}
                     </span>
                     {dateRange.to && (
                         <>
                            থেকে
                            <span className="font-semibold ml-1">
-                                {format(dateRange.to, "d MMM, yyyy", { locale: bn })}
+                                {format(dateRange.to, "dd/MM/yyyy")}
                            </span>
                         </>
                     )}
