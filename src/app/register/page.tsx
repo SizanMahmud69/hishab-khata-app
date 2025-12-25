@@ -32,7 +32,7 @@ function RegisterPageContent() {
   const { toast } = useToast();
   const auth = useAuth();
   const firestore = useFirestore();
-  const { referrerBonusPoints, referredUserBonusPoints, bdtPer100Points } = useBudget();
+  const { referrerBonusPoints, referredUserBonusPoints } = useBudget();
 
   const checkReferralCode = useCallback(async (code: string) => {
     if (!code.trim() || !firestore) {
@@ -116,7 +116,6 @@ function RegisterPageContent() {
           displayName: fullName
         });
 
-        // Ensure app config exists
         const configDocRef = doc(firestore, "app_config", "settings");
         const configDocSnap = await getDoc(configDocRef);
         if (!configDocSnap.exists()) {
@@ -129,11 +128,10 @@ function RegisterPageContent() {
         }
         
         const userDocRef = doc(firestore, "users", user.uid);
-        const ownReferralCode = `#${fullName.split(' ')[0].toLowerCase()}-${Math.random().toString(36).substr(2, 4)}`;
+        const ownReferralCode = `#${fullName.split(' ')[0].toLowerCase().replace(/[^a-z0-9]/g, '')}-${Math.random().toString(36).substr(2, 4)}`;
 
         const batch = writeBatch(firestore);
 
-        // 1. Set new user's document
         batch.set(userDocRef, {
             id: user.uid,
             userId: `#hishab-${Math.random().toString(36).substr(2, 4)}`,
@@ -142,7 +140,7 @@ function RegisterPageContent() {
             avatar: user.photoURL || `https://i.pravatar.cc/150?u=${user.email}`,
             phone: user.phoneNumber || '',
             address: '',
-            points: referrer ? referredUserBonusPoints : 0, // Bonus for referred user
+            points: referrer ? referredUserBonusPoints : 0,
             joinDate: serverTimestamp(),
             lastCheckIn: null,
             checkInStreak: 0,
@@ -151,7 +149,6 @@ function RegisterPageContent() {
             referredBy: referrer ? referrer.id : null,
         });
 
-        // 2. If referred, update referrer
         if (referrer) {
             const referrerDocRef = doc(firestore, "users", referrer.id);
             batch.update(referrerDocRef, { points: increment(referrerBonusPoints) });
@@ -165,9 +162,8 @@ function RegisterPageContent() {
                 createdAt: serverTimestamp(),
             });
             
-             // Create notification for the referrer
-            const referrerNotifRef = doc(collection(firestore, `users/${referrer.id}/notifications`));
-            batch.set(referrerNotifRef, {
+             const referrerNotifRef = doc(collection(firestore, `users/${referrer.id}/notifications`));
+             batch.set(referrerNotifRef, {
                 userId: referrer.id,
                 title: "রেফারেল বোনাস!",
                 description: `${fullName} আপনার কোড ব্যবহার করে যোগ দিয়েছেন। আপনি ${referrerBonusPoints} পয়েন্ট পেয়েছেন।`,
@@ -177,12 +173,11 @@ function RegisterPageContent() {
             });
         }
 
-        // Add welcome bonus to the new user's referrals sub-collection for history tracking
         if (referrer) {
              const newUserReferralRecordRef = doc(collection(firestore, `users/${user.uid}/referrals`));
              batch.set(newUserReferralRecordRef, {
                 userId: user.uid,
-                referredUserId: user.uid, // Self-reference for their own bonus
+                referredUserId: user.uid,
                 referredUserName: "স্বাগতম বোনাস",
                 bonusPoints: referredUserBonusPoints,
                 createdAt: serverTimestamp(),
@@ -216,6 +211,8 @@ function RegisterPageContent() {
         errorMessage = "অনুগ্রহ করে একটি সঠিক ইমেইল ঠিকানা দিন।";
       } else if (error.code === 'auth/weak-password') {
         errorMessage = "পাসওয়ার্ডটি দুর্বল। অনুগ্রহ করে আরও শক্তিশালী পাসওয়ার্ড ব্যবহার করুন।";
+      } else if (error.code === 'permission-denied') {
+          errorMessage = "রেফারেল প্রক্রিয়া সম্পন্ন করার জন্য আপনার অনুমতি নেই। অনুগ্রহ করে অ্যাডমিনের সাথে যোগাযোগ করুন।";
       }
       toast({
         variant: "destructive",

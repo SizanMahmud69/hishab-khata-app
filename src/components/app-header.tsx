@@ -22,7 +22,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from "@
 import { collection, query, where, addDoc, serverTimestamp, doc, updateDoc, writeBatch, getDocs, setDoc, orderBy, getDoc } from 'firebase/firestore'
 
 interface Notification {
-    id: string;
+    id?: string;
     title: string;
     description: string;
     read: boolean;
@@ -34,38 +34,27 @@ interface UserProfile {
     lastCheckIn?: string; // YYYY-MM-DD
 }
 
-export const createNotification = async (notification: Omit<Notification, 'createdAt' | 'read'>, userId: string, firestore: any) => {
+export const createNotification = async (notification: Omit<Notification, 'createdAt' | 'read' | 'userId'> & { id?: string }, userId: string, firestore: any) => {
     if (!userId || !firestore) return;
 
     try {
         const notificationsRef = collection(firestore, `users/${userId}/notifications`);
+        const newNotification = {
+            ...notification,
+            userId,
+            createdAt: serverTimestamp(),
+            read: false,
+        };
 
-        // If an ID is provided, check if a notification with that ID already exists.
         if (notification.id) {
             const docRef = doc(firestore, `users/${userId}/notifications`, notification.id);
-             const docSnapManual = await getDoc(docRef);
+            const docSnap = await getDoc(docRef);
 
-            if (docSnapManual.exists()) {
-                return; // Notification with this ID already exists, so we don't create it again.
+            if (!docSnap.exists()) {
+                await setDoc(docRef, newNotification);
             }
-        }
-        
-        // If we reached here, it means no existing notification with this ID was found.
-        if (notification.id) {
-            // Use the provided ID to set the document
-            const docRef = doc(firestore, `users/${userId}/notifications`, notification.id);
-            await setDoc(docRef, {
-                ...notification,
-                createdAt: new Date().toISOString(),
-                read: false,
-            });
         } else {
-            // Let firestore generate an ID if no specific ID is needed for idempotency.
-            await addDoc(notificationsRef, {
-                ...notification,
-                createdAt: new Date().toISOString(),
-                read: false,
-            });
+            await addDoc(notificationsRef, newNotification);
         }
     } catch(e) {
         console.error("Error creating notification:", e)
@@ -152,13 +141,13 @@ export function AppHeader({children}: {children: ReactNode}) {
     }
     
     const markAsRead = async (id: string) => {
-        if (!user || !firestore) return;
+        if (!user || !firestore || !id) return;
         const notificationRef = doc(firestore, `users/${user.uid}/notifications`, id);
         await updateDoc(notificationRef, { read: true });
     }
 
     const handleNotificationClick = (notification: Notification) => {
-        if (!notification.read) {
+        if (!notification.read && notification.id) {
             markAsRead(notification.id);
         }
         if (notification.link) {
