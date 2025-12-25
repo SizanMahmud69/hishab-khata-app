@@ -218,13 +218,13 @@ function RewardsPageContent() {
             </CardContent>
         </Card>
       ) : (
-        <div className="flex flex-col items-center justify-center h-40 border rounded-lg bg-card text-card-foreground shadow-sm">
-            <Gift className="w-12 h-12 text-primary mb-3" />
-            <p className="text-muted-foreground">পয়েন্ট দিয়ে আকর্ষণীয় অফার রিডিম করুন।</p>
-            <p className="text-sm text-muted-foreground">
-                {minWithdrawalPoints} পয়েন্ট অর্জন করলে উইথড্র অপশন দেখতে পাবেন।
-            </p>
-        </div>
+        <Card className="flex flex-col items-center justify-center text-center p-6 text-card-foreground">
+            <Gift className="w-12 h-12 text-primary mb-4" />
+            <CardTitle className="text-lg font-semibold mb-2">অপর্যাপ্ত পয়েন্ট</CardTitle>
+            <CardDescription>
+                উইথড্র করার জন্য আপনার কমপক্ষে {minWithdrawalPoints} পয়েন্ট প্রয়োজন। নিয়মিত অ্যাপ ব্যবহার করে আরও পয়েন্ট অর্জন করুন!
+            </CardDescription>
+        </Card>
       )}
 
        <Card ref={historyRef}>
