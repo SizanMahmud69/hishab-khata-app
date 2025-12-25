@@ -239,9 +239,9 @@ export default function ProfilePage() {
                     </AlertDescription>
                 </Alert>
             )}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                    <XCircle className="w-8 h-8 text-red-500" />
+                    <XCircle className="w-8 h-8 text-red-500 flex-shrink-0" />
                     <div>
                         <p className="font-semibold text-red-500">এনআইডি ভেরিফাইড নয়</p>
                         <p className="text-sm text-muted-foreground">অতিরিক্ত সুবিধা পেতে আপনার এনআইডি ভেরিফাই করুন।</p>
@@ -249,7 +249,7 @@ export default function ProfilePage() {
                 </div>
                  <Dialog open={isVerificationDialogOpen} onOpenChange={setIsVerificationDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button>
+                    <Button className="w-full sm:w-auto">
                       <UserCheck className="mr-2 h-4 w-4" />
                       এখনই ভেরিফাই করুন
                     </Button>
