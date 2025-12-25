@@ -9,7 +9,7 @@ import { Mail, Phone, UserCheck, XCircle, CheckCircle, User as UserIcon, MapPin,
 import React, { useEffect, useMemo } from "react";
 import Link from 'next/link';
 import { Badge } from "@/components/ui/badge";
-import { collection, query, orderBy, limit } from "firebase/firestore";
+import { collection, query, orderBy, limit, doc } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { createNotification } from "@/components/app-header";
@@ -260,6 +260,8 @@ export default function ProfilePage() {
     </div>
   )
 }
+    
+
     
 
     
