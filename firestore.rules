@@ -18,12 +18,13 @@ service cloud.firestore {
     
     function canUpdateWithdrawalRequest() {
       // User can create, but cannot update status or other admin-only fields.
-      let userUpdatableFields = ['paymentMethod', 'accountNumber'];
-      let incomingKeys = request.resource.data.keys();
-      let existingKeys = resource.data.keys();
+      let userUpdatableFields = ['paymentMethod', 'accountNumber', 'isRefunded'];
+      let incomingData = request.resource.data;
+      let existingData = resource.data;
       
-      // Check if user is trying to update a field they shouldn't
-      return incomingKeys.removeAll(userUpdatableFields).size() == existingKeys.removeAll(userUpdatableFields).size();
+      // Check that no admin-only fields are being changed
+      return incomingData.status == existingData.status &&
+             incomingData.rejectionReason == existingData.rejectionReason;
     }
 
 
