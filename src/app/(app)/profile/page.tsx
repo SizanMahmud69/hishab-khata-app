@@ -311,14 +311,14 @@ export default function ProfilePage() {
   return (
     <div className="flex-1 space-y-6">
       <Card className="overflow-hidden">
-        <div className="h-24 bg-primary/20" />
+        <div className="h-24 bg-gradient-to-r from-green-400 to-blue-500" />
         <div className="relative -mt-16 flex justify-center">
              <Avatar className="h-32 w-32 border-4 border-background shadow-lg">
                 <AvatarImage src={userProfileData?.avatar ?? user?.photoURL ?? `https://i.pravatar.cc/150?u=${user?.email}`} alt="User avatar" data-ai-hint="profile avatar" />
                 <AvatarFallback className="text-4xl">{userProfileData?.name?.charAt(0) ?? user?.displayName?.charAt(0) ?? 'U'}</AvatarFallback>
             </Avatar>
         </div>
-        <CardContent className="text-center pt-6 pb-6 px-4 sm:px-6">
+        <CardContent className="text-center pt-6 pb-6 px-4 sm:px-6 bg-gradient-to-t from-purple-100/30 to-green-100/10">
             <div className="flex items-center justify-center gap-2">
                 <h2 className="text-3xl font-bold">{userProfileData?.name ?? user?.displayName ?? 'ব্যবহারকারী'}</h2>
                  {verificationStatus === 'approved' && <Badge className="bg-green-100 text-green-800 border-green-300 hover:bg-green-100/80"><CheckCircle className="w-3.5 h-3.5 mr-1.5" />ভেরিফাইড</Badge>}
@@ -375,5 +375,6 @@ export default function ProfilePage() {
     </div>
   )
 }
+    
 
     
