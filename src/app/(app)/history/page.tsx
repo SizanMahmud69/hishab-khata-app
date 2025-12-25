@@ -13,12 +13,13 @@ import { type DateRange } from "react-day-picker";
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Input } from '@/components/ui/input';
 
 export default function HistoryPage() {
   const { transactions } = useBudget();
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [tempDate, setTempDate] = useState<DateRange | undefined>(undefined);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+
 
   const sortedTransactions = useMemo(() => {
     return [...transactions].sort((a, b) => {
@@ -63,25 +64,32 @@ export default function HistoryPage() {
   const resetFilter = () => {
     setDateRange(undefined);
     setTempDate(undefined);
+    setIsPopoverOpen(false);
   }
 
   const applyFilter = () => {
     setDateRange(tempDate);
+    setIsPopoverOpen(false);
   }
 
   return (
     <div className="flex-1 space-y-4">
-      <PageHeader title="হিস্টোরি" description="আপনার সকল লেনদেনের ইতিহাস দেখুন।" />
-      
-      <Card className="p-4">
-          <div className="flex flex-col sm:flex-row items-center gap-4">
-            <div className="grid w-full gap-2">
+      <PageHeader title="হিস্টোরি" description="আপনার সকল লেনদেনের ইতিহাস দেখুন।">
+        <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="icon">
+              <FilterIcon className="h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-4 space-y-4">
+              <div className="text-center font-semibold">তারিখ অনুযায়ী ফিল্টার</div>
+              <div className="flex flex-col sm:flex-row items-center gap-4">
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant={"outline"}
                       className={cn(
-                        "w-full justify-start text-left font-normal",
+                        "w-[240px] justify-start text-left font-normal",
                         !tempDate?.from && "text-muted-foreground"
                       )}
                     >
@@ -98,14 +106,12 @@ export default function HistoryPage() {
                     />
                   </PopoverContent>
                 </Popover>
-            </div>
-            <div className="grid w-full gap-2">
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant={"outline"}
                       className={cn(
-                        "w-full justify-start text-left font-normal",
+                        "w-[240px] justify-start text-left font-normal",
                         !tempDate?.to && "text-muted-foreground"
                       )}
                     >
@@ -122,18 +128,18 @@ export default function HistoryPage() {
                     />
                   </PopoverContent>
                 </Popover>
-            </div>
-             <div className='flex w-full sm:w-auto gap-2'>
-                <Button onClick={applyFilter} className="w-full" disabled={!tempDate}>
-                    <FilterIcon className="mr-2 h-4 w-4" />
-                    ফিল্টার
-                </Button>
-                 <Button onClick={resetFilter} variant="ghost" disabled={!dateRange && !tempDate}>
-                    রিসেট
-                </Button>
-             </div>
-          </div>
-      </Card>
+              </div>
+              <div className='flex w-full gap-2 pt-2'>
+                  <Button onClick={applyFilter} className="w-full" disabled={!tempDate}>
+                      ফিল্টার করুন
+                  </Button>
+                  <Button onClick={resetFilter} variant="ghost" disabled={!dateRange && !tempDate} className="w-full">
+                      রিসেট
+                  </Button>
+              </div>
+          </PopoverContent>
+        </Popover>
+      </PageHeader>
       
        {dateRange?.from && (
             <Card className="bg-muted/50">
