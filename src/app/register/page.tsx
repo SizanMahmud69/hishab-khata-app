@@ -228,7 +228,7 @@ function RegisterPageContent() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-500 to-green-500 p-4">
       <Link
         href="/"
         className="absolute left-4 top-4 md:left-8 md:top-8"
@@ -365,5 +365,3 @@ export default function RegisterPage() {
         </BudgetClientProvider>
     )
 }
-
-    

@@ -44,7 +44,7 @@ const landingPageImage = PlaceHolderImages.find(p => p.id === 'finance-app-dashb
 
 export default function Home() {
   return (
-    <div className="flex min-h-dvh flex-col bg-background">
+    <div className="flex min-h-dvh flex-col bg-gradient-to-br from-blue-500 to-green-500">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
@@ -125,7 +125,7 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
+      <footer className="py-6 w-full shrink-0 items-center px-4 md:px-6 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto flex flex-col items-center justify-center gap-4 text-center sm:flex-row sm:justify-between">
             <p className='text-sm text-muted-foreground'>
                 &copy; {new Date().getFullYear()} <span className='font-bold text-primary'>হিসাব খাতা</span>. All rights reserved.
