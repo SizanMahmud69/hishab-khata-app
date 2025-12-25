@@ -25,10 +25,11 @@ service cloud.firestore {
       allow get: if isOwner(userId);
       // Allow querying for a single user by referral code during registration
       allow list: if request.query.limit <= 1;
-      // A signed-in user can create their own user document. A signed-in user (the new referred user)
-      // can also update the referrer's points.
+      // A signed-in user can create their own user document.
       allow create: if isSignedIn();
-      allow update: if isOwner(userId) || isSignedIn();
+      // A user can update their own document.
+      // A signed-in user (the new referred user) can also update ONLY the referrer's points.
+      allow update: if isOwner(userId) || (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['points']));
       // Users should not be able to delete their own accounts this way.
       allow delete: if false;
 
@@ -63,7 +64,7 @@ service cloud.firestore {
         // but cannot change status or rejection reasons set by admin.
         allow update: if isOwner(userId) && 
                          request.resource.data.diff(resource.data).affectedKeys()
-                           .hasOnly(['paymentMethod', 'accountNumber', 'isRefunded', 'processedAt']);
+                           .hasOnly(['paymentMethod', 'accountNumber', 'isRefunded']);
       }
       
       // Sub-collection for notifications
