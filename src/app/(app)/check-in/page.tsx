@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -11,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { format, isToday, isYesterday, parseISO, subDays } from 'date-fns';
 import { bn } from 'date-fns/locale';
 import { useUser, useFirestore, useCollection, useMemoFirebase, FirestorePermissionError } from '@/firebase';
-import { collection, addDoc, serverTimestamp, query, orderBy, limit, updateDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, orderBy, limit, updateDoc, doc, increment } from 'firebase/firestore';
 
 const MAX_STREAK_DAYS = 30;
 const BASE_REWARD = 5;
@@ -113,17 +114,15 @@ export default function CheckInPage() {
 
         const userUpdateData = {
             lastCheckIn: today.toISOString().split('T')[0],
-            checkInStreak: newConsecutiveDays
+            checkInStreak: newConsecutiveDays,
+            points: increment(points)
         };
 
         try {
             const collectionRef = collection(firestore, `users/${user.uid}/checkIns`);
             await addDoc(collectionRef, newCheckIn);
 
-            await addRewardPoints(points);
-
             const userDocRef = doc(firestore, `users/${user.uid}`);
-            
             await updateDoc(userDocRef, userUpdateData);
 
             toast({

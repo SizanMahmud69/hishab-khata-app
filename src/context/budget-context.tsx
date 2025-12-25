@@ -2,7 +2,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo, useCallback } from 'react';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { collection, onSnapshot, addDoc, doc, updateDoc, serverTimestamp, setDoc, query, getDocs, writeBatch, increment, arrayUnion, orderBy } from 'firebase/firestore';
 import { createNotification } from '@/components/app-header';
 import { type WithdrawalRequest } from '@/app/(app)/withdraw/page';
@@ -85,22 +85,43 @@ const SAVINGS_MILESTONES = [1000, 5000, 10000, 20000, 30000, 40000, 50000, 10000
 export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
-    
-    const [transactions, setTransactions] = useState<Transaction[]>([]);
-    const [debtNotes, setDebtNotes] = useState<DebtNote[]>([]);
-    const [referrals, setReferrals] = useState<Referral[]>([]);
-    const [rewardPoints, setRewardPoints] = useState(0);
-    const [minWithdrawalPoints, setMinWithdrawalPoints] = useState(1000);
-    const [referrerBonusPoints, setReferrerBonusPoints] = useState(100);
-    const [referredUserBonusPoints, setReferredUserBonusPoints] = useState(50);
-    const [bdtPer100Points, setBdtPer100Points] = useState(5);
-    const [isDataLoading, setIsDataLoading] = useState(true);
 
     const userDocRef = useMemoFirebase(() => {
         if (!user || !firestore) return null;
         return doc(firestore, `users/${user.uid}`);
     }, [user, firestore]);
-    const { data: userProfile } = useDoc<UserProfile>(userDocRef);
+    
+    const { data: userProfile, isLoading: isUserDocLoading } = useDoc<UserProfile>(userDocRef);
+    
+    const transactionsQuery = useMemoFirebase(() => {
+        if (!user || !firestore) return null;
+        return query(collection(firestore, `users/${user.uid}/transactions`), orderBy("createdAt", "desc"));
+    }, [user, firestore]);
+    const { data: transactions = [], isLoading: areTransactionsLoading } = useCollection<Transaction>(transactionsQuery);
+
+    const debtNotesQuery = useMemoFirebase(() => {
+        if (!user || !firestore) return null;
+        return query(collection(firestore, `users/${user.uid}/debtNotes`), orderBy("createdAt", "desc"));
+    }, [user, firestore]);
+    const { data: debtNotes = [], isLoading: areDebtNotesLoading } = useCollection<DebtNote>(debtNotesQuery);
+
+    const referralsQuery = useMemoFirebase(() => {
+        if (!user || !firestore) return null;
+        return query(collection(firestore, `users/${user.uid}/referrals`), orderBy("createdAt", "desc"));
+    }, [user, firestore]);
+    const { data: referrals = [], isLoading: areReferralsLoading } = useCollection<Referral>(referralsQuery);
+    
+    const appConfigRef = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return doc(firestore, 'app_config', 'settings');
+    }, [firestore]);
+    const { data: appConfig, isLoading: isConfigLoading } = useDoc<AppConfig>(appConfigRef);
+
+    const minWithdrawalPoints = appConfig?.minWithdrawalPoints ?? 1000;
+    const referrerBonusPoints = appConfig?.referrerBonusPoints ?? 100;
+    const referredUserBonusPoints = appConfig?.referredUserBonusPoints ?? 50;
+    const bdtPer100Points = appConfig?.bdtPer100Points ?? 5;
+    const rewardPoints = userProfile?.points ?? 0;
 
     const totalIncome = useMemo(() => transactions.filter(t => t.type === 'income').reduce((sum, item) => sum + item.amount, 0), [transactions]);
     const totalExpense = useMemo(() => transactions.filter(t => t.type === 'expense').reduce((sum, item) => sum + item.amount, 0), [transactions]);
@@ -133,50 +154,9 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
 
 
      useEffect(() => {
-        if (isUserLoading) {
-            setIsDataLoading(true);
-            return;
-        }
-        if (!user || !firestore) {
-            setIsDataLoading(false);
-            setTransactions([]);
-            setDebtNotes([]);
-            setReferrals([]);
-            setRewardPoints(0);
-            return;
-        }
-
-        setIsDataLoading(true);
-        const basePath = `users/${user.uid}`;
-        const listeners: (() => void)[] = [];
-        let activeListeners = 5; // transactions, debtNotes, user doc, app_config, referrals
+        if (!user || !firestore) return;
         
-        const onDataLoaded = () => {
-            activeListeners--;
-            if (activeListeners === 0) {
-                setIsDataLoading(false);
-            }
-        };
-
-        // Listener for app config
-        const appConfigRef = doc(firestore, 'app_config', 'settings');
-        const unsubConfig = onSnapshot(appConfigRef, (doc) => {
-            if (doc.exists()) {
-                const configData = doc.data() as AppConfig;
-                setMinWithdrawalPoints(configData.minWithdrawalPoints || 1000);
-                setReferrerBonusPoints(configData.referrerBonusPoints || 100);
-                setReferredUserBonusPoints(configData.referredUserBonusPoints || 50);
-                setBdtPer100Points(configData.bdtPer100Points || 5);
-            }
-            onDataLoaded();
-        }, (err) => {
-            console.error("Error fetching app config:", err);
-            onDataLoaded();
-        });
-        listeners.push(unsubConfig);
-        
-        // Listener for withdrawal requests to handle notifications and refunds
-        const withdrawalRequestsRef = collection(firestore, basePath, 'withdrawalRequests');
+        const withdrawalRequestsRef = collection(firestore, `users/${user.uid}`, 'withdrawalRequests');
         const unsubWithdrawals = onSnapshot(withdrawalRequestsRef, async (snapshot) => {
             const requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WithdrawalRequest));
             const batch = writeBatch(firestore);
@@ -202,14 +182,14 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
 
                 if (req.status === 'rejected' && !req.isRefunded) {
                     totalRefundPoints += req.points;
-                    const reqRef = doc(firestore, basePath, 'withdrawalRequests', req.id);
+                    const reqRef = doc(firestore, `users/${user.uid}`, 'withdrawalRequests', req.id);
                     batch.update(reqRef, { isRefunded: true, processedAt: serverTimestamp() });
                     refundOccurred = true;
                 }
             }
 
             if (refundOccurred && totalRefundPoints > 0) {
-                const userRef = doc(firestore, basePath);
+                const userRef = doc(firestore, `users/${user.uid}`);
                 batch.update(userRef, { points: increment(totalRefundPoints) });
                 await batch.commit();
 
@@ -221,39 +201,10 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                 }, user.uid, firestore);
             }
         });
-        listeners.push(unsubWithdrawals);
-
-        const createSnapshotListener = <T>(collectionName: string, setData: React.Dispatch<React.SetStateAction<T[]>>) => {
-            const collectionRef = collection(firestore, basePath, collectionName);
-            const q = query(collectionRef, orderBy("createdAt", "desc"));
-            const listener = onSnapshot(q, (snapshot) => {
-                const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as T));
-                setData(data);
-                onDataLoaded();
-            }, (err) => {
-                console.error(`Error fetching ${collectionName}:`, err);
-                onDataLoaded();
-            });
-            listeners.push(listener);
-        };
-
-        const userDocListener = onSnapshot(userDocRef!, (snapshot) => {
-            const userData = snapshot.data() as UserProfile | undefined;
-            setRewardPoints(userData?.points || 0);
-            onDataLoaded();
-        }, (err) => {
-            console.error("User profile fetch error: ", err);
-            onDataLoaded();
-        });
-        listeners.push(userDocListener);
-
-        createSnapshotListener<Transaction>('transactions', setTransactions);
-        createSnapshotListener<DebtNote>('debtNotes', setDebtNotes);
-        createSnapshotListener<Referral>('referrals', setReferrals);
         
-        return () => listeners.forEach(unsub => unsub());
+        return () => unsubWithdrawals();
 
-    }, [user, firestore, isUserLoading, userDocRef]);
+    }, [user, firestore]);
     
     const addDocToCollection = async (collectionName: string, data: any) => {
         if (!user || !firestore) throw new Error("User or firestore not available");
@@ -280,19 +231,12 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     }
     
     const updateRewardPoints = async (points: number, operation: 'add' | 'deduct') => {
-        if (!user || !firestore) return;
+        if (!userDocRef) return;
         
         try {
-            const currentPoints = rewardPoints;
-            
-            let newPoints = 0;
-            if (operation === 'add') {
-                newPoints = currentPoints + points;
-            } else {
-                newPoints = Math.max(0, currentPoints - points);
-            }
-            
-            await setDoc(userDocRef!, { points: newPoints }, { merge: true });
+            await updateDoc(userDocRef, {
+                points: increment(operation === 'add' ? points : -points)
+            });
         } catch (e) {
             console.error("Error updating points: ", e);
         }
@@ -306,7 +250,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
        await updateRewardPoints(pointsToDeduct, 'deduct');
     };
     
-    const isLoading = isUserLoading || isDataLoading;
+    const isLoading = isUserLoading || isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || areReferralsLoading;
 
     return (
         <BudgetContext.Provider value={{ 
@@ -340,5 +284,3 @@ export const useBudget = () => {
     }
     return context;
 };
-
-    
