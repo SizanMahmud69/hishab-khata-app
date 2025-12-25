@@ -45,37 +45,26 @@ export const createNotification = async (notification: Omit<Notification, 'creat
              const docSnapManual = await getDoc(docRef);
 
             if (docSnapManual.exists()) {
-                return; // Notification with this ID already exists
+                return; // Notification with this ID already exists, so we don't create it again.
             }
         }
         
-        // Generic check for duplicates in the last 24 hours to avoid spamming for notifications without a specific ID
-        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-        const q = query(notificationsRef, 
-            where("title", "==", notification.title), 
-            where("description", "==", notification.description),
-            where("createdAt", ">=", twentyFourHoursAgo)
-        );
-
-        const querySnapshot = await getDocs(q);
-
-        if (querySnapshot.empty) {
-            if (notification.id) {
-                // Use the provided ID to set the document
-                const docRef = doc(firestore, `users/${userId}/notifications`, notification.id);
-                await setDoc(docRef, {
-                    ...notification,
-                    createdAt: new Date().toISOString(),
-                    read: false,
-                });
-            } else {
-                // Let firestore generate an ID
-                await addDoc(notificationsRef, {
-                    ...notification,
-                    createdAt: new Date().toISOString(),
-                    read: false,
-                });
-            }
+        // If we reached here, it means no existing notification with this ID was found.
+        if (notification.id) {
+            // Use the provided ID to set the document
+            const docRef = doc(firestore, `users/${userId}/notifications`, notification.id);
+            await setDoc(docRef, {
+                ...notification,
+                createdAt: new Date().toISOString(),
+                read: false,
+            });
+        } else {
+            // Let firestore generate an ID if no specific ID is needed for idempotency.
+            await addDoc(notificationsRef, {
+                ...notification,
+                createdAt: new Date().toISOString(),
+                read: false,
+            });
         }
     } catch(e) {
         console.error("Error creating notification:", e)
