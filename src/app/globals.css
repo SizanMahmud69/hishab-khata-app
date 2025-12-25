@@ -83,7 +83,7 @@
     font-family: 'PT Sans', sans-serif;
   }
   
-  .dark {
+  .dark body {
     background-image: linear-gradient(to bottom right, #1e3a8a, #10b981);
   }
 }
