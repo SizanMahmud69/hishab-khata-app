@@ -28,8 +28,7 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 75% 60%;
     --chart-5: 340 85% 65%;
-    --radius: 0.5rem;
-    --sidebar-background: 0 0% 100% / 0.8;
+    --sidebar-background: 180 50% 90%;
     --sidebar-foreground: 215 25% 27%;
     --sidebar-primary: 120 73% 75%;
     --sidebar-primary-foreground: 120 60% 15%;
@@ -63,7 +62,7 @@
     --chart-3: 30 80% 60%;
     --chart-4: 280 75% 65%;
     --chart-5: 340 85% 70%;
-    --sidebar-background: 222.2 84% 4.9% / 0.8;
+    --sidebar-background: 180 50% 10%;
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 120 73% 75%;
     --sidebar-primary-foreground: 120 60% 15%;
@@ -84,7 +83,7 @@
   }
   
   .dark body {
-    background-image: linear-gradient(to bottom right, #1e3a8a, #10b981);
+    background-image: linear-gradient(to bottom right, hsl(222, 74%, 25%), hsl(160, 61%, 40%));
   }
 }
 
