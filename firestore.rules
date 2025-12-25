@@ -77,7 +77,7 @@ service cloud.firestore {
       // Sub-collection for referral records
       match /referrals/{referralId} {
         allow read: if isOwner(userId);
-        // Only the system (via a new user signup) can create these records
+        // Allow any signed-in user to create a referral record for another user.
         allow create: if isSignedIn();
         allow update, delete: if false;
       }
