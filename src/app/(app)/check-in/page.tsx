@@ -36,7 +36,7 @@ export default function CheckInPage() {
         return query(collection(firestore, `users/${user.uid}/checkIns`), orderBy("createdAt", "desc"), limit(30));
     }, [user, firestore]);
     
-    const { data: history, isLoading } = useCollection<CheckInRecord>(checkInsQuery);
+    const { data: history = [], isLoading } = useCollection<CheckInRecord>(checkInsQuery);
 
     const { consecutiveDays, isCheckedInToday } = useMemo(() => {
         if (!history || history.length === 0) {
@@ -209,7 +209,7 @@ export default function CheckInPage() {
                                 <TableCell className='font-medium'>
                                     {format(parseISO(record.date), "d MMMM, yyyy", { locale: bn })}
                                 </TableCell>
-                                <TableCell className='text-right font-semibold text-primary'>+{record.points}</TableCell>
+                                <TableCell className='text-right font-semibold text-green-600 dark:text-green-400'>+{record.points}</TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
