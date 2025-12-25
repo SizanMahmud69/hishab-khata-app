@@ -83,11 +83,11 @@ body {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
-    background-image: linear-gradient(to right top, #d1f8e1, #c5f4e8, #bcf0f0, #b7ebf7, #b6e5fd);
+    @apply text-foreground;
+    background-image: linear-gradient(to bottom, hsl(var(--primary)), hsl(var(--accent)));
   }
   .dark body {
-    background-image: linear-gradient(to right top, #0b1a13, #0c1c1a, #0e1e20, #131f24, #192027);
+    background-image: linear-gradient(to bottom, hsl(217.2 32.6% 17.5%), hsl(222.2 84% 4.9%));
   }
 }
 
