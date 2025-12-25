@@ -84,17 +84,31 @@ export default function HistoryPage() {
               <PopoverContent className="w-auto p-4" align="end">
                   <div className="grid gap-4">
                     <div className="space-y-2">
-                        <Label className="font-medium">তারিখ সীমা বাছুন</Label>
-                         <Calendar
-                            initialFocus
-                            mode="range"
-                            defaultMonth={tempDateRange?.from}
-                            selected={tempDateRange}
-                            onSelect={setTempDateRange}
-                            numberOfMonths={1}
-                        />
+                        <Label className="font-medium text-center block">তারিখ সীমা বাছুন</Label>
+                         <div className="flex flex-col sm:flex-row gap-4">
+                            <div>
+                                <Label className='text-sm text-muted-foreground'>শুরুর তারিখ</Label>
+                                <Calendar
+                                    mode="single"
+                                    selected={tempDateRange?.from}
+                                    onSelect={(date) => setTempDateRange(prev => ({...prev, from: date}))}
+                                    defaultMonth={tempDateRange?.from}
+                                    initialFocus
+                                />
+                            </div>
+                             <div>
+                                <Label className='text-sm text-muted-foreground'>শেষের তারিখ</Label>
+                                <Calendar
+                                    mode="single"
+                                    selected={tempDateRange?.to}
+                                    onSelect={(date) => setTempDateRange(prev => ({...prev, to: date}))}
+                                    defaultMonth={tempDateRange?.to}
+                                    initialFocus
+                                />
+                            </div>
+                         </div>
                     </div>
-                    <Button onClick={applyFilter}>ফিল্টার করুন</Button>
+                    <Button onClick={applyFilter} disabled={!tempDateRange?.from && !tempDateRange?.to}>ফিল্টার করুন</Button>
                   </div>
               </PopoverContent>
             </Popover>
