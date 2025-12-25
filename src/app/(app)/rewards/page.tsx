@@ -191,7 +191,7 @@ function RewardsPageContent() {
             <Medal className="absolute -bottom-6 -right-4 w-20 h-20 text-yellow-200 opacity-20 transform rotate-12" />
             <div className="text-6xl font-bold text-white drop-shadow-lg">{rewardPoints}</div>
             <p className="text-sm font-medium text-yellow-200 mt-2">(১০০ পয়েন্ট = ৳ {bdtPer100Points})</p>
-            <p className="text-lg font-semibold text-yellow-100 mt-1">≈ ৳ {equivalentAmountBdt}</p>
+             <p className="text-lg font-semibold text-yellow-100 mt-1">≈ ৳{equivalentAmountBdt}</p>
         </CardContent>
         <CardFooter className='flex flex-col items-center justify-center p-4 bg-black/10'>
             <p className="text-center text-yellow-200 font-medium text-sm">নিয়মিত অ্যাপ ব্যবহার করে আরও পয়েন্ট অর্জন করুন।</p>
@@ -199,23 +199,23 @@ function RewardsPageContent() {
       </Card>
       
       {canWithdraw ? (
-        <Card className="border-primary">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <Banknote className="text-primary" />
-                    পয়েন্ট উইথড্র করুন
-                </CardTitle>
-                <CardDescription>
-                    অভিনন্দন! আপনার {minWithdrawalPoints} এর বেশি পয়েন্ট জমা হয়েছে। আপনি এখন আপনার পয়েন্ট টাকাতে রূপান্তর করে উইথড্র করতে পারবেন।
-                </CardDescription>
-            </CardHeader>
-            <CardFooter>
-                 <Button asChild className="w-full">
+        <Card className="relative overflow-hidden bg-gradient-to-r from-blue-500 to-green-500 text-white shadow-lg">
+            <CardContent className="p-6 flex flex-col sm:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-4">
+                    <div className="bg-white/20 p-3 rounded-full">
+                        <Banknote className="w-8 h-8 text-white" />
+                    </div>
+                    <div>
+                        <h3 className="text-xl font-bold">পয়েন্ট উইথড্র করুন</h3>
+                        <p className="text-sm opacity-90 max-w-sm">আপনার অর্জিত পয়েন্ট এখন টাকায় রূপান্তর করে সহজেই উইথড্র করতে পারবেন।</p>
+                    </div>
+                </div>
+                 <Button asChild variant="secondary" className="bg-white text-blue-600 hover:bg-gray-100 font-bold px-6 py-3 w-full sm:w-auto flex-shrink-0">
                     <Link href="/withdraw">
                         এখনই উইথড্র করুন
                     </Link>
                 </Button>
-            </CardFooter>
+            </CardContent>
         </Card>
       ) : (
         <div className="flex flex-col items-center justify-center h-40 border rounded-lg bg-card text-card-foreground shadow-sm">
@@ -270,5 +270,3 @@ export default function RewardsPage() {
         </React.Suspense>
     )
 }
-
-    
