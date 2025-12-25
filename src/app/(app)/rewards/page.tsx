@@ -192,7 +192,7 @@ function RewardsPageContent() {
             <Trophy className="absolute -top-4 -left-4 w-16 h-16 text-yellow-200 opacity-20 transform -rotate-12" />
             <Medal className="absolute -bottom-6 -right-4 w-20 h-20 text-yellow-200 opacity-20 transform rotate-12" />
             <div className="text-6xl font-bold text-white drop-shadow-lg">{rewardPoints}</div>
-            <p className="text-lg font-semibold text-yellow-100 mt-1">≈ ৳ {equivalentAmountBdt} টাকা</p>
+            <p className="text-lg font-semibold text-yellow-100 mt-1">≈ ৳ {equivalentAmountBdt}</p>
             <p className="text-center text-yellow-200 font-medium mt-4">নিয়মিত অ্যাপ ব্যবহার করে আরও পয়েন্ট অর্জন করুন।</p>
         </CardContent>
       </Card>
@@ -269,4 +269,3 @@ export default function RewardsPage() {
         </React.Suspense>
     )
 }
-
