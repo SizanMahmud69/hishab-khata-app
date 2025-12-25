@@ -84,7 +84,7 @@ service cloud.firestore {
     
     // Global app configuration
     match /app_config/{configId} {
-      allow get: if isSignedIn();
+      allow get: if true;
       // Allow any signed-in user to create the config document (e.g., on first registration).
       allow create: if isSignedIn();
       // Prevent clients from listing, updating, or deleting config.
@@ -92,5 +92,3 @@ service cloud.firestore {
     }
   }
 }
-
-    
