@@ -74,8 +74,6 @@ interface BudgetContextType {
     referrerBonusPoints: number;
     referredUserBonusPoints: number;
     bdtPer100Points: number;
-    addRewardPoints: (points: number) => void;
-    deductRewardPoints: (points: number) => void;
     isLoading: boolean;
 }
 
@@ -121,9 +119,9 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
 
     const withdrawalRequestsQuery = useMemoFirebase(() => {
         if (!user || !firestore) return null;
-        return collection(firestore, `users/${user.uid}/withdrawalRequests`);
+        return query(collection(firestore, `users/${user.uid}/withdrawalRequests`));
     }, [user, firestore]);
-    const { data: allWithdrawals, isLoading: areWithdrawalsLoading } = useCollection<WithdrawalRequest>(withdrawalRequestsQuery);
+    const { data: allWithdrawals = [], isLoading: areWithdrawalsLoading } = useCollection<WithdrawalRequest>(withdrawalRequestsQuery);
 
 
     const minWithdrawalPoints = appConfig?.minWithdrawalPoints ?? 1000;
@@ -232,26 +230,6 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         await updateDoc(docRef, { ...debtNote });
     }
     
-    const updateRewardPoints = async (points: number, operation: 'add' | 'deduct') => {
-        if (!userDocRef) return;
-        
-        try {
-            await updateDoc(userDocRef, {
-                points: increment(operation === 'add' ? points : -points)
-            });
-        } catch (e) {
-            console.error("Error updating points: ", e);
-        }
-    }
-
-    const addRewardPoints = (points: number) => {
-        updateRewardPoints(points, 'add');
-    }
-
-    const deductRewardPoints = async (pointsToDeduct: number) => {
-       await updateRewardPoints(pointsToDeduct, 'deduct');
-    };
-    
     const isLoading = isUserLoading || isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || areReferralsLoading || areWithdrawalsLoading;
 
     return (
@@ -270,8 +248,6 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             referrerBonusPoints,
             referredUserBonusPoints,
             bdtPer100Points,
-            addRewardPoints, 
-            deductRewardPoints, 
             isLoading 
         }}>
             {children}

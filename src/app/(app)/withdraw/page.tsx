@@ -45,7 +45,7 @@ export interface WithdrawalRequest {
 }
 
 export default function WithdrawPage() {
-    const { deductRewardPoints, minWithdrawalPoints, bdtPer100Points } = useBudget();
+    const { minWithdrawalPoints, bdtPer100Points } = useBudget();
     const { toast } = useToast();
     const { user } = useUser();
     const firestore = useFirestore();
@@ -97,7 +97,7 @@ export default function WithdrawPage() {
     
     const handleWithdraw = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        if (!user || !firestore) return;
+        if (!user || !firestore || !userDocRef) return;
         
         setIsSubmitting(true);
 
@@ -144,7 +144,7 @@ export default function WithdrawPage() {
                 isRefunded: false,
             });
 
-            batch.update(userDocRef!, { points: increment(-pointsToDeduct) });
+            batch.update(userDocRef, { points: increment(-pointsToDeduct) });
 
             await batch.commit();
 
@@ -207,12 +207,12 @@ export default function WithdrawPage() {
     <div className="flex-1 space-y-6">
       <PageHeader title="পয়েন্ট উইথড্র" description="আপনার অর্জিত পয়েন্ট টাকাতে রূপান্তর করুন।" />
       
-      {lastRejectedRequest && !lastRejectedRequest.isRefunded && (
+      {lastRejectedRequest && (
         <Alert variant="destructive">
             <Info className="h-4 w-4" />
             <AlertTitle>আপনার উইথড্র অনুরোধ বাতিল হয়েছে</AlertTitle>
             <AlertDescription>
-                আপনার সর্বশেষ উইথড্র অনুরোধটি বাতিল করা হয়েছে এবং পয়েন্ট আপনার অ্যাকাউন্টে ফেরত দেওয়া হয়েছে।
+                আপনার বাতিল হওয়া অনুরোধের জন্য পয়েন্ট আপনার অ্যাকাউন্টে ফেরত দেওয়া হয়েছে।
                 {lastRejectedRequest.rejectionReason && ` কারণ: ${lastRejectedRequest.rejectionReason}`}
             </AlertDescription>
         </Alert>
