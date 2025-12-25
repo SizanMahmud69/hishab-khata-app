@@ -158,48 +158,26 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         
         const withdrawalRequestsRef = collection(firestore, `users/${user.uid}`, 'withdrawalRequests');
         const unsubWithdrawals = onSnapshot(withdrawalRequestsRef, async (snapshot) => {
-            const requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WithdrawalRequest));
-            const batch = writeBatch(firestore);
-            let totalRefundPoints = 0;
-            let refundOccurred = false;
-
-            for (const req of requests) {
-                if (req.status === 'approved') {
-                    await createNotification({
-                        id: `wd-status-${req.id}`,
-                        title: 'উইথড্র অনুরোধ অনুমোদিত',
-                        description: `আপনার ${req.amountBdt} টাকার উইথড্র অনুরোধটি সফল হয়েছে।`,
-                        link: '/withdraw?section=history'
-                    }, user.uid, firestore);
-                } else if (req.status === 'rejected') {
-                    await createNotification({
-                        id: `wd-status-${req.id}`,
-                        title: 'উইথড্র অনুরোধ বাতিল হয়েছে',
-                        description: `আপনার উইথড্র অনুরোধটি বাতিল হয়েছে। কারণ: ${req.rejectionReason || 'অজানা'}`,
-                        link: '/withdraw?section=history'
-                    }, user.uid, firestore);
+            snapshot.docChanges().forEach(async (change) => {
+                const req = { id: change.doc.id, ...change.doc.data() } as WithdrawalRequest;
+                if (change.type === "modified") {
+                    if (req.status === 'approved') {
+                        await createNotification({
+                            id: `wd-status-${req.id}`,
+                            title: 'উইথড্র অনুরোধ অনুমোদিত',
+                            description: `আপনার ${req.amountBdt} টাকার উইথড্র অনুরোধটি সফল হয়েছে।`,
+                            link: '/withdraw?section=history'
+                        }, user.uid, firestore);
+                    } else if (req.status === 'rejected') {
+                        await createNotification({
+                            id: `wd-status-${req.id}`,
+                            title: 'উইথড্র অনুরোধ বাতিল হয়েছে',
+                            description: `আপনার উইথড্র অনুরোধটি বাতিল হয়েছে। কারণ: ${req.rejectionReason || 'অজানা'}`,
+                            link: '/withdraw?section=history'
+                        }, user.uid, firestore);
+                    }
                 }
-
-                if (req.status === 'rejected' && !req.isRefunded) {
-                    totalRefundPoints += req.points;
-                    const reqRef = doc(firestore, `users/${user.uid}`, 'withdrawalRequests', req.id);
-                    batch.update(reqRef, { isRefunded: true, processedAt: serverTimestamp() });
-                    refundOccurred = true;
-                }
-            }
-
-            if (refundOccurred && totalRefundPoints > 0) {
-                const userRef = doc(firestore, `users/${user.uid}`);
-                batch.update(userRef, { points: increment(totalRefundPoints) });
-                await batch.commit();
-
-                await createNotification({
-                    id: `refund-${new Date().toISOString()}`,
-                    title: "পয়েন্ট ফেরত দেওয়া হয়েছে",
-                    description: `আপনার বাতিল হওয়া অনুরোধের জন্য ${totalRefundPoints} পয়েন্ট ফেরত দেওয়া হয়েছে।`,
-                    link: "/rewards?section=history"
-                }, user.uid, firestore);
-            }
+            });
         });
         
         return () => unsubWithdrawals();

@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { createNotification } from '@/components/app-header';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
-import { doc, addDoc, collection, serverTimestamp, query, orderBy, writeBatch } from 'firebase/firestore';
+import { doc, addDoc, collection, serverTimestamp, query, orderBy, writeBatch, increment } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { paymentMethods } from '@/lib/data';
@@ -76,13 +76,7 @@ export default function WithdrawPage() {
 
     const lastRejectedRequest = useMemo(() => {
         if (!history) return null;
-        const sortedHistory = [...history].sort((a, b) => {
-            if (a.requestedAt && b.requestedAt) {
-                return b.requestedAt.seconds - a.requestedAt.seconds;
-            }
-            return 0;
-        });
-        return sortedHistory.find(req => req.status === 'rejected' && !req.isRefunded);
+        return history.find(req => req.status === 'rejected' && !req.isRefunded);
     }, [history]);
     
     useEffect(() => {
@@ -90,6 +84,35 @@ export default function WithdrawPage() {
             historyRef.current.scrollIntoView({ behavior: 'smooth' });
         }
     }, [searchParams, isHistoryLoading]);
+
+     useEffect(() => {
+        const handleRefund = async () => {
+            if (lastRejectedRequest && firestore && user && userDocRef) {
+                try {
+                    const batch = writeBatch(firestore);
+                    const reqRef = doc(firestore, `users/${user.uid}/withdrawalRequests`, lastRejectedRequest.id);
+                    
+                    batch.update(reqRef, { isRefunded: true, processedAt: serverTimestamp() });
+                    batch.update(userDocRef, { points: increment(lastRejectedRequest.points) });
+
+                    await batch.commit();
+
+                    createNotification({
+                        id: `refund-${lastRejectedRequest.id}`,
+                        title: "পয়েন্ট ফেরত দেওয়া হয়েছে",
+                        description: `আপনার বাতিল হওয়া অনুরোধের জন্য ${lastRejectedRequest.points} পয়েন্ট ফেরত দেওয়া হয়েছে।`,
+                        link: "/rewards?section=history"
+                    }, user.uid, firestore);
+
+                } catch (error) {
+                    console.error("Error processing refund:", error);
+                }
+            }
+        };
+
+        handleRefund();
+    }, [lastRejectedRequest, firestore, user, userDocRef]);
+
 
     const handlePointsChange = (value: number) => {
         if (value > rewardPoints) {
