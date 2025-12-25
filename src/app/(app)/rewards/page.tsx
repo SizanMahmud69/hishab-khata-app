@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { useMemo, useRef, useEffect } from 'react';
@@ -44,6 +45,8 @@ interface PointHistoryItem {
     date: Date;
     status?: 'pending' | 'approved' | 'rejected';
 }
+
+const CONVERSION_RATE = 5; // 100 points = 5 BDT
 
 function RewardsPageContent() {
     const { user } = useUser();
@@ -142,6 +145,7 @@ function RewardsPageContent() {
     
     const canWithdraw = rewardPoints >= minWithdrawalPoints;
     const isLoading = isUserLoading || isCheckInsLoading || isWithdrawalsLoading || areReferralsLoading;
+    const equivalentAmountBdt = Math.floor(rewardPoints / 100) * CONVERSION_RATE;
     
     const getStatusText = (status?: 'pending' | 'approved' | 'rejected') => {
         switch (status) {
@@ -184,11 +188,12 @@ function RewardsPageContent() {
                 আপনার পয়েন্ট
             </CardTitle>
         </CardHeader>
-        <CardContent className="relative">
+        <CardContent className="relative text-center">
             <Trophy className="absolute -top-4 -left-4 w-16 h-16 text-yellow-200 opacity-20 transform -rotate-12" />
             <Medal className="absolute -bottom-6 -right-4 w-20 h-20 text-yellow-200 opacity-20 transform rotate-12" />
-            <div className="text-6xl font-bold text-center p-8 text-white drop-shadow-lg">{rewardPoints}</div>
-            <p className="text-center text-yellow-100 font-medium">নিয়মিত অ্যাপ ব্যবহার করে আরও পয়েন্ট অর্জন করুন।</p>
+            <div className="text-6xl font-bold text-white drop-shadow-lg">{rewardPoints}</div>
+            <p className="text-lg font-semibold text-yellow-100 mt-1">≈ ৳ {equivalentAmountBdt} টাকা</p>
+            <p className="text-center text-yellow-200 font-medium mt-4">নিয়মিত অ্যাপ ব্যবহার করে আরও পয়েন্ট অর্জন করুন।</p>
         </CardContent>
       </Card>
       
@@ -264,3 +269,4 @@ export default function RewardsPage() {
         </React.Suspense>
     )
 }
+
