@@ -84,10 +84,10 @@ body {
   }
   body {
     @apply text-foreground;
-    background-image: linear-gradient(to bottom, hsl(var(--primary)), hsl(var(--accent)));
+    background-image: linear-gradient(to bottom right, #3b82f6, #22c55e);
   }
   .dark body {
-    background-image: linear-gradient(to bottom, hsl(217.2 32.6% 17.5%), hsl(222.2 84% 4.9%));
+    background-image: linear-gradient(to bottom right, #1e3a8a, #15803d);
   }
 }
 
