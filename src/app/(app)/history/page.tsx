@@ -5,7 +5,7 @@ import React, { useState, useMemo } from 'react';
 import PageHeader from "@/components/page-header";
 import { useBudget } from "@/context/budget-context";
 import { Card, CardContent } from "@/components/ui/card";
-import { TrendingUp, TrendingDown, Filter as FilterIcon } from "lucide-react";
+import { TrendingUp, TrendingDown, Filter as FilterIcon, Calendar as CalendarIcon } from "lucide-react";
 import { format, parseISO, startOfDay, endOfDay } from "date-fns";
 import { bn } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -13,13 +13,12 @@ import { type DateRange } from "react-day-picker";
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 
 export default function HistoryPage() {
   const { transactions } = useBudget();
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  const [tempDateRange, setTempDateRange] = useState<DateRange | undefined>(undefined);
-  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [tempDate, setTempDate] = useState<DateRange | undefined>(undefined);
 
   const sortedTransactions = useMemo(() => {
     return [...transactions].sort((a, b) => {
@@ -63,73 +62,91 @@ export default function HistoryPage() {
   
   const resetFilter = () => {
     setDateRange(undefined);
-    setTempDateRange(undefined);
+    setTempDate(undefined);
   }
 
   const applyFilter = () => {
-    setDateRange(tempDateRange);
-    setIsPopoverOpen(false);
+    setDateRange(tempDate);
   }
 
   return (
     <div className="flex-1 space-y-4">
-      <PageHeader title="হিস্টোরি" description="আপনার সকল লেনদেনের ইতিহাস দেখুন।">
-        <div className="flex items-center gap-2">
-            <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="icon">
-                  <FilterIcon className="h-4 w-4" />
+      <PageHeader title="হিস্টোরি" description="আপনার সকল লেনদেনের ইতিহাস দেখুন।" />
+      
+      <Card className="p-4">
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <div className="grid w-full gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !tempDate?.from && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {tempDate?.from ? format(tempDate.from, "d MMM, yyyy", { locale: bn }) : <span>শুরুর তারিখ</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={tempDate?.from}
+                      onSelect={(date) => setTempDate(prev => ({...prev, from: date}))}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+            </div>
+            <div className="grid w-full gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !tempDate?.to && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {tempDate?.to ? format(tempDate.to, "d MMM, yyyy", { locale: bn }) : <span>শেষের তারিখ</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={tempDate?.to}
+                      onSelect={(date) => setTempDate(prev => ({...prev, to: date}))}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+            </div>
+             <div className='flex w-full sm:w-auto gap-2'>
+                <Button onClick={applyFilter} className="w-full" disabled={!tempDate}>
+                    <FilterIcon className="mr-2 h-4 w-4" />
+                    ফিল্টার
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-4" align="end">
-                  <div className="grid gap-4">
-                    <div className="space-y-2">
-                        <Label className="font-medium text-center block">তারিখ সীমা বাছুন</Label>
-                         <div className="flex flex-col sm:flex-row gap-4">
-                            <div>
-                                <Label className='text-sm text-muted-foreground'>শুরুর তারিখ</Label>
-                                <Calendar
-                                    mode="single"
-                                    selected={tempDateRange?.from}
-                                    onSelect={(date) => setTempDateRange(prev => ({...prev, from: date}))}
-                                    defaultMonth={tempDateRange?.from}
-                                    initialFocus
-                                />
-                            </div>
-                             <div>
-                                <Label className='text-sm text-muted-foreground'>শেষের তারিখ</Label>
-                                <Calendar
-                                    mode="single"
-                                    selected={tempDateRange?.to}
-                                    onSelect={(date) => setTempDateRange(prev => ({...prev, to: date}))}
-                                    defaultMonth={tempDateRange?.to}
-                                    initialFocus
-                                />
-                            </div>
-                         </div>
-                    </div>
-                    <Button onClick={applyFilter} disabled={!tempDateRange?.from && !tempDateRange?.to}>ফিল্টার করুন</Button>
-                  </div>
-              </PopoverContent>
-            </Popover>
-            <Button onClick={resetFilter} variant="ghost" disabled={!dateRange}>
-                ফিল্টার রিসেট
-            </Button>
-        </div>
-      </PageHeader>
+                 <Button onClick={resetFilter} variant="ghost" disabled={!dateRange && !tempDate}>
+                    রিসেট
+                </Button>
+             </div>
+          </div>
+      </Card>
       
        {dateRange?.from && (
             <Card className="bg-muted/50">
                 <CardContent className="p-3 text-center text-sm text-muted-foreground">
                     ফিল্টার চালু আছে: 
                     <span className="font-semibold mx-1">
-                         {format(dateRange.from, "d MMM, y", { locale: bn })}
+                         {format(dateRange.from, "d MMM, yyyy", { locale: bn })}
                     </span>
                     {dateRange.to && (
                         <>
                            থেকে
                            <span className="font-semibold ml-1">
-                                {format(dateRange.to, "d MMM, y", { locale: bn })}
+                                {format(dateRange.to, "d MMM, yyyy", { locale: bn })}
                            </span>
                         </>
                     )}
