@@ -1,3 +1,4 @@
+
 "use client"
 import Link from "next/link"
 import { type ReactNode, useState, useEffect, useMemo } from "react"
@@ -173,11 +174,11 @@ export function AppHeader({children}: {children: ReactNode}) {
 
     return (
         <div className="flex min-h-screen w-full flex-col">
-            <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between border-b border-white/20 bg-gradient-to-r from-blue-400 to-green-400 text-white px-4">
                 <div className="flex items-center gap-2">
                     <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
                         <SheetTrigger asChild>
-                            <Button variant="ghost" size="icon">
+                            <Button variant="ghost" size="icon" className="hover:bg-white/20">
                                 <Menu className="h-6 w-6" />
                                 <span className="sr-only">Open sidebar</span>
                             </Button>
@@ -190,24 +191,24 @@ export function AppHeader({children}: {children: ReactNode}) {
                         </SheetContent>
                     </Sheet>
                     <Link href="/dashboard" className="flex items-center gap-2 font-bold" onClick={handleLinkClick}>
-                        <BookMarked className="h-6 w-6 text-primary" />
+                        <BookMarked className="h-6 w-6" />
                         <span>হিসাব খাতা</span>
                     </Link>
                 </div>
                 <div className="flex items-center gap-2">
-                     <Button variant="ghost" size="icon" asChild className={cn("rounded-full", !isCheckedIn && "animate-glow")}>
+                     <Button variant="ghost" size="icon" asChild className={cn("rounded-full hover:bg-white/20", !isCheckedIn && "animate-glow")}>
                         <Link href="/check-in">
                            {isCheckedIn ? (
-                                <CalendarCheck className="h-5 w-5 text-green-500" />
+                                <CalendarCheck className="h-5 w-5 text-green-200" />
                             ) : (
-                                <CalendarPlus className="h-5 w-5 text-primary" />
+                                <CalendarPlus className="h-5 w-5" />
                             )}
                             <span className="sr-only">Check In</span>
                         </Link>
                     </Button>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="relative">
+                            <Button variant="ghost" size="icon" className="relative hover:bg-white/20">
                                 {notificationCount > 0 && (
                                     <span className="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
                                         {notificationCount}

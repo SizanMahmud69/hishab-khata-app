@@ -26,7 +26,7 @@ function AppContent({ children }: { children: ReactNode }) {
     if (isLoading) {
         return (
              <div className="flex flex-col h-screen">
-                <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between border-b bg-background px-4">
+                <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between border-b bg-gradient-to-r from-blue-400 to-green-400 text-white px-4">
                     <div className="flex items-center gap-2">
                          <Skeleton className="h-8 w-8" />
                          <Skeleton className="h-6 w-32" />
@@ -36,7 +36,7 @@ function AppContent({ children }: { children: ReactNode }) {
                         <Skeleton className="h-8 w-8 rounded-full" />
                     </div>
                 </header>
-                <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-background">
+                <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-blue-500 to-green-500">
                     <div className="flex-1 space-y-4">
                         <div className="grid gap-4 grid-cols-2">
                             <Skeleton className="h-28" />
@@ -53,12 +53,12 @@ function AppContent({ children }: { children: ReactNode }) {
     return (
         <div className="flex flex-col min-h-screen">
             <AppHeader>{children}</AppHeader>
-             <footer className="py-4 mt-auto w-full shrink-0 items-center px-4 md:px-6 border-t">
+             <footer className="py-4 mt-auto w-full shrink-0 items-center px-4 md:px-6 border-t border-white/20 bg-gradient-to-r from-blue-400 to-green-400 text-white">
                 <div className="container mx-auto flex flex-col items-center justify-center gap-2 text-center sm:flex-row sm:justify-between">
-                    <p className='text-xs text-muted-foreground'>
-                        © 2025 <span className='font-bold text-primary'>হিসাব খাতা</span>. All rights reserved.
+                    <p className='text-xs text-blue-100'>
+                        © 2025 <span className='font-bold'>হিসাব খাতা</span>. All rights reserved.
                     </p>
-                    <div className='text-xs text-muted-foreground'>
+                    <div className='text-xs text-blue-100'>
                         Developer: <span className="font-semibold">Sizan Mahmud</span> & Designer: <span className="font-semibold">Black Dimond</span>
                     </div>
                 </div>

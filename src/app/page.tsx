@@ -45,17 +45,17 @@ const landingPageImage = PlaceHolderImages.find(p => p.id === 'finance-app-dashb
 export default function Home() {
   return (
     <div className="flex min-h-dvh flex-col bg-gradient-to-br from-blue-500 to-green-500">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-50 w-full border-b border-white/20 bg-gradient-to-r from-blue-400 to-green-400 text-white">
         <div className="container flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <BookMarked className="h-8 w-8 text-primary" />
+            <BookMarked className="h-8 w-8" />
             <span className="font-bold text-lg">হিসাব খাতা</span>
           </Link>
           <div className="flex items-center gap-2">
-            <Button asChild variant="ghost">
+            <Button asChild variant="ghost" className="hover:bg-white/20">
               <Link href="/login">লগইন</Link>
             </Button>
-            <Button asChild>
+            <Button asChild className="bg-white text-primary hover:bg-white/90">
               <Link href="/register">নিবন্ধন করুন</Link>
             </Button>
           </div>
@@ -71,14 +71,14 @@ export default function Home() {
             </div>
           <div className="container grid lg:grid-cols-2 items-center gap-12 py-20">
             <div className='text-center lg:text-left'>
-                <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl bg-gradient-to-br from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
+                <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl bg-gradient-to-br from-white to-slate-300 bg-clip-text text-transparent">
                   আপনার আর্থিক ব্যবস্থাপনার সহজ সমাধান
                 </h1>
-                <p className="mt-6 max-w-2xl text-lg text-muted-foreground mx-auto lg:mx-0">
+                <p className="mt-6 max-w-2xl text-lg text-blue-100 mx-auto lg:mx-0">
                   "হিসাব খাতা" দিয়ে আপনার ব্যক্তিগত আয়-ব্যয়ের হিসাব রাখুন স্মার্ট এবং আধুনিক উপায়ে। আপনার আর্থিক জীবনের উপর সম্পূর্ণ নিয়ন্ত্রণ নিন।
                 </p>
                 <div className="mt-8 flex justify-center lg:justify-start gap-4">
-                  <Button asChild size="lg">
+                  <Button asChild size="lg" className="bg-white text-primary hover:bg-white/90">
                     <Link href="/register">আজই শুরু করুন <MoveRight className='ml-2 h-5 w-5'/></Link>
                   </Button>
                 </div>
@@ -101,8 +101,8 @@ export default function Home() {
         {/* Features Section */}
         <section id="features" className="container py-20">
           <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">কেন হিসাব খাতা সেরা?</h2>
-            <p className="mt-4 text-lg text-muted-foreground">
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl text-white">কেন হিসাব খাতা সেরা?</h2>
+            <p className="mt-4 text-lg text-blue-100">
               আমরা আপনার প্রতিদিনের আর্থিক জীবনকে সহজ করার জন্য প্রয়োজনীয় সকল ফিচার একত্রিত করেছি।
             </p>
           </div>
@@ -125,12 +125,12 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="py-6 w-full shrink-0 items-center px-4 md:px-6 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <footer className="py-6 w-full shrink-0 items-center px-4 md:px-6 border-t border-white/20 bg-gradient-to-r from-blue-400 to-green-400 text-white">
         <div className="container mx-auto flex flex-col items-center justify-center gap-4 text-center sm:flex-row sm:justify-between">
-            <p className='text-sm text-muted-foreground'>
-                &copy; {new Date().getFullYear()} <span className='font-bold text-primary'>হিসাব খাতা</span>. All rights reserved.
+            <p className='text-sm text-blue-100'>
+                &copy; {new Date().getFullYear()} <span className='font-bold'>হিসাব খাতা</span>. All rights reserved.
             </p>
-            <div className='text-sm text-muted-foreground'>
+            <div className='text-sm text-blue-100'>
                 Developer: <span className="font-semibold">Sizan Mahmud</span> & Designer: <span className="font-semibold">Black Dimond</span>
             </div>
         </div>
