@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useMemo } from 'react';
@@ -79,27 +80,21 @@ export default function ReferPage() {
         <div className="flex-1 space-y-6">
             <PageHeader title="রেফার করুন" description="আপনার বন্ধুদের রেফার করে বোনাস পয়েন্ট অর্জন করুন।" />
 
-            <Card className='border-primary'>
+            <Card className='bg-gradient-to-br from-blue-500 to-green-500 text-white shadow-lg'>
                 <CardHeader>
                     <CardTitle>আপনার রেফারেল কোড</CardTitle>
-                    <CardDescription>এই কোডটি আপনার বন্ধুদের সাথে শেয়ার করুন। তারা নিবন্ধন করার সময় এই কোড ব্যবহার করলে আপনারা উভয়েই বোনাস পয়েন্ট পাবেন।</CardDescription>
+                    <CardDescription className='text-blue-100'>এই কোডটি আপনার বন্ধুদের সাথে শেয়ার করুন। তারা নিবন্ধন করার সময় এই কোড ব্যবহার করলে আপনারা উভয়েই বোনাস পয়েন্ট পাবেন।</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex items-center justify-center gap-4 p-4 rounded-lg bg-muted border border-dashed">
-                        <span className="text-2xl md:text-3xl font-bold tracking-widest text-primary">
+                    <div className="flex items-center justify-center gap-4 p-4 rounded-lg bg-black/20 border border-white/20 border-dashed">
+                        <span className="text-2xl md:text-3xl font-bold tracking-widest">
                             {userProfile?.referralCode ?? 'লোড হচ্ছে...'}
                         </span>
-                        <Button variant="ghost" size="icon" onClick={copyToClipboard} disabled={!userProfile?.referralCode}>
+                        <Button variant="ghost" size="icon" onClick={copyToClipboard} disabled={!userProfile?.referralCode} className='hover:bg-white/20'>
                             <Copy className="h-6 w-6" />
                         </Button>
                     </div>
                 </CardContent>
-                <CardFooter>
-                    <Button className='w-full' onClick={copyToClipboard} disabled={!userProfile?.referralCode}>
-                        <Copy className="mr-2 h-4 w-4" />
-                        কোড কপি করুন
-                    </Button>
-                </CardFooter>
             </Card>
 
             <Card>
@@ -155,5 +150,7 @@ export default function ReferPage() {
         </div>
     );
 }
+
+    
 
     
