@@ -15,18 +15,6 @@ service cloud.firestore {
       // A user is the owner if they are signed in and their UID matches the document's userId.
       return request.auth.uid == userId;
     }
-    
-    function canUpdateWithdrawalRequest() {
-      // User can create, but cannot update status or other admin-only fields.
-      let userUpdatableFields = ['paymentMethod', 'accountNumber', 'isRefunded'];
-      let incomingData = request.resource.data;
-      let existingData = resource.data;
-      
-      // Check that no admin-only fields are being changed
-      return incomingData.status == existingData.status &&
-             incomingData.rejectionReason == existingData.rejectionReason;
-    }
-
 
     // ------------------------------------------------------------------------
     // Collection Rules
@@ -71,8 +59,11 @@ service cloud.firestore {
       match /withdrawalRequests/{requestId} {
         allow get, create, delete: if isOwner(userId);
         allow list: if isOwner(userId);
-        // User cannot update status or rejection reasons. Only admin via console.
-        allow update: if isOwner(userId) && canUpdateWithdrawalRequest(); 
+        // User can update only specific fields. They can update isRefunded to true
+        // but cannot change status or rejection reasons set by admin.
+        allow update: if isOwner(userId) && 
+                         request.resource.data.diff(resource.data).affectedKeys()
+                           .hasOnly(['paymentMethod', 'accountNumber', 'isRefunded', 'processedAt']);
       }
       
       // Sub-collection for notifications
@@ -101,3 +92,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

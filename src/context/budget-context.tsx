@@ -116,50 +116,6 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     }, [firestore]);
     const { data: appConfig, isLoading: isConfigLoading } = useDoc<AppConfig>(appConfigRef);
 
-    useEffect(() => {
-        if (!user || !firestore) return;
-
-        const processedRefunds = new Set<string>();
-
-        const q = query(collection(firestore, `users/${user.uid}/withdrawalRequests`));
-        const unsubscribe = onSnapshot(q, async (querySnapshot) => {
-            const unrefundedRequests = querySnapshot.docs
-                .map(doc => ({ id: doc.id, ...doc.data() } as WithdrawalRequest))
-                .filter(req => req.status === 'rejected' && !req.isRefunded && !processedRefunds.has(req.id));
-
-            if (unrefundedRequests.length === 0) return;
-
-            const batch = writeBatch(firestore);
-            const userDocRef = doc(firestore, 'users', user.uid);
-
-            for (const req of unrefundedRequests) {
-                processedRefunds.add(req.id); // Mark as being processed to prevent re-triggering
-
-                const reqRef = doc(firestore, `users/${user.uid}/withdrawalRequests`, req.id);
-                batch.update(reqRef, { isRefunded: true, processedAt: serverTimestamp() });
-                batch.update(userDocRef, { points: increment(req.points) });
-            }
-
-            try {
-                await batch.commit();
-                for (const req of unrefundedRequests) {
-                     await createNotification({
-                        id: `refund-${req.id}`,
-                        title: "পয়েন্ট ফেরত দেওয়া হয়েছে",
-                        description: `আপনার বাতিল হওয়া অনুরোধের জন্য ${req.points} পয়েন্ট ফেরত দেওয়া হয়েছে।`,
-                        link: "/rewards?section=history"
-                    }, user.uid, firestore);
-                }
-            } catch (error) {
-                console.error("Error processing refunds:", error);
-                 unrefundedRequests.forEach(req => processedRefunds.delete(req.id));
-            }
-        });
-
-        return () => unsubscribe();
-    }, [user, firestore]);
-
-
     const minWithdrawalPoints = appConfig?.minWithdrawalPoints ?? 1000;
     const referrerBonusPoints = appConfig?.referrerBonusPoints ?? 100;
     const referredUserBonusPoints = appConfig?.referredUserBonusPoints ?? 50;
@@ -251,3 +207,5 @@ export const useBudget = () => {
     }
     return context;
 };
+
+    

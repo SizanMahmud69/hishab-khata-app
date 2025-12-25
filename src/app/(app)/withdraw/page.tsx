@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -79,11 +78,62 @@ export default function WithdrawPage() {
         return history.find(req => req.status === 'rejected' && !req.isRefunded);
     }, [history]);
     
-    useEffect(() => {
+     useEffect(() => {
         if (searchParams.get('section') === 'history' && historyRef.current) {
             historyRef.current.scrollIntoView({ behavior: 'smooth' });
         }
     }, [searchParams, isHistoryLoading]);
+
+    // One-time effect to handle all pending refunds on component mount.
+    useEffect(() => {
+        if (!history || !user || !firestore || !userDocRef) return;
+        
+        const unrefundedRequests = history.filter(
+            req => req.status === 'rejected' && !req.isRefunded
+        );
+
+        if (unrefundedRequests.length === 0) return;
+
+        const handleRefund = async () => {
+            const batch = writeBatch(firestore);
+            let totalRefundPoints = 0;
+
+            unrefundedRequests.forEach(req => {
+                const reqRef = doc(firestore, `users/${user.uid}/withdrawalRequests`, req.id);
+                batch.update(reqRef, { isRefunded: true, processedAt: serverTimestamp() });
+                totalRefundPoints += req.points;
+            });
+
+            batch.update(userDocRef, { points: increment(totalRefundPoints) });
+
+            try {
+                await batch.commit();
+                toast({
+                    title: "পয়েন্ট ফেরত দেওয়া হয়েছে",
+                    description: `${totalRefundPoints} পয়েন্ট আপনার অ্যাকাউন্টে ফেরত দেওয়া হয়েছে।`,
+                });
+                unrefundedRequests.forEach(req => {
+                    createNotification({
+                        id: `refund-${req.id}`,
+                        title: "পয়েন্ট ফেরত দেওয়া হয়েছে",
+                        description: `আপনার বাতিল হওয়া অনুরোধের জন্য ${req.points} পয়েন্ট ফেরত দেওয়া হয়েছে।`,
+                        link: "/rewards?section=history"
+                    }, user.uid, firestore);
+                });
+            } catch (error) {
+                console.error("Error processing refunds in batch:", error);
+                toast({
+                    variant: "destructive",
+                    title: "ত্রুটি",
+                    description: "পয়েন্ট ফেরত দেওয়ার সময় একটি সমস্যা হয়েছে।",
+                });
+            }
+        };
+
+        handleRefund();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [history, user, firestore, userDocRef]); // Runs once when history is loaded
+
 
     const handlePointsChange = (value: number) => {
         if (value > rewardPoints) {
@@ -344,3 +394,5 @@ export default function WithdrawPage() {
     </div>
   )
 }
+
+    
