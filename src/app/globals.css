@@ -83,11 +83,7 @@ body {
     @apply border-border;
   }
   body {
-    @apply text-foreground;
-    background-image: linear-gradient(to bottom right, #3b82f6, #22c55e);
-  }
-  .dark body {
-    background-image: linear-gradient(to bottom right, #1e3a8a, #15803d);
+    @apply bg-background text-foreground;
   }
 }
 
