@@ -6,21 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUser, useFirestore, useMemoFirebase, useCollection, useDoc } from "@/firebase";
 import { Mail, Phone, UserCheck, XCircle, CheckCircle, User as UserIcon, MapPin, Cake, AlertTriangle, Info, Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import React, { useState, useEffect, useMemo } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import React, { useEffect, useMemo } from "react";
+import Link from 'next/link';
 import { Badge } from "@/components/ui/badge";
-import { doc, setDoc, addDoc, collection, serverTimestamp, getDocs, query, where, orderBy, limit } from "firebase/firestore";
+import { collection, query, orderBy, limit } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { createNotification } from "@/components/app-header";
@@ -59,11 +48,7 @@ interface VerificationRequest {
 export default function ProfilePage() {
   const { user } = useUser();
   const firestore = useFirestore();
-  const { toast } = useToast();
   
-  const [isVerificationDialogOpen, setIsVerificationDialogOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const userDocRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
     return doc(firestore, 'users', user.uid);
@@ -109,66 +94,6 @@ export default function ProfilePage() {
     }
   }, [verificationRequest, verificationStatus, user, firestore]);
 
-
-  const handleNidSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!user || !firestore || !userDocRef) return;
-
-    setIsSubmitting(true);
-    const formData = new FormData(event.currentTarget);
-    const name = formData.get('name') as string;
-    const nid = formData.get('nid') as string;
-    const phone = formData.get('phone') as string;
-    const dob = formData.get('dob') as string;
-    const address = formData.get('address') as string;
-
-    if (!name || !nid || !phone || !dob || !address) {
-      toast({
-        variant: "destructive",
-        title: "ফর্ম পূরণ আবশ্যক",
-        description: "অনুগ্রহ করে সকল তথ্য পূরণ করুন।",
-      });
-      setIsSubmitting(false);
-      return;
-    }
-    
-    const requestData = {
-        userId: user.uid,
-        status: 'pending',
-        submittedAt: serverTimestamp(),
-        nidName: name,
-        nidNumber: nid,
-        nidDob: dob,
-        nidAddress: address,
-        phone: phone,
-    };
-
-    try {
-        const verificationRequestRef = collection(firestore, `users/${user.uid}/verificationRequests`);
-        const newRequestDoc = await addDoc(verificationRequestRef, requestData);
-
-        await setDoc(userDocRef, {
-            verificationRequestId: newRequestDoc.id,
-            phone: phone,
-        }, { merge: true });
-
-        toast({
-          title: "আবেদন জমা হয়েছে",
-          description: "আপনার এনআইডি ভেরিফিকেশনের আবেদনটি প্রক্রিয়াধীন আছে।",
-        });
-        setIsVerificationDialogOpen(false);
-
-    } catch (error) {
-        console.error("Error submitting NID application:", error);
-        toast({
-            variant: "destructive",
-            title: "ত্রুটি",
-            description: "আবেদন জমা দেওয়ার সময় একটি সমস্যা হয়েছে।",
-        });
-    } finally {
-        setIsSubmitting(false);
-    }
-  };
 
   const VerificationStatus = () => {
     if (isRequestLoading) {
@@ -247,52 +172,12 @@ export default function ProfilePage() {
                         <p className="text-sm text-muted-foreground">অতিরিক্ত সুবিধা পেতে আপনার এনআইডি ভেরিফাই করুন।</p>
                     </div>
                 </div>
-                 <Dialog open={isVerificationDialogOpen} onOpenChange={setIsVerificationDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="w-full sm:w-auto">
-                      <UserCheck className="mr-2 h-4 w-4" />
-                      এখনই ভেরিফাই করুন
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                      <DialogTitle>এনআইডি ভেরিফিকেশন</DialogTitle>
-                      <DialogDescription>
-                        আপনার এনআইডি কার্ড অনুযায়ী সঠিক তথ্য প্রদান করুন।
-                      </DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={handleNidSubmit}>
-                        <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto px-2">
-                          <div className="space-y-1.5">
-                            <Label htmlFor="name">পুরো নাম (এনআইডি অনুযায়ী)</Label>
-                            <Input id="name" name="name" placeholder="আপনার পুরো নাম লিখুন" required />
-                          </div>
-                          <div className="space-y-1.5">
-                            <Label htmlFor="nid">এনআইডি নম্বর</Label>
-                            <Input id="nid" name="nid" type="number" placeholder="আপনার এনআইডি নম্বর" required />
-                          </div>
-                           <div className="space-y-1.5">
-                            <Label htmlFor="dob">জন্ম তারিখ</Label>
-                            <Input id="dob" name="dob" type="date" required />
-                          </div>
-                          <div className="space-y-1.5">
-                            <Label htmlFor="phone">ফোন নম্বর</Label>
-                            <Input id="phone" name="phone" placeholder="আপনার ফোন নম্বর" required />
-                          </div>
-                          <div className="space-y-1.5">
-                            <Label htmlFor="address">ঠিকানা</Label>
-                            <Input id="address" name="address" placeholder="আপনার ঠিকানা লিখুন" required />
-                          </div>
-                        </div>
-                        <DialogFooter className="pt-4">
-                          <Button type="submit" disabled={isSubmitting}>
-                            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            {isSubmitting ? 'জমা হচ্ছে...' : 'জমা দিন'}
-                          </Button>
-                        </DialogFooter>
-                    </form>
-                  </DialogContent>
-                </Dialog>
+                 <Button asChild className="w-full sm:w-auto">
+                    <Link href="/profile/verify">
+                        <UserCheck className="mr-2 h-4 w-4" />
+                        এখনই ভেরিফাই করুন
+                    </Link>
+                 </Button>
             </div>
         </div>
     )
@@ -375,6 +260,8 @@ export default function ProfilePage() {
     </div>
   )
 }
+    
+
     
 
     

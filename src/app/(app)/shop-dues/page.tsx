@@ -23,16 +23,12 @@ import {
   DialogFooter
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils";
-import ShopDueForm from "@/components/shop-due-form";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { format } from "date-fns";
-import { bn } from "date-fns/locale";
 
 
 interface ShopDueSummary {
@@ -50,7 +46,6 @@ export default function ShopDuesPage() {
     
     const [paymentShop, setPaymentShop] = useState<ShopDueSummary | null>(null);
     const [isPaymentOpen, setIsPaymentOpen] = useState(false);
-    const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [paymentAmount, setPaymentAmount] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -185,23 +180,12 @@ export default function ShopDuesPage() {
     <div className="flex-1 space-y-4">
       <PageHeader title="আমার দোকানের বাকি" description="বিভিন্ন দোকানে আপনার মোট বাকির একটি সারসংক্ষেপ।">
         <div className="flex items-center gap-2">
-            <Dialog onOpenChange={setIsAddDialogOpen} open={isAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  দোকান বাকি
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>নতুন বাকির হিসাব</DialogTitle>
-                  <DialogDescription>
-                    দোকানের নাম এবং বাকির পরিমাণ লিখুন।
-                  </DialogDescription>
-                </DialogHeader>
-                <ShopDueForm />
-              </DialogContent>
-            </Dialog>
+            <Button asChild>
+                <Link href="/shop-dues/add">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    দোকান বাকি
+                </Link>
+            </Button>
         </div>
       </PageHeader>
       
@@ -311,3 +295,5 @@ export default function ShopDuesPage() {
     </div>
   )
 }
+
+    
