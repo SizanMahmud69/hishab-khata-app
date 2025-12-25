@@ -53,7 +53,6 @@ function RewardsPageContent() {
     const searchParams = useSearchParams();
     const historyRef = useRef<HTMLDivElement>(null);
     const { minWithdrawalPoints, bdtPer100Points } = useBudget();
-    const [processedRefunds, setProcessedRefunds] = useState<Set<string>>(new Set());
 
     const userDocRef = useMemoFirebase(() => {
         if (!user || !firestore) return null;
@@ -80,54 +79,6 @@ function RewardsPageContent() {
         return query(collection(firestore, `users/${user.uid}/referrals`), orderBy("createdAt", "desc"));
     }, [user, firestore]);
     const { data: referrals, isLoading: areReferralsLoading } = useCollection<Referral>(referralsQuery);
-
-    
-    useEffect(() => {
-        const processRefunds = async () => {
-            if (!allWithdrawals || !firestore || !user || !userDocRef) return;
-
-            const unrefundedRequests = allWithdrawals.filter(
-                req => req.status === 'rejected' && !req.isRefunded && !processedRefunds.has(req.id)
-            );
-            
-            if (unrefundedRequests.length === 0) return;
-
-            const batch = writeBatch(firestore);
-            
-            for (const req of unrefundedRequests) {
-                const reqRef = doc(firestore, `users/${user.uid}/withdrawalRequests`, req.id);
-                batch.update(reqRef, { isRefunded: true, processedAt: serverTimestamp() });
-                setProcessedRefunds(prev => new Set(prev).add(req.id));
-            }
-             batch.update(userDocRef, { 
-                points: increment(unrefundedRequests.reduce((sum, req) => sum + req.points, 0)) 
-            });
-
-
-            try {
-                await batch.commit();
-                for (const req of unrefundedRequests) {
-                     createNotification({
-                        id: `refund-${req.id}`,
-                        title: "পয়েন্ট ফেরত দেওয়া হয়েছে",
-                        description: `আপনার বাতিল হওয়া অনুরোধের জন্য ${req.points} পয়েন্ট ফেরত দেওয়া হয়েছে।`,
-                        link: "/rewards?section=history"
-                    }, user.uid, firestore);
-                }
-            } catch (error) {
-                console.error("Error processing refunds:", error);
-                 setProcessedRefunds(prev => {
-                    const newSet = new Set(prev);
-                    unrefundedRequests.forEach(req => newSet.delete(req.id));
-                    return newSet;
-                });
-            }
-        };
-
-        processRefunds();
-
-    }, [allWithdrawals, firestore, user, userDocRef, processedRefunds]);
-
 
     useEffect(() => {
         if (searchParams.get('section') === 'history' && historyRef.current && !isWithdrawalsLoading && !isCheckInsLoading && !areReferralsLoading) {
@@ -319,5 +270,3 @@ export default function RewardsPage() {
         </React.Suspense>
     )
 }
-
-    

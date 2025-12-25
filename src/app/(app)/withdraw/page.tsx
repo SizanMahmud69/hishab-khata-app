@@ -207,12 +207,12 @@ export default function WithdrawPage() {
     <div className="flex-1 space-y-6">
       <PageHeader title="পয়েন্ট উইথড্র" description="আপনার অর্জিত পয়েন্ট টাকাতে রূপান্তর করুন।" />
       
-      {lastRejectedRequest && (
+      {lastRejectedRequest && !lastRejectedRequest.isRefunded && (
         <Alert variant="destructive">
             <Info className="h-4 w-4" />
             <AlertTitle>আপনার উইথড্র অনুরোধ বাতিল হয়েছে</AlertTitle>
             <AlertDescription>
-                আপনার সর্বশেষ উইথড্র অনুরোধটি বাতিল করা হয়েছে। আপনার পয়েন্ট শীঘ্রই ফেরত দেওয়া হবে।
+                আপনার সর্বশেষ উইথড্র অনুরোধটি বাতিল করা হয়েছে এবং পয়েন্ট আপনার অ্যাকাউন্টে ফেরত দেওয়া হয়েছে।
                 {lastRejectedRequest.rejectionReason && ` কারণ: ${lastRejectedRequest.rejectionReason}`}
             </AlertDescription>
         </Alert>
@@ -344,5 +344,3 @@ export default function WithdrawPage() {
     </div>
   )
 }
-
-    

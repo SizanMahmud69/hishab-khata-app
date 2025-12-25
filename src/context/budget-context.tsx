@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo, useCallback } from 'react';
@@ -85,6 +86,7 @@ const SAVINGS_MILESTONES = [1000, 5000, 10000, 20000, 30000, 40000, 50000, 10000
 export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
+    const [processedRefunds, setProcessedRefunds] = useState<Set<string>>(new Set());
 
     const userDocRef = useMemoFirebase(() => {
         if (!user || !firestore) return null;
@@ -116,6 +118,13 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         return doc(firestore, 'app_config', 'settings');
     }, [firestore]);
     const { data: appConfig, isLoading: isConfigLoading } = useDoc<AppConfig>(appConfigRef);
+
+    const withdrawalRequestsQuery = useMemoFirebase(() => {
+        if (!user || !firestore) return null;
+        return collection(firestore, `users/${user.uid}/withdrawalRequests`);
+    }, [user, firestore]);
+    const { data: allWithdrawals, isLoading: areWithdrawalsLoading } = useCollection<WithdrawalRequest>(withdrawalRequestsQuery);
+
 
     const minWithdrawalPoints = appConfig?.minWithdrawalPoints ?? 1000;
     const referrerBonusPoints = appConfig?.referrerBonusPoints ?? 100;
@@ -154,35 +163,50 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
 
 
      useEffect(() => {
-        if (!user || !firestore) return;
-        
-        const withdrawalRequestsRef = collection(firestore, `users/${user.uid}`, 'withdrawalRequests');
-        const unsubWithdrawals = onSnapshot(withdrawalRequestsRef, async (snapshot) => {
-            snapshot.docChanges().forEach(async (change) => {
-                const req = { id: change.doc.id, ...change.doc.data() } as WithdrawalRequest;
-                if (change.type === "modified") {
-                    if (req.status === 'approved') {
-                        await createNotification({
-                            id: `wd-status-${req.id}`,
-                            title: 'উইথড্র অনুরোধ অনুমোদিত',
-                            description: `আপনার ${req.amountBdt} টাকার উইথড্র অনুরোধটি সফল হয়েছে।`,
-                            link: '/withdraw?section=history'
-                        }, user.uid, firestore);
-                    } else if (req.status === 'rejected') {
-                        await createNotification({
-                            id: `wd-status-${req.id}`,
-                            title: 'উইথড্র অনুরোধ বাতিল হয়েছে',
-                            description: `আপনার উইথড্র অনুরোধটি বাতিল হয়েছে। কারণ: ${req.rejectionReason || 'অজানা'}`,
-                            link: '/withdraw?section=history'
-                        }, user.uid, firestore);
-                    }
-                }
-            });
-        });
-        
-        return () => unsubWithdrawals();
+        if (!allWithdrawals || !user || !firestore || !userDocRef) return;
 
-    }, [user, firestore]);
+        const processRefunds = async () => {
+            const unrefundedRequests = allWithdrawals.filter(
+                req => req.status === 'rejected' && !req.isRefunded && !processedRefunds.has(req.id)
+            );
+
+            if (unrefundedRequests.length === 0) return;
+
+            const batch = writeBatch(firestore);
+            let totalPointsToRefund = 0;
+            const newProcessedIds = new Set(processedRefunds);
+
+            for (const req of unrefundedRequests) {
+                const reqRef = doc(firestore, `users/${user.uid}/withdrawalRequests`, req.id);
+                batch.update(reqRef, { isRefunded: true, processedAt: serverTimestamp() });
+                totalPointsToRefund += req.points;
+                newProcessedIds.add(req.id);
+            }
+            
+            if (totalPointsToRefund > 0) {
+                batch.update(userDocRef, { points: increment(totalPointsToRefund) });
+            }
+
+            try {
+                await batch.commit();
+                setProcessedRefunds(newProcessedIds);
+
+                for (const req of unrefundedRequests) {
+                     await createNotification({
+                        id: `refund-${req.id}`,
+                        title: "পয়েন্ট ফেরত দেওয়া হয়েছে",
+                        description: `আপনার বাতিল হওয়া অনুরোধের জন্য ${req.points} পয়েন্ট ফেরত দেওয়া হয়েছে।`,
+                        link: "/rewards?section=history"
+                    }, user.uid, firestore);
+                }
+            } catch (error) {
+                console.error("Error processing refunds:", error);
+            }
+        };
+
+        processRefunds();
+
+    }, [allWithdrawals, user, firestore, userDocRef, processedRefunds]);
     
     const addDocToCollection = async (collectionName: string, data: any) => {
         if (!user || !firestore) throw new Error("User or firestore not available");
@@ -228,7 +252,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
        await updateRewardPoints(pointsToDeduct, 'deduct');
     };
     
-    const isLoading = isUserLoading || isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || areReferralsLoading;
+    const isLoading = isUserLoading || isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || areReferralsLoading || areWithdrawalsLoading;
 
     return (
         <BudgetContext.Provider value={{ 
@@ -262,5 +286,3 @@ export const useBudget = () => {
     }
     return context;
 };
-
-    
