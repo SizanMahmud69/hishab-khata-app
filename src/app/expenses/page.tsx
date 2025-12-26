@@ -22,6 +22,8 @@ import { useBudget } from "@/context/budget-context"
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from 'lucide-react';
 
+const months = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
+
 export default function ExpensesPage() {
     const { addTransaction, totalIncome, totalExpense } = useBudget();
     const { toast } = useToast();
@@ -46,7 +48,7 @@ export default function ExpensesPage() {
         const category = formData.get('category') as string;
         const amount = parseFloat(formData.get('amount') as string);
         const date = formData.get('date') as string;
-        const description = formData.get('description') as string;
+        const descriptionInput = formData.get('description') as string;
         
         if (!category || !amount || !date) {
             toast({
@@ -66,6 +68,13 @@ export default function ExpensesPage() {
             });
             setIsSubmitting(false);
             return;
+        }
+
+        let description = descriptionInput;
+        if (category === 'বাড়ি ভাড়া') {
+            description = `${descriptionInput} মাসের বাড়ি ভাড়া`;
+        } else if (category === 'বিল') {
+            description = `${descriptionInput} মাসের বিল`;
         }
 
         try {
@@ -139,6 +148,15 @@ export default function ExpensesPage() {
                         </SelectTrigger>
                         <SelectContent>
                             {savingsDestinations.map(dest => <SelectItem key={dest} value={dest}>{dest}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                ) : selectedCategory === 'বাড়ি ভাড়া' || selectedCategory === 'বিল' ? (
+                     <Select name="description" required>
+                        <SelectTrigger>
+                            <SelectValue placeholder="একটি মাস নির্বাচন করুন" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {months.map(month => <SelectItem key={month} value={month}>{month}</SelectItem>)}
                         </SelectContent>
                     </Select>
                 ) : (
