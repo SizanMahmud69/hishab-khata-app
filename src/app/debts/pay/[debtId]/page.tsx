@@ -43,6 +43,7 @@ export default function PayDebtPage() {
     const [paymentAmount, setPaymentAmount] = useState(0);
     const [paymentDate, setPaymentDate] = useState<Date | undefined>(new Date());
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isCalendarOpen, setIsCalendarOpen] = useState(false);
     
     // Set initial payment amount when debtNote loads
     useState(() => {
@@ -172,7 +173,7 @@ export default function PayDebtPage() {
                     </div>
                     <div className="space-y-2">
                         <Label>পরিশোধের তারিখ</Label>
-                        <Popover>
+                        <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                             <PopoverTrigger asChild>
                                 <Button
                                     variant={"outline"}
@@ -189,7 +190,10 @@ export default function PayDebtPage() {
                                 <Calendar
                                     mode="single"
                                     selected={paymentDate}
-                                    onSelect={setPaymentDate}
+                                    onSelect={(date) => {
+                                        setPaymentDate(date);
+                                        setIsCalendarOpen(false);
+                                    }}
                                     initialFocus
                                 />
                             </PopoverContent>
