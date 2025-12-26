@@ -239,13 +239,6 @@ export default function ProfilePage() {
                     <p className="text-muted-foreground">{userProfileData?.phone ?? user?.phoneNumber ?? 'ফোন নম্বর সেট করা নেই'}</p>
                 </div>
             </div>
-             <div className="flex items-start gap-4">
-                <MapPin className="w-6 h-6 text-muted-foreground mt-1" />
-                <div className="flex-1">
-                    <p className="text-sm font-medium">ঠিকানা</p>
-                    <p className="text-muted-foreground">{userProfileData?.address ?? 'ঠিকানা সেট করা নেই'}</p>
-                </div>
-            </div>
         </CardContent>
       </Card>
       
@@ -261,5 +254,3 @@ export default function ProfilePage() {
     </div>
   )
 }
-
-    
