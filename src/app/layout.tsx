@@ -68,9 +68,9 @@ function AppContent({ children }: { children: ReactNode }) {
                     <p className='text-xs text-blue-100'>
                         © 2025 <span className='font-bold'>হিসাব খাতা</span>. All rights reserved.
                     </p>
-                    <div className='text-xs text-blue-100'>
+                    <p className='text-xs text-blue-100 whitespace-nowrap'>
                         Developer: <span className="font-semibold">Sizan Mahmud</span> & Designer: <span className="font-semibold">Black Dimond</span>
-                    </div>
+                    </p>
                 </div>
             </footer>
         </div>

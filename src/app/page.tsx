@@ -130,9 +130,9 @@ export default function Home() {
             <p className='text-sm text-blue-100'>
                 &copy; {new Date().getFullYear()} <span className='font-bold'>হিসাব খাতা</span>. All rights reserved.
             </p>
-            <div className='text-sm text-blue-100'>
+            <p className='text-sm text-blue-100 whitespace-nowrap'>
                 Developer: <span className="font-semibold">Sizan Mahmud</span> & Designer: <span className="font-semibold">Black Dimond</span>
-            </div>
+            </p>
         </div>
       </footer>
     </div>
