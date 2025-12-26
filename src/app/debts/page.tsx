@@ -4,7 +4,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { PlusCircle, TrendingDown, TrendingUp, Loader2 } from "lucide-react"
+import { PlusCircle, TrendingDown, TrendingUp, Loader2, Calendar as CalendarIcon } from "lucide-react"
 import { useBudget, type DebtNote } from "@/context/budget-context";
 import { Button } from "@/components/ui/button"
 import PageHeader from "@/components/page-header"
@@ -32,12 +32,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
 
 export default function DebtsPage() {
     const { debtNotes, updateDebtNote } = useBudget();
     const { toast } = useToast();
     const [selectedDebt, setSelectedDebt] = useState<DebtNote | null>(null);
     const [paymentAmount, setPaymentAmount] = useState<number>(0);
+    const [paymentDate, setPaymentDate] = useState<Date>(new Date());
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -52,6 +56,7 @@ export default function DebtsPage() {
     const openPaymentDialog = (debt: DebtNote) => {
         setSelectedDebt(debt);
         setPaymentAmount(debt.amount - debt.paidAmount);
+        setPaymentDate(new Date());
         setIsPaymentDialogOpen(true);
     }
 
@@ -75,7 +80,7 @@ export default function DebtsPage() {
             const newStatus = newPaidAmount >= selectedDebt.amount ? 'paid' : 'partially-paid';
             const updatedDebt = { ...selectedDebt, paidAmount: newPaidAmount, status: newStatus };
             
-            await updateDebtNote(updatedDebt);
+            await updateDebtNote(updatedDebt, paymentAmount, paymentDate);
 
             toast({
                 title: "সফল!",
@@ -239,7 +244,7 @@ export default function DebtsPage() {
                 <DialogHeader>
                     <DialogTitle>পরিশোধ নিশ্চিত করুন</DialogTitle>
                     <DialogDescription>
-                        {selectedDebt?.person} কে পরিশোধ করার জন্য পরিমাণ লিখুন।
+                        {selectedDebt?.person} কে পরিশোধ করার জন্য পরিমাণ ও তারিখ লিখুন।
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
@@ -267,6 +272,31 @@ export default function DebtsPage() {
                      <p className="text-sm text-muted-foreground text-right pr-1">
                         বাকি আছে: {formatCurrency(selectedDebt ? selectedDebt.amount - selectedDebt.paidAmount : 0)}
                      </p>
+                     <div className="space-y-1.5">
+                         <Label>পরিশোধের তারিখ</Label>
+                         <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                variant={"outline"}
+                                className={cn(
+                                    "w-full justify-start text-left font-normal",
+                                    !paymentDate && "text-muted-foreground"
+                                )}
+                                >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {paymentDate ? format(paymentDate, "PPP") : <span>একটি তারিখ বাছুন</span>}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                                <Calendar
+                                mode="single"
+                                selected={paymentDate}
+                                onSelect={(date) => setPaymentDate(date || new Date())}
+                                initialFocus
+                                />
+                            </PopoverContent>
+                        </Popover>
+                     </div>
                 </div>
                 <DialogFooter>
                     <Button variant="outline" onClick={() => setIsPaymentDialogOpen(false)}>বাতিল</Button>

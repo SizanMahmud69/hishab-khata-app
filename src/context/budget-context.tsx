@@ -6,7 +6,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect, useMe
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { collection, onSnapshot, addDoc, doc, updateDoc, serverTimestamp, setDoc, query, getDocs, writeBatch, increment, arrayUnion, orderBy, Unsubscribe } from 'firebase/firestore';
 import { createNotification } from '@/components/app-header';
-import { type WithdrawalRequest } from '@/app/(app)/withdraw/page';
+import { type WithdrawalRequest } from '@/app/withdraw/page';
 
 // New unified Transaction interface
 export interface Transaction {
@@ -65,7 +65,7 @@ interface BudgetContextType {
     referrals: Referral[];
     addTransaction: (transaction: Omit<Transaction, 'id' | 'createdAt' | 'userId'>) => Promise<void>;
     addDebtNote: (debtNote: Omit<DebtNote, 'id' | 'createdAt' | 'userId'>) => Promise<void>;
-    updateDebtNote: (debtNote: DebtNote) => Promise<void>;
+    updateDebtNote: (debtNote: DebtNote, paymentAmount: number, paymentDate: Date) => Promise<void>;
     totalIncome: number;
     totalExpense: number;
     totalSavings: number;
@@ -170,10 +170,30 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         await addDocToCollection('debtNotes', debtNote);
     }
 
-    const updateDebtNote = async (debtNote: DebtNote) => {
+    const updateDebtNote = async (debtNote: DebtNote, paymentAmount: number, paymentDate: Date) => {
         if (!user || !firestore || !debtNote.id) return;
+
+        const batch = writeBatch(firestore);
+
         const docRef = doc(firestore, `users/${user.uid}/debtNotes`, debtNote.id);
-        await updateDoc(docRef, { ...debtNote });
+        batch.update(docRef, { paidAmount: debtNote.paidAmount, status: debtNote.status });
+        
+        const transactionCollectionRef = collection(firestore, `users/${user.uid}/transactions`);
+        const transactionDocRef = doc(transactionCollectionRef); // Create a new doc with a random ID
+        
+        const transactionData = {
+            userId: user.uid,
+            type: debtNote.type === 'lent' ? 'income' : 'expense',
+            category: debtNote.type === 'lent' ? 'ধার ফেরত' : 'ধার পরিশোধ',
+            amount: paymentAmount,
+            date: paymentDate.toISOString(),
+            description: `${debtNote.person} কে ${debtNote.type === 'lent' ? 'থেকে প্রাপ্তি' : 'কে পরিশোধ'}`,
+            createdAt: serverTimestamp()
+        };
+
+        batch.set(transactionDocRef, transactionData);
+        
+        await batch.commit();
     }
     
     const isLoading = isUserLoading || isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || areReferralsLoading;
