@@ -41,7 +41,7 @@ export default function DebtsPage() {
     const { toast } = useToast();
     const [selectedDebt, setSelectedDebt] = useState<DebtNote | null>(null);
     const [paymentAmount, setPaymentAmount] = useState<number>(0);
-    const [paymentDate, setPaymentDate] = useState<Date>(new Date());
+    const [paymentDate, setPaymentDate] = useState<Date | undefined>(new Date());
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -61,7 +61,7 @@ export default function DebtsPage() {
     }
 
     const handlePaymentConfirm = async () => {
-        if (!selectedDebt) return;
+        if (!selectedDebt || !paymentDate) return;
         
         setIsSubmitting(true);
         const remainingAmount = selectedDebt.amount - selectedDebt.paidAmount;
@@ -291,7 +291,7 @@ export default function DebtsPage() {
                                 <Calendar
                                 mode="single"
                                 selected={paymentDate}
-                                onSelect={(date) => setPaymentDate(date || new Date())}
+                                onSelect={setPaymentDate}
                                 initialFocus
                                 />
                             </PopoverContent>
