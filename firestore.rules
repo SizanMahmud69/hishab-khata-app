@@ -48,7 +48,7 @@ service cloud.firestore {
         allow list, get, create, delete, update: if isOwner(userId);
       }
 
-      // Sub-collection for NID verification requests
+      // Sub-collection for NID verification requests (user-facing)
       match /verificationRequests/{requestId} {
         allow get, create: if isOwner(userId);
         allow list: if isOwner(userId);
@@ -90,6 +90,18 @@ service cloud.firestore {
       allow create: if isSignedIn();
       // Prevent clients from listing, updating, or deleting config.
       allow list, update, delete: if false; 
+    }
+    
+    // Root collection for verification requests for admin and uniqueness checks
+    match /verificationRequests/{requestId} {
+      // Allow any signed-in user to read (for uniqueness checks)
+      allow get, list: if isSignedIn();
+      // Allow creation only if the NID and phone are unique among pending/approved requests.
+      allow create: if isSignedIn()
+                      && !exists(/databases/$(database)/documents/verificationRequests/$(request.resource.data.nidNumber))
+                      && !exists(/databases/$(database)/documents/verificationRequests/$(request.resource.data.phone));
+      // Only admins should update/delete from the console.
+      allow update, delete: if false;
     }
   }
 }

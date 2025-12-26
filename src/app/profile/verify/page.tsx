@@ -5,7 +5,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
-import { doc, setDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, addDoc, collection, serverTimestamp, query, where, getDocs, limit } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import PageHeader from "@/components/page-header";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,29 +40,62 @@ export default function VerifyNidPage() {
         const address = formData.get('address') as string;
 
         if (!name || !nid || !phone || !dob || !address) {
-        toast({
-            variant: "destructive",
-            title: "ফর্ম পূরণ আবশ্যক",
-            description: "অনুগ্রহ করে সকল তথ্য পূরণ করুন।",
-        });
-        setIsSubmitting(false);
-        return;
+            toast({
+                variant: "destructive",
+                title: "ফর্ম পূরণ আবশ্যক",
+                description: "অনুগ্রহ করে সকল তথ্য পূরণ করুন।",
+            });
+            setIsSubmitting(false);
+            return;
         }
-        
-        const requestData = {
-            userId: user.uid,
-            status: 'pending',
-            submittedAt: serverTimestamp(),
-            nidName: name,
-            nidNumber: nid,
-            nidDob: dob,
-            nidAddress: address,
-            phone: phone,
-        };
 
         try {
-            const verificationRequestRef = collection(firestore, `users/${user.uid}/verificationRequests`);
-            const newRequestDoc = await addDoc(verificationRequestRef, requestData);
+            // Check for uniqueness of NID and Phone across all verification requests
+            const verificationRequestsRef = collection(firestore, 'verificationRequests');
+            
+            const nidQuery = query(verificationRequestsRef, where("nidNumber", "==", nid), where("status", "in", ["pending", "approved"]), limit(1));
+            const phoneQuery = query(verificationRequestsRef, where("phone", "==", phone), where("status", "in", ["pending", "approved"]), limit(1));
+
+            const [nidSnapshot, phoneSnapshot] = await Promise.all([getDocs(nidQuery), getDocs(phoneQuery)]);
+
+            if (!nidSnapshot.empty) {
+                toast({
+                    variant: "destructive",
+                    title: "NID নম্বরটি ব্যবহৃত",
+                    description: "এই NID নম্বরটি দিয়ে ইতিমধ্যে একটি ভেরিফিকেশন অনুরোধ করা হয়েছে।",
+                });
+                setIsSubmitting(false);
+                return;
+            }
+
+            if (!phoneSnapshot.empty) {
+                toast({
+                    variant: "destructive",
+                    title: "ফোন নম্বরটি ব্যবহৃত",
+                    description: "এই ফোন নম্বরটি দিয়ে ইতিমধ্যে একটি ভেরিফিকেশন অনুরোধ করা হয়েছে।",
+                });
+                setIsSubmitting(false);
+                return;
+            }
+            
+            const requestData = {
+                userId: user.uid,
+                status: 'pending',
+                submittedAt: serverTimestamp(),
+                nidName: name,
+                nidNumber: nid,
+                nidDob: dob,
+                nidAddress: address,
+                phone: phone,
+            };
+
+            // Add to both the user's sub-collection and the root collection
+            const userVerificationRequestRef = collection(firestore, `users/${user.uid}/verificationRequests`);
+            const newRequestDoc = await addDoc(userVerificationRequestRef, requestData);
+            
+            // Also add to the root-level collection for admin and uniqueness checks
+            const rootRequestDocRef = doc(verificationRequestsRef, newRequestDoc.id);
+            await setDoc(rootRequestDocRef, requestData);
 
             await setDoc(userDocRef, {
                 verificationRequestId: newRequestDoc.id,
@@ -70,8 +103,8 @@ export default function VerifyNidPage() {
             }, { merge: true });
 
             toast({
-            title: "আবেদন জমা হয়েছে",
-            description: "আপনার এনআইডি ভেরিফিকেশনের আবেদনটি প্রক্রিয়াধীন আছে।",
+                title: "আবেদন জমা হয়েছে",
+                description: "আপনার এনআইডি ভেরিফিকেশনের আবেদনটি প্রক্রিয়াধীন আছে।",
             });
             
             router.push('/profile');

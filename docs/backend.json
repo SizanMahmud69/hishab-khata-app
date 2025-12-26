@@ -385,9 +385,15 @@
             "schema": { "$ref": "#/backend/entities/Referral" },
             "description": "Stores a record of users referred by the parent user."
         }
+      },
+      {
+        "path": "/verificationRequests/{requestId}",
+        "definition": {
+          "entityName": "VerificationRequest",
+          "schema": { "$ref": "#/backend/entities/VerificationRequest" },
+          "description": "Root collection for all verification requests, used for admin purposes and ensuring uniqueness of NID and phone numbers across all users."
+        }
       }
     ]
   }
 }
-
-    
