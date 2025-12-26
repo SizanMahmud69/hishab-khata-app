@@ -64,7 +64,7 @@ service cloud.firestore {
         // but cannot change status or rejection reasons set by admin.
         allow update: if isOwner(userId) && 
                          request.resource.data.diff(resource.data).affectedKeys()
-                           .hasOnly(['paymentMethod', 'accountNumber', 'isRefunded']);
+                           .hasOnly(['isRefunded', 'processedAt']);
       }
       
       // Sub-collection for notifications
