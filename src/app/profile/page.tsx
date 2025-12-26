@@ -205,8 +205,8 @@ export default function ProfilePage() {
             </Avatar>
         </div>
         <CardContent className="text-center pt-6 pb-6 px-4 sm:px-6 bg-gradient-to-t from-purple-100/30 to-green-100/10">
-            <div className="flex items-center justify-center gap-2">
-                <h2 className="text-3xl font-bold">{userProfileData?.name ?? user?.displayName ?? 'ব্যবহারকারী'}</h2>
+            <div className="flex flex-col items-center justify-center gap-2">
+                <h2 className="text-2xl md:text-3xl font-bold whitespace-nowrap truncate">{userProfileData?.name ?? user?.displayName ?? 'ব্যবহারকারী'}</h2>
                  {verificationStatus === 'approved' && <Badge className="bg-green-100 text-green-800 border-green-300 hover:bg-green-100/80"><CheckCircle className="w-3.5 h-3.5 mr-1.5" />ভেরিফাইড</Badge>}
                  {verificationStatus === 'pending' && <Badge variant="outline" className="text-yellow-600 border-yellow-400">প্রসেসিং...</Badge>}
             </div>
@@ -261,3 +261,5 @@ export default function ProfilePage() {
     </div>
   )
 }
+
+    
