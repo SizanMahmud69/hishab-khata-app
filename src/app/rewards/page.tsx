@@ -270,3 +270,5 @@ export default function RewardsPage() {
         </React.Suspense>
     )
 }
+
+    
