@@ -4,7 +4,7 @@
 import type { ReactNode } from "react"
 import { AppHeader } from "@/components/app-header"
 import { BudgetClientProvider, useBudget } from "@/context/budget-context-provider"
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUser, FirebaseClientProvider } from "@/firebase";
@@ -15,22 +15,22 @@ function AppContent({ children }: { children: ReactNode }) {
     const { user, isLoading: isAuthLoading } = useUser();
     const { isLoading: isDataLoading } = useBudget();
     const router = useRouter();
+    const pathname = usePathname();
 
+    const noLayoutRoutes = ['/login', '/register', '/forgot-password', '/terms-and-conditions', '/privacy-policy'];
+    const isPublicRoute = noLayoutRoutes.includes(pathname) || pathname === '/';
+    
     useEffect(() => {
-        if (!isAuthLoading && !user) {
+        if (!isAuthLoading && !user && !isPublicRoute) {
             router.push('/login');
         }
-    }, [user, isAuthLoading, router]);
+    }, [user, isAuthLoading, router, isPublicRoute]);
 
-    const isLoading = isAuthLoading || !user || isDataLoading;
-    
-    // This handles the routes that don't need the main app layout
-    const noLayoutRoutes = ['/login', '/register', '/forgot-password', '/terms-and-conditions', '/privacy-policy'];
-    const pathname = useRouter().pathname;
-    if (noLayoutRoutes.includes(pathname) || pathname === '/') {
+    if (isPublicRoute) {
         return <>{children}</>
     }
 
+    const isLoading = isAuthLoading || !user || isDataLoading;
 
     if (isLoading) {
         return (
