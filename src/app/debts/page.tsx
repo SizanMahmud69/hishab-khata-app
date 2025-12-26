@@ -1,10 +1,8 @@
 
-
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { PlusCircle, TrendingDown, TrendingUp, Loader2, Calendar as CalendarIcon } from "lucide-react"
+import { PlusCircle, TrendingDown, TrendingUp, Eye } from "lucide-react"
 import { useBudget, type DebtNote } from "@/context/budget-context";
 import { Button } from "@/components/ui/button"
 import PageHeader from "@/components/page-header"
@@ -16,34 +14,12 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Slider } from "@/components/ui/slider";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
 
 export default function DebtsPage() {
-    const { debtNotes, updateDebtNote } = useBudget();
-    const { toast } = useToast();
-    const [selectedDebt, setSelectedDebt] = useState<DebtNote | null>(null);
-    const [paymentAmount, setPaymentAmount] = useState<number>(0);
-    const [paymentDate, setPaymentDate] = useState<Date | undefined>(new Date());
-    const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const { debtNotes } = useBudget();
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat("bn-BD", {
@@ -51,50 +27,6 @@ export default function DebtsPage() {
           currency: "BDT",
           minimumFractionDigits: 0,
         }).format(amount)
-    }
-
-    const openPaymentDialog = (debt: DebtNote) => {
-        setSelectedDebt(debt);
-        setPaymentAmount(debt.amount - debt.paidAmount);
-        setPaymentDate(new Date());
-        setIsPaymentDialogOpen(true);
-    }
-
-    const handlePaymentConfirm = async () => {
-        if (!selectedDebt || !paymentDate) return;
-        
-        setIsSubmitting(true);
-        const remainingAmount = selectedDebt.amount - selectedDebt.paidAmount;
-        if (paymentAmount <= 0 || paymentAmount > remainingAmount) {
-            toast({
-                variant: "destructive",
-                title: "ভুল পরিমাণ",
-                description: `অনুগ্রহ করে সঠিক পরিমাণ লিখুন (সর্বোচ্চ: ${formatCurrency(remainingAmount)})।`,
-            });
-            setIsSubmitting(false);
-            return;
-        }
-
-        try {
-            const newPaidAmount = selectedDebt.paidAmount + paymentAmount;
-            const newStatus = newPaidAmount >= selectedDebt.amount ? 'paid' : 'partially-paid';
-            const updatedDebt = { ...selectedDebt, paidAmount: newPaidAmount, status: newStatus };
-            
-            await updateDebtNote(updatedDebt, paymentAmount, paymentDate);
-
-            toast({
-                title: "সফল!",
-                description: "পরিশোধের হিসাব সফলভাবে আপডেট করা হয়েছে।",
-            });
-
-            setIsPaymentDialogOpen(false);
-            setSelectedDebt(null);
-        } catch (error) {
-            console.error("Error confirming payment:", error);
-            toast({ variant: "destructive", title: "ত্রুটি", description: "একটি সমস্যা হয়েছে।" });
-        } finally {
-            setIsSubmitting(false);
-        }
     }
 
     const getStatusBadge = (status: 'unpaid' | 'paid' | 'partially-paid') => {
@@ -114,7 +46,6 @@ export default function DebtsPage() {
 
     const totalLent = lentDebts.reduce((sum, debt) => sum + (debt.amount - debt.paidAmount), 0);
     const totalBorrowed = borrowedDebts.reduce((sum, debt) => sum + (debt.amount - debt.paidAmount), 0);
-
 
   return (
     <div className="flex-1 space-y-4">
@@ -180,11 +111,17 @@ export default function DebtsPage() {
                              {getStatusBadge(debt.status)}
                              <Button 
                                 size="sm" 
-                                onClick={() => openPaymentDialog(debt)}
+                                asChild
                                 disabled={debt.status === 'paid'}
                                 variant={debt.status === 'paid' ? 'ghost' : 'outline'}
                             >
-                                {debt.status === 'paid' ? 'সম্পূর্ণ পরিশোধিত' : 'পরিশোধ করুন'}
+                                {debt.id ? (
+                                    <Link href={`/debts/pay/${debt.id}`}>
+                                        {debt.status === 'paid' ? 'সম্পূর্ণ পরিশোধিত' : 'পরিশোধ করুন'}
+                                    </Link>
+                                ) : (
+                                    <span>{debt.status === 'paid' ? 'সম্পূর্ণ পরিশোধিত' : 'পরিশোধ করুন'}</span>
+                                )}
                             </Button>
                         </CardFooter>
                     </Card>
@@ -221,11 +158,17 @@ export default function DebtsPage() {
                            {getStatusBadge(debt.status)}
                            <Button 
                                 size="sm" 
-                                onClick={() => openPaymentDialog(debt)}
+                                asChild
                                 disabled={debt.status === 'paid'}
                                 variant={debt.status === 'paid' ? 'ghost' : 'outline'}
                             >
-                                {debt.status === 'paid' ? 'সম্পূর্ণ পরিশোধিত' : 'পরিশোধ করুন'}
+                                {debt.id ? (
+                                    <Link href={`/debts/pay/${debt.id}`}>
+                                        {debt.status === 'paid' ? 'সম্পূর্ণ পরিশোধিত' : 'পরিশোধ করুন'}
+                                    </Link>
+                                ) : (
+                                    <span>{debt.status === 'paid' ? 'সম্পূর্ণ পরিশোধিত' : 'পরিশোধ করুন'}</span>
+                                )}
                             </Button>
                         </CardFooter>
                     </Card>
@@ -239,74 +182,6 @@ export default function DebtsPage() {
         </TabsContent>
       </Tabs>
       
-        <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
-            <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                    <DialogTitle>পরিশোধ নিশ্চিত করুন</DialogTitle>
-                    <DialogDescription>
-                        {selectedDebt?.person} কে পরিশোধ করার জন্য পরিমাণ ও তারিখ লিখুন।
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                    <div className="space-y-1.5">
-                        <Label htmlFor="payment-amount">
-                            পরিমাণ
-                        </Label>
-                        <Input 
-                            id="payment-amount" 
-                            type="number" 
-                            value={paymentAmount}
-                            onChange={(e) => setPaymentAmount(Number(e.target.value))}
-                            max={selectedDebt ? selectedDebt.amount - selectedDebt.paidAmount : 0}
-                        />
-                    </div>
-                    <div className="space-y-1.5">
-                         <Label>স্লাইডার</Label>
-                         <Slider
-                            value={[paymentAmount]}
-                            max={selectedDebt ? selectedDebt.amount - selectedDebt.paidAmount : 0}
-                            step={10}
-                            onValueChange={(value) => setPaymentAmount(value[0])}
-                        />
-                    </div>
-                     <p className="text-sm text-muted-foreground text-right pr-1">
-                        বাকি আছে: {formatCurrency(selectedDebt ? selectedDebt.amount - selectedDebt.paidAmount : 0)}
-                     </p>
-                     <div className="space-y-1.5">
-                         <Label>পরিশোধের তারিখ</Label>
-                         <Popover>
-                            <PopoverTrigger asChild>
-                                <Button
-                                variant={"outline"}
-                                className={cn(
-                                    "w-full justify-start text-left font-normal",
-                                    !paymentDate && "text-muted-foreground"
-                                )}
-                                >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {paymentDate ? format(paymentDate, "PPP") : <span>একটি তারিখ বাছুন</span>}
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0">
-                                <Calendar
-                                mode="single"
-                                selected={paymentDate}
-                                onSelect={setPaymentDate}
-                                initialFocus
-                                />
-                            </PopoverContent>
-                        </Popover>
-                     </div>
-                </div>
-                <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsPaymentDialogOpen(false)}>বাতিল</Button>
-                    <Button type="submit" onClick={handlePaymentConfirm} disabled={isSubmitting}>
-                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        {isSubmitting ? 'প্রসেসিং...' : 'নিশ্চিত করুন'}
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
     </div>
   )
 }

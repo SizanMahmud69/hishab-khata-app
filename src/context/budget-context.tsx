@@ -172,26 +172,31 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
 
     const updateDebtNote = async (debtNote: DebtNote, paymentAmount: number, paymentDate: Date) => {
         if (!user || !firestore || !debtNote.id) return;
-
+    
         const batch = writeBatch(firestore);
-
+    
         const docRef = doc(firestore, `users/${user.uid}/debtNotes`, debtNote.id);
-        batch.update(docRef, { paidAmount: debtNote.paidAmount, status: debtNote.status });
+        
+        const remainingAmount = debtNote.amount - debtNote.paidAmount;
+        const amountToPay = Math.min(paymentAmount, remainingAmount);
+        const newPaidAmount = debtNote.paidAmount + amountToPay;
+        const newStatus = newPaidAmount >= debtNote.amount ? 'paid' : 'partially-paid';
+        
+        batch.update(docRef, { paidAmount: newPaidAmount, status: newStatus });
         
         const transactionCollectionRef = collection(firestore, `users/${user.uid}/transactions`);
         const transactionDocRef = doc(transactionCollectionRef); // Create a new doc with a random ID
         
-        const transactionData = {
+        const transactionData: Omit<Transaction, 'id' | 'createdAt'> = {
             userId: user.uid,
             type: debtNote.type === 'lent' ? 'income' : 'expense',
             category: debtNote.type === 'lent' ? 'ধার ফেরত' : 'ধার পরিশোধ',
-            amount: paymentAmount,
+            amount: amountToPay,
             date: paymentDate.toISOString(),
-            description: `${debtNote.person} কে ${debtNote.type === 'lent' ? 'থেকে প্রাপ্তি' : 'কে পরিশোধ'}`,
-            createdAt: serverTimestamp()
+            description: `${debtNote.person} ${debtNote.type === 'lent' ? 'থেকে প্রাপ্তি' : 'কে পরিশোধ'}`,
         };
-
-        batch.set(transactionDocRef, transactionData);
+    
+        batch.set(transactionDocRef, {...transactionData, createdAt: serverTimestamp()});
         
         await batch.commit();
     }
