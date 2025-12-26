@@ -5,7 +5,7 @@
 import React, { useState, useMemo } from 'react';
 import PageHeader from "@/components/page-header";
 import { useBudget } from "@/context/budget-context";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, Filter as FilterIcon, Calendar as CalendarIcon } from "lucide-react";
 import { format, parseISO, startOfDay, endOfDay } from "date-fns";
 import { bn } from "date-fns/locale";
@@ -54,6 +54,12 @@ export default function HistoryPage() {
       return true;
     });
   }, [sortedTransactions, dateRange]);
+
+  const filteredTotals = useMemo(() => {
+    const income = filteredTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+    const expense = filteredTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+    return { income, expense };
+  }, [filteredTransactions]);
 
 
   const formatCurrency = (amount: number) => {
@@ -151,22 +157,44 @@ export default function HistoryPage() {
       </PageHeader>
       
        {dateRange?.from && (
-            <Card className="bg-muted/50">
-                <CardContent className="p-3 text-center text-sm text-muted-foreground">
-                    ফিল্টার চালু আছে: 
-                    <span className="font-semibold mx-1">
-                         {format(dateRange.from, "dd/MM/yyyy")}
-                    </span>
-                    {dateRange.to && (
-                        <>
-                           থেকে
-                           <span className="font-semibold ml-1">
-                                {format(dateRange.to, "dd/MM/yyyy")}
-                           </span>
-                        </>
-                    )}
-                </CardContent>
-            </Card>
+            <div className="space-y-4">
+                <Card className="bg-muted/50">
+                    <CardContent className="p-3 text-center text-sm text-muted-foreground">
+                        ফিল্টার চালু আছে: 
+                        <span className="font-semibold mx-1">
+                            {format(dateRange.from, "dd/MM/yyyy")}
+                        </span>
+                        {dateRange.to && (
+                            <>
+                            থেকে
+                            <span className="font-semibold ml-1">
+                                    {format(dateRange.to, "dd/MM/yyyy")}
+                            </span>
+                            </>
+                        )}
+                    </CardContent>
+                </Card>
+                <div className="grid grid-cols-2 gap-4">
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">নির্বাচিত আয়</CardTitle>
+                            <TrendingUp className="h-4 w-4 text-green-500" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold text-green-600">{formatCurrency(filteredTotals.income)}</div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">নির্বাচিত ব্যয়</CardTitle>
+                            <TrendingDown className="h-4 w-4 text-red-500" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold text-red-600">{formatCurrency(filteredTotals.expense)}</div>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
         )}
 
       {filteredTransactions.length > 0 ? (
