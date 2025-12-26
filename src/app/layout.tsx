@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import type { ReactNode } from "react"
@@ -8,11 +7,12 @@ import { BudgetClientProvider, useBudget } from "@/context/budget-context-provid
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useUser } from "@/firebase";
-
+import { useUser, FirebaseClientProvider } from "@/firebase";
+import "./globals.css"
+import { Toaster } from "@/components/ui/toaster"
 
 function AppContent({ children }: { children: ReactNode }) {
-    const { user, isUserLoading: isAuthLoading } = useUser();
+    const { user, isLoading: isAuthLoading } = useUser();
     const { isLoading: isDataLoading } = useBudget();
     const router = useRouter();
 
@@ -23,6 +23,14 @@ function AppContent({ children }: { children: ReactNode }) {
     }, [user, isAuthLoading, router]);
 
     const isLoading = isAuthLoading || !user || isDataLoading;
+    
+    // This handles the routes that don't need the main app layout
+    const noLayoutRoutes = ['/login', '/register', '/forgot-password', '/terms-and-conditions', '/privacy-policy'];
+    const pathname = useRouter().pathname;
+    if (noLayoutRoutes.includes(pathname) || pathname === '/') {
+        return <>{children}</>
+    }
+
 
     if (isLoading) {
         return (
@@ -69,12 +77,17 @@ function AppContent({ children }: { children: ReactNode }) {
 }
 
 
-export default function AppLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <BudgetClientProvider>
-        <AppContent>
-            {children}
-        </AppContent>
-    </BudgetClientProvider>
+     <html lang="en" suppressHydrationWarning>
+      <body>
+        <FirebaseClientProvider>
+          <BudgetClientProvider>
+            <AppContent>{children}</AppContent>
+            <Toaster />
+          </BudgetClientProvider>
+        </FirebaseClientProvider>
+      </body>
+    </html>
   )
 }

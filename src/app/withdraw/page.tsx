@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { createNotification } from '@/components/app-header';
-import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection, FirestorePermissionError } from '@/firebase';
 import { doc, addDoc, collection, serverTimestamp, query, orderBy, writeBatch, increment } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -25,7 +25,7 @@ import { bn } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-
+import { errorEmitter } from '@/firebase/error-emitter';
 
 interface UserProfile {
     points?: number;
@@ -123,11 +123,15 @@ export default function WithdrawPage() {
                 });
             } catch (error) {
                 console.error("Error processing refunds in batch:", error);
-                toast({
-                    variant: "destructive",
-                    title: "ত্রুটি",
-                    description: "পয়েন্ট ফেরত দেওয়ার সময় একটি সমস্যা হয়েছে।",
-                });
+                 if (error instanceof FirestorePermissionError) {
+                    errorEmitter.emit('permission-error', error);
+                } else {
+                    toast({
+                        variant: "destructive",
+                        title: "ত্রুটি",
+                        description: "পয়েন্ট ফেরত দেওয়ার সময় একটি সমস্যা হয়েছে।",
+                    });
+                }
             }
         };
 
@@ -179,24 +183,24 @@ export default function WithdrawPage() {
         }
 
         const withdrawnTkAmount = (pointsToDeduct / 100) * bdtPer100Points;
+        
+        const batch = writeBatch(firestore);
+            
+        const withdrawalRequestRef = doc(collection(firestore, `users/${user.uid}/withdrawalRequests`));
+        batch.set(withdrawalRequestRef, {
+            userId: user.uid,
+            status: 'pending',
+            points: pointsToDeduct,
+            amountBdt: withdrawnTkAmount,
+            paymentMethod: paymentMethod,
+            accountNumber: accountNumber,
+            requestedAt: serverTimestamp(),
+            isRefunded: false,
+        });
+
+        batch.update(userDocRef, { points: increment(-pointsToDeduct) });
 
         try {
-            const batch = writeBatch(firestore);
-            
-            const withdrawalRequestRef = doc(collection(firestore, `users/${user.uid}/withdrawalRequests`));
-            batch.set(withdrawalRequestRef, {
-                userId: user.uid,
-                status: 'pending',
-                points: pointsToDeduct,
-                amountBdt: withdrawnTkAmount,
-                paymentMethod: paymentMethod,
-                accountNumber: accountNumber,
-                requestedAt: serverTimestamp(),
-                isRefunded: false,
-            });
-
-            batch.update(userDocRef, { points: increment(-pointsToDeduct) });
-
             await batch.commit();
 
             createNotification({
@@ -214,11 +218,15 @@ export default function WithdrawPage() {
 
         } catch (error) {
             console.error("Withdrawal error: ", error);
-             toast({
-                variant: "destructive",
-                title: "ত্রুটি",
-                description: "আপনার উইথড্র অনুরোধ প্রক্রিয়া করার সময় একটি সমস্যা হয়েছে।",
-            });
+             if (error instanceof FirestorePermissionError) {
+                errorEmitter.emit('permission-error', error);
+            } else {
+                 toast({
+                    variant: "destructive",
+                    title: "ত্রুটি",
+                    description: "আপনার উইথড্র অনুরোধ প্রক্রিয়া করার সময় একটি সমস্যা হয়েছে।",
+                });
+            }
         } finally {
             setIsSubmitting(false);
         }
