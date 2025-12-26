@@ -2,7 +2,7 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button"
 import PageHeader from "@/components/page-header"
 import {
@@ -25,8 +25,8 @@ import { Loader2 } from 'lucide-react';
 export default function ExpensesPage() {
     const { addTransaction, totalIncome, totalExpense } = useBudget();
     const { toast } = useToast();
-    const formRef = React.useRef<HTMLFormElement>(null);
-    const [selectedCategory, setSelectedCategory] = useState<string>("");
+    const formRef = useRef<HTMLFormElement>(null);
+    const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const balance = totalIncome - totalExpense;
@@ -83,7 +83,7 @@ export default function ExpensesPage() {
             });
 
             formRef.current?.reset();
-            setSelectedCategory("");
+            setSelectedCategory(undefined);
         } catch (error) {
             console.error("Error adding expense:", error);
             toast({ variant: "destructive", title: "ত্রুটি", description: "একটি সমস্যা হয়েছে।" });
@@ -113,7 +113,7 @@ export default function ExpensesPage() {
                 </div>
                 <div className="grid w-full items-center gap-1.5">
                     <Label htmlFor="category">বিভাগ</Label>
-                    <Select name="category" onValueChange={setSelectedCategory} required>
+                    <Select name="category" onValueChange={setSelectedCategory} value={selectedCategory} required>
                         <SelectTrigger>
                             <SelectValue placeholder="একটি বিভাগ নির্বাচন করুন" />
                         </SelectTrigger>

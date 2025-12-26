@@ -2,7 +2,7 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button"
 import PageHeader from "@/components/page-header"
 import {
@@ -27,8 +27,8 @@ const months = ['জানুয়ারি', 'ফেব্রুয়ারি', '�
 export default function IncomePage() {
     const { addTransaction } = useBudget();
     const { toast } = useToast();
-    const formRef = React.useRef<HTMLFormElement>(null);
-    const [selectedSource, setSelectedSource] = React.useState<string>("");
+    const formRef = useRef<HTMLFormElement>(null);
+    const [selectedSource, setSelectedSource] = React.useState<string | undefined>(undefined);
     const [isSubmitting, setIsSubmitting] = useState(false);
     
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -72,7 +72,7 @@ export default function IncomePage() {
             });
 
             formRef.current?.reset();
-            setSelectedSource("");
+            setSelectedSource(undefined);
         } catch (error) {
             console.error("Error adding income:", error);
             toast({ variant: "destructive", title: "ত্রুটি", description: "একটি সমস্যা হয়েছে।" });
@@ -104,7 +104,7 @@ export default function IncomePage() {
                     <Label htmlFor="source">
                     উৎস
                     </Label>
-                    <Select name="source" onValueChange={setSelectedSource} required>
+                    <Select name="source" onValueChange={setSelectedSource} value={selectedSource} required>
                         <SelectTrigger>
                             <SelectValue placeholder="একটি উৎস নির্বাচন করুন" />
                         </SelectTrigger>
