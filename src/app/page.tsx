@@ -1,4 +1,5 @@
 
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { BookMarked, ShieldCheck, FileText, TrendingUp, TrendingDown, HandCoins, Store, Award, MoveRight } from 'lucide-react';
@@ -127,10 +128,10 @@ export default function Home() {
 
       <footer className="py-6 w-full shrink-0 items-center px-4 md:px-6 border-t border-white/20 bg-gradient-to-r from-blue-400 to-green-400 text-white">
         <div className="container mx-auto flex flex-col items-center justify-center gap-4 text-center sm:flex-row sm:justify-between">
-            <p className='text-sm text-blue-100'>
+            <p className='text-[10px] sm:text-xs text-blue-100'>
                 &copy; {new Date().getFullYear()} <span className='font-bold'>হিসাব খাতা</span>. All rights reserved.
             </p>
-            <p className='text-sm text-blue-100 whitespace-nowrap'>
+            <p className='text-[10px] sm:text-xs text-blue-100 whitespace-nowrap'>
                 Developer: <span className="font-semibold">Sizan Mahmud</span> & Designer: <span className="font-semibold">Black Dimond</span>
             </p>
         </div>

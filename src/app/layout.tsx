@@ -65,10 +65,10 @@ function AppContent({ children }: { children: ReactNode }) {
             <AppHeader>{children}</AppHeader>
              <footer className="py-4 mt-auto w-full shrink-0 items-center px-4 md:px-6 border-t border-white/20 bg-gradient-to-r from-blue-400 to-green-400 text-white">
                 <div className="container mx-auto flex flex-col items-center justify-center gap-2 text-center sm:flex-row sm:justify-between">
-                    <p className='text-xs text-blue-100'>
+                    <p className='text-[10px] sm:text-xs text-blue-100'>
                         © 2025 <span className='font-bold'>হিসাব খাতা</span>. All rights reserved.
                     </p>
-                    <p className='text-xs text-blue-100 whitespace-nowrap'>
+                    <p className='text-[10px] sm:text-xs text-blue-100 whitespace-nowrap'>
                         Developer: <span className="font-semibold">Sizan Mahmud</span> & Designer: <span className="font-semibold">Black Dimond</span>
                     </p>
                 </div>
