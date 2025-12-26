@@ -125,7 +125,12 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
 
     const totalIncome = useMemo(() => (transactions || []).filter(t => t.type === 'income').reduce((sum, item) => sum + item.amount, 0), [transactions]);
     const totalExpense = useMemo(() => (transactions || []).filter(t => t.type === 'expense').reduce((sum, item) => sum + item.amount, 0), [transactions]);
-    const totalSavings = useMemo(() => (transactions || []).filter(t => t.category === 'সঞ্চয় ডিপোজিট').reduce((sum, t) => sum + t.amount, 0), [transactions]);
+    
+    const totalSavings = useMemo(() => {
+        const deposits = (transactions || []).filter(t => t.type === 'expense' && t.category === 'সঞ্চয় ডিপোজিট').reduce((sum, item) => sum + item.amount, 0);
+        const withdrawals = (transactions || []).filter(t => t.type === 'income' && t.category === 'সঞ্চয় উত্তোলন').reduce((sum, item) => sum + item.amount, 0);
+        return deposits - withdrawals;
+    }, [transactions]);
 
 
     useEffect(() => {
@@ -233,5 +238,7 @@ export const useBudget = () => {
     }
     return context;
 };
+
+    
 
     
