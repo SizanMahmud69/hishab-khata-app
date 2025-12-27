@@ -81,7 +81,7 @@ function AppContent({ children }: { children: ReactNode }) {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
      <html lang="en" suppressHydrationWarning>
-      <body className="bg-gradient-to-br from-blue-500 to-green-500">
+      <body>
         <FirebaseClientProvider>
           <BudgetClientProvider>
             <AppContent>{children}</AppContent>
