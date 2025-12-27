@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
 import { isThisMonth, parseISO } from 'date-fns';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, doc, updateDoc, writeBatch } from 'firebase/firestore';
+import { collection, query, orderBy, doc, updateDoc, writeBatch, Timestamp } from 'firebase/firestore';
 
 interface Notification {
     id: string;
@@ -19,7 +19,7 @@ interface Notification {
     description: string;
     read: boolean;
     link?: string;
-    createdAt: string; // ISO date string
+    createdAt: Timestamp | string; // Can be a Timestamp from server or a string
 }
 
 export default function NotificationsPage() {
@@ -36,7 +36,14 @@ export default function NotificationsPage() {
 
     const monthlyNotifications = useMemo(() => {
         if (!notifications) return [];
-        return notifications.filter(n => n.createdAt && isThisMonth(parseISO(n.createdAt)));
+        return notifications.filter(n => {
+            if (!n.createdAt) return false;
+            // Handle both Timestamp and string formats
+            const date = typeof n.createdAt === 'string' 
+                ? parseISO(n.createdAt) 
+                : (n.createdAt as Timestamp).toDate();
+            return isThisMonth(date);
+        });
     }, [notifications]);
     
     const markAsRead = async (id: string) => {
@@ -71,7 +78,7 @@ export default function NotificationsPage() {
     return (
         <div className="flex-1 space-y-4">
             <PageHeader title="নোটিফিকেশন" description="আপনার সকল গুরুত্বপূর্ণ আপডেট এবং বার্তা।">
-                <Button onClick={markAllAsRead} disabled={isLoading || monthlyNotifications.every(n => n.read)}>
+                <Button onClick={markAllAsRead} disabled={isLoading || (monthlyNotifications && monthlyNotifications.every(n => n.read))}>
                     সবগুলো পঠিত করুন
                 </Button>
             </PageHeader>
@@ -85,7 +92,7 @@ export default function NotificationsPage() {
                         <div className="flex items-center justify-center p-8">
                             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                         </div>
-                    ) : monthlyNotifications.length > 0 ? (
+                    ) : monthlyNotifications && monthlyNotifications.length > 0 ? (
                         monthlyNotifications.map(notification => (
                             <div 
                                 key={notification.id} 
