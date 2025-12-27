@@ -74,12 +74,6 @@ export default function WithdrawPage() {
     const canWithdraw = rewardPoints >= minWithdrawalPoints;
     const selectedAmountBdt = Math.floor(pointsToWithdraw / 100) * bdtPer100Points;
 
-    const lastRejectedRequest = useMemo(() => {
-        if (!history) return null;
-        // Find a request that was rejected and has already been refunded to show the message
-        return history.find(req => req.status === 'rejected' && req.isRefunded);
-    }, [history]);
-    
      useEffect(() => {
         if (searchParams.get('section') === 'history' && historyRef.current) {
             historyRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -213,17 +207,6 @@ export default function WithdrawPage() {
     <div className="flex-1 space-y-6">
       <PageHeader title="পয়েন্ট উইথড্র" description="আপনার অর্জিত পয়েন্ট টাকাতে রূপান্তর করুন।" />
       
-      {lastRejectedRequest && (
-        <Alert variant="destructive">
-            <Info className="h-4 w-4" />
-            <AlertTitle>আপনার উইথড্র অনুরোধ বাতিল হয়েছে</AlertTitle>
-            <AlertDescription>
-                আপনার বাতিল হওয়া অনুরোধের জন্য পয়েন্ট আপনার অ্যাকাউন্টে ফেরত দেওয়া হয়েছে।
-                {lastRejectedRequest.rejectionReason && ` কারণ: ${lastRejectedRequest.rejectionReason}`}
-            </AlertDescription>
-        </Alert>
-      )}
-
       {canWithdraw ? (
         <Card className="border-primary">
             <CardHeader>
