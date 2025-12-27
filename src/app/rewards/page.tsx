@@ -8,7 +8,7 @@ import PageHeader from "@/components/page-header"
 import { Banknote, Gift, Medal, Star, Trophy, ArrowUpCircle, ArrowDownCircle, History, Undo2, Users } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection, FirestorePermissionError } from '@/firebase';
 import { doc, collection, query, where, orderBy, writeBatch, serverTimestamp, increment } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
@@ -18,6 +18,8 @@ import { type WithdrawalRequest } from '../withdraw/page';
 import { Badge } from '@/components/ui/badge';
 import { useBudget } from '@/context/budget-context';
 import { createNotification } from '@/components/app-header';
+import { useToast } from '@/hooks/use-toast';
+import { errorEmitter } from '@/firebase/error-emitter';
 
 
 interface UserProfile {
@@ -53,6 +55,7 @@ function RewardsPageContent() {
     const searchParams = useSearchParams();
     const historyRef = useRef<HTMLDivElement>(null);
     const { minWithdrawalPoints, bdtPer100Points } = useBudget();
+    const { toast } = useToast();
 
     const userDocRef = useMemoFirebase(() => {
         if (!user || !firestore) return null;
@@ -85,6 +88,60 @@ function RewardsPageContent() {
             historyRef.current.scrollIntoView({ behavior: 'smooth' });
         }
     }, [searchParams, isWithdrawalsLoading, isCheckInsLoading, areReferralsLoading]);
+
+    // One-time effect to handle all pending refunds on component mount.
+    useEffect(() => {
+        if (!allWithdrawals || !user || !firestore || !userDocRef) return;
+        
+        const unrefundedRequests = allWithdrawals.filter(
+            req => req.status === 'rejected' && !req.isRefunded
+        );
+
+        if (unrefundedRequests.length === 0) return;
+
+        const handleRefund = async () => {
+            const batch = writeBatch(firestore);
+            let totalRefundPoints = 0;
+
+            unrefundedRequests.forEach(req => {
+                const reqRef = doc(firestore, `users/${user.uid}/withdrawalRequests`, req.id);
+                batch.update(reqRef, { isRefunded: true, processedAt: serverTimestamp() });
+                totalRefundPoints += req.points;
+            });
+
+            batch.update(userDocRef, { points: increment(totalRefundPoints) });
+
+            try {
+                await batch.commit();
+                toast({
+                    title: "পয়েন্ট ফেরত দেওয়া হয়েছে",
+                    description: `${totalRefundPoints} পয়েন্ট আপনার অ্যাকাউন্টে ফেরত দেওয়া হয়েছে।`,
+                });
+                unrefundedRequests.forEach(req => {
+                    createNotification({
+                        id: `refund-${req.id}`,
+                        title: "পয়েন্ট ফেরত দেওয়া হয়েছে",
+                        description: `আপনার বাতিল হওয়া অনুরোধের জন্য ${req.points} পয়েন্ট ফেরত দেওয়া হয়েছে।`,
+                        link: "/rewards?section=history"
+                    }, user.uid, firestore);
+                });
+            } catch (error) {
+                console.error("Error processing refunds in batch:", error);
+                 if (error instanceof FirestorePermissionError) {
+                    errorEmitter.emit('permission-error', error);
+                } else {
+                    toast({
+                        variant: "destructive",
+                        title: "ত্রুটি",
+                        description: "পয়েন্ট ফেরত দেওয়ার সময় একটি সমস্যা হয়েছে।",
+                    });
+                }
+            }
+        };
+
+        handleRefund();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [allWithdrawals, user, firestore, userDocRef]); // Runs once when withdrawals are loaded
 
     const pointHistory = useMemo((): PointHistoryItem[] => {
         const history: PointHistoryItem[] = [];
