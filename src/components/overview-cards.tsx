@@ -99,7 +99,7 @@ export function OverviewCards() {
                 onBlur={() => setActiveButton(null)}
             >
                 <Link href="/income">
-                    <Plus className={cn("h-4 w-4", activeButton === 'income' && "text-green-600 dark:text-green-200")} />
+                    <Plus className={cn("h-4 w-4", activeButton === 'income' && "text-green-700 dark:text-green-200")} />
                 </Link>
             </Button>
           </div>
@@ -113,7 +113,7 @@ export function OverviewCards() {
               <div className="text-2xl font-bold text-green-700 dark:text-green-300">
                 {formatCurrency(totalIncome)}
               </div>
-              <p className="text-xs text-green-600 dark:text-green-400">
+              <p className="text-xs text-green-700 dark:text-green-400">
                 {getFilterLabel(incomeFilter)}
               </p>
           </div>

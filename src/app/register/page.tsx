@@ -309,7 +309,7 @@ function RegisterPageContent() {
                             যাচাই করা হচ্ছে...
                         </div>
                     ) : referrer ? (
-                        <div className="flex items-center text-green-600 font-medium">
+                        <div className="flex items-center text-green-700 font-medium">
                             <CheckCircle className="mr-1 h-3 w-3" />
                             রেফার করেছেন: {referrer.name}
                         </div>

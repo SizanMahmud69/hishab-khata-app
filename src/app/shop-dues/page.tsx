@@ -91,7 +91,7 @@ export default function ShopDuesPage() {
 
     const getStatusBadge = (remaining: number, paid: number) => {
         if (remaining <= 0) {
-             return <Badge className="bg-green-500 hover:bg-green-500/80">পরিশোধিত</Badge>;
+             return <Badge className="bg-green-600 hover:bg-green-600/80">পরিশোধিত</Badge>;
         }
         if (paid > 0) {
              return <Badge variant="outline" className="border-yellow-500 text-yellow-600">আংশিক</Badge>;
@@ -207,7 +207,7 @@ export default function ShopDuesPage() {
                 <Banknote className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold text-green-500">{formatCurrency(totalPaidAmount)}</div>
+                <div className="text-2xl font-bold text-green-600">{formatCurrency(totalPaidAmount)}</div>
                 <p className="text-xs text-muted-foreground">এই পর্যন্ত মোট পরিশোধ</p>
             </CardContent>
         </Card>
@@ -221,7 +221,7 @@ export default function ShopDuesPage() {
                     <CardTitle>{due.shopName}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className={cn("font-bold text-xl", due.remainingDue > 0 ? 'text-red-500' : 'text-green-500')}>
+                    <div className={cn("font-bold text-xl", due.remainingDue > 0 ? 'text-red-500' : 'text-green-600')}>
                         বাকি: {formatCurrency(due.remainingDue)}
                     </div>
                     <p className="text-xs text-muted-foreground">

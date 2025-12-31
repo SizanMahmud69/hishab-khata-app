@@ -161,7 +161,7 @@ export default function CheckInPage() {
                 <p>লোড হচ্ছে...</p>
             ) : isCheckedInToday ? (
                 <div className="flex flex-col items-center gap-4">
-                    <CheckCircle className="w-16 h-16 text-green-500" />
+                    <CheckCircle className="w-16 h-16 text-green-600" />
                     <p className="font-semibold text-lg">আজকের জন্য আপনার চেক-ইন সম্পন্ন!</p>
                     <p className="text-muted-foreground">আপনার বর্তমান ধারাবাহিকতা: {consecutiveDays} দিন।</p>
                     <p className="text-muted-foreground">আগামীকাল আবার চেক-ইন করে পয়েন্ট নিন।</p>
@@ -209,7 +209,7 @@ export default function CheckInPage() {
                                 <TableCell className='font-medium'>
                                     {format(parseISO(record.date), "d MMMM, yyyy", { locale: bn })}
                                 </TableCell>
-                                <TableCell className='text-right font-semibold text-green-600 dark:text-green-400'>+{record.points}</TableCell>
+                                <TableCell className='text-right font-semibold text-green-700 dark:text-green-500'>+{record.points}</TableCell>
                             </TableRow>
                         ))}
                     </TableBody>

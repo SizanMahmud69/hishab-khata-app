@@ -52,7 +52,7 @@ export function RecentTransactions() {
             {sortedTransactions.slice(0, 5).map((transaction) => (
               <div key={transaction.id} className="flex items-center">
                 <Avatar className="h-10 w-10">
-                    <AvatarFallback className={cn("font-bold", transaction.type === 'income' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600')}>
+                    <AvatarFallback className={cn("font-bold", transaction.type === 'income' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600')}>
                         {transaction.type === 'income' ? <TrendingUp size={20}/> : <TrendingDown size={20} />}
                     </AvatarFallback>
                 </Avatar>
@@ -60,7 +60,7 @@ export function RecentTransactions() {
                   <p className="text-sm font-medium leading-none">{transaction.category}</p>
                   <p className="text-sm text-muted-foreground">{transaction.description}</p>
                 </div>
-                <div className={cn("ml-auto font-medium", transaction.type === 'income' ? 'text-green-500' : 'text-red-500')}>
+                <div className={cn("ml-auto font-medium", transaction.type === 'income' ? 'text-green-600' : 'text-red-500')}>
                     {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
                 </div>
               </div>

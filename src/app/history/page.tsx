@@ -178,10 +178,10 @@ export default function HistoryPage() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">নির্বাচিত আয়</CardTitle>
-                            <TrendingUp className="h-4 w-4 text-green-500" />
+                            <TrendingUp className="h-4 w-4 text-green-600" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-green-600">{formatCurrency(filteredTotals.income)}</div>
+                            <div className="text-2xl font-bold text-green-700">{formatCurrency(filteredTotals.income)}</div>
                         </CardContent>
                     </Card>
                     <Card>
@@ -205,14 +205,14 @@ export default function HistoryPage() {
                     <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
                         <div className="flex items-center gap-2">
                             {transaction.type === 'income' ? 
-                                <TrendingUp className="h-4 w-4 text-green-500" /> : 
+                                <TrendingUp className="h-4 w-4 text-green-600" /> : 
                                 <TrendingDown className="h-4 w-4 text-red-500" />}
                             <span>{transaction.category}</span>
                         </div>
                         {transaction.date && <span>{format(parseISO(transaction.date), "d MMM, yyyy", { locale: bn })}</span>}
                     </div>
                     
-                    <h3 className={cn("text-2xl font-bold", transaction.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400')}>
+                    <h3 className={cn("text-2xl font-bold", transaction.type === 'income' ? 'text-green-700 dark:text-green-500' : 'text-red-600 dark:text-red-400')}>
                         {formatCurrency(transaction.amount)}
                     </h3>
 

@@ -75,7 +75,7 @@ export default function DebtsPage() {
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold text-green-500">{formatCurrency(totalBorrowed)}</div>
+                <div className="text-2xl font-bold text-green-600">{formatCurrency(totalBorrowed)}</div>
                 <p className="text-xs text-muted-foreground">আপনি অন্যদের থেকে যে টাকা নিয়েছেন</p>
             </CardContent>
         </Card>
@@ -145,7 +145,7 @@ export default function DebtsPage() {
                                 </div>
                                 <span className={cn(
                                     "font-bold text-base",
-                                    debt.status !== 'paid' ? 'text-green-500' : 'text-foreground'
+                                    debt.status !== 'paid' ? 'text-green-600' : 'text-foreground'
                                 )}>{formatCurrency(debt.amount)}</span>
                            </div>
                            {debt.status === 'partially-paid' && (

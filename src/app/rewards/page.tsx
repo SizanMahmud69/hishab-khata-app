@@ -205,7 +205,7 @@ function RewardsPageContent() {
     const getStatusText = (status?: 'pending' | 'approved' | 'rejected') => {
         switch (status) {
             case 'pending': return <Badge variant="outline" className="border-yellow-500 text-yellow-600">পেন্ডিং</Badge>;
-            case 'approved': return <Badge className="bg-green-500 hover:bg-green-500/80">সম্পন্ন</Badge>;
+            case 'approved': return <Badge className="bg-green-600 hover:bg-green-600/80">সম্পন্ন</Badge>;
             case 'rejected': return <Badge variant="destructive">বাতিল</Badge>;
             default: return null;
         }
@@ -306,7 +306,7 @@ function RewardsPageContent() {
                                 <p className="text-sm text-muted-foreground">{format(item.date, "d MMMM, yyyy, h:mm a", { locale: bn })}</p>
                              </div>
                         </div>
-                         <p className={`font-bold ${item.type === 'earned' || item.type === 'refunded' ? 'text-green-500' : 'text-red-500'}`}>
+                         <p className={`font-bold ${item.type === 'earned' || item.type === 'refunded' ? 'text-green-600' : 'text-red-500'}`}>
                            {item.type === 'earned' || item.type === 'refunded' ? '+' : '-'}{item.points}
                          </p>
                     </div>
