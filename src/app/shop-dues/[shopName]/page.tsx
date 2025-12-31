@@ -98,7 +98,7 @@ export default function ShopDetailsPage() {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>তারিখ</TableHead>
-                                    <TableHead className="w-[150px]">বিবরণ</TableHead>
+                                    <TableHead>বিবরণ</TableHead>
                                     <TableHead>পরিমাণ</TableHead>
                                     <TableHead>পরিশোধিত</TableHead>
                                     <TableHead className="text-right">স্ট্যাটাস</TableHead>
@@ -107,10 +107,10 @@ export default function ShopDetailsPage() {
                             <TableBody>
                                 {shopEntries.map(entry => (
                                     <TableRow key={entry.id}>
-                                        <TableCell>{format(new Date(entry.date), "d MMM, yyyy", { locale: bn })}</TableCell>
-                                        <TableCell className="text-muted-foreground">{entry.description || "-"}</TableCell>
-                                        <TableCell className="font-medium">{formatCurrency(entry.amount)}</TableCell>
-                                        <TableCell className="text-green-600">{formatCurrency(entry.paidAmount)}</TableCell>
+                                        <TableCell className="whitespace-nowrap">{format(new Date(entry.date), "d MMM, yyyy", { locale: bn })}</TableCell>
+                                        <TableCell className="text-muted-foreground whitespace-nowrap">{entry.description || "-"}</TableCell>
+                                        <TableCell className="font-medium whitespace-nowrap">{formatCurrency(entry.amount)}</TableCell>
+                                        <TableCell className="text-green-600 whitespace-nowrap">{formatCurrency(entry.paidAmount)}</TableCell>
                                         <TableCell className="text-right">{getStatusBadge(entry.status)}</TableCell>
                                     </TableRow>
                                 ))}
