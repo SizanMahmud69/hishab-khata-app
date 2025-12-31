@@ -98,7 +98,7 @@ export default function ShopDetailsPage() {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>তারিখ</TableHead>
-                                    <TableHead>বিবরণ</TableHead>
+                                    <TableHead className="w-[150px]">বিবরণ</TableHead>
                                     <TableHead>পরিমাণ</TableHead>
                                     <TableHead>পরিশোধিত</TableHead>
                                     <TableHead className="text-right">স্ট্যাটাস</TableHead>
