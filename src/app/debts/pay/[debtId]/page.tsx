@@ -95,7 +95,14 @@ export default function PayDebtPage() {
         }
 
         try {
-            await updateDebtNote(debtNote, paymentAmount, paymentDate);
+            const amountToPay = Math.min(paymentAmount, remainingAmount);
+            const newPaidAmount = debtNote.paidAmount + amountToPay;
+            const newStatus = newPaidAmount >= debtNote.amount ? 'paid' : 'partially-paid';
+
+            await updateDebtNote(
+                { ...debtNote, paidAmount: newPaidAmount, status: newStatus },
+                amountToPay
+            );
 
             toast({
                 title: "সফল!",

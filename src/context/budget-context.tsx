@@ -65,7 +65,7 @@ interface BudgetContextType {
     referrals: Referral[];
     addTransaction: (transaction: Omit<Transaction, 'id' | 'createdAt' | 'userId'>) => Promise<void>;
     addDebtNote: (debtNote: Omit<DebtNote, 'id' | 'createdAt' | 'userId'>) => Promise<void>;
-    updateDebtNote: (debtNote: DebtNote, paymentAmount: number, paymentDate: Date) => Promise<void>;
+    updateDebtNote: (debtNote: DebtNote, paymentAmount?: number) => Promise<void>;
     totalIncome: number;
     totalExpense: number;
     totalSavings: number;
@@ -175,33 +175,29 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         await addDocToCollection('debtNotes', debtNote);
     }
 
-    const updateDebtNote = async (debtNote: DebtNote, paymentAmount: number, paymentDate: Date) => {
+    const updateDebtNote = async (debtNote: DebtNote, paymentAmount?: number) => {
         if (!user || !firestore || !debtNote.id) return;
     
         const batch = writeBatch(firestore);
-    
         const docRef = doc(firestore, `users/${user.uid}/debtNotes`, debtNote.id);
         
-        const remainingAmount = debtNote.amount - debtNote.paidAmount;
-        const amountToPay = Math.min(paymentAmount, remainingAmount);
-        const newPaidAmount = debtNote.paidAmount + amountToPay;
-        const newStatus = newPaidAmount >= debtNote.amount ? 'paid' : 'partially-paid';
+        batch.update(docRef, { paidAmount: debtNote.paidAmount, status: debtNote.status });
         
-        batch.update(docRef, { paidAmount: newPaidAmount, status: newStatus });
+        if (paymentAmount && paymentAmount > 0) {
+            const transactionCollectionRef = collection(firestore, `users/${user.uid}/transactions`);
+            const transactionDocRef = doc(transactionCollectionRef);
+            
+            const transactionData: Omit<Transaction, 'id' | 'createdAt'> = {
+                userId: user.uid,
+                type: debtNote.type === 'lent' ? 'income' : 'expense',
+                category: debtNote.type === 'lent' ? 'ধার ফেরত' : 'ধার পরিশোধ',
+                amount: paymentAmount,
+                date: new Date().toISOString(),
+                description: `${debtNote.person} ${debtNote.type === 'lent' ? 'থেকে প্রাপ্তি' : 'কে পরিশোধ'}`,
+            };
         
-        const transactionCollectionRef = collection(firestore, `users/${user.uid}/transactions`);
-        const transactionDocRef = doc(transactionCollectionRef); // Create a new doc with a random ID
-        
-        const transactionData: Omit<Transaction, 'id' | 'createdAt'> = {
-            userId: user.uid,
-            type: debtNote.type === 'lent' ? 'income' : 'expense',
-            category: debtNote.type === 'lent' ? 'ধার ফেরত' : 'ধার পরিশোধ',
-            amount: amountToPay,
-            date: paymentDate.toISOString(),
-            description: `${debtNote.person} ${debtNote.type === 'lent' ? 'থেকে প্রাপ্তি' : 'কে পরিশোধ'}`,
-        };
-    
-        batch.set(transactionDocRef, {...transactionData, createdAt: serverTimestamp()});
+            batch.set(transactionDocRef, {...transactionData, createdAt: serverTimestamp()});
+        }
         
         await batch.commit();
     }
@@ -238,7 +234,3 @@ export const useBudget = () => {
     }
     return context;
 };
-
-    
-
-    
