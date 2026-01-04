@@ -83,7 +83,7 @@ export default function LoginPage() {
                 আপনার অ্যাকাউন্টে প্রবেশ করতে ইমেইল ও পাসওয়ার্ড দিন।
             </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="overflow-y-auto max-h-[calc(100vh-350px)] px-2">
           <form onSubmit={handleLogin}>
             <div className="grid gap-4">
               <div className="space-y-1.5">
