@@ -246,7 +246,7 @@ function RegisterPageContent() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleRegister} className="overflow-y-auto max-h-[calc(100vh-350px)] px-2">
+          <form onSubmit={handleRegister}>
             <div className="grid gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="full-name">পুরো নাম</Label>
