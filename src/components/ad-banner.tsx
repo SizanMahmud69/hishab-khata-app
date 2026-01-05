@@ -69,6 +69,7 @@ export function AdBanner({ page }: AdBannerProps) {
     return (
         <>
             <div className="relative w-full rounded-lg overflow-hidden shadow-lg my-4 group">
+                <span className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full z-10">Ads</span>
                 <Link href={ad.linkUrl} target="_blank" rel="noopener noreferrer">
                     <Image
                         src={ad.imageUrl}
@@ -80,7 +81,7 @@ export function AdBanner({ page }: AdBannerProps) {
                 </Link>
                 <button 
                     onClick={handleDismiss}
-                    className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
                     aria-label="বিজ্ঞাপন বন্ধ করুন"
                 >
                     <X className="w-4 h-4" />
@@ -107,5 +108,3 @@ export function AdBanner({ page }: AdBannerProps) {
         </>
     );
 }
-
-    
