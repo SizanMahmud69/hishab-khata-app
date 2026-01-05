@@ -296,6 +296,20 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "referredUserId", "referredUserName", "bonusPoints", "createdAt"]
+    },
+    "Ad": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "Ad",
+        "type": "object",
+        "description": "Represents an advertisement to be displayed in the app.",
+        "properties": {
+          "id": { "type": "string" },
+          "imageUrl": { "type": "string", "description": "URL of the ad image." },
+          "linkUrl": { "type": "string", "description": "URL to navigate to when the ad is clicked." },
+          "page": { "type": "string", "enum": ["all", "dashboard", "income", "expenses", "debts", "shop-dues"], "description": "The page where the ad should be displayed." },
+          "isActive": { "type": "boolean", "description": "Whether the ad is currently active and should be displayed." }
+        },
+        "required": ["id", "imageUrl", "linkUrl", "page", "isActive"]
     }
   },
   "auth": {
@@ -393,7 +407,17 @@
           "schema": { "$ref": "#/backend/entities/VerificationRequest" },
           "description": "Root collection for all verification requests, used for admin purposes and ensuring uniqueness of NID and phone numbers across all users."
         }
+      },
+      {
+        "path": "/ads/{adId}",
+        "definition": {
+            "entityName": "Ad",
+            "schema": { "$ref": "#/backend/entities/Ad" },
+            "description": "Stores advertisements to be displayed in the app. Publicly readable."
+        }
       }
     ]
   }
 }
+
+    

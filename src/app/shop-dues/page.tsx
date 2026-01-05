@@ -30,6 +30,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
+import { AdBanner } from "@/components/ad-banner";
 
 
 interface ShopDueSummary {
@@ -144,18 +145,9 @@ export default function ShopDuesPage() {
                 const newPaidAmount = entry.paidAmount + paymentForEntry;
                 const newStatus = newPaidAmount >= entry.amount ? 'paid' : 'partially-paid';
 
-                await updateDebtNote({ ...entry, paidAmount: newPaidAmount, status: newStatus });
-                amountToSettle -= paymentForEntry;
+                await updateDebtNote({ ...entry, paidAmount: newPaidAmount, status: newStatus }, paymentForEntry);
             }
             
-            await addTransaction({
-                type: 'expense',
-                category: 'দোকান বাকি পরিশোধ',
-                amount: paymentAmount,
-                date: new Date().toISOString(),
-                description: `${paymentShop.shopName}-এর বাকি পরিশোধ`,
-            });
-
             toast({
                 title: 'সফল!',
                 description: 'পরিশোধের হিসাব সফলভাবে আপডেট করা হয়েছে।',
@@ -249,6 +241,8 @@ export default function ShopDuesPage() {
           </div>
         )}
       </div>
+
+      <AdBanner page="shop-dues" />
       
       {/* Payment Dialog */}
       <Dialog open={isPaymentOpen} onOpenChange={setIsPaymentOpen}>
@@ -296,3 +290,5 @@ export default function ShopDuesPage() {
     </div>
   )
 }
+
+    

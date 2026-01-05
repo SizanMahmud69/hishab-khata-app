@@ -17,6 +17,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import { AdBanner } from "@/components/ad-banner";
 
 export default function DebtsPage() {
     const { debtNotes } = useBudget();
@@ -32,7 +33,7 @@ export default function DebtsPage() {
     const getStatusBadge = (status: 'unpaid' | 'paid' | 'partially-paid') => {
         switch (status) {
             case 'paid':
-                return <Badge className="bg-green-500 hover:bg-green-500/80">পরিশোধিত</Badge>;
+                return <Badge className="bg-green-700 hover:bg-green-700/80">পরিশোধিত</Badge>;
             case 'partially-paid':
                 return <Badge variant="outline" className="border-yellow-500 text-yellow-600">আংশিক</Badge>;
             case 'unpaid':
@@ -75,7 +76,7 @@ export default function DebtsPage() {
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold text-green-600">{formatCurrency(totalBorrowed)}</div>
+                <div className="text-2xl font-bold text-green-700">{formatCurrency(totalBorrowed)}</div>
                 <p className="text-xs text-muted-foreground">আপনি অন্যদের থেকে যে টাকা নিয়েছেন</p>
             </CardContent>
         </Card>
@@ -145,7 +146,7 @@ export default function DebtsPage() {
                                 </div>
                                 <span className={cn(
                                     "font-bold text-base",
-                                    debt.status !== 'paid' ? 'text-green-600' : 'text-foreground'
+                                    debt.status !== 'paid' ? 'text-green-700' : 'text-foreground'
                                 )}>{formatCurrency(debt.amount)}</span>
                            </div>
                            {debt.status === 'partially-paid' && (
@@ -181,7 +182,9 @@ export default function DebtsPage() {
             </div>
         </TabsContent>
       </Tabs>
-      
+      <AdBanner page="debts" />
     </div>
   )
 }
+
+    

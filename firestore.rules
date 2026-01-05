@@ -103,5 +103,15 @@ service cloud.firestore {
       // Only admins should update/delete from the console.
       allow update, delete: if false;
     }
+
+    // Root collection for advertisements
+    match /ads/{adId} {
+      // Anyone can read the ads.
+      allow get, list: if true;
+      // Only admins should create, update, or delete ads from the console.
+      allow write: if false;
+    }
   }
 }
+
+    
