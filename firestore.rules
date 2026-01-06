@@ -119,7 +119,9 @@ service cloud.firestore {
       // Only admins should create, update, or delete plans from the console.
       allow write: if false;
     }
+    
+    match /premium_plans/{document=**} {
+      allow read: if true;
+    }
   }
 }
-
-    
