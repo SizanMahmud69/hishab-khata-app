@@ -1,12 +1,12 @@
 
-
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo, useCallback } from 'react';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
-import { collection, onSnapshot, addDoc, doc, updateDoc, serverTimestamp, setDoc, query, getDocs, writeBatch, increment, arrayUnion, orderBy, Unsubscribe } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, doc, updateDoc, serverTimestamp, setDoc, query, getDocs, writeBatch, increment, arrayUnion, orderBy, Unsubscribe, where } from 'firebase/firestore';
 import { createNotification } from '@/components/app-header';
 import { type WithdrawalRequest } from '@/app/withdraw/page';
+import { isAfter } from 'date-fns';
 
 // New unified Transaction interface
 export interface Transaction {
@@ -40,10 +40,16 @@ interface UserProfile {
     points?: number;
     joinDate?: string;
     notifiedMilestones?: number[];
-    premiumStatus?: 'free' | 'trial' | 'premium';
-    premiumPlanId?: string;
-    premiumExpiryDate?: any; // Firestore Timestamp
 }
+
+interface PremiumSubscription {
+    id: string;
+    userId: string;
+    planId: string;
+    status: 'pending' | 'approved' | 'rejected';
+    expiresAt?: any; // Firestore Timestamp
+}
+
 
 interface AppConfig {
     minWithdrawalPoints: number;
@@ -122,26 +128,36 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
 
     const { data: appConfig, isLoading: isConfigLoading } = useDoc<AppConfig>(appConfigRef);
 
+    const activeSubscriptionQuery = useMemoFirebase(() => {
+        if (!user || !firestore) return null;
+        return query(
+          collection(firestore, 'premium_subscriptions'),
+          where('userId', '==', user.uid),
+          where('status', '==', 'approved'),
+          orderBy('expiresAt', 'desc'),
+          limit(1)
+        );
+      }, [user, firestore]);
+    
+    const { data: activeSubscriptionData, isLoading: isSubscriptionLoading } = useCollection<PremiumSubscription>(activeSubscriptionQuery);
+    
+    const activeSubscription = useMemo(() => {
+        if (!activeSubscriptionData || activeSubscriptionData.length === 0) return { status: 'free', expiryDate: null };
+        const sub = activeSubscriptionData[0];
+        if (sub.expiresAt && isAfter(new Date(), sub.expiresAt.toDate())) {
+            return { status: 'free', expiryDate: null };
+        }
+        return { status: 'premium', expiryDate: sub.expiresAt ? sub.expiresAt.toDate() : null };
+    }, [activeSubscriptionData]);
+
     const minWithdrawalPoints = appConfig?.minWithdrawalPoints ?? 1000;
     const referrerBonusPoints = appConfig?.referrerBonusPoints ?? 100;
     const referredUserBonusPoints = appConfig?.referredUserBonusPoints ?? 50;
     const bdtPer100Points = appConfig?.bdtPer100Points ?? 5;
     const rewardPoints = userProfile?.points ?? 0;
     
-    const premiumStatus = userProfile?.premiumStatus ?? 'free';
-    const premiumExpiryDate = userProfile?.premiumExpiryDate ? userProfile.premiumExpiryDate.toDate() : null;
-
-    useEffect(() => {
-        if (premiumStatus !== 'free' && premiumExpiryDate && new Date() > premiumExpiryDate) {
-             if (userDocRef) {
-                updateDoc(userDocRef, {
-                    premiumStatus: 'free',
-                    premiumPlanId: null,
-                    premiumExpiryDate: null
-                });
-             }
-        }
-    }, [premiumStatus, premiumExpiryDate, userDocRef]);
+    const premiumStatus = activeSubscription.status;
+    const premiumExpiryDate = activeSubscription.expiryDate;
 
 
     const totalIncome = useMemo(() => (transactions || []).filter(t => t.type === 'income').reduce((sum, item) => sum + item.amount, 0), [transactions]);
@@ -223,7 +239,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         await batch.commit();
     }
     
-    const isLoading = isUserLoading || isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || areReferralsLoading;
+    const isLoading = isUserLoading || isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || areReferralsLoading || isSubscriptionLoading;
 
     return (
         <BudgetContext.Provider value={{ 
@@ -257,3 +273,5 @@ export const useBudget = () => {
     }
     return context;
 };
+
+    

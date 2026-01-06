@@ -10,12 +10,12 @@ import { Mail, Phone, UserCheck, XCircle, CheckCircle, User as UserIcon, MapPin,
 import React, { useEffect, useMemo } from "react";
 import Link from 'next/link';
 import { Badge } from "@/components/ui/badge";
-import { collection, query, orderBy, limit, doc } from "firebase/firestore";
+import { collection, query, orderBy, limit, doc, where } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { createNotification } from "@/components/app-header";
 import { premiumPlans } from "@/lib/data";
-import { format } from "date-fns";
+import { format, isAfter } from "date-fns";
 import { bn } from "date-fns/locale";
 
 interface UserProfile {
@@ -31,12 +31,8 @@ interface UserProfile {
     lastCheckIn?: string;
     checkInStreak?: number;
     verificationRequestId?: string;
-    premiumStatus?: 'free' | 'trial' | 'premium';
-    premiumPlanId?: string;
-    premiumExpiryDate?: any;
 }
 
-// Corresponds to the new VerificationRequest entity
 interface VerificationRequest {
     id: string;
     userId: string;
@@ -49,6 +45,19 @@ interface VerificationRequest {
     nidDob: string;
     nidAddress: string;
     phone: string;
+}
+
+interface PremiumSubscription {
+    id: string;
+    userId: string;
+    planId: string;
+    status: 'pending' | 'approved' | 'rejected';
+    paymentMethod: string;
+    accountNumber: string;
+    transactionId?: string;
+    createdAt: any;
+    activatedAt?: any;
+    expiresAt?: any;
 }
 
 
@@ -76,12 +85,36 @@ export default function ProfilePage() {
       latestVerificationRequestQuery
   );
   
+  const activeSubscriptionQuery = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return query(
+      collection(firestore, 'premium_subscriptions'),
+      where('userId', '==', user.uid),
+      where('status', '==', 'approved'),
+      orderBy('expiresAt', 'desc'),
+      limit(1)
+    );
+  }, [user, firestore]);
+
+  const { data: activeSubscriptionData, isLoading: isSubscriptionLoading } = useCollection<PremiumSubscription>(activeSubscriptionQuery);
+  
+  const activeSubscription = useMemo(() => {
+      if (!activeSubscriptionData || activeSubscriptionData.length === 0) return null;
+      const sub = activeSubscriptionData[0];
+      // Check if the plan is still active
+      if (sub.expiresAt && isAfter(new Date(), sub.expiresAt.toDate())) {
+          return null; // Plan has expired
+      }
+      return sub;
+  }, [activeSubscriptionData]);
+
   const currentPlan = useMemo(() => {
-      if(userProfileData?.premiumStatus === 'premium' && userProfileData?.premiumPlanId) {
-          return premiumPlans.find(p => p.id === userProfileData.premiumPlanId);
+      if(activeSubscription) {
+          return premiumPlans.find(p => p.id === activeSubscription.planId);
       }
       return null;
-  }, [userProfileData]);
+  }, [activeSubscription]);
+
 
   const verificationRequest = useMemo(() => latestRequestData?.[0], [latestRequestData]);
   const verificationStatus = verificationRequest?.status;
@@ -197,7 +230,7 @@ export default function ProfilePage() {
     )
   }
   
-  if (isUserLoading || !userProfileData) {
+  if (isUserLoading || isSubscriptionLoading || !userProfileData) {
       return (
           <div className="flex-1 space-y-6">
               <Skeleton className="h-48 w-full" />
@@ -222,7 +255,7 @@ export default function ProfilePage() {
                 <h2 className="text-2xl md:text-3xl font-bold whitespace-nowrap truncate">{userProfileData?.name ?? user?.displayName ?? 'ব্যবহারকারী'}</h2>
                  {verificationStatus === 'approved' && <Badge className="bg-green-200 text-green-800 border-green-400 hover:bg-green-200/80"><CheckCircle className="w-3.5 h-3.5 mr-1.5" />ভেরিফাইড</Badge>}
                  {verificationStatus === 'pending' && <Badge variant="outline" className="text-yellow-600 border-yellow-400">প্রসেসিং...</Badge>}
-                 {userProfileData.premiumStatus === 'premium' && (
+                 {activeSubscription && (
                     <Badge className="bg-yellow-200 text-yellow-800 border-yellow-400 hover:bg-yellow-200/80">
                         <Crown className="w-3.5 h-3.5 mr-1.5" />
                         {currentPlan?.title || 'প্রিমিয়াম'}
@@ -233,15 +266,15 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
       
-       {userProfileData.premiumStatus === 'premium' && (
+       {activeSubscription && (
          <Card className="border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20">
             <CardHeader>
                 <CardTitle>প্রিমিয়াম স্ট্যাটাস</CardTitle>
             </CardHeader>
             <CardContent>
-                <p>আপনার বর্তমান প্ল্যান: <span className="font-bold">{currentPlan?.title || 'প্রিমিয়াম'}</span></p>
+                <p>আপনার বর্তমান প্ল্যান: <span className="font-bold">{currentPlan?.title || 'প্রিমিয়াম'}</span></p>
                 <p>মেয়াদ শেষ হবে: <span className="font-bold">
-                    {userProfileData.premiumExpiryDate ? format(userProfileData.premiumExpiryDate.toDate(), "d MMMM, yyyy", { locale: bn }) : 'লাইফটাইম'}
+                    {activeSubscription.expiresAt ? format(activeSubscription.expiresAt.toDate(), "d MMMM, yyyy", { locale: bn }) : 'লাইফটাইম'}
                 </span></p>
             </CardContent>
          </Card>

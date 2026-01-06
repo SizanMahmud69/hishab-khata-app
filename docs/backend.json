@@ -79,20 +79,6 @@
         "referredBy": {
             "type": "string",
             "description": "The UID of the user who referred this user."
-        },
-        "premiumStatus": {
-            "type": "string",
-            "enum": ["free", "trial", "premium"],
-            "description": "The user's current subscription status."
-        },
-        "premiumPlanId": {
-            "type": "string",
-            "description": "The ID of the currently active premium plan."
-        },
-        "premiumExpiryDate": {
-            "type": "string",
-            "format": "date-time",
-            "description": "The date when the current premium plan expires."
         }
       },
       "required": ["id", "email", "name"]
@@ -324,6 +310,26 @@
           "isActive": { "type": "boolean", "description": "Whether the ad is currently active and should be displayed." }
         },
         "required": ["id", "imageUrl", "linkUrl", "page", "isActive"]
+    },
+    "PremiumSubscription": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "PremiumSubscription",
+        "type": "object",
+        "description": "Represents a user's premium subscription request.",
+        "properties": {
+          "id": { "type": "string" },
+          "userId": { "type": "string" },
+          "planId": { "type": "string" },
+          "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+          "paymentMethod": { "type": "string" },
+          "accountNumber": { "type": "string" },
+          "transactionId": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "activatedAt": { "type": "string", "format": "date-time" },
+          "expiresAt": { "type": "string", "format": "date-time" },
+          "rejectionReason": { "type": "string" }
+        },
+        "required": ["id", "userId", "planId", "status", "paymentMethod", "createdAt"]
     }
   },
   "auth": {
@@ -428,6 +434,14 @@
             "entityName": "Ad",
             "schema": { "$ref": "#/backend/entities/Ad" },
             "description": "Stores advertisements to be displayed in the app. Publicly readable."
+        }
+      },
+      {
+        "path": "/premium_subscriptions/{subscriptionId}",
+        "definition": {
+          "entityName": "PremiumSubscription",
+          "schema": { "$ref": "#/backend/entities/PremiumSubscription" },
+          "description": "Root collection for all premium subscription requests for admin approval."
         }
       }
     ]
