@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation"
 import {
   Award,
   BookMarked,
+  Crown,
   HandCoins,
   History,
   LayoutDashboard,
@@ -73,6 +74,11 @@ const menuItems = [
         label: "রেফার",
         icon: Users,
     },
+    {
+        href: "/premium",
+        label: "সাবস্ক্রিপশন",
+        icon: Crown,
+    }
 ]
 
 export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
