@@ -129,10 +129,7 @@ function CheckoutPageContent() {
         }
 
         try {
-            const batch = writeBatch(firestore);
-
             const newUserSubscriptionRef = doc(collection(firestore, `users/${user.uid}/premium_subscriptions`));
-            const rootSubscriptionRef = doc(firestore, 'premium_subscriptions', newUserSubscriptionRef.id);
 
             const subscriptionData = {
                 id: newUserSubscriptionRef.id,
@@ -145,10 +142,7 @@ function CheckoutPageContent() {
                 createdAt: serverTimestamp(),
             };
 
-            batch.set(newUserSubscriptionRef, subscriptionData);
-            batch.set(rootSubscriptionRef, subscriptionData);
-
-            await batch.commit();
+            await setDoc(newUserSubscriptionRef, subscriptionData);
 
             toast({ title: "অনুরোধ সফল হয়েছে", description: "আপনার সাবস্ক্রিপশন অনুরোধটি পর্যালোচনার জন্য জমা দেওয়া হয়েছে। ২৪ ঘণ্টার মধ্যে এটি সক্রিয় করা হবে।" });
             router.push('/profile');

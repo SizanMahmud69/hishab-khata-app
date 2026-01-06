@@ -457,14 +457,6 @@
             "schema": { "$ref": "#/backend/entities/Ad" },
             "description": "Stores advertisements to be displayed in the app. Publicly readable."
         }
-      },
-      {
-        "path": "/premium_subscriptions/{subscriptionId}",
-        "definition": {
-          "entityName": "PremiumSubscription",
-          "schema": { "$ref": "#/backend/entities/PremiumSubscription" },
-          "description": "Root collection for all premium subscription requests for admin approval."
-        }
       }
     ]
   }

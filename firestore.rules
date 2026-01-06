@@ -119,13 +119,5 @@ service cloud.firestore {
       // Only admins should create, update, or delete ads from the console.
       allow write: if false;
     }
-
-    // Root collection for premium subscriptions for admin approval
-    match /premium_subscriptions/{subscriptionId} {
-        allow get: if isSignedIn();
-        allow create: if isOwner(request.resource.data.userId);
-        allow list: if isSignedIn(); // Allow admin to list all
-        allow update, delete: if false; // Only admin should update status from console
-    }
   }
 }

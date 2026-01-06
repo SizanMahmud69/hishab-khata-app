@@ -92,6 +92,7 @@ interface BudgetContextType {
     isLoading: boolean;
     premiumStatus: 'free' | 'premium';
     premiumExpiryDate: Date | null;
+    userProfile: UserProfile | null;
 }
 
 const BudgetContext = createContext<BudgetContextType | undefined>(undefined);
@@ -148,7 +149,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
 
     // Effect to automatically activate a newly approved subscription
     useEffect(() => {
-        if (!activatableSubscriptions || activatableSubscriptions.length === 0 || !userDocRef || !firestore) {
+        if (!activatableSubscriptions || activatableSubscriptions.length === 0 || !userDocRef || !firestore || !user) {
             return;
         }
 
@@ -176,12 +177,8 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                 });
 
                 // 2. Mark the subscription sub-collection document as activated
-                const subRef = doc(firestore, `users/${user!.uid}/premium_subscriptions`, subscriptionToActivate.id);
+                const subRef = doc(firestore, `users/${user.uid}/premium_subscriptions`, subscriptionToActivate.id);
                 batch.update(subRef, { activatedAt: serverTimestamp() });
-                
-                // 3. (Optional but good practice) Mark the root collection document as activated
-                const rootSubRef = doc(firestore, 'premium_subscriptions', subscriptionToActivate.id);
-                batch.update(rootSubRef, { activatedAt: serverTimestamp() });
 
                 await batch.commit();
 
@@ -191,7 +188,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                     title: "প্রিমিয়াম প্ল্যান সক্রিয় হয়েছে!",
                     description: `অভিনন্দন! আপনার "${plan.title}" প্ল্যানটি এখন সক্রিয়।`,
                     link: "/profile"
-                }, user!.uid, firestore);
+                }, user.uid, firestore);
 
             } catch (error) {
                 console.error("Failed to auto-activate premium subscription:", error);
@@ -323,6 +320,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             isLoading,
             premiumStatus,
             premiumExpiryDate,
+            userProfile,
         }}>
             {children}
         </BudgetContext.Provider>
