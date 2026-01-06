@@ -103,6 +103,8 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
 
+    // If no user is logged in, provide a default, empty context.
+    // All hooks below this line will only run if a user is present.
     const userDocRef = useMemoFirebase(() => {
         if (!user || !firestore) return null;
         return doc(firestore, `users/${user.uid}`);
@@ -299,29 +301,65 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         await batch.commit();
     }
     
-    const isLoading = isUserLoading || isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || areReferralsLoading;
+    const isLoading = isUserLoading || (!!user && (isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || areReferralsLoading));
+
+    const value = useMemo(() => ({
+        transactions, 
+        debtNotes,
+        referrals,
+        addTransaction, 
+        addDebtNote, 
+        updateDebtNote, 
+        totalIncome, 
+        totalExpense, 
+        totalSavings, 
+        rewardPoints,
+        minWithdrawalPoints,
+        referrerBonusPoints,
+        referredUserBonusPoints,
+        bdtPer100Points,
+        isLoading,
+        premiumStatus,
+        premiumExpiryDate,
+        userProfile,
+    }), [
+        transactions, debtNotes, referrals,
+        totalIncome, totalExpense, totalSavings,
+        rewardPoints, minWithdrawalPoints, referrerBonusPoints, referredUserBonusPoints, bdtPer100Points,
+        isLoading, premiumStatus, premiumExpiryDate, userProfile
+    ]);
+
+    if (!user) {
+         const emptyContext: BudgetContextType = {
+            transactions: [],
+            debtNotes: [],
+            referrals: [],
+            addTransaction: async () => {},
+            addDebtNote: async () => {},
+            updateDebtNote: async () => {},
+            totalIncome: 0,
+            totalExpense: 0,
+            totalSavings: 0,
+            rewardPoints: 0,
+            minWithdrawalPoints: 1000,
+            referrerBonusPoints: 100,
+            referredUserBonusPoints: 50,
+            bdtPer100Points: 5,
+            isLoading: isUserLoading,
+            premiumStatus: 'free',
+            premiumExpiryDate: null,
+            userProfile: null,
+        };
+        return (
+            <BudgetContext.Provider value={emptyContext}>
+                {children}
+            </BudgetContext.Provider>
+        );
+    }
+
 
     return (
-        <BudgetContext.Provider value={{ 
-            transactions, 
-            debtNotes,
-            referrals,
-            addTransaction, 
-            addDebtNote, 
-            updateDebtNote, 
-            totalIncome, 
-            totalExpense, 
-            totalSavings, 
-            rewardPoints,
-            minWithdrawalPoints,
-            referrerBonusPoints,
-            referredUserBonusPoints,
-            bdtPer100Points,
-            isLoading,
-            premiumStatus,
-            premiumExpiryDate,
-            userProfile,
-        }}>
+        <BudgetContext.Provider value={value}>
             {children}
         </BudgetContext.Provider>
     );
@@ -334,3 +372,5 @@ export const useBudget = () => {
     }
     return context;
 };
+
+    
