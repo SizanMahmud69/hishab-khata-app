@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Banknote, Gift, Loader2 } from "lucide-react";
+import { Banknote, Gift, Loader2, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { premiumPlans as allPlans, type PremiumPlan, paymentMethods } from "@/lib/data";
@@ -24,7 +24,7 @@ function CheckoutPageContent() {
     const { toast } = useToast();
     const { user } = useUser();
     const firestore = useFirestore();
-    const { rewardPoints } = useBudget();
+    const { rewardPoints, bdtPer100Points } = useBudget();
     
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,6 +34,20 @@ function CheckoutPageContent() {
         if (!planId) return null;
         return allPlans.find(p => p.id === planId);
     }, [planId]);
+
+    const pointsRequired = useMemo(() => {
+        if (!selectedPlan || selectedPlan.price <= 0 || bdtPer100Points <= 0) return 0;
+        return Math.ceil((selectedPlan.price / bdtPer100Points) * 100);
+    }, [selectedPlan, bdtPer100Points]);
+    
+    const copyToClipboard = () => {
+        const paymentNumber = "01740093369";
+        navigator.clipboard.writeText(paymentNumber);
+        toast({
+            title: "কপি হয়েছে!",
+            description: `নম্বর (${paymentNumber}) ক্লিপবোর্ডে কপি করা হয়েছে।`,
+        });
+    };
 
     const handleSubscriptionSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -52,10 +66,10 @@ function CheckoutPageContent() {
     };
 
     const activateWithPoints = async () => {
-        if (!selectedPlan || !user || !firestore || !selectedPlan.points) return;
+        if (!selectedPlan || !user || !firestore || pointsRequired <= 0) return;
 
-        if (rewardPoints < selectedPlan.points) {
-            toast({ variant: 'destructive', title: "অপর্যাপ্ত পয়েন্ট", description: `আপনার ${selectedPlan.points} পয়েন্ট প্রয়োজন, কিন্তু আপনার আছে ${rewardPoints} পয়েন্ট।` });
+        if (rewardPoints < pointsRequired) {
+            toast({ variant: 'destructive', title: "অপর্যাপ্ত পয়েন্ট", description: `আপনার ${pointsRequired} পয়েন্ট প্রয়োজন, কিন্তু আপনার আছে ${rewardPoints} পয়েন্ট।` });
             setIsSubmitting(false);
             return;
         }
@@ -84,12 +98,11 @@ function CheckoutPageContent() {
 
             batch.set(newUserSubscriptionRef, subscriptionData);
             
-            // Update user document with premium status
             batch.update(userDocRef, {
                 premiumStatus: 'premium',
                 premiumPlanId: selectedPlan.id,
                 premiumExpiryDate: expiryDate ? expiryDate : null,
-                points: increment(-selectedPlan.points)
+                points: increment(-pointsRequired)
             });
 
             await batch.commit();
@@ -178,11 +191,11 @@ function CheckoutPageContent() {
                                     </Label>
                                 ))}
                                 <Label htmlFor="points" className={cn("flex items-center gap-4 rounded-lg border p-4 cursor-pointer hover:bg-accent hover:text-accent-foreground", selectedPaymentMethod === "points" && "bg-accent text-accent-foreground")}>
-                                    <RadioGroupItem value="points" id="points" disabled={!selectedPlan.points || selectedPlan.points <= 0} />
+                                    <RadioGroupItem value="points" id="points" disabled={pointsRequired <= 0} />
                                     <Gift className="h-6 w-6 text-green-500" />
                                     <div>
                                         <p className="font-medium">রিওয়ার্ড পয়েন্ট</p>
-                                        <p className="text-xs text-muted-foreground">{selectedPlan.points || 0} পয়েন্ট প্রয়োজন</p>
+                                        <p className="text-xs text-muted-foreground">{pointsRequired || 0} পয়েন্ট প্রয়োজন</p>
                                     </div>
                                 </Label>
                             </RadioGroup>
@@ -191,8 +204,15 @@ function CheckoutPageContent() {
                         {selectedPaymentMethod && selectedPaymentMethod !== 'points' && (
                              <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
                                 <p className="text-sm text-center">অনুগ্রহ করে নিচের নম্বরে <span className='font-bold'>(৳{selectedPlan.price})</span> সেন্ড মানি করুন এবং নিচের তথ্যগুলো পূরণ করুন।</p>
-                                <p className="text-lg font-bold text-center text-primary tracking-widest">01700000000 ({selectedPaymentMethod})</p>
-                                <div className="space-y-2">
+                                <div className="flex items-center justify-center gap-2 p-3 rounded-lg bg-background border border-dashed">
+                                    <p className="text-lg font-bold text-center text-primary tracking-widest">01740093369</p>
+                                    <Button type="button" variant="ghost" size="icon" onClick={copyToClipboard} className='h-8 w-8'>
+                                        <Copy className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                                <p className="text-xs text-center text-muted-foreground">({selectedPaymentMethod} পার্সোনাল)</p>
+
+                                <div className="space-y-2 pt-2">
                                     <Label htmlFor="accountNumber">আপনার {selectedPaymentMethod} নম্বর</Label>
                                     <Input id="accountNumber" name="accountNumber" placeholder="যে নম্বর থেকে টাকা পাঠিয়েছেন" required />
                                 </div>
