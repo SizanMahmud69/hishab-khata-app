@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo, useCallback } from 'react';
@@ -131,8 +132,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const activeSubscriptionQuery = useMemoFirebase(() => {
         if (!user || !firestore) return null;
         return query(
-          collection(firestore, 'premium_subscriptions'),
-          where('userId', '==', user.uid),
+          collection(firestore, `users/${user.uid}/premium_subscriptions`),
           where('status', '==', 'approved'),
           orderBy('expiresAt', 'desc'),
           limit(1)
@@ -273,6 +273,8 @@ export const useBudget = () => {
     }
     return context;
 };
+
+    
 
     
 

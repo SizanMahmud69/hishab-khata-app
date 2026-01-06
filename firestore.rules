@@ -81,6 +81,12 @@ service cloud.firestore {
         allow create: if isSignedIn();
         allow update, delete: if false;
       }
+      
+      // Sub-collection for premium subscriptions
+      match /premium_subscriptions/{subscriptionId} {
+        allow read, create: if isOwner(userId);
+        allow update, delete: if false;
+      }
     }
     
     // Global app configuration
@@ -114,12 +120,14 @@ service cloud.firestore {
 
     // Root collection for premium subscriptions for admin approval
     match /premium_subscriptions/{subscriptionId} {
-        // Allow a user to list their own subscriptions.
-        allow list: if isSignedIn() && request.query.where.userId == request.auth.uid;
         allow get: if isSignedIn();
         allow create: if isOwner(request.resource.data.userId);
+        // A user can list their own subscriptions
+        allow list: if isSignedIn() && request.query.where.userId == request.auth.uid;
         // Only admin should update status from console
         allow update, delete: if false;
     }
   }
 }
+
+    

@@ -52,9 +52,6 @@ interface PremiumSubscription {
     userId: string;
     planId: string;
     status: 'pending' | 'approved' | 'rejected';
-    paymentMethod: string;
-    accountNumber: string;
-    transactionId?: string;
     createdAt: any;
     activatedAt?: any;
     expiresAt?: any;
@@ -88,8 +85,7 @@ export default function ProfilePage() {
   const activeSubscriptionQuery = useMemoFirebase(() => {
     if (!user || !firestore) return null;
     return query(
-      collection(firestore, 'premium_subscriptions'),
-      where('userId', '==', user.uid),
+      collection(firestore, `users/${user.uid}/premium_subscriptions`),
       where('status', '==', 'approved'),
       orderBy('expiresAt', 'desc'),
       limit(1)
@@ -321,3 +317,5 @@ export default function ProfilePage() {
     </div>
   )
 }
+
+    

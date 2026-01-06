@@ -396,6 +396,14 @@
           "description": "Stores a user's reward point withdrawal requests."
         }
       },
+       {
+        "path": "/users/{userId}/premium_subscriptions/{subscriptionId}",
+        "definition": {
+          "entityName": "PremiumSubscription",
+          "schema": { "$ref": "#/backend/entities/PremiumSubscription" },
+          "description": "Stores a user's premium subscription requests and history."
+        }
+      },
       {
         "path": "/app_config/{configId}",
         "definition": {
@@ -447,3 +455,5 @@
     ]
   }
 }
+
+    

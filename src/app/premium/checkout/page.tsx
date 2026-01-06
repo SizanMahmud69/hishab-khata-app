@@ -13,9 +13,9 @@ import { Banknote, Gift, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { premiumPlans as allPlans, type PremiumPlan, paymentMethods } from "@/lib/data";
-import { useUser, useFirestore, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
 import { useBudget } from '@/context/budget-context';
-import { doc, addDoc, collection, serverTimestamp, updateDoc, increment, writeBatch } from 'firebase/firestore';
+import { doc, collection, serverTimestamp, increment, writeBatch, setDoc } from 'firebase/firestore';
 import { addDays } from 'date-fns';
 
 function CheckoutPageContent() {
@@ -63,23 +63,31 @@ function CheckoutPageContent() {
         try {
             const batch = writeBatch(firestore);
             const userDocRef = doc(firestore, 'users', user.uid);
-            const subscriptionRef = doc(collection(firestore, 'premium_subscriptions'));
+            
+            // Generate a new ID for the subscription
+            const newUserSubscriptionRef = doc(collection(firestore, `users/${user.uid}/premium_subscriptions`));
+            const rootSubscriptionRef = doc(firestore, 'premium_subscriptions', newUserSubscriptionRef.id);
 
             let expiryDate = null;
             if (selectedPlan.durationDays) {
                 expiryDate = addDays(new Date(), selectedPlan.durationDays);
             }
 
-            // Create subscription record
-            batch.set(subscriptionRef, {
+            const subscriptionData = {
+                id: newUserSubscriptionRef.id,
                 userId: user.uid,
                 planId: selectedPlan.id,
                 status: 'approved',
                 paymentMethod: 'points',
                 createdAt: serverTimestamp(),
                 activatedAt: serverTimestamp(),
-                expiresAt: expiryDate ? serverTimestamp.from(expiryDate) : null,
-            });
+                expiresAt: expiryDate ? expiryDate : null,
+            };
+
+            // Set subscription record in both places
+            batch.set(newUserSubscriptionRef, subscriptionData);
+            batch.set(rootSubscriptionRef, subscriptionData);
+
 
             // Deduct points
             batch.update(userDocRef, { points: increment(-selectedPlan.points) });
@@ -108,8 +116,13 @@ function CheckoutPageContent() {
         }
 
         try {
-            const subscriptionRef = collection(firestore, 'premium_subscriptions');
-            await addDoc(subscriptionRef, {
+            const batch = writeBatch(firestore);
+
+            const newUserSubscriptionRef = doc(collection(firestore, `users/${user.uid}/premium_subscriptions`));
+            const rootSubscriptionRef = doc(firestore, 'premium_subscriptions', newUserSubscriptionRef.id);
+
+            const subscriptionData = {
+                id: newUserSubscriptionRef.id,
                 userId: user.uid,
                 planId: selectedPlan.id,
                 status: 'pending',
@@ -117,7 +130,12 @@ function CheckoutPageContent() {
                 accountNumber: accountNumber,
                 transactionId: transactionId,
                 createdAt: serverTimestamp(),
-            });
+            };
+
+            batch.set(newUserSubscriptionRef, subscriptionData);
+            batch.set(rootSubscriptionRef, subscriptionData);
+
+            await batch.commit();
 
             toast({ title: "অনুরোধ সফল হয়েছে", description: "আপনার সাবস্ক্রিপশন অনুরোধটি পর্যালোচনার জন্য জমা দেওয়া হয়েছে। ২৪ ঘণ্টার মধ্যে এটি সক্রিয় করা হবে।" });
             router.push('/profile');
@@ -205,3 +223,5 @@ export default function CheckoutPage() {
         </Suspense>
     )
 }
+
+    
