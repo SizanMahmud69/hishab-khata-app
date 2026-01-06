@@ -6,7 +6,7 @@ import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import Image from 'next/image';
 import Link from 'next/link';
-import { X, Annoyed } from 'lucide-react';
+import { X, Crown } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,6 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { useRouter } from 'next/navigation';
 
 interface Ad {
     id: string;
@@ -32,6 +33,7 @@ interface AdBannerProps {
 
 export function AdBanner({ page }: AdBannerProps) {
     const firestore = useFirestore();
+    const router = useRouter();
     const [isDismissed, setIsDismissed] = useState(false);
     const [isAlertOpen, setIsAlertOpen] = useState(false);
     const [showCloseButton, setShowCloseButton] = useState(false);
@@ -79,8 +81,8 @@ export function AdBanner({ page }: AdBannerProps) {
     };
 
     const handlePremiumRedirect = () => {
-        // Here you would redirect to your premium subscription page
-        // For now, we'll just close the dialog.
+        // Redirect to a future premium page
+        router.push('/premium');
         setIsAlertOpen(false);
     }
 
@@ -110,20 +112,20 @@ export function AdBanner({ page }: AdBannerProps) {
                 )}
             </div>
             
-            <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <div className='flex items-center justify-center'>
-                           <Annoyed className="w-12 h-12 text-yellow-500 mb-4" />
-                        </div>
-                        <AlertDialogTitle className="text-center">আপনি কি বিজ্ঞাপন বন্ধ করতে চান?</AlertDialogTitle>
-                        <AlertDialogDescription className="text-center">
+             <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+                <AlertDialogContent className="overflow-hidden p-0">
+                    <div className="bg-gradient-to-br from-yellow-400 to-orange-500 p-8 flex flex-col items-center justify-center text-center">
+                        <Crown className="w-16 h-16 text-white drop-shadow-lg" />
+                    </div>
+                    <AlertDialogHeader className="p-6 text-center">
+                        <AlertDialogTitle className="text-2xl">বিজ্ঞাপনমুক্ত অভিজ্ঞতা নিন!</AlertDialogTitle>
+                        <AlertDialogDescription>
                             আমাদের অ্যাপের বিজ্ঞাপনমুক্ত অভিজ্ঞতা পেতে এবং ডেভেলপারদের সমর্থন করতে, অনুগ্রহ করে প্রিমিয়াম সাবস্ক্রিপশন নিন।
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter className='sm:justify-center'>
+                    <AlertDialogFooter className='p-6 pt-0 bg-transparent'>
                         <AlertDialogCancel>পরে ভাবছি</AlertDialogCancel>
-                        <AlertDialogAction onClick={handlePremiumRedirect}>প্রিমিয়াম নিন</AlertDialogAction>
+                        <AlertDialogAction onClick={handlePremiumRedirect} className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold">প্রিমিয়াম নিন</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
