@@ -31,6 +31,9 @@ interface UserProfile {
     lastCheckIn?: string;
     checkInStreak?: number;
     verificationRequestId?: string;
+    premiumStatus?: 'free' | 'premium';
+    premiumPlanId?: string;
+    premiumExpiryDate?: any;
 }
 
 interface VerificationRequest {
@@ -81,32 +84,21 @@ export default function ProfilePage() {
   const { data: latestRequestData, isLoading: isRequestLoading } = useCollection<VerificationRequest>(
       latestVerificationRequestQuery
   );
-  
-  const activeSubscriptionQuery = useMemoFirebase(() => {
-    if (!user || !firestore) return null;
-    return query(
-      collection(firestore, `users/${user.uid}/premium_subscriptions`),
-      where('status', '==', 'approved'),
-      orderBy('expiresAt', 'desc'),
-      limit(1)
-    );
-  }, [user, firestore]);
 
-  const { data: activeSubscriptionData, isLoading: isSubscriptionLoading } = useCollection<PremiumSubscription>(activeSubscriptionQuery);
-  
   const activeSubscription = useMemo(() => {
-      if (!activeSubscriptionData || activeSubscriptionData.length === 0) return null;
-      const sub = activeSubscriptionData[0];
-      // Check if the plan is still active
-      if (sub.expiresAt && isAfter(new Date(), sub.expiresAt.toDate())) {
-          return null; // Plan has expired
+      if (!userProfileData || userProfileData.premiumStatus !== 'premium') return null;
+      
+      const expiryDate = userProfileData.premiumExpiryDate?.toDate();
+      if (expiryDate && isAfter(new Date(), expiryDate)) {
+          // TODO: Add logic to deactivate plan if expired
+          return null; 
       }
-      return sub;
-  }, [activeSubscriptionData]);
+      return userProfileData;
+  }, [userProfileData]);
 
   const currentPlan = useMemo(() => {
       if(activeSubscription) {
-          return premiumPlans.find(p => p.id === activeSubscription.planId);
+          return premiumPlans.find(p => p.id === activeSubscription.premiumPlanId);
       }
       return null;
   }, [activeSubscription]);
@@ -226,7 +218,7 @@ export default function ProfilePage() {
     )
   }
   
-  if (isUserLoading || isSubscriptionLoading || !userProfileData) {
+  if (isUserLoading || !userProfileData) {
       return (
           <div className="flex-1 space-y-6">
               <Skeleton className="h-48 w-full" />
@@ -262,7 +254,7 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
       
-       {activeSubscription && (
+       {activeSubscription ? (
          <Card className="border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20">
             <CardHeader>
                 <CardTitle>প্রিমিয়াম স্ট্যাটাস</CardTitle>
@@ -270,10 +262,29 @@ export default function ProfilePage() {
             <CardContent>
                 <p>আপনার বর্তমান প্ল্যান: <span className="font-bold">{currentPlan?.title || 'প্রিমিয়াম'}</span></p>
                 <p>মেয়াদ শেষ হবে: <span className="font-bold">
-                    {activeSubscription.expiresAt ? format(activeSubscription.expiresAt.toDate(), "d MMMM, yyyy", { locale: bn }) : 'লাইফটাইম'}
+                    {activeSubscription.premiumExpiryDate ? format(activeSubscription.premiumExpiryDate.toDate(), "d MMMM, yyyy", { locale: bn }) : 'লাইফটাইম'}
                 </span></p>
             </CardContent>
          </Card>
+       ): (
+        <Card>
+            <CardContent className="p-6">
+                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <Crown className="w-8 h-8 text-yellow-500 flex-shrink-0" />
+                        <div>
+                            <p className="font-semibold text-yellow-600">প্রিমিয়াম সাবস্ক্রিপশন</p>
+                            <p className="text-sm text-muted-foreground">বিজ্ঞাপন-মুক্ত অভিজ্ঞতা এবং বিশেষ ফিচার পেতে আপগ্রেড করুন।</p>
+                        </div>
+                    </div>
+                    <Button asChild className="w-full sm:w-auto bg-yellow-500 hover:bg-yellow-600 text-white">
+                        <Link href="/premium">
+                            আপগ্রেড করুন
+                        </Link>
+                    </Button>
+                </div>
+            </CardContent>
+        </Card>
        )}
 
 
@@ -317,5 +328,3 @@ export default function ProfilePage() {
     </div>
   )
 }
-
-    

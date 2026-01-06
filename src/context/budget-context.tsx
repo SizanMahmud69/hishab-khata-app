@@ -41,6 +41,8 @@ interface UserProfile {
     points?: number;
     joinDate?: string;
     notifiedMilestones?: number[];
+    premiumStatus?: 'free' | 'premium';
+    premiumExpiryDate?: any; // firestore timestamp
 }
 
 interface PremiumSubscription {
@@ -85,7 +87,7 @@ interface BudgetContextType {
     referredUserBonusPoints: number;
     bdtPer100Points: number;
     isLoading: boolean;
-    premiumStatus: 'free' | 'trial' | 'premium';
+    premiumStatus: 'free' | 'premium';
     premiumExpiryDate: Date | null;
 }
 
@@ -128,27 +130,20 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     }, [firestore]);
 
     const { data: appConfig, isLoading: isConfigLoading } = useDoc<AppConfig>(appConfigRef);
+    
+    const { premiumStatus, premiumExpiryDate } = useMemo(() => {
+        if (!userProfile) return { status: 'free', expiryDate: null };
+        const status = userProfile.premiumStatus ?? 'free';
+        const expiry = userProfile.premiumExpiryDate?.toDate() ?? null;
 
-    const activeSubscriptionQuery = useMemoFirebase(() => {
-        if (!user || !firestore) return null;
-        return query(
-          collection(firestore, `users/${user.uid}/premium_subscriptions`),
-          where('status', '==', 'approved'),
-          orderBy('expiresAt', 'desc'),
-          limit(1)
-        );
-      }, [user, firestore]);
-    
-    const { data: activeSubscriptionData, isLoading: isSubscriptionLoading } = useCollection<PremiumSubscription>(activeSubscriptionQuery);
-    
-    const activeSubscription = useMemo(() => {
-        if (!activeSubscriptionData || activeSubscriptionData.length === 0) return { status: 'free', expiryDate: null };
-        const sub = activeSubscriptionData[0];
-        if (sub.expiresAt && isAfter(new Date(), sub.expiresAt.toDate())) {
+        if (status === 'premium' && expiry && isAfter(new Date(), expiry)) {
+             // TODO: Logic to update status to 'free' in Firestore if expired
             return { status: 'free', expiryDate: null };
         }
-        return { status: 'premium', expiryDate: sub.expiresAt ? sub.expiresAt.toDate() : null };
-    }, [activeSubscriptionData]);
+        
+        return { status, expiryDate: expiry };
+
+    }, [userProfile]);
 
     const minWithdrawalPoints = appConfig?.minWithdrawalPoints ?? 1000;
     const referrerBonusPoints = appConfig?.referrerBonusPoints ?? 100;
@@ -156,10 +151,6 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const bdtPer100Points = appConfig?.bdtPer100Points ?? 5;
     const rewardPoints = userProfile?.points ?? 0;
     
-    const premiumStatus = activeSubscription.status;
-    const premiumExpiryDate = activeSubscription.expiryDate;
-
-
     const totalIncome = useMemo(() => (transactions || []).filter(t => t.type === 'income').reduce((sum, item) => sum + item.amount, 0), [transactions]);
     const totalExpense = useMemo(() => (transactions || []).filter(t => t.type === 'expense').reduce((sum, item) => sum + item.amount, 0), [transactions]);
     
@@ -239,7 +230,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         await batch.commit();
     }
     
-    const isLoading = isUserLoading || isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || areReferralsLoading || isSubscriptionLoading;
+    const isLoading = isUserLoading || isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || areReferralsLoading;
 
     return (
         <BudgetContext.Provider value={{ 
@@ -273,9 +264,3 @@ export const useBudget = () => {
     }
     return context;
 };
-
-    
-
-    
-
-    

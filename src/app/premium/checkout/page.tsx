@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { premiumPlans as allPlans, type PremiumPlan, paymentMethods } from "@/lib/data";
 import { useUser, useFirestore } from '@/firebase';
 import { useBudget } from '@/context/budget-context';
-import { doc, collection, serverTimestamp, increment, writeBatch, setDoc } from 'firebase/firestore';
+import { doc, collection, serverTimestamp, increment, writeBatch, setDoc, updateDoc } from 'firebase/firestore';
 import { addDays } from 'date-fns';
 
 function CheckoutPageContent() {
@@ -64,9 +64,7 @@ function CheckoutPageContent() {
             const batch = writeBatch(firestore);
             const userDocRef = doc(firestore, 'users', user.uid);
             
-            // Generate a new ID for the subscription
             const newUserSubscriptionRef = doc(collection(firestore, `users/${user.uid}/premium_subscriptions`));
-            const rootSubscriptionRef = doc(firestore, 'premium_subscriptions', newUserSubscriptionRef.id);
 
             let expiryDate = null;
             if (selectedPlan.durationDays) {
@@ -84,13 +82,15 @@ function CheckoutPageContent() {
                 expiresAt: expiryDate ? expiryDate : null,
             };
 
-            // Set subscription record in both places
             batch.set(newUserSubscriptionRef, subscriptionData);
-            batch.set(rootSubscriptionRef, subscriptionData);
-
-
-            // Deduct points
-            batch.update(userDocRef, { points: increment(-selectedPlan.points) });
+            
+            // Update user document with premium status
+            batch.update(userDocRef, {
+                premiumStatus: 'premium',
+                premiumPlanId: selectedPlan.id,
+                premiumExpiryDate: expiryDate ? expiryDate : null,
+                points: increment(-selectedPlan.points)
+            });
 
             await batch.commit();
             
@@ -223,5 +223,3 @@ export default function CheckoutPage() {
         </Suspense>
     )
 }
-
-    

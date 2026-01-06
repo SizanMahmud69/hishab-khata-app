@@ -79,6 +79,20 @@
         "referredBy": {
             "type": "string",
             "description": "The UID of the user who referred this user."
+        },
+        "premiumStatus": {
+            "type": "string",
+            "enum": ["free", "premium"],
+            "description": "The user's current subscription status."
+        },
+        "premiumPlanId": {
+            "type": "string",
+            "description": "The ID of the active premium plan."
+        },
+        "premiumExpiryDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date when the premium subscription expires."
         }
       },
       "required": ["id", "email", "name"]
@@ -455,5 +469,3 @@
     ]
   }
 }
-
-    
