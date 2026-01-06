@@ -134,57 +134,63 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     }, [firestore]);
     const { data: appConfig, isLoading: isConfigLoading } = useDoc<AppConfig>(appConfigRef);
 
-    const activeSubscriptionsQuery = useMemoFirebase(() => {
-        if (!user) return null;
-        return query(
-            collection(firestore, `users/${user.uid}/premium_subscriptions`),
-            where('status', '==', 'approved'),
-            where('activatedAt', '==', null),
-            orderBy('createdAt', 'desc'),
-            limit(1)
-        );
-    }, [user, firestore]);
-    const { data: activeSubscriptions, isLoading: areSubscriptionsLoading } = useCollection<PremiumSubscription>(activeSubscriptionsQuery);
-
-
     useEffect(() => {
-        if (activeSubscriptions && activeSubscriptions.length > 0 && userDocRef && firestore) {
-            const subscriptionToActivate = activeSubscriptions[0];
-            const plan = premiumPlans.find(p => p.id === subscriptionToActivate.planId);
-            if (!plan) return;
+        if (!user || !firestore) return;
 
-            const activate = async () => {
-                const batch = writeBatch(firestore);
-                const expiryDate = plan.durationDays ? addDays(new Date(), plan.durationDays) : null;
-                
-                // Update user profile
-                batch.update(userDocRef, {
-                    premiumStatus: 'premium',
-                    premiumPlanId: plan.id,
-                    premiumExpiryDate: expiryDate ? expiryDate : null,
-                });
+        const checkAndActivateSubscription = async () => {
+            const subscriptionsRef = collection(firestore, `users/${user.uid}/premium_subscriptions`);
+            const q = query(
+                subscriptionsRef, 
+                where('status', '==', 'approved'), 
+                where('activatedAt', '==', null),
+                limit(1)
+            );
+            
+            try {
+                const querySnapshot = await getDocs(q);
+                if (!querySnapshot.empty) {
+                    const subscriptionDoc = querySnapshot.docs[0];
+                    const subscriptionToActivate = { id: subscriptionDoc.id, ...subscriptionDoc.data() } as PremiumSubscription;
+                    
+                    const plan = premiumPlans.find(p => p.id === subscriptionToActivate.planId);
+                    if (!plan) return;
 
-                // Mark subscription as activated
-                const subRef = doc(firestore, `users/${user.uid}/premium_subscriptions`, subscriptionToActivate.id);
-                batch.update(subRef, {
-                    activatedAt: serverTimestamp()
-                });
+                    const batch = writeBatch(firestore);
+                    const expiryDate = plan.durationDays ? addDays(new Date(), plan.durationDays) : null;
+                    
+                    // Update user profile
+                    if(userDocRef) {
+                      batch.update(userDocRef, {
+                          premiumStatus: 'premium',
+                          premiumPlanId: plan.id,
+                          premiumExpiryDate: expiryDate ? expiryDate : null,
+                      });
+                    }
 
-                try {
+                    // Mark subscription as activated
+                    const subRef = doc(firestore, `users/${user.uid}/premium_subscriptions`, subscriptionToActivate.id);
+                    batch.update(subRef, {
+                        activatedAt: serverTimestamp()
+                    });
+
                     await batch.commit();
+
                     createNotification({
                         id: `premium-activated-${subscriptionToActivate.id}`,
                         title: "সাবস্ক্রিপশন সক্রিয় হয়েছে!",
                         description: `আপনার "${plan.title}" প্ল্যানটি সফলভাবে সক্রিয় করা হয়েছে।`,
                         link: "/profile",
                     }, user.uid, firestore);
-                } catch (error) {
-                    console.error("Error activating premium subscription:", error);
                 }
-            };
-            activate();
-        }
-    }, [activeSubscriptions, userDocRef, firestore, user]);
+            } catch (error) {
+                console.error("Error checking/activating subscription:", error);
+            }
+        };
+
+        checkAndActivateSubscription();
+
+    }, [user, firestore, userDocRef]);
+    
 
     const { premiumStatus, premiumExpiryDate } = useMemo(() => {
         if (!userProfile) return { premiumStatus: 'free', premiumExpiryDate: null };
@@ -293,7 +299,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         await batch.commit();
     }
     
-    const isLoading = isUserLoading || (!!user && (isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || areReferralsLoading || areSubscriptionsLoading));
+    const isLoading = isUserLoading || !user || isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || areReferralsLoading;
 
     const value = useMemo(() => ({
         transactions, 
@@ -364,4 +370,5 @@ export const useBudget = () => {
     }
     return context;
 };
+
 
