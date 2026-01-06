@@ -25,6 +25,19 @@ export interface ShopDue {
   status: 'unpaid' | 'paid' | 'partially-paid';
 }
 
+export interface PremiumPlan {
+    id: string;
+    title: string;
+    price: number;
+    currency: string;
+    period: string;
+    description: string;
+    bonusText?: string;
+    isBestValue: boolean;
+    sortOrder: number;
+    isActive: boolean;
+}
+
 export const overviewChartData = [
   { name: 'Jan', income: 0, expense: 0 },
   { name: 'Feb', income: 0, expense: 0 },
@@ -40,3 +53,28 @@ export const incomeSources = ['মাসিক বেতন', 'ফ্রিল�
 export const savingsDestinations = ['ব্যাংক', 'বিকাশ', 'রকেট', 'নগদ'];
 export const paymentMethods = ['বিকাশ', 'নগদ', 'রকেট'];
 
+export const premiumPlans: PremiumPlan[] = [
+    {
+        id: "monthly_plan",
+        title: "মাসিক প্ল্যান",
+        price: 50,
+        currency: "৳",
+        period: "/মাস",
+        description: "যেকোনো সময় বাতিল করুন।",
+        isBestValue: false,
+        sortOrder: 1,
+        isActive: true
+    },
+    {
+        id: "yearly_plan",
+        title: "বাৎসরিক প্ল্যান",
+        price: 500,
+        currency: "৳",
+        period: "/বছর",
+        description: "মাসিক প্ল্যানের চেয়ে ২০% সাশ্রয়ী।",
+        bonusText: "২ মাস ফ্রি!",
+        isBestValue: true,
+        sortOrder: 2,
+        isActive: true
+    }
+];

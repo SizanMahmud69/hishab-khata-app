@@ -5,26 +5,10 @@ import PageHeader from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { CheckCircle, ShieldCheck, Sparkles, Zap, Loader2 } from "lucide-react";
+import { ShieldCheck, Sparkles, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, where, orderBy } from "firebase/firestore";
-import { useMemo } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
-
-interface PremiumPlan {
-    id: string;
-    title: string;
-    price: number;
-    currency: string;
-    period: string;
-    description: string;
-    bonusText?: string;
-    isBestValue: boolean;
-    sortOrder: number;
-    isActive: boolean;
-}
+import { premiumPlans as plans } from "@/lib/data";
 
 const premiumFeatures = [
     { text: "সম্পূর্ণ বিজ্ঞাপন-মুক্ত অভিজ্ঞতা", icon: <ShieldCheck className="h-5 w-5 text-green-500" /> },
@@ -49,18 +33,6 @@ const faqItems = [
 
 export default function PremiumPage() {
     const { toast } = useToast();
-    const firestore = useFirestore();
-
-    const premiumPlansQuery = useMemoFirebase(() => {
-        if (!firestore) return null;
-        return query(
-            collection(firestore, 'premium_plans'),
-            where('isActive', '==', true),
-            orderBy('sortOrder', 'asc')
-        );
-    }, [firestore]);
-
-    const { data: plans, isLoading } = useCollection<PremiumPlan>(premiumPlansQuery);
 
     const handleSubscribeClick = () => {
         toast({
@@ -95,13 +67,7 @@ export default function PremiumPage() {
 
                 {/* Pricing Plans */}
                 <div className="space-y-8">
-                    {isLoading && (
-                        <>
-                            <Skeleton className="h-48 w-full" />
-                            <Skeleton className="h-48 w-full" />
-                        </>
-                    )}
-                    {plans && plans.map(plan => (
+                    {plans.map(plan => (
                         <Card 
                             key={plan.id}
                             className={cn(
@@ -136,7 +102,7 @@ export default function PremiumPage() {
                             </CardFooter>
                         </Card>
                     ))}
-                    {!isLoading && plans?.length === 0 && (
+                    {plans.length === 0 && (
                         <Card>
                             <CardContent className="p-10 text-center text-muted-foreground">
                                 কোনো প্রিমিয়াম প্ল্যান পাওয়া যায়নি।
@@ -167,5 +133,3 @@ export default function PremiumPage() {
         </div>
     );
 }
-
-    
