@@ -20,8 +20,8 @@ function AppContent({ children }: { children: ReactNode }) {
     const isPublicRoute = noLayoutRoutes.includes(pathname) || pathname === '/';
     
     // Conditionally call useBudget only on protected routes
-    const budgetData = !isPublicRoute ? useBudget() : { isLoading: true };
-    const isDataLoading = !isPublicRoute ? budgetData.isLoading : false;
+    const budgetHookResult = !isPublicRoute ? useBudget() : null;
+    const isDataLoading = budgetHookResult ? budgetHookResult.isLoading : false;
 
     useEffect(() => {
         if (!isAuthLoading && !user && !isPublicRoute) {
