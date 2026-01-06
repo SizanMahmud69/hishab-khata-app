@@ -45,21 +45,19 @@ service cloud.firestore {
       
       // Sub-collection for daily check-ins
       match /checkIns/{checkInId} {
-        allow list, get, create, delete, update: if isOwner(userId);
+        allow read, write: if isOwner(userId);
       }
 
       // Sub-collection for NID verification requests (user-facing)
       match /verificationRequests/{requestId} {
-        allow get, create: if isOwner(userId);
-        allow list: if isOwner(userId);
+        allow get, create, list: if isOwner(userId);
         // Only admin should be able to update (approve/reject) or delete requests.
         allow update, delete: if false; 
       }
 
       // Sub-collection for reward point withdrawal requests
       match /withdrawalRequests/{requestId} {
-        allow get, create, delete: if isOwner(userId);
-        allow list: if isOwner(userId);
+        allow get, create, list, delete: if isOwner(userId);
         // User can update only specific fields. They can update isRefunded to true
         // but cannot change status or rejection reasons set by admin.
         allow update: if isOwner(userId) && 
@@ -69,8 +67,7 @@ service cloud.firestore {
       
       // Sub-collection for notifications
       match /notifications/{notificationId} {
-        allow read: if isOwner(userId);
-        allow create, update: if isSignedIn();
+        allow read, create, update: if isOwner(userId);
         allow delete: if false;
       }
       
@@ -85,7 +82,7 @@ service cloud.firestore {
       // Sub-collection for premium subscriptions
       match /premium_subscriptions/{subscriptionId} {
         allow get, create: if isOwner(userId);
-        allow list: if isOwner(userId) && request.query.where.status == 'approved';
+        allow list: if isOwner(userId);
         // Only admin should update status from console
         allow update, delete: if false;
       }
