@@ -7,7 +7,8 @@ import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@
 import { collection, onSnapshot, addDoc, doc, updateDoc, serverTimestamp, setDoc, query, getDocs, writeBatch, increment, arrayUnion, orderBy, Unsubscribe, where, limit } from 'firebase/firestore';
 import { createNotification } from '@/components/app-header';
 import { type WithdrawalRequest } from '@/app/withdraw/page';
-import { isAfter } from 'date-fns';
+import { isAfter, addDays } from 'date-fns';
+import { premiumPlans } from '@/lib/data';
 
 // New unified Transaction interface
 export interface Transaction {
@@ -42,6 +43,7 @@ interface UserProfile {
     joinDate?: string;
     notifiedMilestones?: number[];
     premiumStatus?: 'free' | 'premium';
+    premiumPlanId?: string;
     premiumExpiryDate?: any; // firestore timestamp
 }
 
@@ -50,6 +52,7 @@ interface PremiumSubscription {
     userId: string;
     planId: string;
     status: 'pending' | 'approved' | 'rejected';
+    activatedAt?: any; // To check if we already processed this activation
     expiresAt?: any; // Firestore Timestamp
 }
 
@@ -130,21 +133,89 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     }, [firestore]);
 
     const { data: appConfig, isLoading: isConfigLoading } = useDoc<AppConfig>(appConfigRef);
-    
+
+    const activeSubscriptionsQuery = useMemoFirebase(() => {
+        if (!user || !firestore) return null;
+        return query(
+            collection(firestore, `users/${user.uid}/premium_subscriptions`),
+            where('status', '==', 'approved'),
+            where('activatedAt', '==', null), // Find subscriptions that haven't been activated yet
+            orderBy('createdAt', 'desc'),
+            limit(1)
+        );
+    }, [user, firestore]);
+
+    const { data: activatableSubscriptions } = useCollection<PremiumSubscription>(activeSubscriptionsQuery);
+
+
+    // Effect to automatically activate a newly approved subscription
+    useEffect(() => {
+        if (!activatableSubscriptions || activatableSubscriptions.length === 0 || !userDocRef || !firestore) {
+            return;
+        }
+
+        const subscriptionToActivate = activatableSubscriptions[0];
+        const plan = premiumPlans.find(p => p.id === subscriptionToActivate.planId);
+
+        if (!plan) return;
+
+        const activate = async () => {
+            try {
+                const batch = writeBatch(firestore);
+
+                // 1. Update the user's main profile document
+                let expiryDate = null;
+                if (plan.durationDays) {
+                    expiryDate = addDays(new Date(), plan.durationDays);
+                }
+                batch.update(userDocRef, {
+                    premiumStatus: 'premium',
+                    premiumPlanId: plan.id,
+                    premiumExpiryDate: expiryDate
+                });
+
+                // 2. Mark the subscription sub-collection document as activated
+                const subRef = doc(firestore, `users/${user!.uid}/premium_subscriptions`, subscriptionToActivate.id);
+                batch.update(subRef, { activatedAt: serverTimestamp() });
+                
+                // 3. (Optional but good practice) Mark the root collection document as activated
+                const rootSubRef = doc(firestore, 'premium_subscriptions', subscriptionToActivate.id);
+                batch.update(rootSubRef, { activatedAt: serverTimestamp() });
+
+                await batch.commit();
+
+                // 4. Notify the user
+                createNotification({
+                    id: `premium-activated-${subscriptionToActivate.id}`,
+                    title: "প্রিমিয়াম প্ল্যান সক্রিয় হয়েছে!",
+                    description: `অভিনন্দন! আপনার "${plan.title}" প্ল্যানটি এখন সক্রিয়।`,
+                    link: "/profile"
+                }, user!.uid, firestore);
+
+            } catch (error) {
+                console.error("Failed to auto-activate premium subscription:", error);
+            }
+        };
+
+        activate();
+
+    }, [activatableSubscriptions, userDocRef, firestore, user]);
+
+
     const { premiumStatus, premiumExpiryDate } = useMemo(() => {
-        if (!userProfile) return { status: 'free', expiryDate: null };
+        if (!userProfile) return { premiumStatus: 'free', premiumExpiryDate: null };
         const status = userProfile.premiumStatus ?? 'free';
         const expiry = userProfile.premiumExpiryDate?.toDate() ?? null;
 
         if (status === 'premium' && expiry && isAfter(new Date(), expiry)) {
              // TODO: Logic to update status to 'free' in Firestore if expired
-            return { status: 'free', expiryDate: null };
+            return { premiumStatus: 'free', premiumExpiryDate: null };
         }
         
-        return { status, expiryDate: expiry };
+        return { premiumStatus: status, premiumExpiryDate: expiry };
 
     }, [userProfile]);
-
+    
     const minWithdrawalPoints = appConfig?.minWithdrawalPoints ?? 1000;
     const referrerBonusPoints = appConfig?.referrerBonusPoints ?? 100;
     const referredUserBonusPoints = appConfig?.referredUserBonusPoints ?? 50;

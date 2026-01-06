@@ -9,9 +9,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { ShieldCheck, Sparkles, Zap, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { premiumPlans as allPlans, type PremiumPlan } from "@/lib/data";
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { useBudget } from '@/context/budget-context';
 import { useRouter } from 'next/navigation';
-import { doc } from 'firebase/firestore';
 
 const premiumFeatures = [
     { text: "সম্পূর্ণ বিজ্ঞাপন-মুক্ত অভিজ্ঞতা", icon: <ShieldCheck className="h-5 w-5 text-green-500" /> },
@@ -35,23 +34,12 @@ const faqItems = [
     }
 ];
 
-interface UserProfile {
-    premiumStatus?: 'free' | 'premium';
-    premiumPlanId?: string;
-}
 
 export default function PremiumPage() {
     const router = useRouter();
-    const { user } = useUser();
-    const firestore = useFirestore();
-
-    const userDocRef = useMemoFirebase(() => {
-        if (!user || !firestore) return null;
-        return doc(firestore, 'users', user.uid);
-    }, [user, firestore]);
-
-    const { data: userProfile } = useDoc<UserProfile>(userDocRef);
-
+    const { premiumStatus, userProfile } = useBudget();
+    const currentPlanId = userProfile?.premiumPlanId;
+    
     const plans = useMemo(() => {
         return allPlans.filter(p => p.isActive).sort((a, b) => a.sortOrder - b.sortOrder);
     }, []);
@@ -83,7 +71,7 @@ export default function PremiumPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                  {plans.map(plan => {
-                     const isCurrentUserPlan = userProfile?.premiumStatus === 'premium' && userProfile?.premiumPlanId === plan.id;
+                     const isCurrentUserPlan = premiumStatus === 'premium' && currentPlanId === plan.id;
                      return (
                         <Card 
                             key={plan.id}
