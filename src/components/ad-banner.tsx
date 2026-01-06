@@ -35,13 +35,21 @@ export function AdBanner({ page }: AdBannerProps) {
     const [isDismissed, setIsDismissed] = useState(false);
     const [isAlertOpen, setIsAlertOpen] = useState(false);
     const [showCloseButton, setShowCloseButton] = useState(false);
+    const [adLabelText, setAdLabelText] = useState("বিজ্ঞাপনে ক্লিক করুন");
 
     useEffect(() => {
-        const timer = setTimeout(() => {
+        const closeButtonTimer = setTimeout(() => {
             setShowCloseButton(true);
         }, 5000); // 5 seconds
 
-        return () => clearTimeout(timer); // Cleanup timer on component unmount
+        const labelTextTimer = setTimeout(() => {
+            setAdLabelText("বিজ্ঞাপন");
+        }, 4000); // 4 seconds
+
+        return () => {
+            clearTimeout(closeButtonTimer);
+            clearTimeout(labelTextTimer);
+        };
     }, []);
 
 
@@ -79,7 +87,9 @@ export function AdBanner({ page }: AdBannerProps) {
     return (
         <>
             <div className="relative w-full rounded-lg overflow-hidden shadow-lg my-4 group">
-                <span className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full z-10">Ads</span>
+                <span className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full z-10 transition-all duration-500">
+                    {adLabelText}
+                </span>
                 <Link href={ad.linkUrl} target="_blank" rel="noopener noreferrer">
                     <Image
                         src={ad.imageUrl}
