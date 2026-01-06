@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import Image from 'next/image';
@@ -34,6 +34,16 @@ export function AdBanner({ page }: AdBannerProps) {
     const firestore = useFirestore();
     const [isDismissed, setIsDismissed] = useState(false);
     const [isAlertOpen, setIsAlertOpen] = useState(false);
+    const [showCloseButton, setShowCloseButton] = useState(false);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setShowCloseButton(true);
+        }, 5000); // 5 seconds
+
+        return () => clearTimeout(timer); // Cleanup timer on component unmount
+    }, []);
+
 
     const adsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
@@ -79,13 +89,15 @@ export function AdBanner({ page }: AdBannerProps) {
                         className="w-full object-cover"
                     />
                 </Link>
-                <button 
-                    onClick={handleDismiss}
-                    className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                    aria-label="বিজ্ঞাপন বন্ধ করুন"
-                >
-                    <X className="w-4 h-4" />
-                </button>
+                {showCloseButton && (
+                    <button 
+                        onClick={handleDismiss}
+                        className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                        aria-label="বিজ্ঞাপন বন্ধ করুন"
+                    >
+                        <X className="w-4 h-4" />
+                    </button>
+                )}
             </div>
             
             <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
