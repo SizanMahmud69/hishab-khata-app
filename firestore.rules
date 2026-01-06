@@ -19,6 +19,17 @@ service cloud.firestore {
     // ------------------------------------------------------------------------
     // Collection Rules
     // ------------------------------------------------------------------------
+    
+    // Root collection for premium plans
+    // This must be declared before more specific user rules to allow public access.
+    match /premium_plans/{planId} {
+      allow get: if true;
+      allow write: if false; // Only admins from console
+    }
+    match /premium_plans/{document=**} {
+        allow list: if true;
+    }
+
 
     match /users/{userId} {
       // A user can get their own document.
@@ -110,18 +121,6 @@ service cloud.firestore {
       allow get, list: if true;
       // Only admins should create, update, or delete ads from the console.
       allow write: if false;
-    }
-
-    // Root collection for premium plans
-    match /premium_plans/{planId} {
-      // Anyone can read the premium plans.
-      allow get, list: if true;
-      // Only admins should create, update, or delete plans from the console.
-      allow write: if false;
-    }
-    
-    match /premium_plans/{document=**} {
-      allow read: if true;
     }
   }
 }
