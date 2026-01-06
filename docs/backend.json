@@ -310,6 +310,25 @@
           "isActive": { "type": "boolean", "description": "Whether the ad is currently active and should be displayed." }
         },
         "required": ["id", "imageUrl", "linkUrl", "page", "isActive"]
+    },
+    "PremiumPlan": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PremiumPlan",
+      "type": "object",
+      "description": "Represents a premium subscription plan.",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string", "description": "The title of the plan (e.g., 'মাসিক প্ল্যান')." },
+        "price": { "type": "number", "description": "The price of the plan." },
+        "currency": { "type": "string", "description": "The currency symbol (e.g., '৳')." },
+        "period": { "type": "string", "description": "The billing period (e.g., '/মাস')." },
+        "description": { "type": "string", "description": "A short description of the plan." },
+        "bonusText": { "type": "string", "description": "Optional bonus text (e.g., '২ মাস ফ্রি!')." },
+        "isBestValue": { "type": "boolean", "description": "Whether this plan should be highlighted as the best value." },
+        "sortOrder": { "type": "number", "description": "The display order of the plan." },
+        "isActive": { "type": "boolean", "description": "Whether the plan is currently active." }
+      },
+      "required": ["id", "title", "price", "currency", "period", "description", "sortOrder", "isActive"]
     }
   },
   "auth": {
@@ -415,9 +434,18 @@
             "schema": { "$ref": "#/backend/entities/Ad" },
             "description": "Stores advertisements to be displayed in the app. Publicly readable."
         }
+      },
+      {
+        "path": "/premium_plans/{planId}",
+        "definition": {
+          "entityName": "PremiumPlan",
+          "schema": { "$ref": "#/backend/entities/PremiumPlan" },
+          "description": "Stores available premium subscription plans. Publicly readable."
+        }
       }
     ]
   }
 }
 
+    
     

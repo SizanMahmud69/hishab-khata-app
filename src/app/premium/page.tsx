@@ -5,9 +5,26 @@ import PageHeader from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { CheckCircle, ShieldCheck, Sparkles, Zap } from "lucide-react";
+import { CheckCircle, ShieldCheck, Sparkles, Zap, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { collection, query, where, orderBy } from "firebase/firestore";
+import { useMemo } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+
+interface PremiumPlan {
+    id: string;
+    title: string;
+    price: number;
+    currency: string;
+    period: string;
+    description: string;
+    bonusText?: string;
+    isBestValue: boolean;
+    sortOrder: number;
+    isActive: boolean;
+}
 
 const premiumFeatures = [
     { text: "সম্পূর্ণ বিজ্ঞাপন-মুক্ত অভিজ্ঞতা", icon: <ShieldCheck className="h-5 w-5 text-green-500" /> },
@@ -32,6 +49,18 @@ const faqItems = [
 
 export default function PremiumPage() {
     const { toast } = useToast();
+    const firestore = useFirestore();
+
+    const premiumPlansQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return query(
+            collection(firestore, 'premium_plans'),
+            where('isActive', '==', true),
+            orderBy('sortOrder', 'asc')
+        );
+    }, [firestore]);
+
+    const { data: plans, isLoading } = useCollection<PremiumPlan>(premiumPlansQuery);
 
     const handleSubscribeClick = () => {
         toast({
@@ -66,35 +95,54 @@ export default function PremiumPage() {
 
                 {/* Pricing Plans */}
                 <div className="space-y-8">
-                    <Card className="border-2 border-primary shadow-lg shadow-primary/20">
-                        <CardHeader className="text-center">
-                            <CardTitle className="text-2xl">মাসিক প্ল্যান</CardTitle>
-                            <p className="text-4xl font-bold text-primary">৳৫০<span className="text-sm font-normal text-muted-foreground">/মাস</span></p>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-center text-muted-foreground">যারা স্বল্প সময়ের জন্য প্রিমিয়াম সুবিধা পরীক্ষা করতে চান তাদের জন্য উপযুক্ত।</p>
-                        </CardContent>
-                        <CardFooter>
-                            <Button className="w-full" size="lg" onClick={handleSubscribeClick}>সাবস্ক্রাইব করুন</Button>
-                        </CardFooter>
-                    </Card>
-
-                    <Card className="relative overflow-hidden border-2 border-yellow-500">
-                        <div className="absolute top-0 right-0 bg-yellow-500 text-white text-xs font-bold px-4 py-1 rounded-bl-lg">
-                            Best Value
-                        </div>
-                        <CardHeader className="text-center">
-                            <CardTitle className="text-2xl">বাৎসরিক প্ল্যান</CardTitle>
-                            <p className="text-4xl font-bold text-yellow-600">৳৫০০<span className="text-sm font-normal text-muted-foreground">/বছর</span></p>
-                            <p className="text-sm text-green-600 font-semibold">২ মাস ফ্রি!</p>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-center text-muted-foreground">যারা দীর্ঘ সময়ের জন্য সেরা মূল্য এবং নিরবচ্ছিন্ন পরিষেবা চান তাদের জন্য।</p>
-                        </CardContent>
-                        <CardFooter>
-                            <Button className="w-full bg-yellow-500 hover:bg-yellow-600" size="lg" onClick={handleSubscribeClick}>সাবস্ক্রাইব করুন</Button>
-                        </CardFooter>
-                    </Card>
+                    {isLoading && (
+                        <>
+                            <Skeleton className="h-48 w-full" />
+                            <Skeleton className="h-48 w-full" />
+                        </>
+                    )}
+                    {plans && plans.map(plan => (
+                        <Card 
+                            key={plan.id}
+                            className={cn(
+                                "relative overflow-hidden border-2",
+                                plan.isBestValue ? "border-yellow-500 shadow-lg shadow-primary/20" : "border-primary"
+                            )}
+                        >
+                            {plan.isBestValue && (
+                                <div className="absolute top-0 right-0 bg-yellow-500 text-white text-xs font-bold px-4 py-1 rounded-bl-lg z-10">
+                                    Best Value
+                                </div>
+                            )}
+                            <CardHeader className="text-center">
+                                <CardTitle className="text-2xl">{plan.title}</CardTitle>
+                                <p className={cn("text-4xl font-bold", plan.isBestValue ? "text-yellow-600" : "text-primary")}>
+                                    {plan.currency}{plan.price}
+                                    <span className="text-sm font-normal text-muted-foreground">{plan.period}</span>
+                                </p>
+                                {plan.bonusText && <p className="text-sm text-green-600 font-semibold">{plan.bonusText}</p>}
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-center text-muted-foreground">{plan.description}</p>
+                            </CardContent>
+                            <CardFooter>
+                                <Button 
+                                    className={cn("w-full", plan.isBestValue && "bg-yellow-500 hover:bg-yellow-600")} 
+                                    size="lg" 
+                                    onClick={handleSubscribeClick}
+                                >
+                                    সাবস্ক্রাইব করুন
+                                </Button>
+                            </CardFooter>
+                        </Card>
+                    ))}
+                    {!isLoading && plans?.length === 0 && (
+                        <Card>
+                            <CardContent className="p-10 text-center text-muted-foreground">
+                                কোনো প্রিমিয়াম প্ল্যান পাওয়া যায়নি।
+                            </CardContent>
+                        </Card>
+                    )}
                 </div>
             </div>
 
@@ -119,3 +167,5 @@ export default function PremiumPage() {
         </div>
     );
 }
+
+    

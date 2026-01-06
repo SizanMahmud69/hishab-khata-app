@@ -111,6 +111,14 @@ service cloud.firestore {
       // Only admins should create, update, or delete ads from the console.
       allow write: if false;
     }
+
+    // Root collection for premium plans
+    match /premium_plans/{planId} {
+      // Anyone can read the premium plans.
+      allow get, list: if true;
+      // Only admins should create, update, or delete plans from the console.
+      allow write: if false;
+    }
   }
 }
 
