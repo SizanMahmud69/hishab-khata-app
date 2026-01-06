@@ -84,7 +84,9 @@ service cloud.firestore {
       
       // Sub-collection for premium subscriptions
       match /premium_subscriptions/{subscriptionId} {
-        allow read, create: if isOwner(userId);
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId);
         allow update, delete: if false;
       }
     }
@@ -129,5 +131,3 @@ service cloud.firestore {
     }
   }
 }
-
-    
