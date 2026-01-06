@@ -114,8 +114,8 @@ service cloud.firestore {
 
     // Root collection for premium subscriptions for admin approval
     match /premium_subscriptions/{subscriptionId} {
-        // Allow a user to list their own approved subscriptions. This rule matches the query in budget-context.tsx
-        allow list: if isSignedIn() && request.query.where.userId == request.auth.uid && request.query.where.status == 'approved';
+        // Allow a user to list their own subscriptions.
+        allow list: if isSignedIn() && request.query.where.userId == request.auth.uid;
         allow get: if isSignedIn();
         allow create: if isOwner(request.resource.data.userId);
         // Only admin should update status from console
