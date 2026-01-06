@@ -19,9 +19,10 @@ function AppContent({ children }: { children: ReactNode }) {
     const noLayoutRoutes = ['/login', '/register', '/forgot-password', '/terms-and-conditions', '/privacy-policy'];
     const isPublicRoute = noLayoutRoutes.includes(pathname) || pathname === '/';
     
-    // Conditionally call useBudget only on protected routes
-    const budgetHookResult = !isPublicRoute ? useBudget() : null;
-    const isDataLoading = budgetHookResult ? budgetHookResult.isLoading : false;
+    // Always call hooks at the top level.
+    const budgetHookResult = useBudget();
+    // Conditionally use the result.
+    const isDataLoading = isPublicRoute ? false : budgetHookResult.isLoading;
 
     useEffect(() => {
         if (!isAuthLoading && !user && !isPublicRoute) {
