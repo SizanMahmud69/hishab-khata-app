@@ -23,11 +23,8 @@ service cloud.firestore {
     // Root collection for premium plans
     // This must be declared before more specific user rules to allow public access.
     match /premium_plans/{planId} {
-      allow get: if true;
+      allow get, list: if true;
       allow write: if false; // Only admins from console
-    }
-    match /premium_plans/{document=**} {
-        allow list: if true;
     }
 
 
