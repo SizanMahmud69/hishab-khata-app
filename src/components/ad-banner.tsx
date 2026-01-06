@@ -2,8 +2,8 @@
 "use client";
 
 import { useMemo, useState, useEffect } from 'react';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
+import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
+import { collection, query, where, doc } from 'firebase/firestore';
 import Image from 'next/image';
 import Link from 'next/link';
 import { X, Crown } from 'lucide-react';
@@ -73,7 +73,7 @@ export function AdBanner({ page }: AdBannerProps) {
         // Prioritize page-specific ad over 'all'
         return ads.find(ad => ad.page === page) || ads.find(ad => ad.page === 'all') || null;
     }, [ads, page]);
-
+    
     if (isLoading || !ad || isDismissed || premiumStatus === 'premium') {
         return null;
     }

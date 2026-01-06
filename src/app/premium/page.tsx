@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import PageHeader from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,9 +9,9 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { ShieldCheck, Sparkles, Zap, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { premiumPlans as allPlans, type PremiumPlan } from "@/lib/data";
-import { useUser, useFirestore, useMemoFirebase } from '@/firebase';
-import { useBudget } from '@/context/budget-context';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { useRouter } from 'next/navigation';
+import { doc } from 'firebase/firestore';
 
 const premiumFeatures = [
     { text: "সম্পূর্ণ বিজ্ঞাপন-মুক্ত অভিজ্ঞতা", icon: <ShieldCheck className="h-5 w-5 text-green-500" /> },
@@ -35,8 +35,22 @@ const faqItems = [
     }
 ];
 
+interface UserProfile {
+    premiumStatus?: 'free' | 'premium';
+    premiumPlanId?: string;
+}
+
 export default function PremiumPage() {
     const router = useRouter();
+    const { user } = useUser();
+    const firestore = useFirestore();
+
+    const userDocRef = useMemoFirebase(() => {
+        if (!user || !firestore) return null;
+        return doc(firestore, 'users', user.uid);
+    }, [user, firestore]);
+
+    const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
     const plans = useMemo(() => {
         return allPlans.filter(p => p.isActive).sort((a, b) => a.sortOrder - b.sortOrder);
@@ -68,12 +82,15 @@ export default function PremiumPage() {
             </Card>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                 {plans.map(plan => (
+                 {plans.map(plan => {
+                     const isCurrentUserPlan = userProfile?.premiumStatus === 'premium' && userProfile?.premiumPlanId === plan.id;
+                     return (
                         <Card 
                             key={plan.id}
                             className={cn(
                                 "relative overflow-hidden border-2 flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1",
-                                plan.isBestValue ? "border-yellow-500 shadow-lg shadow-yellow-500/20" : "border-primary/50"
+                                plan.isBestValue ? "border-yellow-500 shadow-lg shadow-yellow-500/20" : "border-primary/50",
+                                isCurrentUserPlan && "ring-2 ring-offset-2 ring-yellow-500"
                             )}
                         >
                             {plan.isBestValue && (
@@ -95,16 +112,16 @@ export default function PremiumPage() {
                             </CardContent>
                             <CardFooter>
                                 <Button 
-                                    className={cn("w-full", plan.isBestValue && "bg-yellow-500 hover:bg-yellow-600 text-white")} 
+                                    className={cn("w-full", plan.isBestValue && !isCurrentUserPlan && "bg-yellow-500 hover:bg-yellow-600 text-white")} 
                                     size="lg" 
                                     onClick={() => handleSubscribeClick(plan)}
-                                    disabled={plan.price === 0}
+                                    disabled={isCurrentUserPlan}
                                 >
-                                    {plan.price === 0 ? 'আপনার প্ল্যান' : 'সাবস্ক্রাইব করুন'}
+                                    {isCurrentUserPlan ? 'আপনার বর্তমান প্ল্যান' : 'সাবস্ক্রাইব করুন'}
                                 </Button>
                             </CardFooter>
                         </Card>
-                    ))}
+                    )})}
                     {plans.length === 0 && (
                         <Card className="md:col-span-2 lg:col-span-3">
                             <CardContent className="p-10 text-center text-muted-foreground">
