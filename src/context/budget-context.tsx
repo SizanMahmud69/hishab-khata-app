@@ -139,9 +139,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         return query(
             collection(firestore, `users/${user.uid}/premium_subscriptions`),
             where('status', '==', 'approved'),
-            where('activatedAt', '==', null), // Find subscriptions that haven't been activated yet
-            orderBy('createdAt', 'desc'),
-            limit(1)
+            orderBy('createdAt', 'desc')
         );
     }, [user, firestore]);
 
@@ -154,7 +152,10 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             return;
         }
 
-        const subscriptionToActivate = activatableSubscriptions[0];
+        const subscriptionToActivate = activatableSubscriptions.find(s => !s.activatedAt);
+
+        if (!subscriptionToActivate) return;
+        
         const plan = premiumPlans.find(p => p.id === subscriptionToActivate.planId);
 
         if (!plan) return;
