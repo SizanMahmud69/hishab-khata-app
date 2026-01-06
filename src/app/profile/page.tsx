@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUser, useFirestore, useMemoFirebase, useCollection, useDoc } from "@/firebase";
-import { Mail, Phone, UserCheck, XCircle, CheckCircle, User as UserIcon, MapPin, Cake, AlertTriangle, Info, Loader2 } from "lucide-react";
+import { Mail, Phone, UserCheck, XCircle, CheckCircle, User as UserIcon, MapPin, Cake, AlertTriangle, Info, Loader2, Crown } from "lucide-react";
 import React, { useEffect, useMemo } from "react";
 import Link from 'next/link';
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,9 @@ import { collection, query, orderBy, limit, doc } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { createNotification } from "@/components/app-header";
+import { premiumPlans } from "@/lib/data";
+import { format } from "date-fns";
+import { bn } from "date-fns/locale";
 
 interface UserProfile {
     id: string;
@@ -28,6 +31,9 @@ interface UserProfile {
     lastCheckIn?: string;
     checkInStreak?: number;
     verificationRequestId?: string;
+    premiumStatus?: 'free' | 'trial' | 'premium';
+    premiumPlanId?: string;
+    premiumExpiryDate?: any;
 }
 
 // Corresponds to the new VerificationRequest entity
@@ -69,6 +75,13 @@ export default function ProfilePage() {
   const { data: latestRequestData, isLoading: isRequestLoading } = useCollection<VerificationRequest>(
       latestVerificationRequestQuery
   );
+  
+  const currentPlan = useMemo(() => {
+      if(userProfileData?.premiumStatus === 'premium' && userProfileData?.premiumPlanId) {
+          return premiumPlans.find(p => p.id === userProfileData.premiumPlanId);
+      }
+      return null;
+  }, [userProfileData]);
 
   const verificationRequest = useMemo(() => latestRequestData?.[0], [latestRequestData]);
   const verificationStatus = verificationRequest?.status;
@@ -209,10 +222,31 @@ export default function ProfilePage() {
                 <h2 className="text-2xl md:text-3xl font-bold whitespace-nowrap truncate">{userProfileData?.name ?? user?.displayName ?? 'ব্যবহারকারী'}</h2>
                  {verificationStatus === 'approved' && <Badge className="bg-green-200 text-green-800 border-green-400 hover:bg-green-200/80"><CheckCircle className="w-3.5 h-3.5 mr-1.5" />ভেরিফাইড</Badge>}
                  {verificationStatus === 'pending' && <Badge variant="outline" className="text-yellow-600 border-yellow-400">প্রসেসিং...</Badge>}
+                 {userProfileData.premiumStatus === 'premium' && (
+                    <Badge className="bg-yellow-200 text-yellow-800 border-yellow-400 hover:bg-yellow-200/80">
+                        <Crown className="w-3.5 h-3.5 mr-1.5" />
+                        {currentPlan?.title || 'প্রিমিয়াম'}
+                    </Badge>
+                 )}
             </div>
              <p className="text-sm text-muted-foreground mt-2">{userProfileData?.userId ?? 'আইডি পাওয়া যায়নি'}</p>
         </CardContent>
       </Card>
+      
+       {userProfileData.premiumStatus === 'premium' && (
+         <Card className="border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20">
+            <CardHeader>
+                <CardTitle>প্রিমিয়াম স্ট্যাটাস</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <p>আপনার বর্তমান প্ল্যান: <span className="font-bold">{currentPlan?.title || 'প্রিমিয়াম'}</span></p>
+                <p>মেয়াদ শেষ হবে: <span className="font-bold">
+                    {userProfileData.premiumExpiryDate ? format(userProfileData.premiumExpiryDate.toDate(), "d MMMM, yyyy", { locale: bn }) : 'লাইফটাইম'}
+                </span></p>
+            </CardContent>
+         </Card>
+       )}
+
 
       <Card>
         <CardHeader>

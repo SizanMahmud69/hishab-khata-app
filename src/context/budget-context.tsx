@@ -40,6 +40,9 @@ interface UserProfile {
     points?: number;
     joinDate?: string;
     notifiedMilestones?: number[];
+    premiumStatus?: 'free' | 'trial' | 'premium';
+    premiumPlanId?: string;
+    premiumExpiryDate?: any; // Firestore Timestamp
 }
 
 interface AppConfig {
@@ -75,6 +78,8 @@ interface BudgetContextType {
     referredUserBonusPoints: number;
     bdtPer100Points: number;
     isLoading: boolean;
+    premiumStatus: 'free' | 'trial' | 'premium';
+    premiumExpiryDate: Date | null;
 }
 
 const BudgetContext = createContext<BudgetContextType | undefined>(undefined);
@@ -122,6 +127,22 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const referredUserBonusPoints = appConfig?.referredUserBonusPoints ?? 50;
     const bdtPer100Points = appConfig?.bdtPer100Points ?? 5;
     const rewardPoints = userProfile?.points ?? 0;
+    
+    const premiumStatus = userProfile?.premiumStatus ?? 'free';
+    const premiumExpiryDate = userProfile?.premiumExpiryDate ? userProfile.premiumExpiryDate.toDate() : null;
+
+    useEffect(() => {
+        if (premiumStatus !== 'free' && premiumExpiryDate && new Date() > premiumExpiryDate) {
+             if (userDocRef) {
+                updateDoc(userDocRef, {
+                    premiumStatus: 'free',
+                    premiumPlanId: null,
+                    premiumExpiryDate: null
+                });
+             }
+        }
+    }, [premiumStatus, premiumExpiryDate, userDocRef]);
+
 
     const totalIncome = useMemo(() => (transactions || []).filter(t => t.type === 'income').reduce((sum, item) => sum + item.amount, 0), [transactions]);
     const totalExpense = useMemo(() => (transactions || []).filter(t => t.type === 'expense').reduce((sum, item) => sum + item.amount, 0), [transactions]);
@@ -220,7 +241,9 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             referrerBonusPoints,
             referredUserBonusPoints,
             bdtPer100Points,
-            isLoading 
+            isLoading,
+            premiumStatus,
+            premiumExpiryDate,
         }}>
             {children}
         </BudgetContext.Provider>

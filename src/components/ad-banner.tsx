@@ -18,6 +18,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { useRouter } from 'next/navigation';
+import { useBudget } from '@/context/budget-context';
 
 interface Ad {
     id: string;
@@ -34,6 +35,7 @@ interface AdBannerProps {
 export function AdBanner({ page }: AdBannerProps) {
     const firestore = useFirestore();
     const router = useRouter();
+    const { premiumStatus } = useBudget();
     const [isDismissed, setIsDismissed] = useState(false);
     const [isAlertOpen, setIsAlertOpen] = useState(false);
     const [showCloseButton, setShowCloseButton] = useState(false);
@@ -72,7 +74,7 @@ export function AdBanner({ page }: AdBannerProps) {
         return ads.find(ad => ad.page === page) || ads.find(ad => ad.page === 'all') || null;
     }, [ads, page]);
 
-    if (isLoading || !ad || isDismissed) {
+    if (isLoading || !ad || isDismissed || premiumStatus === 'premium') {
         return null;
     }
 
@@ -81,7 +83,6 @@ export function AdBanner({ page }: AdBannerProps) {
     };
 
     const handlePremiumRedirect = () => {
-        // Redirect to a future premium page
         router.push('/premium');
         setIsAlertOpen(false);
     }

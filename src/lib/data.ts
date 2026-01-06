@@ -28,7 +28,7 @@ export interface ShopDue {
 export interface PremiumPlan {
     id: string;
     title: string;
-    price: number | string;
+    price: number;
     currency: string;
     period: string;
     description: string;
@@ -37,7 +37,9 @@ export interface PremiumPlan {
     sortOrder: number;
     isActive: boolean;
     points?: number;
+    durationDays?: number; // Number of days the plan is valid for
 }
+
 
 export const overviewChartData = [
   { name: 'Jan', income: 0, expense: 0 },
@@ -66,6 +68,7 @@ export const premiumPlans: PremiumPlan[] = [
         sortOrder: 1,
         isActive: true,
         points: 0,
+        durationDays: 3,
     },
     {
         id: "weekly_plan",
@@ -78,6 +81,7 @@ export const premiumPlans: PremiumPlan[] = [
         sortOrder: 2,
         isActive: true,
         points: 250,
+        durationDays: 7,
     },
     {
         id: "monthly_plan",
@@ -90,6 +94,7 @@ export const premiumPlans: PremiumPlan[] = [
         sortOrder: 3,
         isActive: true,
         points: 900,
+        durationDays: 30,
     },
      {
         id: "3_monthly_plan",
@@ -103,6 +108,7 @@ export const premiumPlans: PremiumPlan[] = [
         sortOrder: 4,
         isActive: true,
         points: 2500,
+        durationDays: 90,
     },
      {
         id: "6_monthly_plan",
@@ -116,6 +122,7 @@ export const premiumPlans: PremiumPlan[] = [
         sortOrder: 5,
         isActive: true,
         points: 4500,
+        durationDays: 180,
     },
     {
         id: "yearly_plan",
@@ -129,6 +136,7 @@ export const premiumPlans: PremiumPlan[] = [
         sortOrder: 6,
         isActive: true,
         points: 8000,
+        durationDays: 365,
     },
     {
         id: "3_yearly_plan",
@@ -142,6 +150,7 @@ export const premiumPlans: PremiumPlan[] = [
         sortOrder: 7,
         isActive: true,
         points: 20000,
+        durationDays: 1095,
     },
     {
         id: "lifetime_plan",
@@ -154,5 +163,6 @@ export const premiumPlans: PremiumPlan[] = [
         sortOrder: 8,
         isActive: true,
         points: 50000,
+        durationDays: 365 * 100, // Effectively lifetime
     }
 ];
