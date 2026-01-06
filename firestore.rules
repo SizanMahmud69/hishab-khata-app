@@ -82,8 +82,10 @@ service cloud.firestore {
       // Sub-collection for premium subscriptions
       match /premium_subscriptions/{subscriptionId} {
         allow get, create, list: if isOwner(userId);
-        // Only admin should update status from console
-        allow update, delete: if false;
+        // Allow user to update only specific fields for activation
+        allow update: if isOwner(userId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['activatedAt']);
+        // Only admin should delete from console
+        allow delete: if false;
       }
     }
     
