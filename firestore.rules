@@ -81,8 +81,7 @@ service cloud.firestore {
       
       // Sub-collection for premium subscriptions
       match /premium_subscriptions/{subscriptionId} {
-        allow get, create: if isOwner(userId);
-        allow list: if isOwner(userId);
+        allow get, create, list: if isOwner(userId);
         // Only admin should update status from console
         allow update, delete: if false;
       }

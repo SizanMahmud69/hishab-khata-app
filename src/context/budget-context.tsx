@@ -100,32 +100,30 @@ const BudgetContext = createContext<BudgetContextType | undefined>(undefined);
 const SAVINGS_MILESTONES = [1000, 5000, 10000, 20000, 30000, 40000, 50000, 100000];
 
 export const BudgetProvider = ({ children }: { children: ReactNode }) => {
-    const { user, isUserLoading } = useUser();
+    const { user, isLoading: isUserLoading } = useUser();
     const firestore = useFirestore();
 
-    // If no user is logged in, provide a default, empty context.
-    // All hooks below this line will only run if a user is present.
     const userDocRef = useMemoFirebase(() => {
-        if (!user || !firestore) return null;
+        if (!user) return null;
         return doc(firestore, `users/${user.uid}`);
     }, [user, firestore]);
     
     const { data: userProfile, isLoading: isUserDocLoading } = useDoc<UserProfile>(userDocRef);
     
     const transactionsQuery = useMemoFirebase(() => {
-        if (!user || !firestore) return null;
+        if (!user) return null;
         return query(collection(firestore, `users/${user.uid}/transactions`), orderBy("createdAt", "desc"));
     }, [user, firestore]);
     const { data: transactions = [], isLoading: areTransactionsLoading } = useCollection<Transaction>(transactionsQuery);
 
     const debtNotesQuery = useMemoFirebase(() => {
-        if (!user || !firestore) return null;
+        if (!user) return null;
         return query(collection(firestore, `users/${user.uid}/debtNotes`), orderBy("createdAt", "desc"));
     }, [user, firestore]);
     const { data: debtNotes = [], isLoading: areDebtNotesLoading } = useCollection<DebtNote>(debtNotesQuery);
 
     const referralsQuery = useMemoFirebase(() => {
-        if (!user || !firestore) return null;
+        if (!user) return null;
         return query(collection(firestore, `users/${user.uid}/referrals`), orderBy("createdAt", "desc"));
     }, [user, firestore]);
     const { data: referrals = [], isLoading: areReferralsLoading } = useCollection<Referral>(referralsQuery);
@@ -134,73 +132,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         if (!firestore) return null;
         return doc(firestore, 'app_config', 'settings');
     }, [firestore]);
-
     const { data: appConfig, isLoading: isConfigLoading } = useDoc<AppConfig>(appConfigRef);
-
-    const activeSubscriptionsQuery = useMemoFirebase(() => {
-        if (!user || !firestore) return null;
-        return query(
-            collection(firestore, `users/${user.uid}/premium_subscriptions`),
-            where('status', '==', 'approved'),
-            orderBy('createdAt', 'desc')
-        );
-    }, [user, firestore]);
-
-    const { data: activatableSubscriptions } = useCollection<PremiumSubscription>(activeSubscriptionsQuery);
-
-
-    // Effect to automatically activate a newly approved subscription
-    useEffect(() => {
-        if (!activatableSubscriptions || activatableSubscriptions.length === 0 || !userDocRef || !firestore || !user) {
-            return;
-        }
-
-        const subscriptionToActivate = activatableSubscriptions.find(s => !s.activatedAt);
-
-        if (!subscriptionToActivate) return;
-        
-        const plan = premiumPlans.find(p => p.id === subscriptionToActivate.planId);
-
-        if (!plan) return;
-
-        const activate = async () => {
-            try {
-                const batch = writeBatch(firestore);
-
-                // 1. Update the user's main profile document
-                let expiryDate = null;
-                if (plan.durationDays) {
-                    expiryDate = addDays(new Date(), plan.durationDays);
-                }
-                batch.update(userDocRef, {
-                    premiumStatus: 'premium',
-                    premiumPlanId: plan.id,
-                    premiumExpiryDate: expiryDate
-                });
-
-                // 2. Mark the subscription sub-collection document as activated
-                const subRef = doc(firestore, `users/${user.uid}/premium_subscriptions`, subscriptionToActivate.id);
-                batch.update(subRef, { activatedAt: serverTimestamp() });
-
-                await batch.commit();
-
-                // 4. Notify the user
-                createNotification({
-                    id: `premium-activated-${subscriptionToActivate.id}`,
-                    title: "প্রিমিয়াম প্ল্যান সক্রিয় হয়েছে!",
-                    description: `অভিনন্দন! আপনার "${plan.title}" প্ল্যানটি এখন সক্রিয়।`,
-                    link: "/profile"
-                }, user.uid, firestore);
-
-            } catch (error) {
-                console.error("Failed to auto-activate premium subscription:", error);
-            }
-        };
-
-        activate();
-
-    }, [activatableSubscriptions, userDocRef, firestore, user]);
-
 
     const { premiumStatus, premiumExpiryDate } = useMemo(() => {
         if (!userProfile) return { premiumStatus: 'free', premiumExpiryDate: null };
@@ -208,13 +140,19 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         const expiry = userProfile.premiumExpiryDate?.toDate() ?? null;
 
         if (status === 'premium' && expiry && isAfter(new Date(), expiry)) {
-             // TODO: Logic to update status to 'free' in Firestore if expired
+             if (userDocRef) {
+                updateDoc(userDocRef, {
+                    premiumStatus: 'free',
+                    premiumPlanId: null,
+                    premiumExpiryDate: null,
+                });
+             }
             return { premiumStatus: 'free', premiumExpiryDate: null };
         }
         
         return { premiumStatus: status, premiumExpiryDate: expiry };
 
-    }, [userProfile]);
+    }, [userProfile, userDocRef]);
     
     const minWithdrawalPoints = appConfig?.minWithdrawalPoints ?? 1000;
     const referrerBonusPoints = appConfig?.referrerBonusPoints ?? 100;
@@ -267,10 +205,12 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const addTransaction = async (transaction: Omit<Transaction, 'id' | 'createdAt' | 'userId'>) => {
+        if(!user) return;
         await addDocToCollection('transactions', transaction);
     };
 
     const addDebtNote = async (debtNote: Omit<DebtNote, 'id' | 'createdAt' | 'userId'>) => {
+        if(!user) return;
         await addDocToCollection('debtNotes', debtNote);
     }
 
@@ -326,10 +266,10 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         transactions, debtNotes, referrals,
         totalIncome, totalExpense, totalSavings,
         rewardPoints, minWithdrawalPoints, referrerBonusPoints, referredUserBonusPoints, bdtPer100Points,
-        isLoading, premiumStatus, premiumExpiryDate, userProfile
+        isLoading, premiumStatus, premiumExpiryDate, userProfile, addTransaction, addDebtNote, updateDebtNote
     ]);
 
-    if (!user) {
+     if (!user) {
          const emptyContext: BudgetContextType = {
             transactions: [],
             debtNotes: [],
@@ -372,5 +312,3 @@ export const useBudget = () => {
     }
     return context;
 };
-
-    
