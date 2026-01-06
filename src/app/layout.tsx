@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import type { ReactNode } from "react"
@@ -14,13 +13,16 @@ import { Toaster } from "@/components/ui/toaster"
 
 function AppContent({ children }: { children: ReactNode }) {
     const { user, isLoading: isAuthLoading } = useUser();
-    const { isLoading: isDataLoading } = useBudget();
-    const router = useRouter();
     const pathname = usePathname();
+    const router = useRouter();
 
     const noLayoutRoutes = ['/login', '/register', '/forgot-password', '/terms-and-conditions', '/privacy-policy'];
     const isPublicRoute = noLayoutRoutes.includes(pathname) || pathname === '/';
     
+    // Conditionally call useBudget only on protected routes
+    const budgetData = !isPublicRoute ? useBudget() : { isLoading: true };
+    const isDataLoading = !isPublicRoute ? budgetData.isLoading : false;
+
     useEffect(() => {
         if (!isAuthLoading && !user && !isPublicRoute) {
             router.push('/login');
