@@ -320,7 +320,7 @@
           "id": { "type": "string" },
           "imageUrl": { "type": "string", "description": "URL of the ad image." },
           "linkUrl": { "type": "string", "description": "URL to navigate to when the ad is clicked." },
-          "page": { "type": "string", "enum": ["all", "dashboard", "income", "expenses", "debts", "shop-dues"], "description": "The page where the ad should be displayed." },
+          "page": { "type": "string", "description": "Comma-separated list of pages where the ad should be displayed (e.g., 'dashboard,income,history'). Use 'all' for every page." },
           "isActive": { "type": "boolean", "description": "Whether the ad is currently active and should be displayed." }
         },
         "required": ["id", "imageUrl", "linkUrl", "page", "isActive"]
@@ -461,3 +461,6 @@
     ]
   }
 }
+
+
+    

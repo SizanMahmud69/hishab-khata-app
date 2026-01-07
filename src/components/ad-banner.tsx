@@ -25,7 +25,7 @@ interface Ad {
     id: string;
     imageUrl: string;
     linkUrl: string;
-    page: string;
+    page: string; // Now a comma-separated string
     isActive: boolean;
 }
 
@@ -61,31 +61,35 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
     }, []);
 
 
-    const adsQuery = useMemoFirebase(() => {
+    const allAdsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
+        // Fetch all active ads, filtering will be done client-side
         return query(
             collection(firestore, 'ads'),
-            where('isActive', '==', true),
-            where('page', 'in', ['all', page])
+            where('isActive', '==', true)
         );
-    }, [firestore, page]);
+    }, [firestore]);
 
-    const { data: ads, isLoading } = useCollection<Ad>(adsQuery);
+    const { data: allAds, isLoading } = useCollection<Ad>(allAdsQuery);
 
     const ad = useMemo(() => {
-        if (!ads || ads.length === 0) return null;
-        
-        const adPool = ads.filter(ad => ad.page === page || ad.page === 'all');
+        if (!allAds || allAds.length === 0) return null;
+
+        // Client-side filtering
+        const adPool = allAds.filter(ad => 
+            ad.page === 'all' || ad.page.split(',').map(p => p.trim()).includes(page)
+        );
+
         if (adPool.length === 0) return null;
 
         if (adIndex !== undefined) {
-             // Sequential selection
+             // Sequential selection based on the pool for the current page
             return adPool[adIndex % adPool.length];
         } else {
-            // Randomly select an ad from the pool
+            // Randomly select an ad from the filtered pool
             return adPool[Math.floor(Math.random() * adPool.length)];
         }
-    }, [ads, page, adIndex]);
+    }, [allAds, page, adIndex]);
     
     if (premiumStatus === 'premium') {
         return null;
@@ -120,7 +124,7 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
                         alt="Advertisement"
                         width={800}
                         height={200}
-                        className="object-cover w-full h-auto"
+                        className="object-cover h-auto"
                     />
                 </Link>
                 {showCloseButton && (
@@ -154,3 +158,5 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
         </>
     );
 }
+
+    
