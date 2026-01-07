@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, Suspense } from 'react';
@@ -17,6 +18,7 @@ import { useUser, useFirestore } from '@/firebase';
 import { useBudget } from '@/context/budget-context';
 import { doc, collection, serverTimestamp, increment, writeBatch, setDoc, updateDoc } from 'firebase/firestore';
 import { addDays } from 'date-fns';
+import { createNotification } from '@/components/app-header';
 
 function CheckoutPageContent() {
     const searchParams = useSearchParams();
@@ -106,6 +108,13 @@ function CheckoutPageContent() {
             });
 
             await batch.commit();
+
+            await createNotification({
+                id: `premium-activated-${newUserSubscriptionRef.id}`,
+                title: "সাবস্ক্রিপশন সক্রিয় হয়েছে!",
+                description: `আপনার "${selectedPlan.title}" প্ল্যানটি সফলভাবে সক্রিয় করা হয়েছে।`,
+                link: "/profile",
+            }, user.uid, firestore);
             
             toast({ title: "অভিনন্দন!", description: `আপনি সফলভাবে "${selectedPlan.title}" প্ল্যানে সাবস্ক্রাইব করেছেন।` });
             router.push('/profile');
@@ -237,3 +246,5 @@ export default function CheckoutPage() {
         </Suspense>
     )
 }
+
+    

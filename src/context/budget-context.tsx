@@ -124,7 +124,8 @@ async function activateSubscription(firestore: Firestore, userId: string, subscr
     const subRef = doc(firestore, `users/${userId}/premium_subscriptions`, subscriptionId);
     batch.update(subRef, {
         activatedAt: serverTimestamp(),
-        expiresAt: expiryDate ? expiryDate : null
+        expiresAt: expiryDate ? expiryDate : null,
+        status: 'approved' // ensure status is approved
     });
 
     await batch.commit();
@@ -181,18 +182,24 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
 
 
     useEffect(() => {
-        if (!user || !firestore || !premiumSubscriptions || premiumSubscriptions.length === 0) return;
-        
-        const subscriptionToActivate = premiumSubscriptions.find(
-            sub => sub.status === 'approved' && !sub.activatedAt
+        if (!user || !firestore) return;
+    
+        const q = query(
+            collection(firestore, `users/${user.uid}/premium_subscriptions`),
+            where('status', '==', 'approved'),
+            where('activatedAt', '==', null)
         );
-
-        if (subscriptionToActivate) {
-            activateSubscription(firestore, user.uid, subscriptionToActivate.id, subscriptionToActivate.planId)
-                .catch(err => console.error("Failed to auto-activate subscription:", err));
-        }
-
-    }, [premiumSubscriptions, user, firestore]);
+    
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            if (!snapshot.empty) {
+                const subToActivate = snapshot.docs[0]; // Activate one by one
+                activateSubscription(firestore, user.uid, subToActivate.id, subToActivate.data().planId)
+                    .catch(err => console.error("Failed to auto-activate subscription:", err));
+            }
+        });
+    
+        return () => unsubscribe(); // Cleanup the listener
+    }, [user, firestore]);
     
     const { premiumStatus, premiumExpiryDate } = useMemo(() => {
         if (!userProfile) return { premiumStatus: 'free', premiumExpiryDate: null };
@@ -215,7 +222,8 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     }, [userProfile, userDocRef]);
     
     const pendingSubscriptionPlanIds = useMemo(() => {
-        return (premiumSubscriptions || []).filter(s => s.status === 'pending').map(s => s.planId);
+        if (!premiumSubscriptions) return [];
+        return premiumSubscriptions.filter(s => s.status === 'pending').map(s => s.planId);
     }, [premiumSubscriptions]);
 
     const activePremiumPlan = useMemo(() => {
@@ -309,7 +317,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         await batch.commit();
     }, [user, firestore]);
     
-    const isLoading = isUserLoading || isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || areReferralsLoading || isSubscriptionsLoading;
+    const isLoading = isUserLoading || isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || isSubscriptionsLoading;
 
     const contextValue = useMemo(() => ({
         transactions, 
@@ -390,5 +398,7 @@ export const useBudget = () => {
     }
     return context;
 };
+
+    
 
     

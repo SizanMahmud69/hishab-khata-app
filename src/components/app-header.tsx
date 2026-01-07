@@ -1,4 +1,5 @@
 
+
 "use client"
 import Link from "next/link"
 import { type ReactNode, useState, useEffect, useMemo } from "react"
@@ -16,7 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { isToday, isBefore, startOfToday, parseISO, format as formatDate } from "date-fns"
+import { isToday, isBefore, startOfToday, parseISO, format as formatDate, differenceInDays } from "date-fns"
 import { useBudget } from "@/context/budget-context"
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from "@/firebase"
 import { collection, query, where, addDoc, serverTimestamp, doc, updateDoc, writeBatch, getDocs, setDoc, orderBy, getDoc } from 'firebase/firestore'
@@ -65,7 +66,7 @@ export const createNotification = async (notification: Omit<Notification, 'creat
 export function AppHeader({children}: {children: ReactNode}) {
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const router = useRouter();
-    const { debtNotes } = useBudget();
+    const { debtNotes, premiumStatus, premiumExpiryDate } = useBudget();
     const { user } = useUser();
     const firestore = useFirestore();
 
@@ -124,11 +125,24 @@ export function AppHeader({children}: {children: ReactNode}) {
                     }
                 }
             });
+
+            // Premium Expiry Reminder
+            if (premiumStatus === 'premium' && premiumExpiryDate) {
+                const daysUntilExpiry = differenceInDays(premiumExpiryDate, today);
+                if (daysUntilExpiry >= 0 && daysUntilExpiry <= 3) {
+                     createNotification({
+                        id: `premium-expiry-reminder-${todayStr}`,
+                        title: "প্রিমিয়াম মেয়াদ শেষ হচ্ছে!",
+                        description: `আপনার প্রিমিয়াম সাবস্ক্রিপশন ${daysUntilExpiry === 0 ? 'আজ' : `${daysUntilExpiry} দিন পর`} শেষ হবে। সুবিধা চালু রাখতে নবায়ন করুন।`,
+                        link: "/premium",
+                    }, user.uid, firestore);
+                }
+            }
         };
 
         checkDailyNotifications();
 
-    }, [debtNotes, user, firestore, isCheckedIn]);
+    }, [debtNotes, user, firestore, isCheckedIn, premiumStatus, premiumExpiryDate]);
 
 
     const notificationCount = useMemo(() => {
@@ -245,3 +259,5 @@ export function AppHeader({children}: {children: ReactNode}) {
         </div>
     )
 }
+
+    
