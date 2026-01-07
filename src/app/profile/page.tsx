@@ -1,84 +1,123 @@
 
-
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useUser } from "@/firebase";
-import { Mail, Phone, UserCheck, XCircle, CheckCircle, User as UserIcon, MapPin, Cake, AlertTriangle, Info, Loader2, Crown } from "lucide-react";
+import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { Mail, Phone, UserCheck, XCircle, CheckCircle, User as UserIcon, Loader2, Crown } from "lucide-react";
 import React, { useMemo } from "react";
 import Link from 'next/link';
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { format } from "date-fns";
 import { bn } from "date-fns/locale";
 import { useBudget } from "@/context/budget-context";
+import { doc } from "firebase/firestore";
+
+interface VerificationRequest {
+    status: 'pending' | 'approved' | 'rejected';
+    rejectionReason?: string;
+}
 
 export default function ProfilePage() {
   const { user } = useUser();
+  const firestore = useFirestore();
   const { 
       userProfile, 
       isLoading,
       premiumStatus, 
       premiumExpiryDate,
       activePremiumPlan,
-      premiumSubscriptions,
+      pendingSubscriptionPlanIds,
       isSubscriptionsLoading,
   } = useBudget();
   
-  const verificationRequest = useMemo(() => {
-      if (!premiumSubscriptions || premiumSubscriptions.length === 0) return null;
-      // This logic for verification request seems misplaced. Let's find the NID verification request.
-      // Assuming you have a separate collection for NID requests.
-      return null; // Placeholder
-  }, [premiumSubscriptions]);
+  const verificationRequestRef = useMemoFirebase(() => {
+    if (!user || !firestore || !userProfile?.verificationRequestId) return null;
+    return doc(firestore, `users/${user.uid}/verificationRequests`, userProfile.verificationRequestId);
+  }, [user, firestore, userProfile?.verificationRequestId]);
 
-  const latestVerificationRequest = useMemo(() => {
-    // This is a more accurate way to find the NID verification request if it exists.
-    // However, for this fix, we will rely on a different approach to get NID info
-    // For now, let's assume we don't have this data directly here but from another source.
-    return null;
-  }, []);
+  const { data: verificationRequest, isLoading: isVerificationLoading } = useDoc<VerificationRequest>(verificationRequestRef);
 
-  const pendingPremiumRequest = useMemo(() => {
-      return premiumSubscriptions.find(sub => sub.status === 'pending');
-  }, [premiumSubscriptions]);
-
+  const pendingPremiumRequest = pendingSubscriptionPlanIds.length > 0;
 
   const VerificationStatus = () => {
-    // This part of the code relies on `verificationRequest` which is not available
-    // in this context. Assuming this information should come from a different source.
-    // For now, let's keep it simple. The user wants to see premium status.
+    if (isVerificationLoading) {
+        return (
+            <div className="flex items-center justify-between gap-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-24" />
+            </div>
+        )
+    }
+
+    if (verificationRequest?.status === 'approved') {
+        return (
+            <div className="flex items-center gap-3 text-green-600 dark:text-green-400">
+                <CheckCircle className="w-8 h-8" />
+                <div>
+                    <p className="font-semibold">এনআইডি ভেরিফাইড</p>
+                    <p className="text-sm text-muted-foreground">আপনার অ্যাকাউন্টটি এখন সম্পূর্ণ সুরক্ষিত।</p>
+                </div>
+            </div>
+        )
+    }
     
-    // The previous logic for NID verification is complex and not directly related to the
-    // immediate bug of premium status not showing. We'll simplify this page to focus
-    // on showing the premium status correctly.
-    
-    // A simplified placeholder for NID status
-    return (
-        <div>
+    if (verificationRequest?.status === 'pending') {
+        return (
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                    <XCircle className="w-8 h-8 text-red-500 flex-shrink-0" />
+                <div className="flex items-center gap-3 text-yellow-600 dark:text-yellow-400">
+                    <Loader2 className="w-8 h-8 animate-spin" />
                     <div>
-                        <p className="font-semibold text-red-500">এনআইডি ভেরিফাইড নয়</p>
-                        <p className="text-sm text-muted-foreground">অতিরিক্ত সুবিধা পেতে আপনার এনআইডি ভেরিফাই করুন।</p>
+                        <p className="font-semibold">ভেরিফিকেশন পেন্ডিং</p>
+                        <p className="text-sm text-muted-foreground">আপনার আবেদনটি পর্যালোচনার অধীনে আছে।</p>
                     </div>
                 </div>
-                 <Button asChild className="w-full sm:w-auto">
+            </div>
+        )
+    }
+    
+    if (verificationRequest?.status === 'rejected') {
+        return (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3 text-red-500">
+                    <XCircle className="w-8 h-8" />
+                    <div>
+                        <p className="font-semibold">ভেরিফিকেশন বাতিল হয়েছে</p>
+                        <p className="text-sm text-muted-foreground">কারণ: {verificationRequest.rejectionReason || 'অজানা কারণ'}</p>
+                    </div>
+                </div>
+                 <Button asChild className="w-full sm:w-auto" variant="destructive">
                     <Link href="/profile/verify">
-                        <UserCheck className="mr-2 h-4 w-4" />
-                        এখনই ভেরিফাই করুন
+                        আবার চেষ্টা করুন
                     </Link>
                  </Button>
             </div>
+        )
+    }
+
+    // Default: Not verified
+    return (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+                <XCircle className="w-8 h-8 text-red-500 flex-shrink-0" />
+                <div>
+                    <p className="font-semibold text-red-500">এনআইডি ভেরিফাইড নয়</p>
+                    <p className="text-sm text-muted-foreground">অতিরিক্ত সুবিধা পেতে আপনার এনআইডি ভেরিফাই করুন।</p>
+                </div>
+            </div>
+             <Button asChild className="w-full sm:w-auto">
+                <Link href="/profile/verify">
+                    <UserCheck className="mr-2 h-4 w-4" />
+                    এখনই ভেরিফাই করুন
+                </Link>
+             </Button>
         </div>
     )
   }
   
-  if (isLoading || isSubscriptionsLoading) {
+  if (isLoading || isSubscriptionsLoading || isVerificationLoading) {
       return (
           <div className="flex-1 space-y-6">
               <Skeleton className="h-48 w-full" />
