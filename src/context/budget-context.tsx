@@ -175,13 +175,13 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
 
     const subscriptionsQuery = useMemoFirebase(() => {
         if (!user || !firestore) return null;
-        return query(collection(firestore, `users/${user.uid}/premium_subscriptions`), orderBy("createdAt", "desc"));
+        return query(collection(firestore, `users/${user.uid}/premium_subscriptions`));
     }, [user, firestore]);
     const { data: premiumSubscriptions = [], isLoading: isSubscriptionsLoading } = useCollection<PremiumSubscription>(subscriptionsQuery);
 
 
     useEffect(() => {
-        if (!user || !firestore || premiumSubscriptions.length === 0) return;
+        if (!user || !firestore || !premiumSubscriptions || premiumSubscriptions.length === 0) return;
         
         const subscriptionToActivate = premiumSubscriptions.find(
             sub => sub.status === 'approved' && !sub.activatedAt
@@ -390,3 +390,5 @@ export const useBudget = () => {
     }
     return context;
 };
+
+    
