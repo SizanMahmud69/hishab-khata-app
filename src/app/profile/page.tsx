@@ -168,7 +168,7 @@ export default function ProfilePage() {
                 </span></p>
             </CardContent>
          </Card>
-       ): pendingPremiumRequest ? (
+       ): pendingSubscriptionPlanIds.length > 0 ? (
         <Card className="border-blue-400 bg-blue-50 dark:bg-blue-900/20">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
