@@ -4,8 +4,6 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { BookMarked, ShieldCheck, FileText, TrendingUp, TrendingDown, HandCoins, Store, Award, MoveRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import Image from 'next/image';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 const features = [
   {
@@ -39,9 +37,6 @@ const features = [
     description: "মাস শেষে আপনার আয়-ব্যয়ের 상세 রিপোর্ট দেখুন এবং বিশ্লেষণ করুন।",
   },
 ];
-
-const landingPageImage = PlaceHolderImages.find(p => p.id === 'finance-app-dashboard');
-
 
 export default function Home() {
   return (
