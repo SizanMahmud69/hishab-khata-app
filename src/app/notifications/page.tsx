@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useMemo } from 'react';
+import React, { useMemo, Fragment } from 'react';
 import PageHeader from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation';
 import { isThisMonth, parseISO } from 'date-fns';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, doc, updateDoc, writeBatch, Timestamp } from 'firebase/firestore';
+import { AdBanner } from '@/components/ad-banner';
 
 interface Notification {
     id: string;
@@ -93,34 +94,40 @@ export default function NotificationsPage() {
                             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                         </div>
                     ) : monthlyNotifications && monthlyNotifications.length > 0 ? (
-                        monthlyNotifications.map(notification => (
-                            <div 
-                                key={notification.id} 
-                                className={cn(
-                                    "flex items-start gap-4 p-4 rounded-lg border transition-colors", 
-                                    !notification.read && "bg-primary/5",
-                                    notification.link ? "cursor-pointer hover:bg-muted/50" : "cursor-default"
-                                )}
-                                onClick={() => handleNotificationClick(notification)}
-                            >
-                                <div className="flex items-start gap-4 flex-1">
-                                    <span className={cn(
-                                        "flex h-10 w-10 items-center justify-center rounded-full flex-shrink-0", 
-                                        notification.read ? "bg-muted-foreground/10" : "bg-primary/10"
-                                    )}>
-                                        <Bell className={cn("h-5 w-5", notification.read ? "text-muted-foreground" : "text-primary")} />
-                                    </span>
-                                    <div className='flex-1'>
-                                        <h4 className="font-semibold">{notification.title}</h4>
-                                        <p className="text-sm text-muted-foreground">{notification.description}</p>
+                        monthlyNotifications.map((notification, index) => (
+                            <Fragment key={notification.id}>
+                                <div 
+                                    className={cn(
+                                        "flex items-start gap-4 p-4 rounded-lg border transition-colors", 
+                                        !notification.read && "bg-primary/5",
+                                        notification.link ? "cursor-pointer hover:bg-muted/50" : "cursor-default"
+                                    )}
+                                    onClick={() => handleNotificationClick(notification)}
+                                >
+                                    <div className="flex items-start gap-4 flex-1">
+                                        <span className={cn(
+                                            "flex h-10 w-10 items-center justify-center rounded-full flex-shrink-0", 
+                                            notification.read ? "bg-muted-foreground/10" : "bg-primary/10"
+                                        )}>
+                                            <Bell className={cn("h-5 w-5", notification.read ? "text-muted-foreground" : "text-primary")} />
+                                        </span>
+                                        <div className='flex-1'>
+                                            <h4 className="font-semibold">{notification.title}</h4>
+                                            <p className="text-sm text-muted-foreground">{notification.description}</p>
+                                        </div>
                                     </div>
+                                    {!notification.read && (
+                                        <div className="flex items-center h-full">
+                                            <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+                                        </div>
+                                    )}
                                 </div>
-                                {!notification.read && (
-                                    <div className="flex items-center h-full">
-                                        <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+                                {(index + 1) % 2 === 0 && (
+                                    <div className='my-4'>
+                                        <AdBanner page="notifications" adIndex={Math.floor(index / 2)} />
                                     </div>
                                 )}
-                            </div>
+                            </Fragment>
                         ))
                     ) : (
                         <div className="text-center py-10 text-muted-foreground">
