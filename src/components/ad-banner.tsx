@@ -36,9 +36,9 @@ interface AdBannerProps {
 }
 
 const sizeConfig = {
-    small: { width: 800, height: 100 }, // 8:1 ratio
-    medium: { width: 800, height: 200 }, // 4:1 ratio
-    large: { width: 800, height: 400 }, // 2:1 ratio
+    small: { width: 800, height: 100 },
+    medium: { width: 800, height: 200 },
+    large: { width: 800, height: 400 },
 };
 
 
@@ -120,8 +120,7 @@ export function AdBanner({ page, className, size = 'medium' }: AdBannerProps) {
                         alt="Advertisement"
                         width={sizeConfig[size].width}
                         height={sizeConfig[size].height}
-                        className="w-full object-contain"
-                        style={{ aspectRatio: `${sizeConfig[size].width} / ${sizeConfig[size].height}` }}
+                        className="object-cover h-full"
                     />
                 </Link>
                 {showCloseButton && (
