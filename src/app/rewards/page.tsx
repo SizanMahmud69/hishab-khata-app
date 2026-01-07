@@ -5,7 +5,7 @@
 import React, { useMemo, useRef, useEffect, useState, Fragment } from 'react';
 import { useSearchParams } from 'next/navigation';
 import PageHeader from "@/components/page-header"
-import { Banknote, Gift, Medal, Star, Trophy, ArrowUpCircle, ArrowDownCircle, History, Undo2, Users } from "lucide-react"
+import { Banknote, Gift, Medal, Star, Trophy, ArrowUpCircle, ArrowDownCircle, History, Undo2, Users, Crown } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection, FirestorePermissionError } from '@/firebase';
@@ -21,7 +21,7 @@ import { createNotification } from '@/components/app-header';
 import { useToast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { AdBanner } from '@/components/ad-banner';
-
+import { type PremiumSubscription } from '@/context/budget-context';
 
 interface UserProfile {
     points?: number;
@@ -83,12 +83,19 @@ function RewardsPageContent() {
         return query(collection(firestore, `users/${user.uid}/referrals`), orderBy("createdAt", "desc"));
     }, [user, firestore]);
     const { data: referrals, isLoading: areReferralsLoading } = useCollection<Referral>(referralsQuery);
+    
+    const subscriptionsQuery = useMemoFirebase(() => {
+        if (!user || !firestore) return null;
+        return query(collection(firestore, `users/${user.uid}/premium_subscriptions`), where("paymentMethod", "==", "points"), orderBy("createdAt", "desc"));
+    }, [user, firestore]);
+    const { data: subscriptions, isLoading: areSubscriptionsLoading } = useCollection<PremiumSubscription & { pointsSpent?: number }>(subscriptionsQuery);
+
 
     useEffect(() => {
-        if (searchParams.get('section') === 'history' && historyRef.current && !isWithdrawalsLoading && !isCheckInsLoading && !areReferralsLoading) {
+        if (searchParams.get('section') === 'history' && historyRef.current && !isWithdrawalsLoading && !isCheckInsLoading && !areReferralsLoading && !areSubscriptionsLoading) {
             historyRef.current.scrollIntoView({ behavior: 'smooth' });
         }
-    }, [searchParams, isWithdrawalsLoading, isCheckInsLoading, areReferralsLoading]);
+    }, [searchParams, isWithdrawalsLoading, isCheckInsLoading, areReferralsLoading, areSubscriptionsLoading]);
 
     // One-time effect to handle all pending refunds on component mount.
     useEffect(() => {
@@ -171,6 +178,20 @@ function RewardsPageContent() {
             })
         }
         
+        if (subscriptions) {
+            subscriptions.forEach(sub => {
+                if (sub.createdAt && sub.pointsSpent) {
+                    history.push({
+                        type: 'spent',
+                        source: 'সাবস্ক্রিপশন ক্রয়',
+                        points: sub.pointsSpent,
+                        date: sub.createdAt.toDate(),
+                        status: sub.status as 'pending' | 'approved' | 'rejected'
+                    });
+                }
+            });
+        }
+
         if (allWithdrawals) {
             allWithdrawals.forEach(wd => {
                 if (wd.requestedAt) {
@@ -197,10 +218,10 @@ function RewardsPageContent() {
         
         return history.sort((a, b) => b.date.getTime() - a.date.getTime());
 
-    }, [checkIns, allWithdrawals, referrals]);
+    }, [checkIns, allWithdrawals, referrals, subscriptions]);
     
     const canWithdraw = rewardPoints >= minWithdrawalPoints;
-    const isLoading = isUserLoading || isCheckInsLoading || isWithdrawalsLoading || areReferralsLoading;
+    const isLoading = isUserLoading || isCheckInsLoading || isWithdrawalsLoading || areReferralsLoading || areSubscriptionsLoading;
     const equivalentAmountBdt = Math.floor(rewardPoints / 100) * bdtPer100Points;
     
     const getStatusText = (status?: 'pending' | 'approved' | 'rejected') => {
@@ -218,6 +239,7 @@ function RewardsPageContent() {
             case 'রেফারেল বোনাস': return <Users className="h-6 w-6 text-blue-500" />;
             case 'পয়েন্ট উইথড্র': return <ArrowDownCircle className="h-6 w-6 text-red-500" />;
             case 'পয়েন্ট রিফান্ড': return <Undo2 className="h-6 w-6 text-blue-500" />;
+            case 'সাবস্ক্রিপশন ক্রয়': return <Crown className="h-6 w-6 text-yellow-600" />;
             default: return <Gift className="h-6 w-6 text-gray-500" />;
         }
     }
@@ -312,9 +334,9 @@ function RewardsPageContent() {
                             {item.type === 'earned' || item.type === 'refunded' ? '+' : '-'}{item.points}
                             </p>
                         </div>
-                        {(index + 1) % 2 === 0 && (
+                        {(index + 1) % 5 === 0 && (
                             <div className='my-4'>
-                                <AdBanner page="rewards" adIndex={Math.floor(index / 2)} />
+                                <AdBanner page="rewards" adIndex={Math.floor(index / 5)} />
                             </div>
                         )}
                     </Fragment>

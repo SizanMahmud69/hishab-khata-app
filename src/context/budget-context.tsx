@@ -55,6 +55,9 @@ export interface PremiumSubscription {
     activatedAt?: any;
     expiresAt?: any; // Firestore Timestamp
     createdAt: any;
+    paymentMethod?: string;
+    pointsSpent?: number;
+    amountBdt?: number;
 }
 
 
@@ -176,7 +179,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
 
     const subscriptionsQuery = useMemoFirebase(() => {
         if (!user || !firestore) return null;
-        return query(collection(firestore, `users/${user.uid}/premium_subscriptions`));
+        return query(collection(firestore, `users/${user.uid}/premium_subscriptions`), orderBy("createdAt", "desc"));
     }, [user, firestore]);
     const { data: premiumSubscriptions = [], isLoading: isSubscriptionsLoading } = useCollection<PremiumSubscription>(subscriptionsQuery);
 
@@ -398,7 +401,5 @@ export const useBudget = () => {
     }
     return context;
 };
-
-    
 
     

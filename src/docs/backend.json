@@ -1,0 +1,467 @@
+
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user in the system.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique Firebase Auth UID for the user."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Custom, user-facing ID like '#hishab-4310'."
+        },
+        "email": {
+          "type": "string",
+          "description": "User's email address.",
+          "format": "email"
+        },
+        "name": {
+          "type": "string",
+          "description": "User's full display name."
+        },
+        "avatar": {
+          "type": "string",
+          "description": "URL of the user's profile picture."
+        },
+        "phone": {
+          "type": "string",
+          "description": "User's phone number."
+        },
+        "address": {
+          "type": "string",
+          "description": "User's primary address."
+        },
+        "points": {
+          "type": "number",
+          "description": "User's total reward points."
+        },
+        "joinDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The ISO 8601 timestamp when the user registered."
+        },
+        "lastCheckIn": {
+          "type": "string",
+          "format": "date",
+          "description": "The date of the user's last daily check-in."
+        },
+        "checkInStreak": {
+          "type": "number",
+          "description": "The user's current daily check-in streak."
+        },
+        "verificationRequestId": {
+          "type": "string",
+          "description": "ID of the current or last verification request document in the sub-collection."
+        },
+        "shops": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of shop names added by the user."
+        },
+        "notifiedMilestones": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "List of savings milestones for which the user has been notified."
+        },
+        "referralCode": {
+            "type": "string",
+            "description": "The unique code this user can share with others."
+        },
+        "referredBy": {
+            "type": "string",
+            "description": "The UID of the user who referred this user."
+        },
+        "premiumStatus": {
+            "type": "string",
+            "enum": ["free", "premium"],
+            "description": "The user's current subscription status."
+        },
+        "premiumPlanId": {
+            "type": "string",
+            "description": "The ID of the active premium plan."
+        },
+        "premiumExpiryDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date when the premium subscription expires."
+        }
+      },
+      "required": ["id", "email", "name"]
+    },
+    "Transaction": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Transaction",
+      "type": "object",
+      "description": "Represents a single financial transaction, either income or expense.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the transaction."
+        },
+        "userId": {
+          "type": "string",
+          "description": "The UID of the user who owns this transaction."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["income", "expense"],
+          "description": "The type of transaction."
+        },
+        "category": {
+          "type": "string",
+          "description": "The category of the transaction (e.g., 'Salary', 'Food')."
+        },
+        "amount": {
+          "type": "number",
+          "description": "The amount of the transaction."
+        },
+        "date": {
+          "type": "string",
+          "description": "Date of the transaction.",
+          "format": "date-time"
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief description of the transaction."
+        }
+      },
+      "required": ["id", "userId", "type", "category", "amount", "date"]
+    },
+    "DebtNote": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "DebtNote",
+      "type": "object",
+      "description": "Represents a debt record, either money lent or borrowed.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the debt note."
+        },
+        "userId": {
+          "type": "string",
+          "description": "The UID of the user who owns this debt note."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["lent", "borrowed", "shopDue"],
+          "description": "The type of debt."
+        },
+        "person": {
+          "type": "string",
+          "description": "Name of the person or shop involved in the debt."
+        },
+        "amount": {
+          "type": "number",
+          "description": "The total amount of the debt."
+        },
+        "paidAmount": {
+          "type": "number",
+          "description": "The amount that has been paid back."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["unpaid", "partially-paid", "paid"],
+          "description": "The current status of the debt."
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date the debt was created."
+        },
+        "repaymentDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The expected repayment date."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief description of the debt."
+        }
+      },
+      "required": ["id", "userId", "type", "person", "amount", "paidAmount", "status", "date"]
+    },
+    "CheckIn": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CheckIn",
+      "type": "object",
+      "description": "Represents a daily check-in record for a user.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the check-in record."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N CheckIn)"
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The ISO 8601 timestamp of the check-in."
+        },
+        "points": {
+          "type": "number",
+          "description": "Points awarded for this check-in."
+        }
+      },
+      "required": ["id", "userId", "date", "points"]
+    },
+    "VerificationRequest": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "VerificationRequest",
+      "type": "object",
+      "description": "Represents a user's NID verification request.",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "submittedAt": { "type": "string", "format": "date-time" },
+        "reviewedAt": { "type": "string", "format": "date-time" },
+        "rejectionReason": { "type": "string" },
+        "nidName": { "type": "string" },
+        "nidNumber": { "type": "string" },
+        "nidDob": { "type": "string", "format": "date" },
+        "nidAddress": { "type": "string" },
+        "phone": { "type": "string" }
+      },
+      "required": ["id", "userId", "status", "submittedAt", "nidName", "nidNumber", "nidDob", "nidAddress", "phone"]
+    },
+    "WithdrawalRequest": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "WithdrawalRequest",
+      "type": "object",
+      "description": "Represents a user's request to withdraw reward points.",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "points": { "type": "number" },
+        "amountBdt": { "type": "number" },
+        "paymentMethod": { "type": "string" },
+        "accountNumber": { "type": "string" },
+        "requestedAt": { "type": "string", "format": "date-time" },
+        "processedAt": { "type": "string", "format": "date-time" },
+        "rejectionReason": { "type": "string" },
+        "isRefunded": { "type": "boolean" }
+      },
+      "required": ["id", "userId", "status", "points", "amountBdt", "paymentMethod", "accountNumber", "requestedAt"]
+    },
+    "AppConfig": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AppConfig",
+      "type": "object",
+      "description": "Stores global configuration for the application.",
+      "properties": {
+        "minWithdrawalPoints": {
+          "type": "number",
+          "description": "The minimum number of points a user must have to make a withdrawal request."
+        },
+        "referrerBonusPoints": {
+          "type": "number",
+          "description": "Points awarded to the user who refers a new user."
+        },
+        "referredUserBonusPoints": {
+          "type": "number",
+          "description": "Points awarded to the new user who signs up with a referral code."
+        },
+        "bdtPer100Points": {
+            "type": "number",
+            "description": "The amount of BDT equivalent to 100 reward points."
+        }
+      },
+      "required": ["minWithdrawalPoints", "referrerBonusPoints", "referredUserBonusPoints", "bdtPer100Points"]
+    },
+    "Notification": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Notification",
+      "type": "object",
+      "description": "Represents a notification for a user.",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "link": { "type": "string" },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "title", "description", "read", "createdAt"]
+    },
+     "Referral": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Referral",
+      "type": "object",
+      "description": "Represents a successful referral made by a user.",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "referredUserId": { "type": "string", "description": "The UID of the user who was referred." },
+        "referredUserName": { "type": "string", "description": "The name of the user who was referred." },
+        "bonusPoints": { "type": "number", "description": "Points awarded to the referrer for this referral." },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "referredUserId", "referredUserName", "bonusPoints", "createdAt"]
+    },
+    "Ad": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "Ad",
+        "type": "object",
+        "description": "Represents an advertisement to be displayed in the app.",
+        "properties": {
+          "id": { "type": "string" },
+          "imageUrl": { "type": "string", "description": "URL of the ad image." },
+          "linkUrl": { "type": "string", "description": "URL to navigate to when the ad is clicked." },
+          "page": { "type": "string", "description": "Comma-separated list of pages where the ad should be displayed (e.g., 'dashboard,income,history'). Use 'all' for every page." },
+          "isActive": { "type": "boolean", "description": "Whether the ad is currently active and should be displayed." }
+        },
+        "required": ["id", "imageUrl", "linkUrl", "page", "isActive"]
+    },
+    "PremiumSubscription": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "PremiumSubscription",
+        "type": "object",
+        "description": "Represents a user's premium subscription request.",
+        "properties": {
+          "id": { "type": "string" },
+          "userId": { "type": "string" },
+          "planId": { "type": "string" },
+          "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+          "paymentMethod": { "type": "string" },
+          "accountNumber": { "type": "string" },
+          "transactionId": { "type": "string" },
+          "pointsSpent": { "type": "number" },
+          "amountBdt": { "type": "number" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "activatedAt": { "type": "string", "format": "date-time" },
+          "expiresAt": { "type": "string", "format": "date-time" },
+          "rejectionReason": { "type": "string" }
+        },
+        "required": ["id", "userId", "planId", "status", "paymentMethod", "createdAt"]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profile information. Path-based ownership ensures only the authenticated user can access their own profile."
+        }
+      },
+      {
+        "path": "/users/{userId}/transactions/{transactionId}",
+        "definition": {
+          "entityName": "Transaction",
+          "schema": {
+            "$ref": "#/backend/entities/Transaction"
+          },
+          "description": "Stores all financial transactions (income and expense) for a user."
+        }
+      },
+      {
+        "path": "/users/{userId}/debtNotes/{debtNoteId}",
+        "definition": {
+          "entityName": "DebtNote",
+          "schema": {
+            "$ref": "#/backend/entities/DebtNote"
+          },
+          "description": "Stores all debt-related records (lent, borrowed, shop dues) for a user."
+        }
+      },
+      {
+        "path": "/users/{userId}/checkIns/{checkInId}",
+        "definition": {
+          "entityName": "CheckIn",
+          "schema": {
+            "$ref": "#/backend/entities/CheckIn"
+          },
+          "description": "Stores daily check-in records for a user to track streaks and rewards."
+        }
+      },
+      {
+        "path": "/users/{userId}/verificationRequests/{requestId}",
+        "definition": {
+          "entityName": "VerificationRequest",
+          "schema": { "$ref": "#/backend/entities/VerificationRequest" },
+          "description": "Stores a user's NID verification requests. Admins can update status from the console."
+        }
+      },
+      {
+        "path": "/users/{userId}/withdrawalRequests/{requestId}",
+        "definition": {
+          "entityName": "WithdrawalRequest",
+          "schema": { "$ref": "#/backend/entities/WithdrawalRequest" },
+          "description": "Stores a user's reward point withdrawal requests."
+        }
+      },
+       {
+        "path": "/users/{userId}/premium_subscriptions/{subscriptionId}",
+        "definition": {
+          "entityName": "PremiumSubscription",
+          "schema": { "$ref": "#/backend/entities/PremiumSubscription" },
+          "description": "Stores a user's premium subscription requests and history."
+        }
+      },
+      {
+        "path": "/app_config/{configId}",
+        "definition": {
+          "entityName": "AppConfig",
+          "schema": { "$ref": "#/backend/entities/AppConfig" },
+          "description": "Stores global application settings. Should be publicly readable."
+        }
+      },
+      {
+        "path": "/users/{userId}/notifications/{notificationId}",
+        "definition": {
+            "entityName": "Notification",
+            "schema": { "$ref": "#/backend/entities/Notification" },
+            "description": "Stores notifications for a user."
+        }
+      },
+      {
+        "path": "/users/{userId}/referrals/{referralId}",
+        "definition": {
+            "entityName": "Referral",
+            "schema": { "$ref": "#/backend/entities/Referral" },
+            "description": "Stores a record of users referred by the parent user."
+        }
+      },
+      {
+        "path": "/verificationRequests/{requestId}",
+        "definition": {
+          "entityName": "VerificationRequest",
+          "schema": { "$ref": "#/backend/entities/VerificationRequest" },
+          "description": "Root collection for all verification requests, used for admin purposes and ensuring uniqueness of NID and phone numbers across all users."
+        }
+      },
+      {
+        "path": "/ads/{adId}",
+        "definition": {
+            "entityName": "Ad",
+            "schema": { "$ref": "#/backend/entities/Ad" },
+            "description": "Stores advertisements to be displayed in the app. Publicly readable."
+        }
+      }
+    ]
+  }
+}
+
+    

@@ -93,6 +93,8 @@ function CheckoutPageContent() {
                 planId: selectedPlan.id,
                 status: 'approved',
                 paymentMethod: 'points',
+                pointsSpent: pointsRequired,
+                amountBdt: selectedPlan.price,
                 createdAt: serverTimestamp(),
                 activatedAt: serverTimestamp(),
                 expiresAt: expiryDate ? expiryDate : null,
@@ -148,6 +150,7 @@ function CheckoutPageContent() {
                 paymentMethod: selectedPaymentMethod,
                 accountNumber: accountNumber,
                 transactionId: transactionId,
+                amountBdt: selectedPlan.price,
                 createdAt: serverTimestamp(),
             };
 
