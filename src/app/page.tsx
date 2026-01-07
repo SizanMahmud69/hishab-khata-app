@@ -70,31 +70,19 @@ export default function Home() {
                 <div className="blur-[106px] h-56 bg-gradient-to-br from-primary to-purple-400 dark:from-blue-700"></div>
                 <div className="blur-[106px] h-32 bg-gradient-to-r from-cyan-400 to-sky-300 dark:to-indigo-600"></div>
             </div>
-          <div className="container grid lg:grid-cols-2 items-center gap-12 py-20">
-            <div className='text-center lg:text-left'>
+          <div className="container grid lg:grid-cols-1 items-center gap-12 py-20">
+            <div className='text-center lg:text-center'>
                 <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl bg-gradient-to-br from-white to-slate-300 bg-clip-text text-transparent">
                   আপনার আর্থিক ব্যবস্থাপনার সহজ সমাধান
                 </h1>
-                <p className="mt-6 max-w-2xl text-lg text-blue-100 mx-auto lg:mx-0">
+                <p className="mt-6 max-w-2xl text-lg text-blue-100 mx-auto">
                   "হিসাব খাতা" দিয়ে আপনার ব্যক্তিগত আয়-ব্যয়ের হিসাব রাখুন স্মার্ট এবং আধুনিক উপায়ে। আপনার আর্থিক জীবনের উপর সম্পূর্ণ নিয়ন্ত্রণ নিন।
                 </p>
-                <div className="mt-8 flex justify-center lg:justify-start gap-4">
+                <div className="mt-8 flex justify-center lg:justify-center gap-4">
                   <Button asChild size="lg" className="bg-white text-primary hover:bg-white/90">
                     <Link href="/register">আজই শুরু করুন <MoveRight className='ml-2 h-5 w-5'/></Link>
                   </Button>
                 </div>
-            </div>
-             <div className="hidden lg:block">
-             {landingPageImage && (
-              <Image 
-                src={landingPageImage.imageUrl}
-                alt="হিসাব খাতা অ্যাপ ড্যাশবোর্ড"
-                width={600}
-                height={500}
-                className="rounded-lg shadow-2xl"
-                data-ai-hint={landingPageImage.imageHint}
-              />
-            )}
             </div>
           </div>
         </section>
