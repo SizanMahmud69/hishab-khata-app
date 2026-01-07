@@ -84,8 +84,8 @@ service cloud.firestore {
         allow get, create: if isOwner(userId);
         // Allow user to update only specific fields for activation
         allow update: if isOwner(userId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['activatedAt']);
-        // Allow real-time listening for approved, non-activated subscriptions
-        allow list: if isOwner(userId) && request.query.where.status == 'approved' && request.query.where.activatedAt == null;
+        // Allow user to listen to their own subscriptions
+        allow list: if isOwner(userId);
         // Only admin should delete from console
         allow delete: if false;
       }
