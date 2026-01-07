@@ -120,7 +120,7 @@ export function AdBanner({ page, className, size = 'medium' }: AdBannerProps) {
                         alt="Advertisement"
                         width={sizeConfig[size].width}
                         height={sizeConfig[size].height}
-                        className="w-full object-cover"
+                        className="w-full object-contain"
                         style={{ aspectRatio: `${sizeConfig[size].width} / ${sizeConfig[size].height}` }}
                     />
                 </Link>
