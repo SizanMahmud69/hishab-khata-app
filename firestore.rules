@@ -81,9 +81,11 @@ service cloud.firestore {
       
       // Sub-collection for premium subscriptions
       match /premium_subscriptions/{subscriptionId} {
-        allow get, create, list: if isOwner(userId);
+        allow get, create: if isOwner(userId);
         // Allow user to update only specific fields for activation
         allow update: if isOwner(userId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['activatedAt']);
+        // Allow real-time listening for approved, non-activated subscriptions
+        allow list: if isOwner(userId) && request.query.where.status == 'approved' && request.query.where.activatedAt == null;
         // Only admin should delete from console
         allow delete: if false;
       }

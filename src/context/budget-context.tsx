@@ -4,7 +4,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo, useCallback } from 'react';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
-import { collection, onSnapshot, addDoc, doc, updateDoc, serverTimestamp, setDoc, query, getDocs, writeBatch, increment, arrayUnion, orderBy, Unsubscribe, where, limit } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, doc, updateDoc, serverTimestamp, setDoc, query, getDocs, writeBatch, increment, arrayUnion, orderBy, Unsubscribe, where, limit, Firestore } from 'firebase/firestore';
 import { createNotification } from '@/components/app-header';
 import { type WithdrawalRequest } from '@/app/withdraw/page';
 import { isAfter, addDays } from 'date-fns';
@@ -99,6 +99,41 @@ const BudgetContext = createContext<BudgetContextType | undefined>(undefined);
 
 const SAVINGS_MILESTONES = [1000, 5000, 10000, 20000, 30000, 40000, 50000, 100000];
 
+async function activateSubscription(firestore: Firestore, userId: string, subscriptionId: string, planId: string) {
+    const userDocRef = doc(firestore, 'users', userId);
+    const plan = premiumPlans.find(p => p.id === planId);
+    if (!plan) {
+        console.error(`Plan with id ${planId} not found.`);
+        return;
+    }
+
+    const batch = writeBatch(firestore);
+    const expiryDate = plan.durationDays ? addDays(new Date(), plan.durationDays) : null;
+
+    // Update user profile
+    batch.update(userDocRef, {
+        premiumStatus: 'premium',
+        premiumPlanId: plan.id,
+        premiumExpiryDate: expiryDate ? expiryDate : null,
+    });
+
+    // Mark subscription as activated
+    const subRef = doc(firestore, `users/${userId}/premium_subscriptions`, subscriptionId);
+    batch.update(subRef, {
+        activatedAt: serverTimestamp()
+    });
+
+    await batch.commit();
+
+    createNotification({
+        id: `premium-activated-${subscriptionId}`,
+        title: "সাবস্ক্রিপশন সক্রিয় হয়েছে!",
+        description: `আপনার "${plan.title}" প্ল্যানটি সফলভাবে সক্রিয় করা হয়েছে।`,
+        link: "/profile",
+    }, userId, firestore);
+}
+
+
 export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const { user, isLoading: isUserLoading } = useUser();
     const firestore = useFirestore();
@@ -137,59 +172,30 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         if (!user || !firestore) return;
 
-        const checkAndActivateSubscription = async () => {
-            const subscriptionsRef = collection(firestore, `users/${user.uid}/premium_subscriptions`);
-            const q = query(
-                subscriptionsRef, 
-                where('status', '==', 'approved'), 
-                where('activatedAt', '==', null),
-                limit(1)
-            );
-            
-            try {
-                const querySnapshot = await getDocs(q);
-                if (!querySnapshot.empty) {
-                    const subscriptionDoc = querySnapshot.docs[0];
-                    const subscriptionToActivate = { id: subscriptionDoc.id, ...subscriptionDoc.data() } as PremiumSubscription;
-                    
-                    const plan = premiumPlans.find(p => p.id === subscriptionToActivate.planId);
-                    if (!plan) return;
+        const subscriptionsRef = collection(firestore, `users/${user.uid}/premium_subscriptions`);
+        const q = query(
+            subscriptionsRef, 
+            where('status', '==', 'approved'), 
+            where('activatedAt', '==', null),
+            limit(1)
+        );
 
-                    const batch = writeBatch(firestore);
-                    const expiryDate = plan.durationDays ? addDays(new Date(), plan.durationDays) : null;
-                    
-                    // Update user profile
-                    if(userDocRef) {
-                      batch.update(userDocRef, {
-                          premiumStatus: 'premium',
-                          premiumPlanId: plan.id,
-                          premiumExpiryDate: expiryDate ? expiryDate : null,
-                      });
-                    }
-
-                    // Mark subscription as activated
-                    const subRef = doc(firestore, `users/${user.uid}/premium_subscriptions`, subscriptionToActivate.id);
-                    batch.update(subRef, {
-                        activatedAt: serverTimestamp()
-                    });
-
-                    await batch.commit();
-
-                    createNotification({
-                        id: `premium-activated-${subscriptionToActivate.id}`,
-                        title: "সাবস্ক্রিপশন সক্রিয় হয়েছে!",
-                        description: `আপনার "${plan.title}" প্ল্যানটি সফলভাবে সক্রিয় করা হয়েছে।`,
-                        link: "/profile",
-                    }, user.uid, firestore);
-                }
-            } catch (error) {
-                console.error("Error checking/activating subscription:", error);
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            if (!snapshot.empty) {
+                const docToActivate = snapshot.docs[0];
+                const subscription = { id: docToActivate.id, ...docToActivate.data() } as PremiumSubscription;
+                
+                activateSubscription(firestore, user.uid, subscription.id, subscription.planId)
+                    .catch(err => console.error("Failed to activate subscription:", err));
             }
-        };
+        }, (error) => {
+            console.error("Error listening to subscription updates:", error);
+        });
 
-        checkAndActivateSubscription();
-
-    }, [user, firestore, userDocRef]);
+        // Cleanup listener on component unmount
+        return () => unsubscribe();
+        
+    }, [user, firestore]);
     
 
     const { premiumStatus, premiumExpiryDate } = useMemo(() => {
@@ -262,17 +268,17 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         });
     };
 
-    const addTransaction = async (transaction: Omit<Transaction, 'id' | 'createdAt' | 'userId'>) => {
+    const addTransaction = useCallback(async (transaction: Omit<Transaction, 'id' | 'createdAt' | 'userId'>) => {
         if(!user) return;
         await addDocToCollection('transactions', transaction);
-    };
+    }, [user]);
 
-    const addDebtNote = async (debtNote: Omit<DebtNote, 'id' | 'createdAt' | 'userId'>) => {
+    const addDebtNote = useCallback(async (debtNote: Omit<DebtNote, 'id' | 'createdAt' | 'userId'>) => {
         if(!user) return;
         await addDocToCollection('debtNotes', debtNote);
-    }
+    }, [user]);
 
-    const updateDebtNote = async (debtNote: DebtNote, paymentAmount?: number) => {
+    const updateDebtNote = useCallback(async (debtNote: DebtNote, paymentAmount?: number) => {
         if (!user || !firestore || !debtNote.id) return;
     
         const batch = writeBatch(firestore);
@@ -297,11 +303,11 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         }
         
         await batch.commit();
-    }
+    }, [user, firestore]);
     
-    const isLoading = isUserLoading || !user || isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || areReferralsLoading;
+    const isLoading = isUserLoading || isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || areReferralsLoading;
 
-    const value = useMemo(() => ({
+    const contextValue = useMemo(() => ({
         transactions, 
         debtNotes,
         referrals,
@@ -343,7 +349,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             referrerBonusPoints: 100,
             referredUserBonusPoints: 50,
             bdtPer100Points: 5,
-            isLoading: isUserLoading,
+            isLoading: true, // Set to true for non-logged-in users to show loading state
             premiumStatus: 'free',
             premiumExpiryDate: null,
             userProfile: null,
@@ -357,7 +363,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
 
 
     return (
-        <BudgetContext.Provider value={value}>
+        <BudgetContext.Provider value={contextValue}>
             {children}
         </BudgetContext.Provider>
     );
@@ -370,5 +376,6 @@ export const useBudget = () => {
     }
     return context;
 };
+
 
 
