@@ -1,0 +1,122 @@
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ------------------------------------------------------------------------
+    // Helper Functions
+    // ------------------------------------------------------------------------
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      // A user is the owner if they are signed in and their UID matches the document's userId.
+      return request.auth.uid == userId;
+    }
+
+    // ------------------------------------------------------------------------
+    // Collection Rules
+    // ------------------------------------------------------------------------
+    
+    match /users/{userId} {
+      // A user can get their own document.
+      allow get: if isOwner(userId);
+      // Allow querying for a single user by referral code during registration
+      allow list: if request.query.limit <= 1;
+      // A signed-in user can create their own user document.
+      allow create: if isSignedIn();
+      // A user can update their own document.
+      // A signed-in user (the new referred user) can also update ONLY the referrer's points.
+      allow update: if isOwner(userId) || (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['points']));
+      // Users should not be able to delete their own accounts this way.
+      allow delete: if false;
+
+      // Sub-collection for all financial transactions (income/expense)
+      match /transactions/{transactionId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Sub-collection for all debt records (lent, borrowed, shop dues)
+      match /debtNotes/{debtNoteId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Sub-collection for daily check-ins
+      match /checkIns/{checkInId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Sub-collection for NID verification requests (user-facing)
+      match /verificationRequests/{requestId} {
+        allow get, create, list: if isOwner(userId);
+        // Only admin should be able to update (approve/reject) or delete requests.
+        allow update, delete: if false; 
+      }
+
+      // Sub-collection for reward point withdrawal requests
+      match /withdrawalRequests/{requestId} {
+        allow get, create, list, delete: if isOwner(userId);
+        // User can update only specific fields. They can update isRefunded to true
+        // but cannot change status or rejection reasons set by admin.
+        allow update: if isOwner(userId) && 
+                         request.resource.data.diff(resource.data).affectedKeys()
+                           .hasOnly(['isRefunded', 'processedAt']);
+      }
+      
+      // Sub-collection for notifications
+      match /notifications/{notificationId} {
+        allow read, create, update: if isOwner(userId);
+        allow delete: if false;
+      }
+      
+      // Sub-collection for referral records
+      match /referrals/{referralId} {
+        allow read: if isOwner(userId);
+        // Allow any signed-in user to create a referral record for another user.
+        allow create: if isSignedIn();
+        allow update, delete: if false;
+      }
+      
+      // Sub-collection for premium subscriptions
+      match /premium_subscriptions/{subscriptionId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update: if isOwner(userId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['activatedAt', 'status', 'expiresAt']);
+        // Only admin should delete from console
+        allow delete: if false;
+      }
+    }
+    
+    // Global app configuration
+    match /app_config/{configId} {
+      allow get: if true;
+      // Allow any signed-in user to create the config document (e.g., on first registration).
+      allow create: if isSignedIn();
+      // Prevent clients from listing, updating, or deleting config.
+      allow list, update, delete: if false; 
+    }
+    
+    // Root collection for verification requests for admin and uniqueness checks
+    match /verificationRequests/{requestId} {
+      // Allow any signed-in user to read (for uniqueness checks)
+      allow get, list: if isSignedIn();
+      // Allow creation only if the NID and phone are unique among pending/approved requests.
+      allow create: if isSignedIn()
+                      && !exists(/databases/$(database)/documents/verificationRequests/$(request.resource.data.nidNumber))
+                      && !exists(/databases/$(database)/documents/verificationRequests/$(request.resource.data.phone));
+      // Only admins should update/delete from the console.
+      allow update, delete: if false;
+    }
+
+    // Root collection for advertisements
+    match /ads/{adId} {
+      // Anyone can read the ads.
+      allow get, list: if true;
+      // Only admins should create, update, or delete ads from the console.
+      allow write: if false;
+    }
+  }
+}

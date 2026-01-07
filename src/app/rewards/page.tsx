@@ -6,222 +6,35 @@ import React, { useMemo, useRef, useEffect, useState, Fragment } from 'react';
 import { useSearchParams } from 'next/navigation';
 import PageHeader from "@/components/page-header"
 import { Banknote, Gift, Medal, Star, Trophy, ArrowUpCircle, ArrowDownCircle, History, Undo2, Users, Crown } from "lucide-react"
+import { useBudget, PointHistoryItem } from "@/context/budget-context";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection, FirestorePermissionError } from '@/firebase';
-import { doc, collection, query, where, orderBy, writeBatch, serverTimestamp, increment } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { bn } from 'date-fns/locale';
-import { type WithdrawalRequest } from '../withdraw/page';
 import { Badge } from '@/components/ui/badge';
-import { useBudget } from '@/context/budget-context';
-import { createNotification } from '@/components/app-header';
-import { useToast } from '@/hooks/use-toast';
-import { errorEmitter } from '@/firebase/error-emitter';
 import { AdBanner } from '@/components/ad-banner';
-import { type PremiumSubscription } from '@/context/budget-context';
 
-interface UserProfile {
-    points?: number;
-}
-
-interface CheckInRecord {
-    id: string;
-    date: string; // ISO String
-    points: number;
-    createdAt: any;
-}
-
-interface Referral {
-    id: string;
-    referredUserName: string;
-    bonusPoints: number;
-    createdAt: any; // Firestore Timestamp
-}
-
-
-interface PointHistoryItem {
-    type: 'earned' | 'spent' | 'refunded';
-    source: string;
-    points: number;
-    date: Date;
-    status?: 'pending' | 'approved' | 'rejected';
-}
 
 function RewardsPageContent() {
-    const { user } = useUser();
-    const firestore = useFirestore();
     const searchParams = useSearchParams();
     const historyRef = useRef<HTMLDivElement>(null);
-    const { minWithdrawalPoints, bdtPer100Points } = useBudget();
-    const { toast } = useToast();
-
-    const userDocRef = useMemoFirebase(() => {
-        if (!user || !firestore) return null;
-        return doc(firestore, 'users', user.uid);
-    }, [user, firestore]);
-
-    const { data: userProfile, isLoading: isUserLoading } = useDoc<UserProfile>(userDocRef);
-    const rewardPoints = userProfile?.points ?? 0;
-
-    const checkInsQuery = useMemoFirebase(() => {
-        if (!user || !firestore) return null;
-        return query(collection(firestore, `users/${user.uid}/checkIns`), orderBy("createdAt", "desc"));
-    }, [user, firestore]);
-    const { data: checkIns, isLoading: isCheckInsLoading } = useCollection<CheckInRecord>(checkInsQuery);
-    
-    const withdrawalsQuery = useMemoFirebase(() => {
-        if (!user || !firestore) return null;
-        return query(collection(firestore, `users/${user.uid}/withdrawalRequests`), orderBy("requestedAt", "desc"));
-    }, [user, firestore]);
-    const { data: allWithdrawals, isLoading: isWithdrawalsLoading } = useCollection<WithdrawalRequest>(withdrawalsQuery);
-    
-    const referralsQuery = useMemoFirebase(() => {
-        if (!user || !firestore) return null;
-        return query(collection(firestore, `users/${user.uid}/referrals`), orderBy("createdAt", "desc"));
-    }, [user, firestore]);
-    const { data: referrals, isLoading: areReferralsLoading } = useCollection<Referral>(referralsQuery);
-    
-    const subscriptionsQuery = useMemoFirebase(() => {
-        if (!user || !firestore) return null;
-        return query(collection(firestore, `users/${user.uid}/premium_subscriptions`), where("paymentMethod", "==", "points"), orderBy("createdAt", "desc"));
-    }, [user, firestore]);
-    const { data: subscriptions, isLoading: areSubscriptionsLoading } = useCollection<PremiumSubscription & { pointsSpent?: number }>(subscriptionsQuery);
-
+    const { 
+        rewardPoints, 
+        minWithdrawalPoints, 
+        bdtPer100Points, 
+        isLoading, 
+        pointHistory 
+    } = useBudget();
 
     useEffect(() => {
-        if (searchParams.get('section') === 'history' && historyRef.current && !isWithdrawalsLoading && !isCheckInsLoading && !areReferralsLoading && !areSubscriptionsLoading) {
+        if (searchParams.get('section') === 'history' && historyRef.current && !isLoading) {
             historyRef.current.scrollIntoView({ behavior: 'smooth' });
         }
-    }, [searchParams, isWithdrawalsLoading, isCheckInsLoading, areReferralsLoading, areSubscriptionsLoading]);
-
-    // One-time effect to handle all pending refunds on component mount.
-    useEffect(() => {
-        if (!allWithdrawals || !user || !firestore || !userDocRef) return;
-        
-        const unrefundedRequests = allWithdrawals.filter(
-            req => req.status === 'rejected' && !req.isRefunded
-        );
-
-        if (unrefundedRequests.length === 0) return;
-
-        const handleRefund = async () => {
-            const batch = writeBatch(firestore);
-            let totalRefundPoints = 0;
-
-            unrefundedRequests.forEach(req => {
-                const reqRef = doc(firestore, `users/${user.uid}/withdrawalRequests`, req.id);
-                batch.update(reqRef, { isRefunded: true, processedAt: serverTimestamp() });
-                totalRefundPoints += req.points;
-            });
-
-            batch.update(userDocRef, { points: increment(totalRefundPoints) });
-
-            try {
-                await batch.commit();
-                toast({
-                    title: "পয়েন্ট ফেরত দেওয়া হয়েছে",
-                    description: `${totalRefundPoints} পয়েন্ট আপনার অ্যাকাউন্টে ফেরত দেওয়া হয়েছে।`,
-                });
-                unrefundedRequests.forEach(req => {
-                    createNotification({
-                        id: `refund-${req.id}`,
-                        title: "পয়েন্ট ফেরত দেওয়া হয়েছে",
-                        description: `আপনার বাতিল হওয়া অনুরোধের জন্য ${req.points} পয়েন্ট ফেরত দেওয়া হয়েছে।`,
-                        link: "/rewards?section=history"
-                    }, user.uid, firestore);
-                });
-            } catch (error) {
-                console.error("Error processing refunds in batch:", error);
-                 if (error instanceof FirestorePermissionError) {
-                    errorEmitter.emit('permission-error', error);
-                } else {
-                    toast({
-                        variant: "destructive",
-                        title: "ত্রুটি",
-                        description: "পয়েন্ট ফেরত দেওয়ার সময় একটি সমস্যা হয়েছে।",
-                    });
-                }
-            }
-        };
-
-        handleRefund();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [allWithdrawals, user, firestore, userDocRef]); // Runs once when withdrawals are loaded
-
-    const pointHistory = useMemo((): PointHistoryItem[] => {
-        const history: PointHistoryItem[] = [];
-
-        if (checkIns) {
-            checkIns.forEach(ci => {
-                history.push({
-                    type: 'earned',
-                    source: 'দৈনিক চেক-ইন',
-                    points: ci.points,
-                    date: parseISO(ci.date)
-                });
-            });
-        }
-        
-        if (referrals) {
-            referrals.forEach(ref => {
-                 if (ref.createdAt) {
-                    history.push({
-                        type: 'earned',
-                        source: 'রেফারেল বোনাস',
-                        points: ref.bonusPoints,
-                        date: ref.createdAt.toDate(),
-                    });
-                }
-            })
-        }
-        
-        if (subscriptions) {
-            subscriptions.forEach(sub => {
-                if (sub.createdAt && sub.pointsSpent) {
-                    history.push({
-                        type: 'spent',
-                        source: 'সাবস্ক্রিপশন ক্রয়',
-                        points: sub.pointsSpent,
-                        date: sub.createdAt.toDate(),
-                        status: sub.status as 'pending' | 'approved' | 'rejected'
-                    });
-                }
-            });
-        }
-
-        if (allWithdrawals) {
-            allWithdrawals.forEach(wd => {
-                if (wd.requestedAt) {
-                    history.push({
-                        type: 'spent',
-                        source: 'পয়েন্ট উইথড্র',
-                        points: wd.points,
-                        date: wd.requestedAt.toDate(),
-                        status: wd.status,
-                    });
-                }
-                
-                if (wd.status === 'rejected' && wd.isRefunded && wd.processedAt) {
-                    history.push({
-                        type: 'refunded',
-                        source: 'পয়েন্ট রিফান্ড',
-                        points: wd.points,
-                        date: wd.processedAt.toDate(),
-                        status: 'approved' // To show it as a completed transaction
-                    });
-                }
-            });
-        }
-        
-        return history.sort((a, b) => b.date.getTime() - a.date.getTime());
-
-    }, [checkIns, allWithdrawals, referrals, subscriptions]);
+    }, [searchParams, isLoading]);
     
     const canWithdraw = rewardPoints >= minWithdrawalPoints;
-    const isLoading = isUserLoading || isCheckInsLoading || isWithdrawalsLoading || areReferralsLoading || areSubscriptionsLoading;
     const equivalentAmountBdt = Math.floor(rewardPoints / 100) * bdtPer100Points;
     
     const getStatusText = (status?: 'pending' | 'approved' | 'rejected') => {
@@ -357,5 +170,3 @@ export default function RewardsPage() {
         </React.Suspense>
     )
 }
-
-    

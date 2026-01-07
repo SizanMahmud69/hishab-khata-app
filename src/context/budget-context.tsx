@@ -7,7 +7,7 @@ import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@
 import { collection, onSnapshot, addDoc, doc, updateDoc, serverTimestamp, setDoc, query, getDocs, writeBatch, increment, arrayUnion, orderBy, Unsubscribe, where, limit, Firestore } from 'firebase/firestore';
 import { createNotification } from '@/components/app-header';
 import { type WithdrawalRequest } from '@/app/withdraw/page';
-import { isAfter, addDays } from 'date-fns';
+import { isAfter, addDays, parseISO } from 'date-fns';
 import { premiumPlans, type PremiumPlan } from '@/lib/data';
 
 // New unified Transaction interface
@@ -77,11 +77,28 @@ interface Referral {
     createdAt: any;
 }
 
+interface CheckInRecord {
+    id: string;
+    date: string; // ISO String
+    points: number;
+    createdAt: any;
+}
+
+
+export interface PointHistoryItem {
+    type: 'earned' | 'spent' | 'refunded';
+    source: string;
+    points: number;
+    date: Date;
+    status?: 'pending' | 'approved' | 'rejected';
+}
+
 
 interface BudgetContextType {
     transactions: Transaction[];
     debtNotes: DebtNote[];
     referrals: Referral[];
+    pointHistory: PointHistoryItem[];
     addTransaction: (transaction: Omit<Transaction, 'id' | 'createdAt' | 'userId'>) => Promise<void>;
     addDebtNote: (debtNote: Omit<DebtNote, 'id' | 'createdAt' | 'userId'>) => Promise<void>;
     updateDebtNote: (debtNote: DebtNote, paymentAmount?: number) => Promise<void>;
@@ -182,6 +199,18 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         return query(collection(firestore, `users/${user.uid}/premium_subscriptions`), orderBy("createdAt", "desc"));
     }, [user, firestore]);
     const { data: premiumSubscriptions = [], isLoading: isSubscriptionsLoading } = useCollection<PremiumSubscription>(subscriptionsQuery);
+    
+    const checkInsQuery = useMemoFirebase(() => {
+        if (!user || !firestore) return null;
+        return query(collection(firestore, `users/${user.uid}/checkIns`), orderBy("createdAt", "desc"));
+    }, [user, firestore]);
+    const { data: checkIns = [], isLoading: isCheckInsLoading } = useCollection<CheckInRecord>(checkInsQuery);
+    
+    const withdrawalsQuery = useMemoFirebase(() => {
+        if (!user || !firestore) return null;
+        return query(collection(firestore, `users/${user.uid}/withdrawalRequests`), orderBy("requestedAt", "desc"));
+    }, [user, firestore]);
+    const { data: allWithdrawals = [], isLoading: isWithdrawalsLoading } = useCollection<WithdrawalRequest>(withdrawalsQuery);
 
 
     useEffect(() => {
@@ -320,12 +349,82 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         await batch.commit();
     }, [user, firestore]);
     
-    const isLoading = isUserLoading || isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || isSubscriptionsLoading;
+    const pointHistory = useMemo((): PointHistoryItem[] => {
+        const history: PointHistoryItem[] = [];
+
+        if (checkIns) {
+            checkIns.forEach(ci => {
+                history.push({
+                    type: 'earned',
+                    source: 'দৈনিক চেক-ইন',
+                    points: ci.points,
+                    date: parseISO(ci.date)
+                });
+            });
+        }
+        
+        if (referrals) {
+            referrals.forEach(ref => {
+                 if (ref.createdAt) {
+                    history.push({
+                        type: 'earned',
+                        source: 'রেফারেল বোনাস',
+                        points: ref.bonusPoints,
+                        date: ref.createdAt.toDate(),
+                    });
+                }
+            })
+        }
+        
+        if (premiumSubscriptions) {
+            premiumSubscriptions.forEach(sub => {
+                if (sub.createdAt && sub.paymentMethod === 'points' && sub.pointsSpent) {
+                    history.push({
+                        type: 'spent',
+                        source: 'সাবস্ক্রিপশন ক্রয়',
+                        points: sub.pointsSpent,
+                        date: sub.createdAt.toDate(),
+                        status: sub.status
+                    });
+                }
+            });
+        }
+
+        if (allWithdrawals) {
+            allWithdrawals.forEach(wd => {
+                if (wd.requestedAt) {
+                    history.push({
+                        type: 'spent',
+                        source: 'পয়েন্ট উইথড্র',
+                        points: wd.points,
+                        date: wd.requestedAt.toDate(),
+                        status: wd.status,
+                    });
+                }
+                
+                if (wd.status === 'rejected' && wd.isRefunded && wd.processedAt) {
+                    history.push({
+                        type: 'refunded',
+                        source: 'পয়েন্ট রিফান্ড',
+                        points: wd.points,
+                        date: wd.processedAt.toDate(),
+                        status: 'approved' // To show it as a completed transaction
+                    });
+                }
+            });
+        }
+        
+        return history.sort((a, b) => b.date.getTime() - a.date.getTime());
+
+    }, [checkIns, allWithdrawals, referrals, premiumSubscriptions]);
+    
+    const isLoading = isUserLoading || isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || isSubscriptionsLoading || isCheckInsLoading || areReferralsLoading || isWithdrawalsLoading;
 
     const contextValue = useMemo(() => ({
         transactions, 
         debtNotes,
         referrals,
+        pointHistory,
         addTransaction, 
         addDebtNote, 
         updateDebtNote, 
@@ -346,7 +445,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         activePremiumPlan,
         isSubscriptionsLoading
     }), [
-        transactions, debtNotes, referrals,
+        transactions, debtNotes, referrals, pointHistory,
         totalIncome, totalExpense, totalSavings,
         rewardPoints, minWithdrawalPoints, referrerBonusPoints, referredUserBonusPoints, bdtPer100Points,
         isLoading, premiumStatus, premiumExpiryDate, userProfile, premiumSubscriptions, 
@@ -359,6 +458,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             transactions: [],
             debtNotes: [],
             referrals: [],
+            pointHistory: [],
             addTransaction: async () => {},
             addDebtNote: async () => {},
             updateDebtNote: async () => {},
@@ -401,5 +501,3 @@ export const useBudget = () => {
     }
     return context;
 };
-
-    
