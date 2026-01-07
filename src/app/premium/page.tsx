@@ -6,11 +6,12 @@ import PageHeader from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ShieldCheck, Sparkles, Zap, CheckCircle } from "lucide-react";
+import { ShieldCheck, Sparkles, Zap, CheckCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { premiumPlans as allPlans, type PremiumPlan } from "@/lib/data";
 import { useBudget } from '@/context/budget-context';
 import { useRouter } from 'next/navigation';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const premiumFeatures = [
     { text: "সম্পূর্ণ বিজ্ঞাপন-মুক্ত অভিজ্ঞতা", icon: <ShieldCheck className="h-5 w-5 text-green-500" /> },
@@ -37,8 +38,12 @@ const faqItems = [
 
 export default function PremiumPage() {
     const router = useRouter();
-    const { premiumStatus, userProfile } = useBudget();
-    const currentPlanId = userProfile?.premiumPlanId;
+    const { 
+        premiumStatus, 
+        activePremiumPlan, 
+        pendingSubscriptionPlanIds, 
+        isSubscriptionsLoading 
+    } = useBudget();
     
     const plans = useMemo(() => {
         return allPlans.filter(p => p.isActive).sort((a, b) => a.sortOrder - b.sortOrder);
@@ -46,6 +51,19 @@ export default function PremiumPage() {
 
     const handleSubscribeClick = (plan: PremiumPlan) => {
         router.push(`/premium/checkout?planId=${plan.id}`);
+    };
+    
+    const getButtonState = (plan: PremiumPlan) => {
+        if (isSubscriptionsLoading) {
+            return { text: <Loader2 className="h-4 w-4 animate-spin" />, disabled: true };
+        }
+        if (premiumStatus === 'premium' && activePremiumPlan?.id === plan.id) {
+            return { text: "আপনার বর্তমান প্ল্যান", disabled: true };
+        }
+        if (pendingSubscriptionPlanIds.includes(plan.id)) {
+            return { text: "সাবস্ক্রিপশন পেন্ডিং", disabled: true };
+        }
+        return { text: "সাবস্ক্রাইব করুন", disabled: false };
     };
 
     return (
@@ -71,14 +89,14 @@ export default function PremiumPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                  {plans.map(plan => {
-                     const isCurrentUserPlan = premiumStatus === 'premium' && currentPlanId === plan.id;
+                     const buttonState = getButtonState(plan);
                      return (
                         <Card 
                             key={plan.id}
                             className={cn(
                                 "relative overflow-hidden border-2 flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1",
                                 plan.isBestValue ? "border-yellow-500 shadow-lg shadow-yellow-500/20" : "border-primary/50",
-                                isCurrentUserPlan && "ring-2 ring-offset-2 ring-yellow-500"
+                                buttonState.text === "আপনার বর্তমান প্ল্যান" && "ring-2 ring-offset-2 ring-yellow-500"
                             )}
                         >
                             {plan.isBestValue && (
@@ -99,14 +117,18 @@ export default function PremiumPage() {
                                 <p className="text-center text-muted-foreground text-sm">{plan.description}</p>
                             </CardContent>
                             <CardFooter>
-                                <Button 
-                                    className={cn("w-full", plan.isBestValue && !isCurrentUserPlan && "bg-yellow-500 hover:bg-yellow-600 text-white")} 
-                                    size="lg" 
-                                    onClick={() => handleSubscribeClick(plan)}
-                                    disabled={isCurrentUserPlan}
-                                >
-                                    {isCurrentUserPlan ? 'আপনার বর্তমান প্ল্যান' : 'সাবস্ক্রাইব করুন'}
-                                </Button>
+                                {isSubscriptionsLoading ? (
+                                    <Skeleton className="h-12 w-full" />
+                                ) : (
+                                    <Button 
+                                        className={cn("w-full", plan.isBestValue && !buttonState.disabled && "bg-yellow-500 hover:bg-yellow-600 text-white")} 
+                                        size="lg" 
+                                        onClick={() => handleSubscribeClick(plan)}
+                                        disabled={buttonState.disabled}
+                                    >
+                                        {buttonState.text}
+                                    </Button>
+                                )}
                             </CardFooter>
                         </Card>
                     )})}
@@ -119,7 +141,6 @@ export default function PremiumPage() {
                     )}
             </div>
 
-            {/* FAQ Section */}
             <Card>
                 <CardHeader>
                     <CardTitle>সাধারণ জিজ্ঞাসা (FAQ)</CardTitle>

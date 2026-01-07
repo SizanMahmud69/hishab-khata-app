@@ -8,7 +8,7 @@ import { collection, onSnapshot, addDoc, doc, updateDoc, serverTimestamp, setDoc
 import { createNotification } from '@/components/app-header';
 import { type WithdrawalRequest } from '@/app/withdraw/page';
 import { isAfter, addDays } from 'date-fns';
-import { premiumPlans } from '@/lib/data';
+import { premiumPlans, type PremiumPlan } from '@/lib/data';
 
 // New unified Transaction interface
 export interface Transaction {
@@ -47,13 +47,14 @@ interface UserProfile {
     premiumExpiryDate?: any; // firestore timestamp
 }
 
-interface PremiumSubscription {
+export interface PremiumSubscription {
     id: string;
     userId: string;
     planId: string;
     status: 'pending' | 'approved' | 'rejected';
-    activatedAt?: any; // To check if we already processed this activation
+    activatedAt?: any;
     expiresAt?: any; // Firestore Timestamp
+    createdAt: any;
 }
 
 
@@ -93,6 +94,10 @@ interface BudgetContextType {
     premiumStatus: 'free' | 'premium';
     premiumExpiryDate: Date | null;
     userProfile: UserProfile | null;
+    premiumSubscriptions: PremiumSubscription[];
+    pendingSubscriptionPlanIds: string[];
+    activePremiumPlan: PremiumPlan | null;
+    isSubscriptionsLoading: boolean;
 }
 
 const BudgetContext = createContext<BudgetContextType | undefined>(undefined);
@@ -110,17 +115,16 @@ async function activateSubscription(firestore: Firestore, userId: string, subscr
     const batch = writeBatch(firestore);
     const expiryDate = plan.durationDays ? addDays(new Date(), plan.durationDays) : null;
 
-    // Update user profile
     batch.update(userDocRef, {
         premiumStatus: 'premium',
         premiumPlanId: plan.id,
         premiumExpiryDate: expiryDate ? expiryDate : null,
     });
 
-    // Mark subscription as activated
     const subRef = doc(firestore, `users/${userId}/premium_subscriptions`, subscriptionId);
     batch.update(subRef, {
-        activatedAt: serverTimestamp()
+        activatedAt: serverTimestamp(),
+        expiresAt: expiryDate ? expiryDate : null
     });
 
     await batch.commit();
@@ -169,35 +173,27 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     }, [firestore]);
     const { data: appConfig, isLoading: isConfigLoading } = useDoc<AppConfig>(appConfigRef);
 
-    useEffect(() => {
-        if (!user || !firestore) return;
+    const subscriptionsQuery = useMemoFirebase(() => {
+        if (!user || !firestore) return null;
+        return query(collection(firestore, `users/${user.uid}/premium_subscriptions`), orderBy("createdAt", "desc"));
+    }, [user, firestore]);
+    const { data: premiumSubscriptions = [], isLoading: isSubscriptionsLoading } = useCollection<PremiumSubscription>(subscriptionsQuery);
 
-        const subscriptionsRef = collection(firestore, `users/${user.uid}/premium_subscriptions`);
-        const q = query(
-            subscriptionsRef, 
-            where('status', '==', 'approved'), 
-            where('activatedAt', '==', null),
-            limit(1)
+
+    useEffect(() => {
+        if (!user || !firestore || premiumSubscriptions.length === 0) return;
+        
+        const subscriptionToActivate = premiumSubscriptions.find(
+            sub => sub.status === 'approved' && !sub.activatedAt
         );
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            if (!snapshot.empty) {
-                const docToActivate = snapshot.docs[0];
-                const subscription = { id: docToActivate.id, ...docToActivate.data() } as PremiumSubscription;
-                
-                activateSubscription(firestore, user.uid, subscription.id, subscription.planId)
-                    .catch(err => console.error("Failed to activate subscription:", err));
-            }
-        }, (error) => {
-            console.error("Error listening to subscription updates:", error);
-        });
+        if (subscriptionToActivate) {
+            activateSubscription(firestore, user.uid, subscriptionToActivate.id, subscriptionToActivate.planId)
+                .catch(err => console.error("Failed to auto-activate subscription:", err));
+        }
 
-        // Cleanup listener on component unmount
-        return () => unsubscribe();
-        
-    }, [user, firestore]);
+    }, [premiumSubscriptions, user, firestore]);
     
-
     const { premiumStatus, premiumExpiryDate } = useMemo(() => {
         if (!userProfile) return { premiumStatus: 'free', premiumExpiryDate: null };
         const status = userProfile.premiumStatus ?? 'free';
@@ -217,6 +213,15 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         return { premiumStatus: status, premiumExpiryDate: expiry };
 
     }, [userProfile, userDocRef]);
+    
+    const pendingSubscriptionPlanIds = useMemo(() => {
+        return (premiumSubscriptions || []).filter(s => s.status === 'pending').map(s => s.planId);
+    }, [premiumSubscriptions]);
+
+    const activePremiumPlan = useMemo(() => {
+        if (premiumStatus !== 'premium' || !userProfile?.premiumPlanId) return null;
+        return premiumPlans.find(p => p.id === userProfile.premiumPlanId) || null;
+    }, [premiumStatus, userProfile]);
     
     const minWithdrawalPoints = appConfig?.minWithdrawalPoints ?? 1000;
     const referrerBonusPoints = appConfig?.referrerBonusPoints ?? 100;
@@ -247,7 +252,6 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                         link: `/milestone?amount=${milestone}` 
                     }, user.uid, firestore);
 
-                    // Update user doc in firestore
                     if (userDocRef) {
                         updateDoc(userDocRef, {
                             notifiedMilestones: arrayUnion(milestone)
@@ -305,7 +309,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         await batch.commit();
     }, [user, firestore]);
     
-    const isLoading = isUserLoading || isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || areReferralsLoading;
+    const isLoading = isUserLoading || isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || areReferralsLoading || isSubscriptionsLoading;
 
     const contextValue = useMemo(() => ({
         transactions, 
@@ -326,11 +330,17 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         premiumStatus,
         premiumExpiryDate,
         userProfile,
+        premiumSubscriptions,
+        pendingSubscriptionPlanIds,
+        activePremiumPlan,
+        isSubscriptionsLoading
     }), [
         transactions, debtNotes, referrals,
         totalIncome, totalExpense, totalSavings,
         rewardPoints, minWithdrawalPoints, referrerBonusPoints, referredUserBonusPoints, bdtPer100Points,
-        isLoading, premiumStatus, premiumExpiryDate, userProfile, addTransaction, addDebtNote, updateDebtNote
+        isLoading, premiumStatus, premiumExpiryDate, userProfile, premiumSubscriptions, 
+        pendingSubscriptionPlanIds, activePremiumPlan, isSubscriptionsLoading,
+        addTransaction, addDebtNote, updateDebtNote
     ]);
 
      if (!user && !isUserLoading) {
@@ -349,10 +359,14 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             referrerBonusPoints: 100,
             referredUserBonusPoints: 50,
             bdtPer100Points: 5,
-            isLoading: true, // Set to true for non-logged-in users to show loading state
+            isLoading: true,
             premiumStatus: 'free',
             premiumExpiryDate: null,
             userProfile: null,
+            premiumSubscriptions: [],
+            pendingSubscriptionPlanIds: [],
+            activePremiumPlan: null,
+            isSubscriptionsLoading: true,
         };
         return (
             <BudgetContext.Provider value={emptyContext}>
@@ -376,6 +390,3 @@ export const useBudget = () => {
     }
     return context;
 };
-
-
-
