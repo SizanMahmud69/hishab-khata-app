@@ -2,7 +2,7 @@
 
 "use client";
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, Fragment } from 'react';
 import { useSearchParams } from 'next/navigation';
 import PageHeader from "@/components/page-header"
 import { Banknote, History, Gift, Info, Loader2 } from "lucide-react"
@@ -24,8 +24,8 @@ import { format } from 'date-fns';
 import { bn } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { errorEmitter } from '@/firebase/error-emitter';
+import { AdBanner } from '@/components/ad-banner';
 
 interface UserProfile {
     points?: number;
@@ -299,28 +299,39 @@ export default function WithdrawPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {history.map((req) => (
-                                <TableRow key={req.id}>
-                                    <TableCell className='font-medium'>
-                                        {req.requestedAt ? format(req.requestedAt.toDate(), "d MMM, yyyy", { locale: bn }) : '-'}
-                                    </TableCell>
-                                    <TableCell>{req.paymentMethod}</TableCell>
-                                    <TableCell className='text-muted-foreground'>{req.points}</TableCell>
-                                    <TableCell className='font-semibold'>{formatCurrency(req.amountBdt)}</TableCell>
-                                    <TableCell className='text-right flex justify-end items-center gap-2'>
-                                        {getStatusBadge(req.status)}
-                                        {req.status === 'rejected' && req.rejectionReason && (
-                                            <Tooltip>
-                                                <TooltipTrigger>
-                                                    <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                    <p>{req.rejectionReason}</p>
-                                                </TooltipContent>
-                                            </Tooltip>
-                                        )}
-                                    </TableCell>
-                                </TableRow>
+                            {history.map((req, index) => (
+                                <Fragment key={req.id}>
+                                    <TableRow>
+                                        <TableCell className='font-medium'>
+                                            {req.requestedAt ? format(req.requestedAt.toDate(), "d MMM, yyyy", { locale: bn }) : '-'}
+                                        </TableCell>
+                                        <TableCell>{req.paymentMethod}</TableCell>
+                                        <TableCell className='text-muted-foreground'>{req.points}</TableCell>
+                                        <TableCell className='font-semibold'>{formatCurrency(req.amountBdt)}</TableCell>
+                                        <TableCell className='text-right flex justify-end items-center gap-2'>
+                                            {getStatusBadge(req.status)}
+                                            {req.status === 'rejected' && req.rejectionReason && (
+                                                <Tooltip>
+                                                    <TooltipTrigger>
+                                                        <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p>{req.rejectionReason}</p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            )}
+                                        </TableCell>
+                                    </TableRow>
+                                    {(index + 1) % 2 === 0 && (
+                                        <TableRow>
+                                            <TableCell colSpan={5} className="p-0">
+                                                <div className='my-2'>
+                                                    <AdBanner page="withdraw" size="small" />
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </Fragment>
                             ))}
                         </TableBody>
                     </Table>

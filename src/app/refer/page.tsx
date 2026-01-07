@@ -2,9 +2,9 @@
 
 "use client";
 
-import React, { useMemo } from 'react';
+import React, { useMemo, Fragment } from 'react';
 import PageHeader from "@/components/page-header";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Copy, Gift, HelpCircle, Loader2, Users } from 'lucide-react';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { bn } from 'date-fns/locale';
 import { useBudget } from '@/context/budget-context';
+import { AdBanner } from '@/components/ad-banner';
 
 interface UserProfile {
     userId: string;
@@ -127,19 +128,26 @@ export default function ReferPage() {
                     </div>
                     <div className="space-y-3">
                         {referrals && referrals.length > 0 ? (
-                            referrals.map(referral => (
-                                <div key={referral.id} className="flex items-center justify-between p-3 rounded-lg border">
-                                    <div>
-                                        <p className="font-semibold">{referral.referredUserName}</p>
-                                        <p className="text-sm text-muted-foreground">
-                                            {referral.createdAt ? format(referral.createdAt.toDate(), "d MMM, yyyy", { locale: bn }) : ''}
-                                        </p>
+                            referrals.map((referral, index) => (
+                                <Fragment key={referral.id}>
+                                    <div className="flex items-center justify-between p-3 rounded-lg border">
+                                        <div>
+                                            <p className="font-semibold">{referral.referredUserName}</p>
+                                            <p className="text-sm text-muted-foreground">
+                                                {referral.createdAt ? format(referral.createdAt.toDate(), "d MMM, yyyy", { locale: bn }) : ''}
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center gap-1 font-bold text-green-500">
+                                            <Gift className="h-4 w-4" />
+                                            <span>+{referral.bonusPoints}</span>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-1 font-bold text-green-500">
-                                        <Gift className="h-4 w-4" />
-                                        <span>+{referral.bonusPoints}</span>
-                                    </div>
-                                </div>
+                                    {(index + 1) % 2 === 0 && (
+                                        <div className='my-4'>
+                                            <AdBanner page="refer" size="small" />
+                                        </div>
+                                    )}
+                                </Fragment>
                             ))
                         ) : (
                             <p className="text-center text-muted-foreground py-6">আপনি এখনও কাউকে রেফার করেননি।</p>

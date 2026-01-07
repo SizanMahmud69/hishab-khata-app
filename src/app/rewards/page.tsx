@@ -2,7 +2,7 @@
 
 "use client";
 
-import React, { useMemo, useRef, useEffect, useState } from 'react';
+import React, { useMemo, useRef, useEffect, useState, Fragment } from 'react';
 import { useSearchParams } from 'next/navigation';
 import PageHeader from "@/components/page-header"
 import { Banknote, Gift, Medal, Star, Trophy, ArrowUpCircle, ArrowDownCircle, History, Undo2, Users } from "lucide-react"
@@ -20,6 +20,7 @@ import { useBudget } from '@/context/budget-context';
 import { createNotification } from '@/components/app-header';
 import { useToast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
+import { AdBanner } from '@/components/ad-banner';
 
 
 interface UserProfile {
@@ -295,21 +296,28 @@ function RewardsPageContent() {
         <CardContent className="space-y-4">
             {pointHistory.length > 0 ? (
                 pointHistory.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 rounded-lg border">
-                        <div className="flex items-center gap-3">
-                             {getSourceIcon(item.source)}
-                             <div>
-                                <div className="font-semibold flex items-center gap-2">
-                                  {item.source}
-                                  {item.source === 'পয়েন্ট উইথড্র' && getStatusText(item.status)}
+                    <Fragment key={index}>
+                        <div className="flex items-center justify-between p-3 rounded-lg border">
+                            <div className="flex items-center gap-3">
+                                {getSourceIcon(item.source)}
+                                <div>
+                                    <div className="font-semibold flex items-center gap-2">
+                                    {item.source}
+                                    {item.source === 'পয়েন্ট উইথড্র' && getStatusText(item.status)}
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">{format(item.date, "d MMMM, yyyy, h:mm a", { locale: bn })}</p>
                                 </div>
-                                <p className="text-sm text-muted-foreground">{format(item.date, "d MMMM, yyyy, h:mm a", { locale: bn })}</p>
-                             </div>
+                            </div>
+                            <p className={`font-bold ${item.type === 'earned' || item.type === 'refunded' ? 'text-green-600' : 'text-red-500'}`}>
+                            {item.type === 'earned' || item.type === 'refunded' ? '+' : '-'}{item.points}
+                            </p>
                         </div>
-                         <p className={`font-bold ${item.type === 'earned' || item.type === 'refunded' ? 'text-green-600' : 'text-red-500'}`}>
-                           {item.type === 'earned' || item.type === 'refunded' ? '+' : '-'}{item.points}
-                         </p>
-                    </div>
+                        {(index + 1) % 2 === 0 && (
+                            <div className='my-4'>
+                                <AdBanner page="rewards" size="small" />
+                            </div>
+                        )}
+                    </Fragment>
                 ))
             ) : (
                 <p className='text-sm text-muted-foreground text-center py-4'>কোনো হিস্টোরি পাওয়া যায়নি।</p>

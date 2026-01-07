@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, Fragment } from 'react';
 import PageHeader from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -13,6 +13,7 @@ import { format, isToday, isYesterday, parseISO, subDays } from 'date-fns';
 import { bn } from 'date-fns/locale';
 import { useUser, useFirestore, useCollection, useMemoFirebase, FirestorePermissionError } from '@/firebase';
 import { collection, addDoc, serverTimestamp, query, orderBy, limit, updateDoc, doc, increment } from 'firebase/firestore';
+import { AdBanner } from '@/components/ad-banner';
 
 const MAX_STREAK_DAYS = 30;
 const BASE_REWARD = 5;
@@ -185,7 +186,7 @@ export default function CheckInPage() {
             )}
         </CardContent>
       </Card>
-
+      <AdBanner page="check-in" />
       <Card className="max-w-md mx-auto">
         <CardHeader>
             <CardTitle className='flex items-center gap-2'>
@@ -205,12 +206,14 @@ export default function CheckInPage() {
                     </TableHeader>
                     <TableBody>
                         {history.slice(0, 7).map((record, index) => (
-                            <TableRow key={index}>
-                                <TableCell className='font-medium'>
-                                    {format(parseISO(record.date), "d MMMM, yyyy", { locale: bn })}
-                                </TableCell>
-                                <TableCell className='text-right font-semibold text-green-700 dark:text-green-500'>+{record.points}</TableCell>
-                            </TableRow>
+                           <Fragment key={index}>
+                             <TableRow>
+                                 <TableCell className='font-medium'>
+                                     {format(parseISO(record.date), "d MMMM, yyyy", { locale: bn })}
+                                 </TableCell>
+                                 <TableCell className='text-right font-semibold text-green-700 dark:text-green-500'>+{record.points}</TableCell>
+                             </TableRow>
+                            </Fragment>
                         ))}
                     </TableBody>
                 </Table>

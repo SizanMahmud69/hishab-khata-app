@@ -2,8 +2,8 @@
 "use client";
 
 import { useMemo, useState, useEffect } from 'react';
-import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, where, doc } from 'firebase/firestore';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, where } from 'firebase/firestore';
 import Image from 'next/image';
 import Link from 'next/link';
 import { X, Crown } from 'lucide-react';
@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useRouter } from 'next/navigation';
 import { useBudget } from '@/context/budget-context';
+import { Skeleton } from './ui/skeleton';
 
 interface Ad {
     id: string;
@@ -30,9 +31,18 @@ interface Ad {
 
 interface AdBannerProps {
     page: string;
+    className?: string;
+    size?: 'small' | 'medium' | 'large';
 }
 
-export function AdBanner({ page }: AdBannerProps) {
+const sizeConfig = {
+    small: { width: 800, height: 100 }, // 8:1 ratio
+    medium: { width: 800, height: 200 }, // 4:1 ratio
+    large: { width: 800, height: 400 }, // 2:1 ratio
+};
+
+
+export function AdBanner({ page, className, size = 'medium' }: AdBannerProps) {
     const firestore = useFirestore();
     const router = useRouter();
     const { premiumStatus } = useBudget();
@@ -70,11 +80,22 @@ export function AdBanner({ page }: AdBannerProps) {
 
     const ad = useMemo(() => {
         if (!ads || ads.length === 0) return null;
-        // Prioritize page-specific ad over 'all'
-        return ads.find(ad => ad.page === page) || ads.find(ad => ad.page === 'all') || null;
+        // Create a pool of ads to choose from
+        const adPool = ads.filter(ad => ad.page === page || ad.page === 'all');
+        if (adPool.length === 0) return null;
+        // Randomly select an ad from the pool
+        return adPool[Math.floor(Math.random() * adPool.length)];
     }, [ads, page]);
     
-    if (isLoading || !ad || isDismissed || premiumStatus === 'premium') {
+    if (premiumStatus === 'premium') {
+        return null;
+    }
+    
+    if (isLoading) {
+        return <Skeleton className="w-full rounded-lg" style={{ height: `${sizeConfig[size].height / 4}px` }} />;
+    }
+
+    if (!ad || isDismissed) {
         return null;
     }
 
@@ -89,7 +110,7 @@ export function AdBanner({ page }: AdBannerProps) {
 
     return (
         <>
-            <div className="relative w-full rounded-lg overflow-hidden shadow-lg my-4 group">
+            <div className={`relative w-full rounded-lg overflow-hidden shadow-lg group ${className}`}>
                 <span className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full z-10 transition-all duration-500 whitespace-nowrap">
                     {adLabelText}
                 </span>
@@ -97,9 +118,10 @@ export function AdBanner({ page }: AdBannerProps) {
                     <Image
                         src={ad.imageUrl}
                         alt="Advertisement"
-                        width={800}
-                        height={200}
+                        width={sizeConfig[size].width}
+                        height={sizeConfig[size].height}
                         className="w-full object-cover"
+                        style={{ aspectRatio: `${sizeConfig[size].width} / ${sizeConfig[size].height}` }}
                     />
                 </Link>
                 {showCloseButton && (
