@@ -5,12 +5,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
-import { Mail, Phone, UserCheck, XCircle, CheckCircle, User as UserIcon, Loader2, Crown } from "lucide-react";
+import { Mail, Phone, UserCheck, XCircle, CheckCircle, User as UserIcon, Loader2, Crown, Info } from "lucide-react";
 import React, { useMemo } from "react";
 import Link from 'next/link';
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { bn } from "date-fns/locale";
 import { useBudget } from "@/context/budget-context";
 import { doc } from "firebase/firestore";
@@ -18,6 +18,10 @@ import { doc } from "firebase/firestore";
 interface VerificationRequest {
     status: 'pending' | 'approved' | 'rejected';
     rejectionReason?: string;
+    nidName?: string;
+    nidNumber?: string;
+    nidDob?: string;
+    nidAddress?: string;
 }
 
 export default function ProfilePage() {
@@ -235,6 +239,34 @@ export default function ProfilePage() {
             <VerificationStatus />
         </CardContent>
       </Card>
+
+      {verificationRequest?.status === 'approved' && verificationRequest.nidName && (
+        <Card>
+            <CardHeader>
+                <CardTitle>ভেরিফাইড তথ্য</CardTitle>
+                <CardDescription>আপনার এনআইডি অনুযায়ী ভেরিফাই হওয়া তথ্যসমূহ।</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm">
+                <div className="flex justify-between border-b pb-2">
+                    <span className="text-muted-foreground">নাম</span>
+                    <span className="font-medium">{verificationRequest.nidName}</span>
+                </div>
+                <div className="flex justify-between border-b pb-2">
+                    <span className="text-muted-foreground">এনআইডি নম্বর</span>
+                    <span className="font-medium">{verificationRequest.nidNumber}</span>
+                </div>
+                <div className="flex justify-between border-b pb-2">
+                    <span className="text-muted-foreground">জন্ম তারিখ</span>
+                    <span className="font-medium">{verificationRequest.nidDob ? format(parseISO(verificationRequest.nidDob), 'd MMMM, yyyy', { locale: bn }) : '-'}</span>
+                </div>
+                <div className="flex justify-between">
+                    <span className="text-muted-foreground">ঠিকানা</span>
+                    <span className="font-medium text-right">{verificationRequest.nidAddress}</span>
+                </div>
+            </CardContent>
+        </Card>
+      )}
+
     </div>
   )
 }
