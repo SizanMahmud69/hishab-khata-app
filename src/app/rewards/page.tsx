@@ -314,7 +314,7 @@ function RewardsPageContent() {
                         </div>
                         {(index + 1) % 2 === 0 && (
                             <div className='my-4'>
-                                <AdBanner page="rewards" size="small" />
+                                <AdBanner page="rewards" />
                             </div>
                         )}
                     </Fragment>

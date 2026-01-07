@@ -222,7 +222,7 @@ export default function HistoryPage() {
                 </Card>
                 {(index + 1) % 2 === 0 && (
                     <div className='my-4'>
-                        <AdBanner page="history" size="small" />
+                        <AdBanner page="history" />
                     </div>
                 )}
             </Fragment>
