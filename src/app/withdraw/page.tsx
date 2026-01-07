@@ -326,7 +326,7 @@ export default function WithdrawPage() {
                                         <TableRow>
                                             <TableCell colSpan={5} className="p-0">
                                                 <div className='my-2'>
-                                                    <AdBanner page="withdraw" />
+                                                    <AdBanner page="withdraw" adIndex={Math.floor(index / 2)} />
                                                 </div>
                                             </TableCell>
                                         </TableRow>

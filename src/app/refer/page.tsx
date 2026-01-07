@@ -144,7 +144,7 @@ export default function ReferPage() {
                                     </div>
                                     {(index + 1) % 2 === 0 && (
                                         <div className='my-4'>
-                                            <AdBanner page="refer" />
+                                            <AdBanner page="refer" adIndex={Math.floor(index / 2)} />
                                         </div>
                                     )}
                                 </Fragment>

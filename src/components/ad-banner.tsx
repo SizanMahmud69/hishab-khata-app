@@ -32,17 +32,11 @@ interface Ad {
 interface AdBannerProps {
     page: string;
     className?: string;
-    size?: 'small' | 'medium' | 'large';
+    adIndex?: number;
 }
 
-const sizeConfig = {
-    small: { width: 800, height: 100 },
-    medium: { width: 800, height: 200 },
-    large: { width: 800, height: 400 },
-};
 
-
-export function AdBanner({ page, className, size = 'medium' }: AdBannerProps) {
+export function AdBanner({ page, className, adIndex }: AdBannerProps) {
     const firestore = useFirestore();
     const router = useRouter();
     const { premiumStatus } = useBudget();
@@ -80,19 +74,25 @@ export function AdBanner({ page, className, size = 'medium' }: AdBannerProps) {
 
     const ad = useMemo(() => {
         if (!ads || ads.length === 0) return null;
-        // Create a pool of ads to choose from
+        
         const adPool = ads.filter(ad => ad.page === page || ad.page === 'all');
         if (adPool.length === 0) return null;
-        // Randomly select an ad from the pool
-        return adPool[Math.floor(Math.random() * adPool.length)];
-    }, [ads, page]);
+
+        if (adIndex !== undefined) {
+             // Sequential selection
+            return adPool[adIndex % adPool.length];
+        } else {
+            // Randomly select an ad from the pool
+            return adPool[Math.floor(Math.random() * adPool.length)];
+        }
+    }, [ads, page, adIndex]);
     
     if (premiumStatus === 'premium') {
         return null;
     }
     
     if (isLoading) {
-        return <Skeleton className="w-full rounded-lg" style={{ height: `${sizeConfig[size].height / 4}px` }} />;
+        return <Skeleton className="w-full rounded-lg h-32" />;
     }
 
     if (!ad || isDismissed) {
@@ -118,9 +118,9 @@ export function AdBanner({ page, className, size = 'medium' }: AdBannerProps) {
                     <Image
                         src={ad.imageUrl}
                         alt="Advertisement"
-                        width={sizeConfig[size].width}
-                        height={sizeConfig[size].height}
-                        className="object-cover h-full"
+                        width={800}
+                        height={200}
+                        className="object-cover w-full h-auto"
                     />
                 </Link>
                 {showCloseButton && (
