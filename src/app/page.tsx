@@ -2,39 +2,39 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { BookMarked, ShieldCheck, FileText, TrendingUp, TrendingDown, HandCoins, Store, Award, MoveRight } from 'lucide-react';
+import { BookMarked, ShieldCheck, TrendingUp, TrendingDown, HandCoins, Award, Users, Crown, MoveRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const features = [
   {
     icon: <TrendingUp className="h-8 w-8 text-primary" />,
-    title: "আয়ের হিসাব",
-    description: "আপনার সকল আয়ের উৎস এবং পরিমাণ নির্ভুলভাবে রেকর্ড করুন।",
-  },
-  {
-    icon: <TrendingDown className="h-8 w-8 text-red-500" />,
-    title: "ব্যয়ের হিসাব",
-    description: "প্রতিদিনের ছোট-বড় সকল ব্যয়ের হিসাব রাখুন ক্যাটাগরি অনুযায়ী।",
+    title: "আয়-ব্যয়ের হিসাব",
+    description: "আপনার সকল আয় এবং ব্যয়ের উৎস ও পরিমাণ নির্ভুলভাবে রেকর্ড করুন, ক্যাটাগরি অনুযায়ী বিশ্লেষণ করুন।",
   },
   {
     icon: <HandCoins className="h-8 w-8 text-yellow-500" />,
-    title: "ধারের হিসাব",
-    description: "কারও থেকে টাকা ধার নিলে বা কাউকে দিলে, তার হিসাব সহজেই রাখুন।",
+    title: "সকল ধারের হিসাব",
+    description: "কাউকে টাকা ধার দিলে বা নিলে এবং দোকানের বাকি থাকলে, তার পুঙ্খানুপুঙ্খ হিসাব সহজেই রাখুন।",
   },
-  {
-    icon: <Store className="h-8 w-8 text-purple-500" />,
-    title: "দোকান বাকি",
-    description: "বিভিন্ন দোকানে আপনার বাকির হিসাব এক জায়গায় গুছিয়ে রাখুন।",
+   {
+    icon: <Users className="h-8 w-8 text-indigo-500" />,
+    title: "রেফার ও আয়",
+    description: "আপনার বন্ধুদের অ্যাপে আমন্ত্রণ জানিয়ে আকর্ষণীয় বোনাস পয়েন্ট অর্জন করুন এবং আয় করুন।",
   },
   {
     icon: <Award className="h-8 w-8 text-green-500" />,
-    title: "রিওয়ার্ড সিস্টেম",
-    description: "প্রতিদিন অ্যাপ ব্যবহার করে এবং মাইলফলক অর্জন করে পয়েন্ট জমান।",
+    title: "রিওয়ার্ড ও চেক-ইন",
+    description: "প্রতিদিন অ্যাপ ব্যবহার করে, চেক-ইন করে এবং মাইলফলক অর্জন করে মূল্যবান রিওয়ার্ড পয়েন্ট জমান।",
   },
   {
-    icon: <BookMarked className="h-8 w-8 text-indigo-500" />,
-    title: "মাসিক রিপোর্ট",
-    description: "মাস শেষে আপনার আয়-ব্যয়ের 상세 রিপোর্ট দেখুন এবং বিশ্লেষণ করুন।",
+    icon: <ShieldCheck className="h-8 w-8 text-blue-500" />,
+    title: "NID ভেরিফিকেশন",
+    description: "আপনার অ্যাকাউন্ট সুরক্ষিত রাখতে এবং বিশ্বাসযোগ্যতা বাড়াতে এনআইডি ভেরিফিকেশন সম্পন্ন করুন।",
+  },
+  {
+    icon: <Crown className="h-8 w-8 text-purple-500" />,
+    title: "প্রিমিয়াম সাবস্ক্রিপশন",
+    description: "বিজ্ঞাপন-মুক্ত অভিজ্ঞতা এবং বিশেষ ফিচার পেতে প্রিমিয়াম প্ল্যানে আপগ্রেড করুন।",
   },
 ];
 
