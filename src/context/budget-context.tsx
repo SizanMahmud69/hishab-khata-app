@@ -124,40 +124,6 @@ const BudgetContext = createContext<BudgetContextType | undefined>(undefined);
 
 const SAVINGS_MILESTONES = [1000, 5000, 10000, 20000, 30000, 40000, 50000, 100000];
 
-async function activateSubscription(firestore: Firestore, userId: string, subscriptionId: string, planId: string) {
-    const userDocRef = doc(firestore, 'users', userId);
-    const plan = premiumPlans.find(p => p.id === planId);
-    if (!plan) {
-        console.error(`Plan with id ${planId} not found.`);
-        return;
-    }
-
-    const batch = writeBatch(firestore);
-    const expiryDate = plan.durationDays ? addDays(new Date(), plan.durationDays) : null;
-
-    batch.update(userDocRef, {
-        premiumStatus: 'premium',
-        premiumPlanId: plan.id,
-        premiumExpiryDate: expiryDate ? expiryDate : null,
-    });
-
-    const subRef = doc(firestore, `users/${userId}/premium_subscriptions`, subscriptionId);
-    batch.update(subRef, {
-        activatedAt: serverTimestamp(),
-        expiresAt: expiryDate ? expiryDate : null,
-        status: 'approved' // ensure status is approved
-    });
-
-    await batch.commit();
-
-    createNotification({
-        id: `premium-activated-${subscriptionId}`,
-        title: "সাবস্ক্রিপশন সক্রিয় হয়েছে!",
-        description: `আপনার "${plan.title}" প্ল্যানটি সফলভাবে সক্রিয় করা হয়েছে।`,
-        link: "/profile",
-    }, userId, firestore);
-}
-
 
 export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const { user, isLoading: isUserLoading } = useUser();
@@ -213,6 +179,40 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const { data: allWithdrawals = [], isLoading: isWithdrawalsLoading } = useCollection<WithdrawalRequest>(withdrawalsQuery);
 
 
+    const activateSubscription = useCallback(async (firestore: Firestore, userId: string, subscriptionId: string, planId: string) => {
+        const userDocRef = doc(firestore, 'users', userId);
+        const plan = premiumPlans.find(p => p.id === planId);
+        if (!plan) {
+            console.error(`Plan with id ${planId} not found.`);
+            return;
+        }
+
+        const batch = writeBatch(firestore);
+        const expiryDate = plan.durationDays ? addDays(new Date(), plan.durationDays) : null;
+
+        batch.update(userDocRef, {
+            premiumStatus: 'premium',
+            premiumPlanId: plan.id,
+            premiumExpiryDate: expiryDate ? expiryDate : null,
+        });
+
+        const subRef = doc(firestore, `users/${userId}/premium_subscriptions`, subscriptionId);
+        batch.update(subRef, {
+            activatedAt: serverTimestamp(),
+            expiresAt: expiryDate ? expiryDate : null,
+            status: 'approved' // ensure status is approved
+        });
+
+        await batch.commit();
+
+        createNotification({
+            id: `premium-activated-${subscriptionId}`,
+            title: "সাবস্ক্রিপশন সক্রিয় হয়েছে!",
+            description: `আপনার "${plan.title}" প্ল্যানটি সফলভাবে সক্রিয় করা হয়েছে।`,
+            link: "/profile",
+        }, userId, firestore);
+    }, []);
+
     useEffect(() => {
         if (!user || !firestore) return;
     
@@ -231,7 +231,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         });
     
         return () => unsubscribe(); // Cleanup the listener
-    }, [user, firestore]);
+    }, [user, firestore, activateSubscription]);
     
     const { premiumStatus, premiumExpiryDate } = useMemo(() => {
         if (!userProfile) return { premiumStatus: 'free', premiumExpiryDate: null };
