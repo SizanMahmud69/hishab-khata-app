@@ -43,19 +43,19 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
     const [isAlertOpen, setIsAlertOpen] = useState(false);
     const [adLabel, setAdLabel] = useState('বিজ্ঞাপন');
 
-    // Define which pages should use the pop-up/AlertDialog
+    // Define which pages should use the pop-up/AlertDialog on load
     const popUpPages = ['landing', 'profile', 'premium'];
-    const isPopUpAd = popUpPages.includes(page);
+    const isPopUpAdOnLoad = popUpPages.includes(page);
     
     // Timer state for pop-up ads
     const [showCloseButton, setShowCloseButton] = useState(false);
     useEffect(() => {
-        if (!isPopUpAd) return;
+        if (!isPopUpAdOnLoad) return;
         const closeButtonTimer = setTimeout(() => {
             setShowCloseButton(true);
         }, 5000); // 5 seconds
         return () => clearTimeout(closeButtonTimer);
-    }, [isPopUpAd]);
+    }, [isPopUpAdOnLoad]);
 
 
     const allAdsQuery = useMemoFirebase(() => {
@@ -77,8 +77,8 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
 
         if (adPool.length === 0) return null;
         
-        // For pop-up ads, set a delay before showing
-        if (isPopUpAd) {
+        // For pop-up ads on load, set a delay before showing
+        if (isPopUpAdOnLoad) {
              setTimeout(() => setIsAlertOpen(true), 2000);
         }
         
@@ -87,7 +87,7 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
         } else {
             return adPool[Math.floor(Math.random() * adPool.length)];
         }
-    }, [allAds, page, adIndex, isPopUpAd]);
+    }, [allAds, page, adIndex, isPopUpAdOnLoad]);
     
     useEffect(() => {
         if (ad) {
@@ -103,8 +103,7 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
     }
 
     if (isLoading) {
-        // Only show skeleton for inline ads, not pop-ups
-        return isPopUpAd ? null : <Skeleton className="h-24 w-full" />;
+        return isPopUpAdOnLoad ? null : <Skeleton className="h-24 w-full" />;
     }
 
     const handleDismiss = () => {
@@ -113,12 +112,31 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
     };
 
     const handlePremiumRedirect = () => {
-        router.push('/premium');
         setIsAlertOpen(false);
+        router.push('/premium');
+    };
+    
+    const handleCrossClick = () => {
+        setIsAlertOpen(true);
     };
 
-    // Render Pop-up Ad
-    if (isPopUpAd) {
+    const AdDialog = (
+        <AlertDialogContent className="overflow-hidden p-0 max-w-sm">
+            <AlertDialogHeader className="p-6 text-center">
+                <AlertDialogTitle className="text-xl">বিজ্ঞাপন-মুক্ত অভিজ্ঞতা নিন!</AlertDialogTitle>
+                <AlertDialogDescription>
+                    আমাদের অ্যাপের বিজ্ঞাপনমুক্ত অভিজ্ঞতা পেতে এবং ডেভেলপারদের সমর্থন করতে, অনুগ্রহ করে প্রিমিয়াম সাবস্ক্রিপশন নিন।
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className='px-6 pb-6 pt-0 bg-transparent flex sm:flex-row sm:justify-center gap-2'>
+                <AlertDialogCancel onClick={handleDismiss} className='w-full'>পরে ভাবছি</AlertDialogCancel>
+                <AlertDialogAction onClick={handlePremiumRedirect} className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold">প্রিমিয়াম নিন</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    );
+
+    // Render Pop-up Ad on load for specific pages
+    if (isPopUpAdOnLoad) {
         return (
             <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
                 <AlertDialogContent className="overflow-hidden p-0 max-w-sm">
@@ -137,7 +155,7 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
                         </span>
                         {showCloseButton && (
                             <button 
-                                onClick={handlePremiumRedirect}
+                                onClick={handleCrossClick}
                                 className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full transition-opacity z-10"
                                 aria-label="প্রিমিয়াম কিনুন"
                             >
@@ -160,28 +178,31 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
         );
     }
     
-    // Render Inline Banner Ad
+    // Render Inline Banner Ad for other pages
     return (
-        <div className={`relative group ${className}`}>
-            <Link href={ad.linkUrl} target="_blank" className="block">
-                <Image
-                    src={ad.imageUrl}
-                    alt="Advertisement"
-                    width={800}
-                    height={150}
-                    className="w-full h-auto object-cover rounded-lg"
-                />
-            </Link>
-             <span className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full z-10 pointer-events-none transition-all duration-300">
-                {adLabel}
-            </span>
-            <button 
-                onClick={handlePremiumRedirect}
-                className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full transition-opacity opacity-0 group-hover:opacity-100 z-10"
-                aria-label="বিজ্ঞাপন বন্ধ করুন"
-            >
-                <X className="w-4 h-4" />
-            </button>
-        </div>
+        <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+            <div className={`relative group ${className}`}>
+                <Link href={ad.linkUrl} target="_blank" className="block">
+                    <Image
+                        src={ad.imageUrl}
+                        alt="Advertisement"
+                        width={800}
+                        height={150}
+                        className="w-full h-auto object-cover rounded-lg"
+                    />
+                </Link>
+                <span className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full z-10 pointer-events-none transition-all duration-300">
+                    {adLabel}
+                </span>
+                <button 
+                    onClick={handleCrossClick}
+                    className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full transition-opacity opacity-0 group-hover:opacity-100 z-10"
+                    aria-label="বিজ্ঞাপন বন্ধ করুন"
+                >
+                    <X className="w-4 h-4" />
+                </button>
+            </div>
+            {AdDialog}
+        </AlertDialog>
     );
 }
