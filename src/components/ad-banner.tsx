@@ -51,22 +51,21 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
     const [showCloseButton, setShowCloseButton] = useState(false);
     
     useEffect(() => {
-        if (!isPopUpAdOnLoad) return;
+        if (!isPopUpAdOnLoad || premiumStatus === 'premium') return;
+
+        const openAdTimer = setTimeout(() => {
+             setIsAlertOpen(true);
+        }, 2000); // 2-second delay before showing the pop-up
+
         const closeButtonTimer = setTimeout(() => {
             setShowCloseButton(true);
-        }, 5000); // 5 seconds
-        
-        const openAdTimer = setTimeout(() => {
-            if (ad && premiumStatus !== 'premium') {
-                setIsAlertOpen(true);
-            }
-        }, 2000);
+        }, 5000); // 5 seconds before showing close button
 
         return () => {
-            clearTimeout(closeButtonTimer);
             clearTimeout(openAdTimer);
+            clearTimeout(closeButtonTimer);
         }
-    }, [isPopUpAdOnLoad, premiumStatus]);
+    }, [isPopUpAdOnLoad, premiumStatus, page]);
 
 
     const allAdsQuery = useMemoFirebase(() => {
@@ -113,7 +112,7 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
     }
 
     const handleDismiss = () => {
-        setIsDismissed(true); // Don't show again in this session
+        setIsDismissed(true);
         setIsAlertOpen(false);
     };
 
@@ -129,6 +128,7 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
     const AdDialog = (
         <AlertDialogContent>
             <AlertDialogHeader>
+                <AlertDialogTitle className='sr-only'>Advertisement Dialog</AlertDialogTitle>
                 <div className="flex flex-col items-center text-center gap-4">
                     <div className="rounded-full bg-yellow-100 dark:bg-yellow-900/30 p-4">
                         <Crown className="w-12 h-12 text-yellow-500" />
@@ -167,7 +167,31 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
         return (
             <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
                 <AlertDialogTitle className='sr-only'>Advertisement Dialog</AlertDialogTitle>
-                {AdDialog}
+                {ad && (
+                    <AlertDialogContent>
+                        <Link href={ad.linkUrl} target="_blank" className="block w-full h-auto" onClick={() => setIsAlertOpen(false)}>
+                            <Image
+                                src={ad.imageUrl}
+                                alt="Advertisement"
+                                width={800}
+                                height={400}
+                                className="w-full h-auto object-contain rounded-lg"
+                            />
+                        </Link>
+                        {showCloseButton && (
+                            <AlertDialogFooter className="pt-4">
+                                <AlertDialogCancel onClick={() => setIsAlertOpen(false)} className='w-full'>
+                                    <X className="mr-2 h-4 w-4" />
+                                    বন্ধ করুন
+                                </AlertDialogCancel>
+                                <AlertDialogAction onClick={handlePremiumRedirect} className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold">
+                                    <Crown className="mr-2 h-4 w-4" />
+                                    বিজ্ঞাপন ছাড়া দেখুন
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        )}
+                    </AlertDialogContent>
+                )}
             </AlertDialog>
         );
     }
@@ -194,7 +218,6 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
                     <X className="w-4 h-4" />
                 </button>
             </div>
-             <AlertDialogTitle className='sr-only'>Advertisement Options</AlertDialogTitle>
             {isAlertOpen && AdDialog}
         </AlertDialog>
     );
