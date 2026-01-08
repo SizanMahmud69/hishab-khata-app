@@ -134,7 +134,7 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
                 </div>
             </AlertDialogHeader>
             <AlertDialogFooter className='flex-col sm:flex-row sm:justify-center gap-2'>
-                <AlertDialogCancel className='w-full'>
+                <AlertDialogCancel onClick={() => setIsAlertOpen(false)} className='w-full'>
                     <X className="mr-2 h-4 w-4" />
                     পরে ভাবছি
                 </AlertDialogCancel>
@@ -161,6 +161,7 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
         return (
             <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
                 <AlertDialogContent className="overflow-hidden p-0 max-w-sm">
+                    <AlertDialogTitle className='sr-only'>Advertisement</AlertDialogTitle>
                     <div className="relative">
                         <Link href={ad.linkUrl} target="_blank" onClick={() => setIsAlertOpen(false)}>
                             <Image
@@ -182,8 +183,8 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
                             </button>
                         )}
                     </div>
-                   {AdDialog}
                 </AlertDialogContent>
+                {isAlertOpen && AdDialog}
             </AlertDialog>
         );
     }
@@ -210,7 +211,7 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
                     <X className="w-4 h-4" />
                 </button>
             </div>
-            {AdDialog}
+            {isAlertOpen && AdDialog}
         </AlertDialog>
     );
 }
