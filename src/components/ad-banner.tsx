@@ -166,9 +166,12 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
     if (isPopUpAdOnLoad) {
         return (
             <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
-                <AlertDialogTitle className='sr-only'>Advertisement Dialog</AlertDialogTitle>
+                
                 {ad && (
                     <AlertDialogContent>
+                         <AlertDialogHeader>
+                            <AlertDialogTitle className='sr-only'>Advertisement</AlertDialogTitle>
+                        </AlertDialogHeader>
                         <Link href={ad.linkUrl} target="_blank" className="block w-full h-auto" onClick={() => setIsAlertOpen(false)}>
                             <Image
                                 src={ad.imageUrl}
