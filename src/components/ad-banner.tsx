@@ -121,16 +121,27 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
     };
 
     const AdDialog = (
-        <AlertDialogContent className="overflow-hidden p-0 max-w-sm">
-            <AlertDialogHeader className="p-6 text-center">
-                <AlertDialogTitle className="text-xl">বিজ্ঞাপন-মুক্ত অভিজ্ঞতা নিন!</AlertDialogTitle>
-                <AlertDialogDescription>
-                    আমাদের অ্যাপের বিজ্ঞাপনমুক্ত অভিজ্ঞতা পেতে এবং ডেভেলপারদের সমর্থন করতে, অনুগ্রহ করে প্রিমিয়াম সাবস্ক্রিপশন নিন।
-                </AlertDialogDescription>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <div className="flex flex-col items-center text-center gap-4">
+                    <div className="rounded-full bg-yellow-100 dark:bg-yellow-900/30 p-4">
+                        <Crown className="w-12 h-12 text-yellow-500" />
+                    </div>
+                    <AlertDialogTitle className="text-2xl">বিজ্ঞাপন-মুক্ত অভিজ্ঞতা নিন!</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        আমাদের অ্যাপের বিজ্ঞাপনমুক্ত অভিজ্ঞতা পেতে এবং ডেভেলপারদের সমর্থন করতে, অনুগ্রহ করে প্রিমিয়াম সাবস্ক্রিপশন নিন।
+                    </AlertDialogDescription>
+                </div>
             </AlertDialogHeader>
-            <AlertDialogFooter className='px-6 pb-6 pt-0 bg-transparent flex sm:flex-row sm:justify-center gap-2'>
-                <AlertDialogCancel className='w-full'>পরে ভাবছি</AlertDialogCancel>
-                <AlertDialogAction onClick={handlePremiumRedirect} className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold">প্রিমিয়াম নিন</AlertDialogAction>
+            <AlertDialogFooter className='flex-col sm:flex-row sm:justify-center gap-2'>
+                <AlertDialogCancel className='w-full'>
+                    <X className="mr-2 h-4 w-4" />
+                    পরে ভাবছি
+                </AlertDialogCancel>
+                <AlertDialogAction onClick={handlePremiumRedirect} className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold">
+                    <Crown className="mr-2 h-4 w-4" />
+                    প্রিমিয়াম নিন
+                </AlertDialogAction>
             </AlertDialogFooter>
         </AlertDialogContent>
     );
@@ -163,16 +174,7 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
                             </button>
                         )}
                     </div>
-                    <AlertDialogHeader className="p-6 text-center">
-                        <AlertDialogTitle className="text-xl">বিজ্ঞাপন-মুক্ত অভিজ্ঞতা নিন!</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            আমাদের অ্যাপের বিজ্ঞাপনমুক্ত অভিজ্ঞতা পেতে এবং ডেভেলপারদের সমর্থন করতে, অনুগ্রহ করে প্রিমিয়াম সাবস্ক্রিপশন নিন।
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter className='px-6 pb-6 pt-0 bg-transparent flex sm:flex-row sm:justify-center gap-2'>
-                        <AlertDialogCancel className='w-full'>পরে ভাবছি</AlertDialogCancel>
-                        <AlertDialogAction onClick={handlePremiumRedirect} className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold">প্রিমিয়াম নিন</AlertDialogAction>
-                    </AlertDialogFooter>
+                   {AdDialog}
                 </AlertDialogContent>
             </AlertDialog>
         );
