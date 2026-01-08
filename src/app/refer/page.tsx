@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import React, { useMemo, Fragment } from 'react';
@@ -142,9 +141,9 @@ export default function ReferPage() {
                                             <span>+{referral.bonusPoints}</span>
                                         </div>
                                     </div>
-                                    {(index + 1) % 2 === 0 && (
+                                    {(index + 1) % 5 === 0 && (
                                         <div className='my-4'>
-                                            <AdBanner page="refer" adIndex={Math.floor(index / 2)} />
+                                            <AdBanner page="refer" adIndex={Math.floor(index / 5)} />
                                         </div>
                                     )}
                                 </Fragment>

@@ -49,13 +49,24 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
     
     // Timer state for pop-up ads
     const [showCloseButton, setShowCloseButton] = useState(false);
+    
     useEffect(() => {
         if (!isPopUpAdOnLoad) return;
         const closeButtonTimer = setTimeout(() => {
             setShowCloseButton(true);
         }, 5000); // 5 seconds
-        return () => clearTimeout(closeButtonTimer);
-    }, [isPopUpAdOnLoad]);
+        
+        const openAdTimer = setTimeout(() => {
+            if (ad && premiumStatus !== 'premium') {
+                setIsAlertOpen(true);
+            }
+        }, 2000);
+
+        return () => {
+            clearTimeout(closeButtonTimer);
+            clearTimeout(openAdTimer);
+        }
+    }, [isPopUpAdOnLoad, premiumStatus]);
 
 
     const allAdsQuery = useMemoFirebase(() => {
@@ -77,17 +88,12 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
 
         if (adPool.length === 0) return null;
         
-        // For pop-up ads on load, set a delay before showing
-        if (isPopUpAdOnLoad) {
-             setTimeout(() => setIsAlertOpen(true), 2000);
-        }
-        
         if (adIndex !== undefined) {
             return adPool[adIndex % adPool.length];
         } else {
             return adPool[Math.floor(Math.random() * adPool.length)];
         }
-    }, [allAds, page, adIndex, isPopUpAdOnLoad]);
+    }, [allAds, page, adIndex]);
     
     useEffect(() => {
         if (ad) {
@@ -160,31 +166,8 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
     if (isPopUpAdOnLoad) {
         return (
             <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
-                <AlertDialogContent className="overflow-hidden p-0 max-w-sm">
-                    <AlertDialogTitle className='sr-only'>Advertisement</AlertDialogTitle>
-                    <div className="relative">
-                        <Link href={ad.linkUrl} target="_blank" onClick={() => setIsAlertOpen(false)}>
-                            <Image
-                                src={ad.imageUrl}
-                                alt="Advertisement"
-                                width={400}
-                                height={400}
-                                className="object-cover w-full h-auto"
-                            />
-                        </Link>
-                        <AdLabel />
-                        {showCloseButton && (
-                            <button 
-                                onClick={handleCrossClick}
-                                className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full transition-opacity z-10"
-                                aria-label="প্রিমিয়াম কিনুন"
-                            >
-                                <X className="w-4 h-4" />
-                            </button>
-                        )}
-                    </div>
-                </AlertDialogContent>
-                {isAlertOpen && AdDialog}
+                <AlertDialogTitle className='sr-only'>Advertisement Dialog</AlertDialogTitle>
+                {AdDialog}
             </AlertDialog>
         );
     }
@@ -211,6 +194,7 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
                     <X className="w-4 h-4" />
                 </button>
             </div>
+             <AlertDialogTitle className='sr-only'>Advertisement Options</AlertDialogTitle>
             {isAlertOpen && AdDialog}
         </AlertDialog>
     );

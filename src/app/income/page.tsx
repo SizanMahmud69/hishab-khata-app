@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import React, { useState, useRef } from "react";
@@ -155,7 +154,9 @@ export default function IncomePage() {
             </CardFooter>
         </form>
       </Card>
-      <AdBanner page="income" />
+      <div className="max-w-2xl mx-auto">
+        <AdBanner page="income" />
+      </div>
     </div>
   )
 }

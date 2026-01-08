@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useMemo, useState } from "react";
@@ -20,7 +19,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils";

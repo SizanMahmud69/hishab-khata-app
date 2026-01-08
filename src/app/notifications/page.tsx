@@ -122,9 +122,9 @@ export default function NotificationsPage() {
                                         </div>
                                     )}
                                 </div>
-                                {(index + 1) % 2 === 0 && (
+                                {(index + 1) % 4 === 0 && (
                                     <div className='my-4'>
-                                        <AdBanner page="notifications" adIndex={Math.floor(index / 2)} />
+                                        <AdBanner page="notifications" adIndex={Math.floor(index / 4)} />
                                     </div>
                                 )}
                             </Fragment>

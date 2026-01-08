@@ -186,7 +186,7 @@ export default function CheckInPage() {
             )}
         </CardContent>
       </Card>
-      <AdBanner page="check-in" />
+      
       <Card className="max-w-md mx-auto">
         <CardHeader>
             <CardTitle className='flex items-center gap-2'>
@@ -222,6 +222,9 @@ export default function CheckInPage() {
             )}
         </CardContent>
       </Card>
+      <div className="max-w-md mx-auto">
+        <AdBanner page="check-in" />
+      </div>
 
     </div>
   )
