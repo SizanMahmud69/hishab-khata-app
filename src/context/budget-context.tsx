@@ -218,16 +218,18 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     
         const q = query(
             collection(firestore, `users/${user.uid}/premium_subscriptions`),
-            where('status', '==', 'approved'),
-            where('activatedAt', '==', null)
+            where('status', '==', 'approved')
         );
     
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            if (!snapshot.empty) {
-                const subToActivate = snapshot.docs[0]; // Activate one by one
-                activateSubscription(firestore, user.uid, subToActivate.id, subToActivate.data().planId)
-                    .catch(err => console.error("Failed to auto-activate subscription:", err));
-            }
+            snapshot.docs.forEach(subDoc => {
+                const subscriptionData = subDoc.data();
+                // Activate only if it hasn't been activated before
+                if (!subscriptionData.activatedAt) {
+                    activateSubscription(firestore, user.uid, subDoc.id, subscriptionData.planId)
+                        .catch(err => console.error("Failed to auto-activate subscription:", err));
+                }
+            });
         });
     
         return () => unsubscribe(); // Cleanup the listener
