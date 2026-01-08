@@ -43,20 +43,15 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
     const [isDismissed, setIsDismissed] = useState(false);
     const [isAlertOpen, setIsAlertOpen] = useState(false);
     const [showCloseButton, setShowCloseButton] = useState(false);
-    const [adLabelText, setAdLabelText] = useState("বিজ্ঞাপনটি বন্ধ করতে ক্লিক করুন");
+    const [adLabelText, setAdLabelText] = useState("বিজ্ঞাপন");
 
     useEffect(() => {
         const closeButtonTimer = setTimeout(() => {
             setShowCloseButton(true);
         }, 5000); // 5 seconds
 
-        const labelTextTimer = setTimeout(() => {
-            setAdLabelText("বিজ্ঞাপন");
-        }, 4000); // 4 seconds
-
         return () => {
             clearTimeout(closeButtonTimer);
-            clearTimeout(labelTextTimer);
         };
     }, []);
 
@@ -81,6 +76,9 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
         );
 
         if (adPool.length === 0) return null;
+        
+        // Show the ad after a delay to not be too intrusive
+        setTimeout(() => setIsAlertOpen(true), 2000);
 
         if (adIndex !== undefined) {
              // Sequential selection based on the pool for the current page
@@ -96,7 +94,8 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
     }
     
     if (isLoading) {
-        return <Skeleton className="w-full rounded-lg h-32" />;
+        // Don't show a skeleton for a pop-up
+        return null;
     }
 
     if (!ad || isDismissed) {
@@ -104,8 +103,15 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
     }
 
     const handleDismiss = () => {
-        setIsAlertOpen(true);
+        setIsAlertOpen(false);
+        setIsDismissed(true); // Don't show again in this session
     };
+    
+    const handleActionClick = () => {
+        router.push(ad.linkUrl);
+        handleDismiss();
+    }
+
 
     const handlePremiumRedirect = () => {
         router.push('/premium');
@@ -113,49 +119,41 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
     }
 
     return (
-        <>
-            <div className={`relative w-full rounded-lg overflow-hidden shadow-lg group ${className}`}>
-                <span className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full z-10 transition-all duration-500 whitespace-nowrap">
-                    {adLabelText}
-                </span>
-                <Link href={ad.linkUrl} target="_blank" rel="noopener noreferrer">
-                    <Image
+        <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+            <AlertDialogContent className="overflow-hidden p-0 max-w-sm">
+                 <div className="relative">
+                     <Image
                         src={ad.imageUrl}
                         alt="Advertisement"
-                        width={800}
-                        height={200}
-                        className="object-cover h-auto"
+                        width={400}
+                        height={400}
+                        className="object-cover w-full h-auto"
                     />
-                </Link>
-                {showCloseButton && (
-                    <button 
-                        onClick={handleDismiss}
-                        className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                        aria-label="বিজ্ঞাপন বন্ধ করুন"
-                    >
-                        <X className="w-4 h-4" />
-                    </button>
-                )}
-            </div>
-            
-             <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
-                <AlertDialogContent className="overflow-hidden p-0">
-                    <div className="bg-gradient-to-br from-yellow-400 to-orange-500 p-8 flex flex-col items-center justify-center text-center">
-                        <Crown className="w-16 h-16 text-white drop-shadow-lg" />
-                    </div>
-                    <AlertDialogHeader className="p-6 text-center">
-                        <AlertDialogTitle className="text-2xl">বিজ্ঞাপনমুক্ত অভিজ্ঞতা নিন!</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            আমাদের অ্যাপের বিজ্ঞাপনমুক্ত অভিজ্ঞতা পেতে এবং ডেভেলপারদের সমর্থন করতে, অনুগ্রহ করে প্রিমিয়াম সাবস্ক্রিপশন নিন।
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter className='p-6 pt-0 bg-transparent'>
-                        <AlertDialogCancel>পরে ভাবছি</AlertDialogCancel>
-                        <AlertDialogAction onClick={handlePremiumRedirect} className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold">প্রিমিয়াম নিন</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-        </>
+                     <span className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full z-10 transition-all duration-500 whitespace-nowrap">
+                        {adLabelText}
+                    </span>
+                     {showCloseButton && (
+                        <button 
+                            onClick={handleDismiss}
+                            className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full transition-opacity z-10"
+                            aria-label="বিজ্ঞাপন বন্ধ করুন"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    )}
+                 </div>
+                <AlertDialogHeader className="p-6 text-center">
+                    <AlertDialogTitle className="text-xl">বিজ্ঞাপন-মুক্ত অভিজ্ঞতা নিন!</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        আমাদের অ্যাপের বিজ্ঞাপনমুক্ত অভিজ্ঞতা পেতে এবং ডেভেলপারদের সমর্থন করতে, অনুগ্রহ করে প্রিমিয়াম সাবস্ক্রিপশন নিন।
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter className='px-6 pb-6 pt-0 bg-transparent flex sm:flex-row sm:justify-center gap-2'>
+                    <AlertDialogCancel onClick={handleDismiss} className='w-full'>বাতিল</AlertDialogCancel>
+                    <AlertDialogAction onClick={handlePremiumRedirect} className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold">প্রিমিয়াম নিন</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     );
 }
 

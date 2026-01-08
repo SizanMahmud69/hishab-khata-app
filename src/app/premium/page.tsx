@@ -12,6 +12,7 @@ import { premiumPlans as allPlans, type PremiumPlan } from "@/lib/data";
 import { useBudget } from '@/context/budget-context';
 import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AdBanner } from '@/components/ad-banner';
 
 const premiumFeatures = [
     { text: "সম্পূর্ণ বিজ্ঞাপন-মুক্ত অভিজ্ঞতা", icon: <ShieldCheck className="h-5 w-5 text-green-500" /> },
@@ -68,6 +69,7 @@ export default function PremiumPage() {
 
     return (
         <div className="flex-1 space-y-8">
+            <AdBanner page="premium" />
             <PageHeader
                 title="প্রিমিয়াম সাবস্ক্রিপশন"
                 description="হিসাব খাতা অ্যাপের সেরা অভিজ্ঞতা পেতে প্রিমিয়াম প্ল্যান বেছে নিন।"

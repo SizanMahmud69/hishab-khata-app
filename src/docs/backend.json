@@ -338,8 +338,6 @@
           "paymentMethod": { "type": "string" },
           "accountNumber": { "type": "string" },
           "transactionId": { "type": "string" },
-          "pointsSpent": { "type": "number" },
-          "amountBdt": { "type": "number" },
           "createdAt": { "type": "string", "format": "date-time" },
           "activatedAt": { "type": "string", "format": "date-time" },
           "expiresAt": { "type": "string", "format": "date-time" },

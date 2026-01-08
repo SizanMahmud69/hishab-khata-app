@@ -29,7 +29,7 @@ service cloud.firestore {
       allow create: if isSignedIn();
       // A user can update their own document.
       // A signed-in user (the new referred user) can also update ONLY the referrer's points.
-      allow update: if isOwner(userId) || (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['points']));
+      allow update: if isOwner(userId) || (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['points', 'premiumStatus', 'premiumPlanId', 'premiumExpiryDate']));
       // Users should not be able to delete their own accounts this way.
       allow delete: if false;
 
@@ -81,9 +81,9 @@ service cloud.firestore {
       
       // Sub-collection for premium subscriptions
       match /premium_subscriptions/{subscriptionId} {
-        allow get: if isOwner(userId);
-        allow list: if isOwner(userId);
+        allow get, list: if request.auth.uid == userId;
         allow create: if isOwner(userId);
+        // Allow user to update only specific fields for activation
         allow update: if isOwner(userId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['activatedAt', 'status', 'expiresAt']);
         // Only admin should delete from console
         allow delete: if false;

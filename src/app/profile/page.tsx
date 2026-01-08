@@ -14,6 +14,7 @@ import { format, parseISO } from "date-fns";
 import { bn } from "date-fns/locale";
 import { useBudget } from "@/context/budget-context";
 import { doc } from "firebase/firestore";
+import { AdBanner } from "@/components/ad-banner";
 
 interface VerificationRequest {
     status: 'pending' | 'approved' | 'rejected';
@@ -134,6 +135,7 @@ export default function ProfilePage() {
   
   return (
     <div className="flex-1 space-y-6">
+      <AdBanner page="profile" />
       <Card className="overflow-hidden">
         <div className="h-24 bg-gradient-to-r from-green-400 to-blue-500" />
         <div className="relative -mt-16 flex justify-center">
