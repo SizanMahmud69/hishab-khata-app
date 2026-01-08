@@ -137,9 +137,9 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
                         </span>
                         {showCloseButton && (
                             <button 
-                                onClick={handleDismiss}
+                                onClick={handlePremiumRedirect}
                                 className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full transition-opacity z-10"
-                                aria-label="বিজ্ঞাপন বন্ধ করুন"
+                                aria-label="প্রিমিয়াম কিনুন"
                             >
                                 <X className="w-4 h-4" />
                             </button>
