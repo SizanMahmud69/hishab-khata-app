@@ -49,6 +49,7 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
     const isPopUpAdOnLoad = popUpPages.includes(page);
     
     // Timer state for pop-up ads
+    const [countdown, setCountdown] = useState(5);
     const [showCloseButton, setShowCloseButton] = useState(false);
     
     useEffect(() => {
@@ -58,15 +59,28 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
              setIsAlertOpen(true);
         }, 2000); // 2-second delay before showing the pop-up
 
-        const closeButtonTimer = setTimeout(() => {
-            setShowCloseButton(true);
-        }, 5000); // 5 seconds before showing close button
-
         return () => {
             clearTimeout(openAdTimer);
-            clearTimeout(closeButtonTimer);
         }
     }, [isPopUpAdOnLoad, premiumStatus, page]);
+
+    useEffect(() => {
+        if (isAlertOpen) {
+            setCountdown(5);
+            setShowCloseButton(false);
+            const countdownInterval = setInterval(() => {
+                setCountdown(prev => {
+                    if (prev <= 1) {
+                        clearInterval(countdownInterval);
+                        setShowCloseButton(true);
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+            return () => clearInterval(countdownInterval);
+        }
+    }, [isAlertOpen]);
 
 
     const allAdsQuery = useMemoFirebase(() => {
@@ -137,7 +151,7 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
     const AdDialog = (
         <AlertDialogContent>
             <AlertDialogHeader>
-                <AlertDialogTitle className='sr-only'>Advertisement Dialog</AlertDialogTitle>
+                <AlertDialogTitle className='sr-only'>বিজ্ঞাপন মুক্ত অভিজ্ঞতা</AlertDialogTitle>
                 <div className="flex flex-col items-center text-center gap-4">
                     <div className="rounded-full bg-yellow-100 dark:bg-yellow-900/30 p-4">
                         <Crown className="w-12 h-12 text-yellow-500" />
@@ -177,31 +191,38 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
             <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
                 <AlertDialogTitle className="sr-only">Advertisement</AlertDialogTitle>
                 {ad && (
-                    <AlertDialogContent>
-                         <AlertDialogHeader>
-                            <AlertDialogTitle className='sr-only'>Advertisement</AlertDialogTitle>
-                        </AlertDialogHeader>
-                        <Link href={ad.linkUrl} target="_blank" className="block w-full h-auto" onClick={() => setIsAlertOpen(false)}>
-                            <Image
-                                src={ad.imageUrl}
-                                alt="Advertisement"
-                                width={800}
-                                height={400}
-                                className="w-full h-auto object-contain rounded-lg"
-                            />
-                        </Link>
-                        {showCloseButton && (
-                            <AlertDialogFooter className="pt-4">
-                                <AlertDialogCancel onClick={() => setIsAlertOpen(false)} className='w-full'>
-                                    <X className="mr-2 h-4 w-4" />
-                                    বন্ধ করুন
-                                </AlertDialogCancel>
-                                <AlertDialogAction onClick={handlePremiumRedirect} className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold">
-                                    <Crown className="mr-2 h-4 w-4" />
-                                    বিজ্ঞাপন ছাড়া দেখুন
-                                </AlertDialogAction>
-                            </AlertDialogFooter>
-                        )}
+                    <AlertDialogContent className="p-0 border-0 max-w-lg w-full">
+                        <div className="relative">
+                            <Link href={ad.linkUrl} target="_blank" className="block w-full h-auto" onClick={() => setIsAlertOpen(false)}>
+                                <Image
+                                    src={ad.imageUrl}
+                                    alt="Advertisement"
+                                    width={800}
+                                    height={400}
+                                    className="w-full h-auto object-contain rounded-t-lg"
+                                />
+                            </Link>
+                             <div className="absolute top-2 right-2 flex items-center justify-center h-8 w-8 rounded-full bg-black/50 text-white">
+                                {!showCloseButton ? (
+                                    <span className="text-sm font-bold">{countdown}</span>
+                                ) : (
+                                    <button onClick={() => setIsAlertOpen(false)} className="h-full w-full flex items-center justify-center">
+                                        <X className="w-5 h-5" />
+                                        <span className="sr-only">বন্ধ করুন</span>
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                        <AlertDialogFooter className="p-4 pt-2 bg-background rounded-b-lg flex-col sm:flex-row gap-2">
+                             <AlertDialogCancel onClick={() => setIsAlertOpen(false)} className='w-full'>
+                                <X className="mr-2 h-4 w-4" />
+                                বন্ধ করুন
+                            </AlertDialogCancel>
+                            <AlertDialogAction onClick={handlePremiumRedirect} className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold">
+                                <Crown className="mr-2 h-4 w-4" />
+                                বিজ্ঞাপন ছাড়া দেখুন
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
                     </AlertDialogContent>
                 )}
             </AlertDialog>
@@ -211,6 +232,7 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
     // Render Inline Banner Ad for other pages
     return (
         <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+            <AlertDialogTitle className="sr-only">বিজ্ঞাপন অপশন</AlertDialogTitle>
             <div className={`relative group ${className}`}>
                 <Link href={ad.linkUrl} target="_blank" className="block">
                     <Image
@@ -234,3 +256,5 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
         </AlertDialog>
     );
 }
+
+    
