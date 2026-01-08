@@ -176,7 +176,7 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
                 {adLabel}
             </span>
             <button 
-                onClick={handleDismiss}
+                onClick={handlePremiumRedirect}
                 className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full transition-opacity opacity-0 group-hover:opacity-100 z-10"
                 aria-label="বিজ্ঞাপন বন্ধ করুন"
             >
