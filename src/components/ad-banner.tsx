@@ -152,7 +152,7 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
     
     // Render Inline Banner Ad
     return (
-        <div className={`relative ${className}`}>
+        <div className={`relative group ${className}`}>
             <Link href={ad.linkUrl} target="_blank" className="block">
                 <Image
                     src={ad.imageUrl}
@@ -162,6 +162,16 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
                     className="w-full h-auto object-cover rounded-lg"
                 />
             </Link>
+             <span className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full z-10 pointer-events-none">
+                বিজ্ঞাপন
+            </span>
+            <button 
+                onClick={handleDismiss}
+                className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full transition-opacity opacity-0 group-hover:opacity-100 z-10"
+                aria-label="বিজ্ঞাপন বন্ধ করুন"
+            >
+                <X className="w-4 h-4" />
+            </button>
         </div>
     );
 }
