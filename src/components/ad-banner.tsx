@@ -41,6 +41,7 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
     const { premiumStatus } = useBudget();
     const [isDismissed, setIsDismissed] = useState(false);
     const [isAlertOpen, setIsAlertOpen] = useState(false);
+    const [adLabel, setAdLabel] = useState('বিজ্ঞাপন');
 
     // Define which pages should use the pop-up/AlertDialog
     const popUpPages = ['landing', 'profile', 'premium'];
@@ -88,6 +89,15 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
         }
     }, [allAds, page, adIndex, isPopUpAd]);
     
+    useEffect(() => {
+        if (ad) {
+            const timer = setTimeout(() => {
+                setAdLabel('বিজ্ঞাপনটি বন্ধ করতে ক্লিক করুন');
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [ad]);
+
     if (premiumStatus === 'premium' || isDismissed || !ad) {
         return null;
     }
@@ -122,8 +132,8 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
                                 className="object-cover w-full h-auto"
                             />
                         </Link>
-                        <span className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full z-10">
-                            বিজ্ঞাপন
+                        <span className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full z-10 transition-all duration-300">
+                            {adLabel}
                         </span>
                         {showCloseButton && (
                             <button 
@@ -162,8 +172,8 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
                     className="w-full h-auto object-cover rounded-lg"
                 />
             </Link>
-             <span className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full z-10 pointer-events-none">
-                বিজ্ঞাপন
+             <span className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full z-10 pointer-events-none transition-all duration-300">
+                {adLabel}
             </span>
             <button 
                 onClick={handleDismiss}
@@ -175,5 +185,3 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
         </div>
     );
 }
-
-    
