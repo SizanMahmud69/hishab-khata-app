@@ -42,6 +42,7 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
     const [isDismissed, setIsDismissed] = useState(false);
     const [isAlertOpen, setIsAlertOpen] = useState(false);
     const [showHint, setShowHint] = useState(false);
+    const [ad, setAd] = useState<Ad | null>(null);
 
     // Define which pages should use the pop-up/AlertDialog on load
     const popUpPages = ['landing', 'profile', 'premium'];
@@ -77,21 +78,29 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
     }, [firestore]);
 
     const { data: allAds, isLoading } = useCollection<Ad>(allAdsQuery);
+    
+    useEffect(() => {
+      if (!allAds || allAds.length === 0) {
+        setAd(null);
+        return;
+      }
 
-    const ad = useMemo(() => {
-        if (!allAds || allAds.length === 0) return null;
+      const adPool = allAds.filter(ad => 
+        ad.page === 'all' || ad.page.split(',').map(p => p.trim()).includes(page)
+      );
 
-        const adPool = allAds.filter(ad => 
-            ad.page === 'all' || ad.page.split(',').map(p => p.trim()).includes(page)
-        );
-
-        if (adPool.length === 0) return null;
-        
-        if (adIndex !== undefined) {
-            return adPool[adIndex % adPool.length];
-        } else {
-            return adPool[Math.floor(Math.random() * adPool.length)];
-        }
+      if (adPool.length === 0) {
+        setAd(null);
+        return;
+      }
+      
+      let selectedAd;
+      if (adIndex !== undefined) {
+          selectedAd = adPool[adIndex % adPool.length];
+      } else {
+          selectedAd = adPool[Math.floor(Math.random() * adPool.length)];
+      }
+      setAd(selectedAd);
     }, [allAds, page, adIndex]);
     
     useEffect(() => {
@@ -166,7 +175,7 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
     if (isPopUpAdOnLoad) {
         return (
             <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
-                
+                <AlertDialogTitle className="sr-only">Advertisement</AlertDialogTitle>
                 {ad && (
                     <AlertDialogContent>
                          <AlertDialogHeader>
