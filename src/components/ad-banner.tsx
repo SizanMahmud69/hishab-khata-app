@@ -107,8 +107,8 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
     }
 
     const handleDismiss = () => {
-        setIsAlertOpen(false);
         setIsDismissed(true); // Don't show again in this session
+        setIsAlertOpen(false);
     };
 
     const handlePremiumRedirect = () => {
@@ -129,7 +129,7 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className='px-6 pb-6 pt-0 bg-transparent flex sm:flex-row sm:justify-center gap-2'>
-                <AlertDialogCancel onClick={handleDismiss} className='w-full'>পরে ভাবছি</AlertDialogCancel>
+                <AlertDialogCancel className='w-full'>পরে ভাবছি</AlertDialogCancel>
                 <AlertDialogAction onClick={handlePremiumRedirect} className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold">প্রিমিয়াম নিন</AlertDialogAction>
             </AlertDialogFooter>
         </AlertDialogContent>
@@ -170,7 +170,7 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className='px-6 pb-6 pt-0 bg-transparent flex sm:flex-row sm:justify-center gap-2'>
-                        <AlertDialogCancel onClick={handleDismiss} className='w-full'>পরে ভাবছি</AlertDialogCancel>
+                        <AlertDialogCancel className='w-full'>পরে ভাবছি</AlertDialogCancel>
                         <AlertDialogAction onClick={handlePremiumRedirect} className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold">প্রিমিয়াম নিন</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
