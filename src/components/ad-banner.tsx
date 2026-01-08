@@ -41,7 +41,7 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
     const { premiumStatus } = useBudget();
     const [isDismissed, setIsDismissed] = useState(false);
     const [isAlertOpen, setIsAlertOpen] = useState(false);
-    const [adLabel, setAdLabel] = useState('বিজ্ঞাপন');
+    const [showHint, setShowHint] = useState(false);
 
     // Define which pages should use the pop-up/AlertDialog on load
     const popUpPages = ['landing', 'profile', 'premium'];
@@ -91,10 +91,10 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
     
     useEffect(() => {
         if (ad) {
-            const timer = setTimeout(() => {
-                setAdLabel('বিজ্ঞাপনটি বন্ধ করতে ক্লিক করুন');
+            const interval = setInterval(() => {
+                setShowHint(prev => !prev);
             }, 3000);
-            return () => clearTimeout(timer);
+            return () => clearInterval(interval);
         }
     }, [ad]);
 
@@ -146,6 +146,16 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
         </AlertDialogContent>
     );
 
+    const AdLabel = () => (
+        <span className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full z-10 transition-all duration-300 overflow-hidden whitespace-nowrap">
+            বিজ্ঞাপন
+            <span className={`transition-all duration-500 ease-in-out ${showHint ? 'opacity-100 translate-x-1' : 'opacity-0 -translate-x-full'}`}>
+                : বন্ধ করতে ক্লিক করুন
+            </span>
+        </span>
+    );
+
+
     // Render Pop-up Ad on load for specific pages
     if (isPopUpAdOnLoad) {
         return (
@@ -161,9 +171,7 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
                                 className="object-cover w-full h-auto"
                             />
                         </Link>
-                        <span className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full z-10 transition-all duration-300">
-                            {adLabel}
-                        </span>
+                        <AdLabel />
                         {showCloseButton && (
                             <button 
                                 onClick={handleCrossClick}
@@ -193,9 +201,7 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
                         className="w-full h-auto object-cover rounded-lg"
                     />
                 </Link>
-                <span className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full z-10 pointer-events-none transition-all duration-300">
-                    {adLabel}
-                </span>
+                 <AdLabel />
                 <button 
                     onClick={handleCrossClick}
                     className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full transition-opacity opacity-0 group-hover:opacity-100 z-10"
