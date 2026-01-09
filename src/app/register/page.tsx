@@ -108,22 +108,19 @@ function RegisterPageContent() {
         return;
       }
       
-      // Step 1: Create Firebase Auth user
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       
-      // This should always be true, but as a safeguard.
       if(user) {
-        // Update Firebase Auth profile
         await updateProfile(user, {
           displayName: fullName
         });
 
-        // Step 2: Create the Firestore user document
+        const batch = writeBatch(firestore);
         const userDocRef = doc(firestore, "users", user.uid);
         const ownReferralCode = `#${fullName.split(' ')[0].toLowerCase().replace(/[^a-z0-9]/g, '')}-${Math.random().toString(36).substr(2, 4)}`;
         
-        await setDoc(userDocRef, {
+        batch.set(userDocRef, {
             id: user.uid,
             userId: `#hishab-${Math.random().toString(36).substr(2, 4)}`,
             name: fullName,
@@ -143,23 +140,18 @@ function RegisterPageContent() {
             premiumExpiryDate: null,
         });
 
-        // Step 3: Handle referral logic (if applicable) in a separate, non-blocking operation
         if (referrer) {
-            const referrerBatch = writeBatch(firestore);
-            const referrerDocRef = doc(firestore, "users", referrer.id);
-            referrerBatch.update(referrerDocRef, { points: increment(referrerBonusPoints) });
-
             const referralRecordRef = doc(collection(firestore, `users/${referrer.id}/referrals`));
-            referrerBatch.set(referralRecordRef, {
+            batch.set(referralRecordRef, {
                 userId: referrer.id,
                 referredUserId: user.uid,
                 referredUserName: fullName,
                 bonusPoints: referrerBonusPoints,
                 createdAt: serverTimestamp(),
             });
-            
+
              const referrerNotifRef = doc(collection(firestore, `users/${referrer.id}/notifications`));
-             referrerBatch.set(referrerNotifRef, {
+             batch.set(referrerNotifRef, {
                 userId: referrer.id,
                 title: "রেফারেল বোনাস!",
                 description: `${fullName} আপনার কোড ব্যবহার করে যোগ দিয়েছেন। আপনি ${referrerBonusPoints} পয়েন্ট পেয়েছেন।`,
@@ -167,34 +159,40 @@ function RegisterPageContent() {
                 read: false,
                 createdAt: serverTimestamp(),
             });
-            // We commit this separately. If it fails, it won't roll back the user creation.
-            referrerBatch.commit().catch(err => {
-              console.error("Failed to apply referrer bonus:", err);
-              // Optionally, notify the user or log this for manual correction.
-            });
+            
+             // Also update the referrer's points. A cloud function would be a more robust way to do this
+             // to avoid security rule complexity, but for now we allow this via rules.
+             const referrerDocRef = doc(firestore, "users", referrer.id);
+             batch.update(referrerDocRef, { points: increment(referrerBonusPoints) });
         }
-
-        // Create welcome bonus notification for the new user
+        
+        // Create welcome bonus notification for the new user if they were referred
         if (referrer) {
-            await createNotification({
+            const welcomeNotifRef = doc(collection(firestore, `users/${user.uid}/notifications`));
+            batch.set(welcomeNotifRef, {
                 id: `welcome-bonus-${user.uid}`,
+                userId: user.uid,
                 title: 'স্বাগতম বোনাস!',
                 description: `রেফার কোড ব্যবহার করার জন্য আপনি ${referredUserBonusPoints} পয়েন্ট পেয়েছেন।`,
                 link: `/congratulations?title=স্বাগতম বোনাস&description=আমাদের অ্যাপে আপনাকে স্বাগতম!&points=${referredUserBonusPoints}`,
-            }, user.uid, firestore);
+                read: false,
+                createdAt: serverTimestamp(),
+            });
         }
-
+        
         // Ensure app_config exists
         const configDocRef = doc(firestore, "app_config", "settings");
         const configDocSnap = await getDoc(configDocRef);
         if (!configDocSnap.exists()) {
-          await setDoc(configDocRef, { 
+          batch.set(configDocRef, { 
             minWithdrawalPoints: 1000,
             referrerBonusPoints: 100,
             referredUserBonusPoints: 50,
             bdtPer100Points: 5,
            });
         }
+        
+        await batch.commit();
       }
 
       toast({
