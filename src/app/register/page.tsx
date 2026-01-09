@@ -139,10 +139,12 @@ function RegisterPageContent() {
             premiumPlanId: null,
             premiumExpiryDate: null,
         });
-
+        
+        // This batch is for operations on the referrer's data, executed by the new user
+        const referrerBatch = writeBatch(firestore);
         if (referrer) {
             const referralRecordRef = doc(collection(firestore, `users/${referrer.id}/referrals`));
-            batch.set(referralRecordRef, {
+            referrerBatch.set(referralRecordRef, {
                 userId: referrer.id,
                 referredUserId: user.uid,
                 referredUserName: fullName,
@@ -150,23 +152,12 @@ function RegisterPageContent() {
                 createdAt: serverTimestamp(),
             });
 
-             const referrerNotifRef = doc(collection(firestore, `users/${referrer.id}/notifications`));
-             batch.set(referrerNotifRef, {
-                userId: referrer.id,
-                title: "রেফারেল বোনাস!",
-                description: `${fullName} আপনার কোড ব্যবহার করে যোগ দিয়েছেন। আপনি ${referrerBonusPoints} পয়েন্ট পেয়েছেন।`,
-                link: `/congratulations?title=রেফারেল বোনাস&description=আপনি সফলভাবে একজনকে রেফার করেছেন!&points=${referrerBonusPoints}`,
-                read: false,
-                createdAt: serverTimestamp(),
-            });
-            
-             // Also update the referrer's points. A cloud function would be a more robust way to do this
-             // to avoid security rule complexity, but for now we allow this via rules.
+             // Also update the referrer's points.
              const referrerDocRef = doc(firestore, "users", referrer.id);
-             batch.update(referrerDocRef, { points: increment(referrerBonusPoints) });
+             referrerBatch.update(referrerDocRef, { points: increment(referrerBonusPoints) });
         }
         
-        // Create welcome bonus notification for the new user if they were referred
+        // Welcome bonus notification for the new user if they were referred
         if (referrer) {
             const welcomeNotifRef = doc(collection(firestore, `users/${user.uid}/notifications`));
             batch.set(welcomeNotifRef, {
@@ -192,7 +183,10 @@ function RegisterPageContent() {
            });
         }
         
-        await batch.commit();
+        await batch.commit(); // Commit changes for the new user
+        if (referrer) {
+            await referrerBatch.commit(); // Commit changes for the referrer
+        }
       }
 
       toast({
@@ -361,5 +355,3 @@ export default function RegisterPage() {
         </BudgetClientProvider>
     )
 }
-
-    
