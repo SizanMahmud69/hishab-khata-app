@@ -116,11 +116,12 @@ function RegisterPageContent() {
           displayName: fullName
         });
 
-        const batch = writeBatch(firestore);
+        // Batch 1: Create the new user's own data
+        const userBatch = writeBatch(firestore);
         const userDocRef = doc(firestore, "users", user.uid);
         const ownReferralCode = `#${fullName.split(' ')[0].toLowerCase().replace(/[^a-z0-9]/g, '')}-${Math.random().toString(36).substr(2, 4)}`;
         
-        batch.set(userDocRef, {
+        userBatch.set(userDocRef, {
             id: user.uid,
             userId: `#hishab-${Math.random().toString(36).substr(2, 4)}`,
             name: fullName,
@@ -139,27 +140,11 @@ function RegisterPageContent() {
             premiumPlanId: null,
             premiumExpiryDate: null,
         });
-        
-        // This batch is for operations on the referrer's data, executed by the new user
-        if (referrer) {
-            const referralRecordRef = doc(collection(firestore, `users/${referrer.id}/referrals`));
-            batch.set(referralRecordRef, {
-                userId: referrer.id,
-                referredUserId: user.uid,
-                referredUserName: fullName,
-                bonusPoints: referrerBonusPoints,
-                createdAt: serverTimestamp(),
-            });
 
-             // Also update the referrer's points.
-             const referrerDocRef = doc(firestore, "users", referrer.id);
-             batch.update(referrerDocRef, { points: increment(referrerBonusPoints) });
-        }
-        
         // Welcome bonus notification for the new user if they were referred
         if (referrer) {
             const welcomeNotifRef = doc(collection(firestore, `users/${user.uid}/notifications`));
-            batch.set(welcomeNotifRef, {
+            userBatch.set(welcomeNotifRef, {
                 id: `welcome-bonus-${user.uid}`,
                 userId: user.uid,
                 title: 'স্বাগতম বোনাস!',
@@ -174,7 +159,7 @@ function RegisterPageContent() {
         const configDocRef = doc(firestore, "app_config", "settings");
         const configDocSnap = await getDoc(configDocRef);
         if (!configDocSnap.exists()) {
-          batch.set(configDocRef, { 
+          userBatch.set(configDocRef, { 
             minWithdrawalPoints: 1000,
             referrerBonusPoints: 100,
             referredUserBonusPoints: 50,
@@ -182,7 +167,26 @@ function RegisterPageContent() {
            });
         }
         
-        await batch.commit(); // Commit all changes
+        await userBatch.commit(); // Commit user data first
+
+        // Batch 2: Update referrer's data. This runs after the new user is successfully created.
+        if (referrer) {
+            const referrerBatch = writeBatch(firestore);
+            const referrerDocRef = doc(firestore, "users", referrer.id);
+            const referralRecordRef = doc(collection(firestore, `users/${referrer.id}/referrals`));
+            
+            referrerBatch.set(referralRecordRef, {
+                userId: referrer.id,
+                referredUserId: user.uid,
+                referredUserName: fullName,
+                bonusPoints: referrerBonusPoints,
+                createdAt: serverTimestamp(),
+            });
+
+            referrerBatch.update(referrerDocRef, { points: increment(referrerBonusPoints) });
+            
+            await referrerBatch.commit();
+        }
       }
 
       toast({
