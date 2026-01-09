@@ -141,10 +141,9 @@ function RegisterPageContent() {
         });
         
         // This batch is for operations on the referrer's data, executed by the new user
-        const referrerBatch = writeBatch(firestore);
         if (referrer) {
             const referralRecordRef = doc(collection(firestore, `users/${referrer.id}/referrals`));
-            referrerBatch.set(referralRecordRef, {
+            batch.set(referralRecordRef, {
                 userId: referrer.id,
                 referredUserId: user.uid,
                 referredUserName: fullName,
@@ -154,7 +153,7 @@ function RegisterPageContent() {
 
              // Also update the referrer's points.
              const referrerDocRef = doc(firestore, "users", referrer.id);
-             referrerBatch.update(referrerDocRef, { points: increment(referrerBonusPoints) });
+             batch.update(referrerDocRef, { points: increment(referrerBonusPoints) });
         }
         
         // Welcome bonus notification for the new user if they were referred
@@ -183,10 +182,7 @@ function RegisterPageContent() {
            });
         }
         
-        await batch.commit(); // Commit changes for the new user
-        if (referrer) {
-            await referrerBatch.commit(); // Commit changes for the referrer
-        }
+        await batch.commit(); // Commit all changes
       }
 
       toast({

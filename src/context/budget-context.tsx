@@ -2,7 +2,7 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { collection, onSnapshot, addDoc, doc, updateDoc, serverTimestamp, setDoc, query, getDocs, writeBatch, increment, arrayUnion, orderBy, Unsubscribe, where, limit, Firestore } from 'firebase/firestore';
 import { createNotification } from '@/components/app-header';
@@ -68,7 +68,7 @@ interface AppConfig {
     bdtPer100Points: number;
 }
 
-interface Referral {
+export interface Referral {
     id: string;
     userId: string;
     referredUserId: string;
@@ -128,6 +128,7 @@ const SAVINGS_MILESTONES = [1000, 5000, 10000, 20000, 30000, 40000, 50000, 10000
 export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const { user, isLoading: isUserLoading } = useUser();
     const firestore = useFirestore();
+    const prevReferralsRef = useRef<Referral[]>();
 
     const userDocRef = useMemoFirebase(() => {
         if (!user) return null;
@@ -177,6 +178,22 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         return query(collection(firestore, `users/${user.uid}/withdrawalRequests`), orderBy("requestedAt", "desc"));
     }, [user, firestore]);
     const { data: allWithdrawals = [], isLoading: isWithdrawalsLoading } = useCollection<WithdrawalRequest>(withdrawalsQuery);
+    
+    
+     useEffect(() => {
+        if (user && firestore && referrals && prevReferralsRef.current && referrals.length > prevReferralsRef.current.length) {
+            const newReferrals = referrals.filter(r => !prevReferralsRef.current!.some(pr => pr.id === r.id));
+            newReferrals.forEach(newRef => {
+                createNotification({
+                    id: `new-referral-${newRef.id}`,
+                    title: "সফল রেফারেল!",
+                    description: `অভিনন্দন! আপনি একটি সফল রেফারেলের জন্য ${newRef.bonusPoints} পয়েন্ট পেয়েছেন।`,
+                    link: "/refer",
+                }, user.uid, firestore);
+            });
+        }
+        prevReferralsRef.current = referrals;
+    }, [referrals, user, firestore]);
 
 
     const activateSubscription = useCallback(async (firestore: Firestore, userId: string, subscriptionId: string, planId: string) => {
