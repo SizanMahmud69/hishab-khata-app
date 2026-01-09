@@ -116,23 +116,13 @@ function RegisterPageContent() {
           displayName: fullName
         });
 
-        const configDocRef = doc(firestore, "app_config", "settings");
-        const configDocSnap = await getDoc(configDocRef);
-        if (!configDocSnap.exists()) {
-          await setDoc(configDocRef, { 
-            minWithdrawalPoints: 1000,
-            referrerBonusPoints: 100,
-            referredUserBonusPoints: 50,
-            bdtPer100Points: 5,
-           });
-        }
+        // --- Batch 1: Operations for the new user ---
+        const userBatch = writeBatch(firestore);
         
         const userDocRef = doc(firestore, "users", user.uid);
         const ownReferralCode = `#${fullName.split(' ')[0].toLowerCase().replace(/[^a-z0-9]/g, '')}-${Math.random().toString(36).substr(2, 4)}`;
 
-        const batch = writeBatch(firestore);
-
-        batch.set(userDocRef, {
+        userBatch.set(userDocRef, {
             id: user.uid,
             userId: `#hishab-${Math.random().toString(36).substr(2, 4)}`,
             name: fullName,
@@ -150,32 +140,8 @@ function RegisterPageContent() {
         });
 
         if (referrer) {
-            const referrerDocRef = doc(firestore, "users", referrer.id);
-            batch.update(referrerDocRef, { points: increment(referrerBonusPoints) });
-
-            const referralRecordRef = doc(collection(firestore, `users/${referrer.id}/referrals`));
-            batch.set(referralRecordRef, {
-                userId: referrer.id,
-                referredUserId: user.uid,
-                referredUserName: fullName,
-                bonusPoints: referrerBonusPoints,
-                createdAt: serverTimestamp(),
-            });
-            
-             const referrerNotifRef = doc(collection(firestore, `users/${referrer.id}/notifications`));
-             batch.set(referrerNotifRef, {
-                userId: referrer.id,
-                title: "রেফারেল বোনাস!",
-                description: `${fullName} আপনার কোড ব্যবহার করে যোগ দিয়েছেন। আপনি ${referrerBonusPoints} পয়েন্ট পেয়েছেন।`,
-                link: `/congratulations?title=রেফারেল বোনাস&description=আপনি সফলভাবে একজনকে রেফার করেছেন!&points=${referrerBonusPoints}`,
-                read: false,
-                createdAt: serverTimestamp(),
-            });
-        }
-
-        if (referrer) {
              const newUserReferralRecordRef = doc(collection(firestore, `users/${user.uid}/referrals`));
-             batch.set(newUserReferralRecordRef, {
+             userBatch.set(newUserReferralRecordRef, {
                 userId: user.uid,
                 referredUserId: user.uid,
                 referredUserName: "স্বাগতম বোনাস",
@@ -184,8 +150,36 @@ function RegisterPageContent() {
             });
         }
         
-        await batch.commit();
+        await userBatch.commit();
+        
+        // --- Batch 2: Operations for the referrer (if any) ---
+        if (referrer) {
+            const referrerBatch = writeBatch(firestore);
+            const referrerDocRef = doc(firestore, "users", referrer.id);
+            referrerBatch.update(referrerDocRef, { points: increment(referrerBonusPoints) });
 
+            const referralRecordRef = doc(collection(firestore, `users/${referrer.id}/referrals`));
+            referrerBatch.set(referralRecordRef, {
+                userId: referrer.id,
+                referredUserId: user.uid,
+                referredUserName: fullName,
+                bonusPoints: referrerBonusPoints,
+                createdAt: serverTimestamp(),
+            });
+            
+             const referrerNotifRef = doc(collection(firestore, `users/${referrer.id}/notifications`));
+             referrerBatch.set(referrerNotifRef, {
+                userId: referrer.id,
+                title: "রেফারেল বোনাস!",
+                description: `${fullName} আপনার কোড ব্যবহার করে যোগ দিয়েছেন। আপনি ${referrerBonusPoints} পয়েন্ট পেয়েছেন।`,
+                link: `/congratulations?title=রেফারেল বোনাস&description=আপনি সফলভাবে একজনকে রেফার করেছেন!&points=${referrerBonusPoints}`,
+                read: false,
+                createdAt: serverTimestamp(),
+            });
+            await referrerBatch.commit();
+        }
+
+        // Create welcome bonus notification for the new user
         if (referrer) {
             await createNotification({
                 id: `welcome-bonus-${user.uid}`,
@@ -193,6 +187,17 @@ function RegisterPageContent() {
                 description: `রেফার কোড ব্যবহার করার জন্য আপনি ${referredUserBonusPoints} পয়েন্ট পেয়েছেন।`,
                 link: `/congratulations?title=স্বাগতম বোনাস&description=আমাদের অ্যাপে আপনাকে স্বাগতম!&points=${referredUserBonusPoints}`,
             }, user.uid, firestore);
+        }
+
+        const configDocRef = doc(firestore, "app_config", "settings");
+        const configDocSnap = await getDoc(configDocRef);
+        if (!configDocSnap.exists()) {
+          await setDoc(configDocRef, { 
+            minWithdrawalPoints: 1000,
+            referrerBonusPoints: 100,
+            referredUserBonusPoints: 50,
+            bdtPer100Points: 5,
+           });
         }
       }
 
@@ -212,7 +217,7 @@ function RegisterPageContent() {
       } else if (error.code === 'auth/weak-password') {
         errorMessage = "পাসওয়ার্ডটি দুর্বল। অনুগ্রহ করে আরও শক্তিশালী পাসওয়ার্ড ব্যবহার করুন।";
       } else if (error.code === 'permission-denied') {
-          errorMessage = "রেফারেল প্রক্রিয়া সম্পন্ন করার জন্য আপনার অনুমতি নেই। অনুগ্রহ করে অ্যাডমিনের সাথে যোগাযোগ করুন।";
+          errorMessage = "রেফারেল প্রক্রিয়া সম্পন্ন করার জন্য আপনার অনুমতি নেই। অনুগ্রহ করে অ্যাডমিনের সাথে যোগাযোগ করুন।";
       }
       toast({
         variant: "destructive",
@@ -362,3 +367,5 @@ export default function RegisterPage() {
         </BudgetClientProvider>
     )
 }
+
+    
