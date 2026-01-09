@@ -108,21 +108,22 @@ function RegisterPageContent() {
         return;
       }
       
+      // Step 1: Create Firebase Auth user
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       
+      // This should always be true, but as a safeguard.
       if(user) {
+        // Update Firebase Auth profile
         await updateProfile(user, {
           displayName: fullName
         });
 
-        // --- Batch 1: Operations for the new user ---
-        const userBatch = writeBatch(firestore);
-        
+        // Step 2: Create the Firestore user document
         const userDocRef = doc(firestore, "users", user.uid);
         const ownReferralCode = `#${fullName.split(' ')[0].toLowerCase().replace(/[^a-z0-9]/g, '')}-${Math.random().toString(36).substr(2, 4)}`;
-
-        userBatch.set(userDocRef, {
+        
+        await setDoc(userDocRef, {
             id: user.uid,
             userId: `#hishab-${Math.random().toString(36).substr(2, 4)}`,
             name: fullName,
@@ -137,22 +138,12 @@ function RegisterPageContent() {
             verificationRequestId: null,
             referralCode: ownReferralCode,
             referredBy: referrer ? referrer.id : null,
+            premiumStatus: 'free',
+            premiumPlanId: null,
+            premiumExpiryDate: null,
         });
 
-        if (referrer) {
-             const newUserReferralRecordRef = doc(collection(firestore, `users/${user.uid}/referrals`));
-             userBatch.set(newUserReferralRecordRef, {
-                userId: user.uid,
-                referredUserId: user.uid,
-                referredUserName: "স্বাগতম বোনাস",
-                bonusPoints: referredUserBonusPoints,
-                createdAt: serverTimestamp(),
-            });
-        }
-        
-        await userBatch.commit();
-        
-        // --- Batch 2: Operations for the referrer (if any) ---
+        // Step 3: Handle referral logic (if applicable) in a separate, non-blocking operation
         if (referrer) {
             const referrerBatch = writeBatch(firestore);
             const referrerDocRef = doc(firestore, "users", referrer.id);
@@ -176,7 +167,11 @@ function RegisterPageContent() {
                 read: false,
                 createdAt: serverTimestamp(),
             });
-            await referrerBatch.commit();
+            // We commit this separately. If it fails, it won't roll back the user creation.
+            referrerBatch.commit().catch(err => {
+              console.error("Failed to apply referrer bonus:", err);
+              // Optionally, notify the user or log this for manual correction.
+            });
         }
 
         // Create welcome bonus notification for the new user
@@ -189,6 +184,7 @@ function RegisterPageContent() {
             }, user.uid, firestore);
         }
 
+        // Ensure app_config exists
         const configDocRef = doc(firestore, "app_config", "settings");
         const configDocSnap = await getDoc(configDocRef);
         if (!configDocSnap.exists()) {
@@ -217,7 +213,7 @@ function RegisterPageContent() {
       } else if (error.code === 'auth/weak-password') {
         errorMessage = "পাসওয়ার্ডটি দুর্বল। অনুগ্রহ করে আরও শক্তিশালী পাসওয়ার্ড ব্যবহার করুন।";
       } else if (error.code === 'permission-denied') {
-          errorMessage = "রেফারেল প্রক্রিয়া সম্পন্ন করার জন্য আপনার অনুমতি নেই। অনুগ্রহ করে অ্যাডমিনের সাথে যোগাযোগ করুন।";
+          errorMessage = "নিবন্ধন প্রক্রিয়া সম্পন্ন করার জন্য আপনার অনুমতি নেই। অনুগ্রহ করে অ্যাডমিনের সাথে যোগাযোগ করুন।";
       }
       toast({
         variant: "destructive",
