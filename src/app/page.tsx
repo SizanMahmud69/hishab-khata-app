@@ -42,7 +42,6 @@ const features = [
 export default function Home() {
   return (
     <div className="flex min-h-dvh flex-col bg-gradient-to-br from-blue-500 to-green-500">
-      <AdBanner page="landing" />
       <header className="sticky top-0 z-50 w-full border-b border-white/20 bg-gradient-to-r from-blue-400 to-green-400 text-white">
         <div className="container flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
@@ -83,6 +82,10 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        <div className="container pb-12">
+            <AdBanner page="landing" />
+        </div>
 
         {/* Features Section */}
         <section id="features" className="container py-20">

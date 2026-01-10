@@ -69,7 +69,6 @@ export default function PremiumPage() {
 
     return (
         <div className="flex-1 space-y-8">
-            <AdBanner page="premium" />
             <PageHeader
                 title="প্রিমিয়াম সাবস্ক্রিপশন"
                 description="হিসাব খাতা অ্যাপের সেরা অভিজ্ঞতা পেতে প্রিমিয়াম প্ল্যান বেছে নিন।"
@@ -160,7 +159,7 @@ export default function PremiumPage() {
                     </Accordion>
                 </CardContent>
             </Card>
-
+             <AdBanner page="premium" adIndex={1} />
         </div>
     );
 }

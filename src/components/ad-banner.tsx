@@ -34,6 +34,11 @@ interface AdBannerProps {
     adIndex?: number;
 }
 
+const popUpPages = ['landing', 'profile', 'premium'];
+
+// Select one random page from the popUpPages array to show the pop-up on.
+const randomPopUpPage = popUpPages[Math.floor(Math.random() * popUpPages.length)];
+
 export function AdBanner({ page, className, adIndex }: AdBannerProps) {
     const firestore = useFirestore();
     const router = useRouter();
@@ -47,8 +52,7 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
 
 
     // Define which pages should use the pop-up/AlertDialog on load
-    const popUpPages = ['landing', 'profile', 'premium'];
-    const isPopUpAdOnLoad = popUpPages.includes(page);
+    const isPopUpAdOnLoad = page === randomPopUpPage;
     
     // Timer state for pop-up ads
     const [countdown, setCountdown] = useState(5);
@@ -115,10 +119,11 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
       if (adIndex !== undefined) {
           selectedAd = adPool[adIndex % adPool.length];
       } else {
+          // Use Math.random() to select a random ad from the pool
           selectedAd = adPool[Math.floor(Math.random() * adPool.length)];
       }
       setAd(selectedAd);
-    }, [allAds, page, adIndex]);
+    }, [allAds, page, adIndex]); // Re-run when these change
     
     useEffect(() => {
         if (ad) {
