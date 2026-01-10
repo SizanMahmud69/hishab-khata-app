@@ -10,6 +10,7 @@ import Confetti from 'react-confetti';
 import { useWindowSize } from 'react-use';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { AdBanner } from '@/components/ad-banner';
 
 function MilestoneContent() {
   const searchParams = useSearchParams();
@@ -51,6 +52,9 @@ function MilestoneContent() {
             </Button>
           </CardContent>
         </Card>
+        <div className="max-w-2xl mx-auto pt-4">
+            <AdBanner page="milestone" />
+        </div>
       </div>
     </>
   );

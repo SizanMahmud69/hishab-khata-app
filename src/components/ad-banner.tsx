@@ -151,7 +151,6 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
     const AdDialog = (
         <AlertDialogContent>
             <AlertDialogHeader>
-                <AlertDialogTitle className='sr-only'>বিজ্ঞাপন মুক্ত অভিজ্ঞতা</AlertDialogTitle>
                 <div className="flex flex-col items-center text-center gap-4">
                     <div className="rounded-full bg-yellow-100 dark:bg-yellow-900/30 p-4">
                         <Crown className="w-12 h-12 text-yellow-500" />
@@ -189,9 +188,9 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
     if (isPopUpAdOnLoad) {
         return (
             <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
-                <AlertDialogTitle className="sr-only">Advertisement</AlertDialogTitle>
                 {ad && (
                     <AlertDialogContent className="p-0 border-0 max-w-lg w-full">
+                        <AlertDialogTitle className="sr-only">Advertisement</AlertDialogTitle>
                         <div className="relative">
                             <Link href={ad.linkUrl} target="_blank" className="block w-full h-auto" onClick={() => setIsAlertOpen(false)}>
                                 <Image
@@ -213,11 +212,7 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
                                 )}
                             </div>
                         </div>
-                        <AlertDialogFooter className="p-4 pt-2 bg-background rounded-b-lg flex-col sm:flex-row gap-2">
-                             <AlertDialogCancel onClick={() => setIsAlertOpen(false)} className='w-full'>
-                                <X className="mr-2 h-4 w-4" />
-                                বন্ধ করুন
-                            </AlertDialogCancel>
+                        <AlertDialogFooter className="p-4 pt-2 bg-background rounded-b-lg flex-col sm:justify-center">
                             <AlertDialogAction onClick={handlePremiumRedirect} className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold">
                                 <Crown className="mr-2 h-4 w-4" />
                                 বিজ্ঞাপন ছাড়া দেখুন
@@ -256,5 +251,3 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
         </AlertDialog>
     );
 }
-
-    
