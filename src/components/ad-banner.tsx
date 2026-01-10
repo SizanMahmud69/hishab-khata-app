@@ -59,14 +59,19 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
     useEffect(() => {
         if (typeof window !== 'undefined' && !POP_UP_EXCLUDED_PAGES.includes(page)) {
             let count = parseInt(localStorage.getItem('pageViewCount') || '0', 10);
+            
+            // Increment the counter for the new page view.
             count += 1;
             
-            if (count >= 4) {
+            // Decide if we should show the ad on *this* page load.
+            if (count === 4) {
                 setIsPopUpAdOnLoad(true);
-                localStorage.setItem('pageViewCount', '0'); // Reset after deciding to show
+                // Reset the counter immediately after deciding to show the ad.
+                localStorage.setItem('pageViewCount', '0');
             } else {
-                localStorage.setItem('pageViewCount', count.toString());
                 setIsPopUpAdOnLoad(false);
+                // Save the new count.
+                localStorage.setItem('pageViewCount', count.toString());
             }
         }
     }, [page]);
@@ -152,9 +157,10 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
         return null;
     }
 
-    if (isLoading) {
-        return isPopUpAdOnLoad ? null : <Skeleton className="h-24 w-full" />;
+    if (isLoading && !isPopUpAdOnLoad) {
+        return <Skeleton className="h-24 w-full" />;
     }
+
 
     const handleDismiss = () => {
         setIsDismissed(true);
