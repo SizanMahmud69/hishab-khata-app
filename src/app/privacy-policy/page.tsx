@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowRight } from "lucide-react"
+import { AdBanner } from "@/components/ad-banner"
 
 export default function PrivacyPolicyPage() {
   return (
@@ -61,6 +62,9 @@ export default function PrivacyPolicyPage() {
 
               <h2 className="mt-8 text-2xl font-semibold">যোগাযোগ</h2>
               <p>এই গোপনীয়তা নীতি সম্পর্কে আপনার কোনো প্রশ্ন থাকলে, অনুগ্রহ করে আমাদের সাথে [যোগাযোগের ইমেল] এ যোগাযোগ করুন।</p>
+            </div>
+             <div className="pt-8">
+                <AdBanner page="privacy-policy" />
             </div>
           </div>
         </div>

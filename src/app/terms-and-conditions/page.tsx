@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowRight } from "lucide-react"
+import { AdBanner } from "@/components/ad-banner"
 
 export default function TermsAndConditionsPage() {
   return (
@@ -51,6 +52,9 @@ export default function TermsAndConditionsPage() {
 
               <h2 className="mt-8 text-2xl font-semibold">১০. যোগাযোগ</h2>
               <p>এই শর্তাবলী সম্পর্কে আপনার কোনো প্রশ্ন থাকলে, অনুগ্রহ করে আমাদের সাথে [যোগাযোগের ইমেল] এ যোগাযোগ করুন।</p>
+            </div>
+            <div className="pt-8">
+                <AdBanner page="terms-and-conditions" />
             </div>
           </div>
         </div>
