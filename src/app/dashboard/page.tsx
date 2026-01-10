@@ -62,11 +62,10 @@ export default function DashboardPage() {
             <OverviewPieChart />
         </div>
       </div>
+      <AdBanner page="dashboard" adIndex={1} />
       <div className="grid grid-cols-1 gap-6">
         <RecentTransactions />
       </div>
     </div>
   )
 }
-
-    
