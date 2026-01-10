@@ -35,11 +35,8 @@ interface AdBannerProps {
 }
 
 // All pages where a pop-up *can* appear. Excludes auth pages.
-const ALL_POP_UP_CANDIDATE_PAGES = [
-    'dashboard', 'income', 'expenses', 'debts', 'shop-dues', 'history', 
-    'rewards', 'refer', 'premium', 'check-in', 'congratulations', 'milestone', 
-    'profile', 'profile/verify', 'refer', 'settings/shops', 'shop-dues/add',
-    'debts/add', 'withdraw'
+const POP_UP_EXCLUDED_PAGES = [
+    'login', 'register', 'forgot-password', 'terms-and-conditions', 'privacy-policy', '/'
 ];
 
 
@@ -60,26 +57,15 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
     const [showCloseButton, setShowCloseButton] = useState(false);
 
     useEffect(() => {
-        // This effect runs on every page that has an AdBanner.
-        if (typeof window !== 'undefined') {
+        if (typeof window !== 'undefined' && !POP_UP_EXCLUDED_PAGES.includes(page)) {
             let count = parseInt(localStorage.getItem('pageViewCount') || '0', 10);
             count += 1;
-            localStorage.setItem('pageViewCount', count.toString());
-
-            let adPopUpPage = localStorage.getItem('adPopUpPage');
-
-            if (count >= 3 && !adPopUpPage) {
-                // Time to select a new page for the pop-up
-                adPopUpPage = ALL_POP_UP_CANDIDATE_PAGES[Math.floor(Math.random() * ALL_POP_UP_CANDIDATE_PAGES.length)];
-                localStorage.setItem('adPopUpPage', adPopUpPage);
-            }
-
-            if (page === adPopUpPage) {
+            
+            if (count >= 3) {
                 setIsPopUpAdOnLoad(true);
-                 // Reset counter after showing the ad
-                localStorage.setItem('pageViewCount', '0');
-                localStorage.removeItem('adPopUpPage');
+                localStorage.setItem('pageViewCount', '0'); // Reset after deciding to show
             } else {
+                localStorage.setItem('pageViewCount', count.toString());
                 setIsPopUpAdOnLoad(false);
             }
         }
