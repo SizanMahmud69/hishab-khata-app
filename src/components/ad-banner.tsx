@@ -61,7 +61,7 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
             let count = parseInt(localStorage.getItem('pageViewCount') || '0', 10);
             count += 1;
             
-            if (count >= 3) {
+            if (count >= 4) {
                 setIsPopUpAdOnLoad(true);
                 localStorage.setItem('pageViewCount', '0'); // Reset after deciding to show
             } else {
