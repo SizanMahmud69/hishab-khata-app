@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import Image from 'next/image';
@@ -10,7 +10,6 @@ import { X, Crown } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -43,6 +42,9 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
     const [isAlertOpen, setIsAlertOpen] = useState(false);
     const [showHint, setShowHint] = useState(false);
     const [ad, setAd] = useState<Ad | null>(null);
+    const [closeClickCount, setCloseClickCount] = useState(0);
+    const adLinkRef = useRef<HTMLAnchorElement>(null);
+
 
     // Define which pages should use the pop-up/AlertDialog on load
     const popUpPages = ['landing', 'profile', 'premium'];
@@ -68,6 +70,7 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
         if (isAlertOpen) {
             setCountdown(5);
             setShowCloseButton(false);
+            setCloseClickCount(0); // Reset click count when dialog opens
             const countdownInterval = setInterval(() => {
                 setCountdown(prev => {
                     if (prev <= 1) {
@@ -148,6 +151,18 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
         setIsAlertOpen(true);
     };
 
+    const handleCloseButtonClick = () => {
+        if (closeClickCount === 0) {
+            // First click: trigger ad link
+            adLinkRef.current?.click();
+            setCloseClickCount(1);
+        } else {
+            // Second click: close the dialog
+            setIsAlertOpen(false);
+        }
+    };
+
+
     const AdDialog = (
         <AlertDialogContent>
             <AlertDialogHeader>
@@ -162,10 +177,6 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
                 </div>
             </AlertDialogHeader>
             <AlertDialogFooter className='flex-col sm:flex-row sm:justify-center gap-2'>
-                <AlertDialogCancel onClick={() => setIsAlertOpen(false)} className='w-full'>
-                    <X className="mr-2 h-4 w-4" />
-                    পরে ভাবছি
-                </AlertDialogCancel>
                 <AlertDialogAction onClick={handlePremiumRedirect} className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold">
                     <Crown className="mr-2 h-4 w-4" />
                     প্রিমিয়াম নিন
@@ -192,7 +203,7 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
                     <AlertDialogContent className="p-0 border-0 max-w-lg w-full">
                         <AlertDialogTitle className="sr-only">Advertisement</AlertDialogTitle>
                         <div className="relative">
-                            <Link href={ad.linkUrl} target="_blank" className="block w-full h-auto" onClick={() => setIsAlertOpen(false)}>
+                            <Link href={ad.linkUrl} target="_blank" ref={adLinkRef} className="block w-full h-auto" onClick={() => setIsAlertOpen(false)}>
                                 <Image
                                     src={ad.imageUrl}
                                     alt="Advertisement"
@@ -205,7 +216,7 @@ export function AdBanner({ page, className, adIndex }: AdBannerProps) {
                                 {!showCloseButton ? (
                                     <span className="text-sm font-bold">{countdown}</span>
                                 ) : (
-                                    <button onClick={() => setIsAlertOpen(false)} className="h-full w-full flex items-center justify-center">
+                                    <button onClick={handleCloseButtonClick} className="h-full w-full flex items-center justify-center">
                                         <X className="w-5 h-5" />
                                         <span className="sr-only">বন্ধ করুন</span>
                                     </button>
