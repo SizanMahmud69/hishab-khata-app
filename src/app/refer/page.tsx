@@ -154,7 +154,8 @@ export default function ReferPage() {
                     </div>
                 </CardContent>
             </Card>
-
+            {/* This AdBanner is specifically for triggering the pop-up logic */}
+            <AdBanner page="refer" />
         </div>
     );
 }

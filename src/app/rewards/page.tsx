@@ -158,6 +158,8 @@ function RewardsPageContent() {
             )}
         </CardContent>
       </Card>
+      {/* This AdBanner is specifically for triggering the pop-up logic */}
+      <AdBanner page="rewards" />
     </div>
   )
 }
