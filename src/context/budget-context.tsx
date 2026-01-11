@@ -118,6 +118,7 @@ interface BudgetContextType {
     pendingSubscriptionPlanIds: string[];
     activePremiumPlan: PremiumPlan | null;
     isSubscriptionsLoading: boolean;
+    hasUsedFreeTrial: boolean;
 }
 
 const BudgetContext = createContext<BudgetContextType | undefined>(undefined);
@@ -281,6 +282,11 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         if (premiumStatus !== 'premium' || !userProfile?.premiumPlanId) return null;
         return premiumPlans.find(p => p.id === userProfile.premiumPlanId) || null;
     }, [premiumStatus, userProfile]);
+
+    const hasUsedFreeTrial = useMemo(() => {
+        if (!premiumSubscriptions) return false;
+        return premiumSubscriptions.some(sub => sub.planId === 'free_trial');
+    }, [premiumSubscriptions]);
     
     const minWithdrawalPoints = appConfig?.minWithdrawalPoints ?? 1000;
     const referrerBonusPoints = appConfig?.referrerBonusPoints ?? 100;
@@ -462,13 +468,14 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         premiumSubscriptions,
         pendingSubscriptionPlanIds,
         activePremiumPlan,
-        isSubscriptionsLoading
+        isSubscriptionsLoading,
+        hasUsedFreeTrial,
     }), [
         transactions, debtNotes, referrals, pointHistory,
         totalIncome, totalExpense, totalSavings,
         rewardPoints, minWithdrawalPoints, referrerBonusPoints, referredUserBonusPoints, bdtPer100Points,
         isLoading, premiumStatus, premiumExpiryDate, userProfile, premiumSubscriptions, 
-        pendingSubscriptionPlanIds, activePremiumPlan, isSubscriptionsLoading,
+        pendingSubscriptionPlanIds, activePremiumPlan, isSubscriptionsLoading, hasUsedFreeTrial,
         addTransaction, addDebtNote, updateDebtNote
     ]);
 
@@ -497,6 +504,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             pendingSubscriptionPlanIds: [],
             activePremiumPlan: null,
             isSubscriptionsLoading: true,
+            hasUsedFreeTrial: false,
         };
         return (
             <BudgetContext.Provider value={emptyContext}>

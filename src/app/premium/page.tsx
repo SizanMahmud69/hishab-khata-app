@@ -43,7 +43,8 @@ export default function PremiumPage() {
         premiumStatus, 
         activePremiumPlan, 
         pendingSubscriptionPlanIds, 
-        isSubscriptionsLoading 
+        isSubscriptionsLoading,
+        hasUsedFreeTrial,
     } = useBudget();
     
     const plans = useMemo(() => {
@@ -57,6 +58,9 @@ export default function PremiumPage() {
     const getButtonState = (plan: PremiumPlan) => {
         if (isSubscriptionsLoading) {
             return { text: <Loader2 className="h-4 w-4 animate-spin" />, disabled: true };
+        }
+        if (plan.id === 'free_trial' && hasUsedFreeTrial) {
+            return { text: "ট্রায়াল ব্যবহৃত হয়েছে", disabled: true };
         }
         if (premiumStatus === 'premium' && activePremiumPlan?.id === plan.id) {
             return { text: "আপনার বর্তমান প্ল্যান", disabled: true };
