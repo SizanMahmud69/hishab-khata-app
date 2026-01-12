@@ -29,7 +29,7 @@ service cloud.firestore {
       allow create: if isSignedIn();
       // A user can update their own document.
       // A signed-in user (the new referred user) can also update ONLY the referrer's points.
-      allow update: if isOwner(userId) || (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['points']));
+      allow update: if isOwner(userId) || (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['points', 'premiumStatus', 'premiumPlanId', 'premiumExpiryDate']));
       // Users should not be able to delete their own accounts this way.
       allow delete: if false;
 
@@ -45,6 +45,11 @@ service cloud.firestore {
       
       // Sub-collection for daily check-ins
       match /checkIns/{checkInId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Sub-collection for daily ad task status
+      match /adTaskStatus/{taskId} {
         allow read, write: if isOwner(userId);
       }
 
@@ -67,8 +72,7 @@ service cloud.firestore {
       
       // Sub-collection for notifications
       match /notifications/{notificationId} {
-        allow write: if isOwner(userId);
-        allow read, update: if isOwner(userId);
+        allow write, read, update: if isOwner(userId);
         allow delete: if false;
       }
       
