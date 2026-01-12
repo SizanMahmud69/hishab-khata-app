@@ -13,11 +13,11 @@ export function InterstitialAd() {
     const { premiumStatus } = useBudget();
 
     useEffect(() => {
-        const handleLoad = () => {
-            if (premiumStatus === 'premium') {
-                return;
-            }
+        if (premiumStatus === 'premium') {
+            return;
+        }
 
+        const handleLoad = () => {
             if (typeof window.show_10446368 === 'function') {
                 try {
                     window.show_10446368({
@@ -36,13 +36,15 @@ export function InterstitialAd() {
             }
         };
         
-        // Ensure the page is fully loaded before trying to show the ad
+        // If the page is already loaded, run the script.
+        // Otherwise, wait for the 'load' event.
         if (document.readyState === 'complete') {
             handleLoad();
         } else {
             window.addEventListener('load', handleLoad);
         }
 
+        // Cleanup function to remove the event listener when the component unmounts.
         return () => {
             window.removeEventListener('load', handleLoad);
         };
