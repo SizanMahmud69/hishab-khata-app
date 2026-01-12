@@ -25,25 +25,31 @@ export function AdBanner({ page, adIndex }: { page: string; adIndex?: number }) 
         
         window.addEventListener('unhandledrejection', handleError);
 
-        try {
-            if (typeof window.show_10446368 === 'function') {
-                window.show_10446368({
-                    type: 'inApp',
-                    inAppSettings: {
-                        frequency: 2,
-                        capping: 0.1,
-                        interval: 30,
-                        timeout: 5,
-                        everyPage: false
-                    }
-                });
+        // Use setTimeout to delay the execution until after the current render cycle is complete.
+        // This helps prevent race conditions with the ad script and DOM readiness.
+        const timer = setTimeout(() => {
+            try {
+                if (typeof window.show_10446368 === 'function') {
+                    window.show_10446368({
+                        type: 'inApp',
+                        inAppSettings: {
+                            frequency: 2,
+                            capping: 0.1,
+                            interval: 30,
+                            timeout: 5,
+                            everyPage: false
+                        }
+                    });
+                }
+            } catch (e) {
+                console.error("Ad script execution error:", e);
             }
-        } catch (e) {
-            console.error("Ad script error:", e);
-        }
+        }, 0);
 
-        // Cleanup the event listener when the component unmounts
+
+        // Cleanup the event listener and timeout when the component unmounts
         return () => {
+            clearTimeout(timer);
             window.removeEventListener('unhandledrejection', handleError);
         };
 
