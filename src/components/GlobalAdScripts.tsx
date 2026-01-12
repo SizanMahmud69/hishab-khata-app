@@ -10,6 +10,7 @@ const SOCIAL_BAR_AD_URL = "https://pl28457235.effectivegatecpm.com/8e/dd/54/8edd
 declare global {
     interface Window {
         show_10446368: (options?: any) => Promise<void>;
+        adzilla_id: any;
     }
 }
 
@@ -22,19 +23,34 @@ export function GlobalAdScripts() {
 
     // Effect for Social Bar Ad
     useEffect(() => {
-        const scriptExists = document.querySelector(`script[src="${SOCIAL_BAR_AD_URL}"]`);
+        const scriptId = 'social-bar-ad-script';
+        const scriptExists = document.getElementById(scriptId);
 
         if (premiumStatus === 'free' && !isPublicRoute) {
             if (!scriptExists) {
+                // Set config for the ad position before loading the script
+                window.adzilla_id = {
+                    "position": "bottom"
+                };
+
                 const scriptElement = document.createElement('script');
+                scriptElement.id = scriptId;
                 scriptElement.src = SOCIAL_BAR_AD_URL;
                 scriptElement.async = true;
                 document.body.appendChild(scriptElement);
             }
+        } else {
+             if (scriptExists) {
+                scriptExists.remove();
+                const adzillaContainer = document.getElementById('adzilla-container');
+                if (adzillaContainer) {
+                    adzillaContainer.remove();
+                }
+            }
         }
 
         return () => {
-            const scriptToRemove = document.querySelector(`script[src="${SOCIAL_BAR_AD_URL}"]`);
+            const scriptToRemove = document.getElementById(scriptId);
             if (scriptToRemove) {
                 scriptToRemove.remove();
             }
