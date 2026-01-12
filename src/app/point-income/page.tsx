@@ -136,7 +136,7 @@ export default function PointIncomePage() {
             <div className="flex-1 space-y-4">
                 <PageHeader title="পয়েন্ট ইনকাম" description="বিজ্ঞাপন দেখে পয়েন্ট অর্জন করুন।" />
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {[...Array(4)].map((_, i) => (
+                    {[...Array(5)].map((_, i) => (
                         <Card key={i}><CardContent className="p-6"><Skeleton className="h-24 w-full" /></CardContent></Card>
                     ))}
                 </div>
@@ -175,7 +175,7 @@ export default function PointIncomePage() {
                 </Card>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                 {(adTaskPoints || []).slice(0, TOTAL_ADS_TO_VIEW + 1).map((points, index) => (
                     <Card 
                         key={index}

@@ -294,7 +294,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const referrerBonusPoints = appConfig?.referrerBonusPoints ?? 100;
     const referredUserBonusPoints = appConfig?.referredUserBonusPoints ?? 50;
     const bdtPer100Points = appConfig?.bdtPer100Points ?? 5;
-    const adTaskPoints = appConfig?.adTaskPoints ?? [10, 10, 10, 10, 50]; // Default points
+    const adTaskPoints = appConfig?.adTaskPoints ?? [10, 10, 10, 10, 50]; // Default points for 4 views + 1 click
     const rewardPoints = userProfile?.points ?? 0;
     
     const totalIncome = useMemo(() => (transactions || []).filter(t => t.type === 'income').reduce((sum, item) => sum + item.amount, 0), [transactions]);
