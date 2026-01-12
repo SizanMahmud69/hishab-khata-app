@@ -12,7 +12,7 @@ import { premiumPlans as allPlans, type PremiumPlan } from "@/lib/data";
 import { useBudget } from '@/context/budget-context';
 import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
-import { InterstitialAd } from '@/components/ad-banner';
+import { AdBanner } from '@/components/ad-banner';
 
 const premiumFeatures = [
     { text: "সম্পূর্ণ বিজ্ঞাপন-মুক্ত অভিজ্ঞতা", icon: <ShieldCheck className="h-5 w-5 text-green-500" /> },
@@ -163,7 +163,7 @@ export default function PremiumPage() {
                     </Accordion>
                 </CardContent>
             </Card>
-             <InterstitialAd />
+             <AdBanner page="premium" />
         </div>
     );
 }

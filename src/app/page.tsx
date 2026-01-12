@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { BookMarked, ShieldCheck, TrendingUp, TrendingDown, HandCoins, Award, Users, Crown, MoveRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { InterstitialAd } from '@/components/ad-banner';
+import { AdBanner } from '@/components/ad-banner';
 
 const features = [
   {
@@ -84,7 +84,7 @@ export default function Home() {
         </section>
 
         <div className="container pb-12">
-            <InterstitialAd />
+            <AdBanner page="home" />
         </div>
 
         {/* Features Section */}

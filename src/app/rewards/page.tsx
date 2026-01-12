@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { format } from 'date-fns';
 import { bn } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
-import { InterstitialAd } from '@/components/ad-banner';
+import { AdBanner } from '@/components/ad-banner';
 
 
 function RewardsPageContent() {
@@ -148,7 +148,7 @@ function RewardsPageContent() {
                         </div>
                         {(index + 1) % 5 === 0 && (
                             <div className='my-4'>
-                                <InterstitialAd />
+                                <AdBanner page="rewards" adIndex={(index + 1) / 5} />
                             </div>
                         )}
                     </Fragment>
@@ -158,8 +158,7 @@ function RewardsPageContent() {
             )}
         </CardContent>
       </Card>
-      {/* This InterstitialAd is specifically for triggering the pop-up logic */}
-      <InterstitialAd />
+      <AdBanner page="rewards" adIndex={0} />
     </div>
   )
 }

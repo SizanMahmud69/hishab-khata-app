@@ -2,7 +2,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowRight } from "lucide-react"
-import { InterstitialAd } from "@/components/ad-banner"
+import { AdBanner } from "@/components/ad-banner"
 
 export default function PrivacyPolicyPage() {
   return (
@@ -65,7 +65,7 @@ export default function PrivacyPolicyPage() {
               <p>এই গোপনীয়তা নীতি সম্পর্কে আপনার কোনো প্রশ্ন থাকলে, অনুগ্রহ করে আমাদের সাথে [যোগাযোগের ইমেল] এ যোগাযোগ করুন।</p>
             </div>
              <div className="pt-8">
-                <InterstitialAd />
+                <AdBanner page="privacy" />
             </div>
           </div>
         </div>

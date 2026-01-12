@@ -1,5 +1,5 @@
 
-import { InterstitialAd } from "@/components/ad-banner";
+import { AdBanner } from "@/components/ad-banner";
 import PageHeader from "@/components/page-header"
 import { SettingsShops } from "@/components/settings-shops"
 
@@ -9,7 +9,7 @@ export default function ShopsSettingsPage() {
       <PageHeader title="দোকানের তালিকা সেটিংস" description="আপনার দোকানের তালিকা পরিচালনা করুন।" />
       <SettingsShops />
       <div className="pt-4">
-        <InterstitialAd />
+        <AdBanner page="settings-shops" />
       </div>
     </div>
   )

@@ -19,7 +19,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { InterstitialAd } from "@/components/ad-banner";
+import { AdBanner } from "@/components/ad-banner";
 
 export default function PayDebtPage() {
     const { debtId } = useParams();
@@ -216,7 +216,7 @@ export default function PayDebtPage() {
                 </CardFooter>
             </Card>
             <div className="max-w-2xl mx-auto">
-                <InterstitialAd />
+                <AdBanner page="pay-debt" />
             </div>
         </div>
     );

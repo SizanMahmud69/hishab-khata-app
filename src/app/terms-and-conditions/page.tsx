@@ -2,7 +2,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowRight } from "lucide-react"
-import { InterstitialAd } from "@/components/ad-banner"
+import { AdBanner } from "@/components/ad-banner"
 
 export default function TermsAndConditionsPage() {
   return (
@@ -55,7 +55,7 @@ export default function TermsAndConditionsPage() {
               <p>এই শর্তাবলী সম্পর্কে আপনার কোনো প্রশ্ন থাকলে, অনুগ্রহ করে আমাদের সাথে [যোগাযোগের ইমেল] এ যোগাযোগ করুন।</p>
             </div>
             <div className="pt-8">
-                <InterstitialAd />
+                <AdBanner page="terms" />
             </div>
           </div>
         </div>

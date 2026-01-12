@@ -20,7 +20,7 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
-import { InterstitialAd } from "@/components/ad-banner";
+import { AdBanner } from "@/components/ad-banner";
 
 export default function AddDebtPage() {
     const { addDebtNote, addTransaction, totalIncome, totalExpense } = useBudget();
@@ -168,7 +168,7 @@ export default function AddDebtPage() {
         </form>
       </Card>
       <div className="max-w-2xl mx-auto">
-        <InterstitialAd />
+        <AdBanner page="add-debt" />
       </div>
     </div>
   )

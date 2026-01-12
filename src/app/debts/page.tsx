@@ -17,7 +17,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import { InterstitialAd } from "@/components/ad-banner";
+import { AdBanner } from "@/components/ad-banner";
 
 export default function DebtsPage() {
     const { debtNotes } = useBudget();
@@ -182,7 +182,7 @@ export default function DebtsPage() {
             </div>
         </TabsContent>
       </Tabs>
-      <InterstitialAd />
+      <AdBanner page="debts" />
     </div>
   )
 }
