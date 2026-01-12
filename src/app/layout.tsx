@@ -92,7 +92,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <Toaster />
           </BudgetClientProvider>
         </FirebaseClientProvider>
-        <Script src="https://pl28428118.effectivegatecpm.com/0c/22/02/0c220271b2d231c2e61062d769563457.js"></Script>
         <Script src="https://pl28457235.effectivegatecpm.com/8e/dd/54/8edd54854e77a6161245532c7f56ec4b.js"></Script>
       </body>
     </html>
