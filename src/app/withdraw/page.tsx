@@ -25,6 +25,7 @@ import { bn } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { errorEmitter } from '@/firebase/error-emitter';
+import { AdBanner } from '@/components/ad-banner';
 
 interface UserProfile {
     points?: number;
@@ -331,6 +332,7 @@ export default function WithdrawPage() {
             )}
         </CardContent>
       </Card>
+      <AdBanner page="withdraw" />
     </div>
   )
 }

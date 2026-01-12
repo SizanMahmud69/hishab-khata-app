@@ -24,6 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { type DebtNote } from "@/context/budget-context";
 import PageHeader from "@/components/page-header";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { AdBanner } from "@/components/ad-banner";
 
 export default function AddShopDuePage() {
     const { addDebtNote } = useBudget();
@@ -195,6 +196,7 @@ export default function AddShopDuePage() {
                 </CardFooter>
             </form>
         </Card>
+        <AdBanner page="add-shop-due" />
     </div>
     );
 }

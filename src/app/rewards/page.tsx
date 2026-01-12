@@ -14,6 +14,7 @@ import Link from 'next/link';
 import { format } from 'date-fns';
 import { bn } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
+import { AdBanner } from '@/components/ad-banner';
 
 
 function RewardsPageContent() {
@@ -154,6 +155,7 @@ function RewardsPageContent() {
             )}
         </CardContent>
       </Card>
+      <AdBanner page="rewards" />
     </div>
   )
 }
