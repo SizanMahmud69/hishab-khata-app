@@ -18,7 +18,7 @@ export function AdBanner({ page, adIndex = 1 }: { page: string; adIndex?: number
         return null;
     }
 
-    const adKey = '23a22d63f1824f6a206935229e119cc5';
+    const adKey = '3ba7137cf83e3b9991ea29595a11120e';
     const adContainerId = `ad-container-${page}-${adIndex}`;
 
      useEffect(() => {
@@ -27,8 +27,8 @@ export function AdBanner({ page, adIndex = 1 }: { page: string; adIndex?: number
             atOptions = {
                 'key' : '${adKey}',
                 'format' : 'iframe',
-                'height' : 300,
-                'width' : 160,
+                'height' : 50,
+                'width' : 320,
                 'params' : {}
             };
         `;
@@ -48,7 +48,7 @@ export function AdBanner({ page, adIndex = 1 }: { page: string; adIndex?: number
 
 
     return (
-        <div id={adContainerId} className="flex justify-center items-center my-4 min-h-[300px] min-w-[160px]">
+        <div id={adContainerId} className="flex justify-center items-center my-4 min-h-[50px] min-w-[320px]">
         </div>
     );
 }
