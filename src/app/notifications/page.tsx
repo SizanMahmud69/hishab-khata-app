@@ -122,6 +122,9 @@ export default function NotificationsPage() {
                                         </div>
                                     )}
                                 </div>
+                                {(index + 1) % 5 === 0 && (
+                                    <AdBanner page="notifications" adIndex={(index + 1) / 5} />
+                                )}
                             </Fragment>
                         ))
                     ) : (
@@ -131,7 +134,6 @@ export default function NotificationsPage() {
                     )}
                 </CardContent>
             </Card>
-            <AdBanner page="notifications" />
         </div>
     );
 }

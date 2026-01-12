@@ -141,6 +141,9 @@ export default function ReferPage() {
                                             <span>+{referral.bonusPoints}</span>
                                         </div>
                                     </div>
+                                    {(index + 1) % 5 === 0 && (
+                                        <AdBanner page="refer" adIndex={(index + 1) / 5} />
+                                    )}
                                 </Fragment>
                             ))
                         ) : (
@@ -149,7 +152,6 @@ export default function ReferPage() {
                     </div>
                 </CardContent>
             </Card>
-            <AdBanner page="refer" />
         </div>
     );
 }

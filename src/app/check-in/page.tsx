@@ -205,14 +205,21 @@ export default function CheckInPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {history.slice(0, 7).map((record, index) => (
-                           <Fragment key={index}>
+                        {history.slice(0, 30).map((record, index) => (
+                           <Fragment key={record.id}>
                              <TableRow>
                                  <TableCell className='font-medium'>
                                      {format(parseISO(record.date), "d MMMM, yyyy", { locale: bn })}
                                  </TableCell>
                                  <TableCell className='text-right font-semibold text-green-700 dark:text-green-500'>+{record.points}</TableCell>
                              </TableRow>
+                             {(index + 1) % 5 === 0 && (
+                                <TableRow>
+                                    <TableCell colSpan={2} className="p-0">
+                                        <AdBanner page="check-in" adIndex={(index + 1) / 5} />
+                                    </TableCell>
+                                </TableRow>
+                             )}
                             </Fragment>
                         ))}
                     </TableBody>
@@ -222,7 +229,6 @@ export default function CheckInPage() {
             )}
         </CardContent>
       </Card>
-      <AdBanner page="check-in" />
     </div>
   )
 }

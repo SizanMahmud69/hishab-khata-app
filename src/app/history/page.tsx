@@ -220,6 +220,9 @@ export default function HistoryPage() {
                         {transaction.description && <p className="text-sm text-muted-foreground mt-1">{transaction.description}</p>}
                     </CardContent>
                 </Card>
+                {(index + 1) % 5 === 0 && (
+                    <AdBanner page="history" adIndex={(index + 1) / 5} />
+                )}
             </Fragment>
           ))}
         </div>
@@ -228,7 +231,6 @@ export default function HistoryPage() {
           <p className="text-muted-foreground">এই তারিখ সীমার মধ্যে কোনো লেনদেন পাওয়া যায়নি।</p>
         </div>
       )}
-      <AdBanner page="history" />
     </div>
   );
 }

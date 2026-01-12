@@ -148,6 +148,9 @@ function RewardsPageContent() {
                             {item.type === 'earned' || item.type === 'refunded' ? '+' : '-'}{item.points}
                             </p>
                         </div>
+                        {(index + 1) % 5 === 0 && (
+                            <AdBanner page="rewards" adIndex={(index + 1) / 5} />
+                        )}
                     </Fragment>
                 ))
             ) : (
@@ -155,7 +158,6 @@ function RewardsPageContent() {
             )}
         </CardContent>
       </Card>
-      <AdBanner page="rewards" />
     </div>
   )
 }

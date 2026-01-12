@@ -322,6 +322,13 @@ export default function WithdrawPage() {
                                             )}
                                         </TableCell>
                                     </TableRow>
+                                    {(index + 1) % 5 === 0 && (
+                                        <TableRow>
+                                            <TableCell colSpan={5} className="p-0">
+                                                <AdBanner page="withdraw-history" adIndex={(index + 1) / 5} />
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
                                 </Fragment>
                             ))}
                         </TableBody>
@@ -332,7 +339,6 @@ export default function WithdrawPage() {
             )}
         </CardContent>
       </Card>
-      <AdBanner page="withdraw" />
     </div>
   )
 }
