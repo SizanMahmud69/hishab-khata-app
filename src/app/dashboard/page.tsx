@@ -8,7 +8,7 @@ import { OverviewPieChart } from "@/components/overview-pie-chart"
 import { Wallet, Landmark } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { useBudget } from "@/context/budget-context";
-import { AdBanner } from "@/components/ad-banner";
+import { InterstitialAd } from "@/components/ad-banner";
 
 export default function DashboardPage() {
     const { totalIncome, totalExpense, totalSavings } = useBudget();
@@ -24,7 +24,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex-1 space-y-4">
-      <AdBanner page="dashboard" />
+      <InterstitialAd />
       <div className="grid gap-4 grid-cols-2">
         <OverviewCards />
       </div>
@@ -62,7 +62,7 @@ export default function DashboardPage() {
             <OverviewPieChart />
         </div>
       </div>
-      <AdBanner page="dashboard" adIndex={1} />
+      <InterstitialAd />
       <div className="grid grid-cols-1 gap-6">
         <RecentTransactions />
       </div>

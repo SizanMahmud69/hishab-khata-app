@@ -13,7 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { bn } from 'date-fns/locale';
 import { useBudget } from '@/context/budget-context';
-import { AdBanner } from '@/components/ad-banner';
+import { InterstitialAd } from '@/components/ad-banner';
 
 interface UserProfile {
     userId: string;
@@ -143,7 +143,7 @@ export default function ReferPage() {
                                     </div>
                                     {(index + 1) % 5 === 0 && (
                                         <div className='my-4'>
-                                            <AdBanner page="refer" adIndex={Math.floor(index / 5)} />
+                                            <InterstitialAd />
                                         </div>
                                     )}
                                 </Fragment>
@@ -154,8 +154,8 @@ export default function ReferPage() {
                     </div>
                 </CardContent>
             </Card>
-            {/* This AdBanner is specifically for triggering the pop-up logic */}
-            <AdBanner page="refer" />
+            {/* This InterstitialAd is specifically for triggering the pop-up logic */}
+            <InterstitialAd />
         </div>
     );
 }

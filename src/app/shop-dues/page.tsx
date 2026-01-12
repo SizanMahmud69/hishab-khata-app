@@ -28,7 +28,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
-import { AdBanner } from "@/components/ad-banner";
+import { InterstitialAd } from "@/components/ad-banner";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 
@@ -241,7 +241,7 @@ export default function ShopDuesPage() {
         )}
       </div>
 
-      <AdBanner page="shop-dues" />
+      <InterstitialAd />
       
       {/* Payment Dialog */}
       <Dialog open={isPaymentOpen} onOpenChange={setIsPaymentOpen}>

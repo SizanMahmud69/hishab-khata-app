@@ -2,6 +2,7 @@
 "use client";
 
 import type { ReactNode } from "react"
+import Script from "next/script";
 import { AppHeader } from "@/components/app-header"
 import { BudgetClientProvider, useBudget } from "@/context/budget-context-provider"
 import { usePathname, useRouter } from "next/navigation";
@@ -91,6 +92,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <Toaster />
           </BudgetClientProvider>
         </FirebaseClientProvider>
+        <Script src='//libtl.com/sdk.js' data-zone='10446368' data-sdk='show_10446368' />
       </body>
     </html>
   )

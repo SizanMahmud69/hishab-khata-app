@@ -20,7 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { incomeSources, savingsDestinations } from "@/lib/data";
 import { Loader2 } from "lucide-react";
-import { AdBanner } from "@/components/ad-banner";
+import { InterstitialAd } from "@/components/ad-banner";
 
 const months = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
 
@@ -155,7 +155,7 @@ export default function IncomePage() {
         </form>
       </Card>
       <div className="max-w-2xl mx-auto">
-        <AdBanner page="income" />
+        <InterstitialAd />
       </div>
     </div>
   )

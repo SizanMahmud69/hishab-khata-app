@@ -25,7 +25,7 @@ import { bn } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { errorEmitter } from '@/firebase/error-emitter';
-import { AdBanner } from '@/components/ad-banner';
+import { InterstitialAd } from '@/components/ad-banner';
 
 interface UserProfile {
     points?: number;
@@ -326,7 +326,7 @@ export default function WithdrawPage() {
                                         <TableRow>
                                             <TableCell colSpan={5} className="p-0">
                                                 <div className='my-2'>
-                                                    <AdBanner page="withdraw" adIndex={Math.floor(index / 2)} />
+                                                    <InterstitialAd />
                                                 </div>
                                             </TableCell>
                                         </TableRow>

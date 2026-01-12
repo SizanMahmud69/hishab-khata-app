@@ -10,7 +10,7 @@ import Confetti from 'react-confetti';
 import { useWindowSize } from 'react-use';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { AdBanner } from '@/components/ad-banner';
+import { InterstitialAd } from '@/components/ad-banner';
 
 function CongratulationsContent() {
   const searchParams = useSearchParams();
@@ -48,7 +48,7 @@ function CongratulationsContent() {
           </CardContent>
         </Card>
         <div className="max-w-2xl mx-auto pt-4">
-            <AdBanner page="congratulations" />
+            <InterstitialAd />
         </div>
       </div>
     </>
