@@ -229,7 +229,7 @@ export default function PointIncomePage() {
                             </CardDescription>
                         </CardContent>
                         <CardFooter className="flex-col gap-4">
-                            <div className="flex items-center justify-center gap-2 text-xl font-bold text-primary">
+                            <div className="flex items-center justify-center gap-2 text-xl font-bold text-green-700 dark:text-green-500">
                                 <Star className="w-5 h-5" />
                                 <span>{points ?? 0} পয়েন্ট</span>
                             </div>
