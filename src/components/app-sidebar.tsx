@@ -19,7 +19,6 @@ import {
   Users,
   DollarSign,
 } from "lucide-react"
-import Script from "next/script"
 
 import {
   Sidebar,
@@ -89,21 +88,6 @@ const menuItems = [
     }
 ]
 
-function NativeAdBanner() {
-    const { premiumStatus } = useBudget();
-
-    if (premiumStatus === 'premium') {
-        return null;
-    }
-
-    return (
-        <div className="p-2">
-            <Script async={true} data-cfasync="false" src="https://pl28457299.effectivegatecpm.com/fb85d9a02582beb6541bd75b74a59858/invoke.js" />
-            <div id="container-fb85d9a02582beb6541bd75b74a59858"></div>
-        </div>
-    );
-}
-
 export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
   const pathname = usePathname()
   const router = useRouter();
@@ -156,7 +140,6 @@ export function AppSidebar({ onLinkClick }: { onLinkClick?: () => void }) {
       </SidebarContent>
         <SidebarSeparator />
         <SidebarFooter>
-            <NativeAdBanner />
             <SidebarMenu>
                  <SidebarMenuItem>
                     <SidebarMenuButton
