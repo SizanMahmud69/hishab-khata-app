@@ -23,7 +23,7 @@ interface AdTaskStatus {
 
 declare global {
     interface Window {
-        show_10446368: () => Promise<void>;
+        show_10446368: (format?: 'pop') => Promise<void>;
     }
 }
 
@@ -71,7 +71,6 @@ export default function PointIncomePage() {
         const rewardPoints = adTaskPoints[viewedAds.length];
         if (rewardPoints && user && firestore) {
              const completeTask = async () => {
-                setIsWaiting(true);
                 const userDocRef = doc(firestore, 'users', user.uid);
                 await updateDoc(userDocRef, {
                     points: increment(rewardPoints)
@@ -109,17 +108,17 @@ export default function PointIncomePage() {
                 if (viewedAds.length === CLICK_AD_INDEX) {
                     setTaskCompletedToday(true);
                 }
-                setIsWaiting(false);
             };
             await completeTask();
         }
+        setIsWaiting(false);
     }
 
 
     const handleAdClick = (index: number) => {
         if (typeof window.show_10446368 === 'function') {
             setIsWaiting(true);
-            window.show_10446368().then(() => {
+            window.show_10446368('pop').then(() => {
                 rewardUser();
             }).catch((error) => {
                 console.error("Ad error:", error);
