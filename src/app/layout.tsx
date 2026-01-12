@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useUser, FirebaseClientProvider } from "@/firebase";
 import "./globals.css"
 import { Toaster } from "@/components/ui/toaster"
+import { GlobalAdScripts } from "@/components/GlobalAdScripts";
 
 function AppContent({ children }: { children: ReactNode }) {
     const { user, isLoading: isAuthLoading } = useUser();
@@ -90,9 +91,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <BudgetClientProvider>
             <AppContent>{children}</AppContent>
             <Toaster />
+            <GlobalAdScripts />
           </BudgetClientProvider>
         </FirebaseClientProvider>
-        <Script src="https://pl28457235.effectivegatecpm.com/8e/dd/54/8edd54854e77a6161245532c7f56ec4b.js"></Script>
       </body>
     </html>
   )
