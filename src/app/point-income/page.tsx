@@ -3,11 +3,11 @@
 
 import React, { useState, useEffect, useMemo, Fragment } from 'react';
 import PageHeader from "@/components/page-header";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useBudget } from "@/context/budget-context";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, updateDoc, increment, serverTimestamp, getDoc, setDoc, addDoc, collection, query, where, getDocs, Timestamp, startOfDay, endOfDay } from 'firebase/firestore';
+import { doc, updateDoc, increment, serverTimestamp, getDoc, setDoc, addDoc, collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { startOfDay, endOfDay } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CheckCircle, MousePointerClick, Star, Tv } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -51,7 +51,7 @@ export default function PointIncomePage() {
     }, [user, firestore]);
 
     useEffect(() => {
-        if (!user || !firestore) return;
+        if (!user || !firestore || !adTaskStatusRef) return;
 
         const checkStatusAndProgress = async () => {
             setIsStatusLoading(true);
@@ -246,5 +246,3 @@ export default function PointIncomePage() {
         </div>
     );
 }
-
-    
