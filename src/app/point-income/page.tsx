@@ -13,6 +13,7 @@ import { CheckCircle, MousePointerClick, Star, Tv } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { createNotification } from '@/components/app-header';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
 const TOTAL_ADS_TO_VIEW = 4;
 const CLICK_AD_INDEX = 4; // The 5th ad (index 4) is for clicking
