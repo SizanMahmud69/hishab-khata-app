@@ -1,3 +1,4 @@
+
 "use client";
 
 import Script from 'next/script';
@@ -22,9 +23,15 @@ export function AdBanner({ page, adIndex = 1 }: { page: string; adIndex?: number
     const adContainerId = `ad-container-${page}-${adIndex}`;
 
      useEffect(() => {
+        // Ensure the container is empty before appending scripts
+        const container = document.getElementById(adContainerId);
+        if (!container) return;
+        container.innerHTML = '';
+
         const adScript = document.createElement('script');
+        adScript.type = 'text/javascript';
         adScript.innerHTML = `
-            atOptions = {
+            var atOptions = {
                 'key' : '${adKey}',
                 'format' : 'iframe',
                 'height' : 50,
@@ -32,14 +39,15 @@ export function AdBanner({ page, adIndex = 1 }: { page: string; adIndex?: number
                 'params' : {}
             };
         `;
-        document.getElementById(adContainerId)?.appendChild(adScript);
+        container.appendChild(adScript);
 
         const invokeScript = document.createElement('script');
-        invokeScript.src = `https://www.highperformanceformat.com/${adKey}/invoke.js`;
-        document.getElementById(adContainerId)?.appendChild(invokeScript);
+        invokeScript.type = 'text/javascript';
+        invokeScript.src = `//www.highperformanceformat.com/${adKey}/invoke.js`;
+        invokeScript.async = true;
+        container.appendChild(invokeScript);
 
         return () => {
-             const container = document.getElementById(adContainerId);
              if(container) {
                 container.innerHTML = '';
              }

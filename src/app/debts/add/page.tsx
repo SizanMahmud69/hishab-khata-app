@@ -118,6 +118,7 @@ export default function AddDebtPage() {
   return (
     <div className="flex-1 space-y-4">
       <PageHeader title="নতুন ধারের হিসাব" description="সম্পর্কিত ব্যক্তির নাম এবং অর্থের পরিমাণ লিখুন।" />
+      <AdBanner page="add-debt" />
       <Card className="max-w-2xl mx-auto">
         <form onSubmit={handleAddNewDebt}>
             <CardHeader>
@@ -167,7 +168,6 @@ export default function AddDebtPage() {
             </CardFooter>
         </form>
       </Card>
-      <AdBanner page="add-debt" />
     </div>
   )
 }
