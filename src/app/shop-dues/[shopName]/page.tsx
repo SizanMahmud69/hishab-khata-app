@@ -18,7 +18,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { format } from "date-fns";
 import { bn } from "date-fns/locale";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AdBanner } from "@/components/ad-banner";
 
 export default function ShopDetailsPage() {
     const { shopName: encodedShopName } = useParams();
@@ -123,9 +122,6 @@ export default function ShopDetailsPage() {
                      )}
                 </CardContent>
             </Card>
-            <div className="pt-4">
-                <AdBanner page="shop-details" />
-            </div>
         </div>
     )
 }

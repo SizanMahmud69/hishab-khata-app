@@ -12,7 +12,6 @@ import { useRouter } from 'next/navigation';
 import { isThisMonth, parseISO } from 'date-fns';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, doc, updateDoc, writeBatch, Timestamp } from 'firebase/firestore';
-import { AdBanner } from '@/components/ad-banner';
 
 interface Notification {
     id: string;
@@ -122,11 +121,6 @@ export default function NotificationsPage() {
                                         </div>
                                     )}
                                 </div>
-                                {(index + 1) % 4 === 0 && (
-                                    <div className='my-4'>
-                                        <AdBanner page="notifications" adIndex={(index + 1) / 4} />
-                                    </div>
-                                )}
                             </Fragment>
                         ))
                     ) : (

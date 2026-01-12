@@ -92,7 +92,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <Toaster />
           </BudgetClientProvider>
         </FirebaseClientProvider>
-        <Script src='//libtl.com/sdk.js' data-zone='10446368' data-sdk='show_10446368' />
       </body>
     </html>
   )

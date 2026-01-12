@@ -13,7 +13,6 @@ import Link from 'next/link';
 import { format } from 'date-fns';
 import { bn } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
-import { AdBanner } from '@/components/ad-banner';
 
 
 function RewardsPageContent() {
@@ -146,11 +145,6 @@ function RewardsPageContent() {
                             {item.type === 'earned' || item.type === 'refunded' ? '+' : '-'}{item.points}
                             </p>
                         </div>
-                        {(index + 1) % 5 === 0 && (
-                            <div className='my-4'>
-                                <AdBanner page="rewards" adIndex={(index + 1) / 5} />
-                            </div>
-                        )}
                     </Fragment>
                 ))
             ) : (
@@ -158,7 +152,6 @@ function RewardsPageContent() {
             )}
         </CardContent>
       </Card>
-      <AdBanner page="rewards" adIndex={0} />
     </div>
   )
 }

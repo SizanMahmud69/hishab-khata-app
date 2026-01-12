@@ -13,7 +13,6 @@ import { type DateRange } from "react-day-picker";
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { AdBanner } from '@/components/ad-banner';
 
 export default function HistoryPage() {
   const { transactions } = useBudget();
@@ -220,11 +219,6 @@ export default function HistoryPage() {
                         {transaction.description && <p className="text-sm text-muted-foreground mt-1">{transaction.description}</p>}
                     </CardContent>
                 </Card>
-                {(index + 1) % 2 === 0 && (
-                    <div className='my-4'>
-                        <AdBanner page="history" adIndex={(index + 1) / 2} />
-                    </div>
-                )}
             </Fragment>
           ))}
         </div>

@@ -13,7 +13,6 @@ import { format, isToday, isYesterday, parseISO, subDays } from 'date-fns';
 import { bn } from 'date-fns/locale';
 import { useUser, useFirestore, useCollection, useMemoFirebase, FirestorePermissionError, errorEmitter } from '@/firebase';
 import { collection, addDoc, serverTimestamp, query, orderBy, limit, updateDoc, doc, increment } from 'firebase/firestore';
-import { AdBanner } from '@/components/ad-banner';
 
 const MAX_STREAK_DAYS = 30;
 const BASE_REWARD = 5;
@@ -222,10 +221,6 @@ export default function CheckInPage() {
             )}
         </CardContent>
       </Card>
-      <div className="max-w-md mx-auto">
-        <AdBanner page="check-in" />
-      </div>
-
     </div>
   )
 }

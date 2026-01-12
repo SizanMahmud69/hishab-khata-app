@@ -13,7 +13,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { bn } from 'date-fns/locale';
 import { useBudget } from '@/context/budget-context';
-import { AdBanner } from '@/components/ad-banner';
 
 interface UserProfile {
     userId: string;
@@ -141,11 +140,6 @@ export default function ReferPage() {
                                             <span>+{referral.bonusPoints}</span>
                                         </div>
                                     </div>
-                                    {(index + 1) % 5 === 0 && (
-                                        <div className='my-4'>
-                                            <AdBanner page="refer" adIndex={(index + 1) / 5} />
-                                        </div>
-                                    )}
                                 </Fragment>
                             ))
                         ) : (
@@ -154,7 +148,6 @@ export default function ReferPage() {
                     </div>
                 </CardContent>
             </Card>
-            <AdBanner page="refer" adIndex={0} />
         </div>
     );
 }

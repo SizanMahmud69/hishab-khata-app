@@ -18,7 +18,6 @@ import { useBudget } from '@/context/budget-context';
 import { doc, collection, serverTimestamp, increment, writeBatch, setDoc, updateDoc } from 'firebase/firestore';
 import { addDays } from 'date-fns';
 import { createNotification } from '@/components/app-header';
-import { AdBanner } from '@/components/ad-banner';
 
 function CheckoutPageContent() {
     const searchParams = useSearchParams();
@@ -237,9 +236,6 @@ function CheckoutPageContent() {
                     </CardFooter>
                 </Card>
             </form>
-             <div className="max-w-2xl mx-auto pt-4">
-                <AdBanner page="checkout" />
-            </div>
         </div>
     );
 }
