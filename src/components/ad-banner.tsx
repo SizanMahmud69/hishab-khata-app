@@ -1,7 +1,8 @@
+
 "use client";
 
 import { useBudget } from '@/context/budget-context';
-import { useEffect }from 'react';
+import { useCallback, useState } from 'react';
 
 declare global {
     interface Window {
@@ -11,51 +12,47 @@ declare global {
 
 export function AdBanner({ page, adIndex }: { page: string; adIndex?: number }) {
     const { premiumStatus } = useBudget();
+    const [adShown, setAdShown] = useState(false);
 
-    useEffect(() => {
-        if (premiumStatus === 'premium') {
+    const showAd = useCallback(() => {
+        if (adShown || premiumStatus === 'premium' || typeof window.show_10446368 !== 'function') {
             return;
         }
 
-        const handleError = (event: PromiseRejectionEvent) => {
-            // Prevent the error from crashing the app
-            event.preventDefault();
-            console.error("Caught unhandled ad rejection:", event.reason);
-        };
-        
-        window.addEventListener('unhandledrejection', handleError);
-
-        // Use setTimeout to delay the execution until after the current render cycle is complete.
-        // This helps prevent race conditions with the ad script and DOM readiness.
-        const timer = setTimeout(() => {
-            try {
-                if (typeof window.show_10446368 === 'function') {
-                    window.show_10446368({
-                        type: 'inApp',
-                        inAppSettings: {
-                            frequency: 2,
-                            capping: 0.1,
-                            interval: 30,
-                            timeout: 5,
-                            everyPage: false
-                        }
-                    });
+        try {
+            window.show_10446368({
+                type: 'inApp',
+                inAppSettings: {
+                    frequency: 2,
+                    capping: 0.1,
+                    interval: 30,
+                    timeout: 5,
+                    everyPage: false
                 }
-            } catch (e) {
-                console.error("Ad script execution error:", e);
-            }
-        }, 0);
+            });
+            setAdShown(true);
+        } catch (e) {
+            console.error("Ad script execution error:", e);
+        }
+    }, [adShown, premiumStatus]);
 
-
-        // Cleanup the event listener and timeout when the component unmounts
-        return () => {
-            clearTimeout(timer);
-            window.removeEventListener('unhandledrejection', handleError);
-        };
-
-    }, [premiumStatus]);
-
-
-    // This component does not render anything visible itself.
-    return null;
+    if (premiumStatus === 'premium') {
+        return null;
+    }
+    
+    // Render a full-viewport div to catch mouse enter events.
+    // This is a robust way to ensure the page is interactive before showing an ad.
+    return (
+        <div 
+            onMouseEnter={showAd}
+            style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                width: '100vw',
+                height: '100vh',
+                zIndex: -1, // Ensure it doesn't interfere with other UI elements
+            }}
+        />
+    );
 }
