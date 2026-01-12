@@ -215,6 +215,32 @@
       },
       "required": ["id", "userId", "date", "points"]
     },
+    "AdTask": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AdTask",
+      "type": "object",
+      "description": "Represents a completed ad-watching task for a user.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ad task record."
+        },
+        "userId": {
+          "type": "string",
+          "description": "The UID of the user who completed the task."
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The ISO 8601 timestamp of when the task was completed."
+        },
+        "points": {
+          "type": "number",
+          "description": "Points awarded for this task."
+        }
+      },
+      "required": ["id", "userId", "date", "points"]
+    },
     "VerificationRequest": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "VerificationRequest",
@@ -399,6 +425,16 @@
             "$ref": "#/backend/entities/CheckIn"
           },
           "description": "Stores daily check-in records for a user to track streaks and rewards."
+        }
+      },
+      {
+        "path": "/users/{userId}/adTasks/{taskId}",
+        "definition": {
+          "entityName": "AdTask",
+          "schema": {
+            "$ref": "#/backend/entities/AdTask"
+          },
+          "description": "Stores a record of each completed ad-watching task for a user."
         }
       },
       {

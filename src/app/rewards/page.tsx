@@ -1,10 +1,11 @@
 
+
 "use client";
 
 import React, { useMemo, useRef, useEffect, useState, Fragment } from 'react';
 import { useSearchParams } from 'next/navigation';
 import PageHeader from "@/components/page-header"
-import { Banknote, Gift, Medal, Star, Trophy, ArrowUpCircle, ArrowDownCircle, History, Undo2, Users, Crown } from "lucide-react"
+import { Banknote, Gift, Medal, Star, Trophy, ArrowUpCircle, ArrowDownCircle, History, Undo2, Users, Crown, Tv } from "lucide-react"
 import { useBudget, PointHistoryItem } from "@/context/budget-context";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
@@ -51,6 +52,7 @@ function RewardsPageContent() {
             case 'পয়েন্ট উইথড্র': return <ArrowDownCircle className="h-6 w-6 text-red-500" />;
             case 'পয়েন্ট রিফান্ড': return <Undo2 className="h-6 w-6 text-blue-500" />;
             case 'সাবস্ক্রিপশন ক্রয়': return <Crown className="h-6 w-6 text-yellow-600" />;
+            case 'বিজ্ঞাপন টাস্ক': return <Tv className="h-6 w-6 text-indigo-500" />;
             default: return <Gift className="h-6 w-6 text-gray-500" />;
         }
     }

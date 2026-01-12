@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -7,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { useBudget } from "@/context/budget-context";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, updateDoc, increment, serverTimestamp, getDoc, setDoc } from 'firebase/firestore';
+import { doc, updateDoc, increment, serverTimestamp, getDoc, setDoc, addDoc, collection } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CheckCircle, MousePointerClick, Star, Tv } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -76,6 +77,13 @@ export default function PointIncomePage() {
                     await updateDoc(userDocRef, {
                         points: increment(rewardPoints)
                     });
+
+                    const adTasksCollectionRef = collection(firestore, `users/${user.uid}/adTasks`);
+                    await addDoc(adTasksCollectionRef, {
+                        points: rewardPoints,
+                        date: serverTimestamp(),
+                        createdAt: serverTimestamp()
+                    });
                     
                     if (adTaskStatusRef) {
                         await setDoc(adTaskStatusRef, { lastCompletedDate: todayStr });
@@ -84,7 +92,7 @@ export default function PointIncomePage() {
                     await createNotification({
                         title: "পয়েন্ট অর্জন করেছেন!",
                         description: `বিজ্ঞাপন দেখার টাস্ক সম্পন্ন করার জন্য আপনি ${rewardPoints} পয়েন্ট পেয়েছেন।`,
-                        link: "/rewards"
+                        link: "/rewards?section=history"
                     }, user.uid, firestore);
 
                     toast({

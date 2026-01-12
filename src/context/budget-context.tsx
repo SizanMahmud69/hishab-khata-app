@@ -85,6 +85,12 @@ interface CheckInRecord {
     createdAt: any;
 }
 
+interface AdTaskRecord {
+    id: string;
+    points: number;
+    date: any; // Firestore Timestamp
+}
+
 
 export interface PointHistoryItem {
     type: 'earned' | 'spent' | 'refunded';
@@ -175,6 +181,12 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         return query(collection(firestore, `users/${user.uid}/checkIns`), orderBy("createdAt", "desc"));
     }, [user, firestore]);
     const { data: checkIns = [], isLoading: isCheckInsLoading } = useCollection<CheckInRecord>(checkInsQuery);
+    
+    const adTasksQuery = useMemoFirebase(() => {
+        if (!user) return null;
+        return query(collection(firestore, `users/${user.uid}/adTasks`), orderBy("createdAt", "desc"));
+    }, [user, firestore]);
+    const { data: adTasks = [], isLoading: areAdTasksLoading } = useCollection<AdTaskRecord>(adTasksQuery);
     
     const withdrawalsQuery = useMemoFirebase(() => {
         if (!user || !firestore) return null;
@@ -390,6 +402,19 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                 });
             });
         }
+
+        if (adTasks) {
+            adTasks.forEach(task => {
+                if (task.date) {
+                    history.push({
+                        type: 'earned',
+                        source: 'বিজ্ঞাপন টাস্ক',
+                        points: task.points,
+                        date: task.date.toDate()
+                    });
+                }
+            });
+        }
         
         if (referrals) {
             referrals.forEach(ref => {
@@ -444,9 +469,9 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         
         return history.sort((a, b) => b.date.getTime() - a.date.getTime());
 
-    }, [checkIns, allWithdrawals, referrals, premiumSubscriptions]);
+    }, [checkIns, adTasks, allWithdrawals, referrals, premiumSubscriptions]);
     
-    const isLoading = isUserLoading || isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || isSubscriptionsLoading || isCheckInsLoading || areReferralsLoading || isWithdrawalsLoading;
+    const isLoading = isUserLoading || isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || isSubscriptionsLoading || isCheckInsLoading || areReferralsLoading || isWithdrawalsLoading || areAdTasksLoading;
 
     const contextValue = useMemo(() => ({
         transactions, 
