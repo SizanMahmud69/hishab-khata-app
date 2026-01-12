@@ -30,7 +30,8 @@ export function GlobalAdScripts() {
             if (!scriptExists) {
                 // Set config for the ad position before loading the script
                 window.adzilla_id = {
-                    "position": "bottom"
+                    "position": "bottom",
+                    "reShowAfter": 30
                 };
 
                 const scriptElement = document.createElement('script');
