@@ -12,31 +12,41 @@ declare global {
 export function InterstitialAd() {
     const { premiumStatus } = useBudget();
 
-    const handleLoad = () => {
-        if (premiumStatus === 'premium') {
-            return;
-        }
-
-        if (typeof window.show_10446368 === 'function') {
-            try {
-                window.show_10446368({
-                    type: 'inApp',
-                    inAppSettings: {
-                        frequency: 2,
-                        capping: 0.1,
-                        interval: 30,
-                        timeout: 5,
-                        everyPage: false
-                    }
-                });
-            } catch (e) {
-                console.error("Ad script error:", e);
+    useEffect(() => {
+        const handleLoad = () => {
+            if (premiumStatus === 'premium') {
+                return;
             }
-        }
-    };
 
-    // This component renders a hidden div with an onLoad event.
-    // The onLoad event fires after the entire page (including scripts, images, etc.) has loaded.
-    // This is a more reliable way to ensure the ad script is ready than using setTimeout.
-    return <div style={{ display: 'none' }} onLoad={handleLoad} />;
+            if (typeof window.show_10446368 === 'function') {
+                try {
+                    window.show_10446368({
+                        type: 'inApp',
+                        inAppSettings: {
+                            frequency: 2,
+                            capping: 0.1,
+                            interval: 30,
+                            timeout: 5,
+                            everyPage: false
+                        }
+                    });
+                } catch (e) {
+                    console.error("Ad script error:", e);
+                }
+            }
+        };
+        
+        // Ensure the page is fully loaded before trying to show the ad
+        if (document.readyState === 'complete') {
+            handleLoad();
+        } else {
+            window.addEventListener('load', handleLoad);
+        }
+
+        return () => {
+            window.removeEventListener('load', handleLoad);
+        };
+    }, [premiumStatus]);
+
+    return null; // This component does not render anything visible
 }
