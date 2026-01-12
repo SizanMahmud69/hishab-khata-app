@@ -283,7 +283,7 @@ export default function ShopDuesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <AdBanner page="shop-dues" />
+      <AdBanner page="shop-dues" variant="square" />
     </div>
   )
 }

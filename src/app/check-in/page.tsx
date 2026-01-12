@@ -216,7 +216,7 @@ export default function CheckInPage() {
                              {(index + 1) % 5 === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={2} className="p-0">
-                                        <AdBanner page="check-in" adIndex={(index + 1) / 5} />
+                                        <AdBanner page="check-in" adIndex={(index + 1) / 5} variant="inline" />
                                     </TableCell>
                                 </TableRow>
                              )}

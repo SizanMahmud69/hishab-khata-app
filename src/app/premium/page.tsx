@@ -146,8 +146,6 @@ export default function PremiumPage() {
                     )}
             </div>
 
-            <AdBanner page="premium" />
-
             <Card>
                 <CardHeader>
                     <CardTitle>সাধারণ জিজ্ঞাসা (FAQ)</CardTitle>
@@ -165,6 +163,8 @@ export default function PremiumPage() {
                     </Accordion>
                 </CardContent>
             </Card>
+            
+            <AdBanner page="premium" variant="square" />
         </div>
     );
 }

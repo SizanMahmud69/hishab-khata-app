@@ -221,7 +221,7 @@ export default function HistoryPage() {
                     </CardContent>
                 </Card>
                 {(index + 1) % 5 === 0 && (
-                    <AdBanner page="history" adIndex={(index + 1) / 5} />
+                    <AdBanner page="history" adIndex={(index + 1) / 5} variant="inline" />
                 )}
             </Fragment>
           ))}

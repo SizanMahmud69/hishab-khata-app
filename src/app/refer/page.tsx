@@ -142,7 +142,7 @@ export default function ReferPage() {
                                         </div>
                                     </div>
                                     {(index + 1) % 5 === 0 && (
-                                        <AdBanner page="refer" adIndex={(index + 1) / 5} />
+                                        <AdBanner page="refer" adIndex={(index + 1) / 5} variant="inline" />
                                     )}
                                 </Fragment>
                             ))

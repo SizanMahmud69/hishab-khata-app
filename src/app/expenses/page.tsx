@@ -20,7 +20,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useBudget } from "@/context/budget-context"
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from 'lucide-react';
-import { AdBanner } from '@/components/ad-banner';
+import { AdBanner } from "@/components/ad-banner";
 
 const months = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
 
@@ -105,7 +105,7 @@ export default function ExpensesPage() {
     <div className="flex-1 space-y-4">
       <PageHeader title="নতুন খরচ যোগ করুন" description="আপনার খরচের বিভাগ, পরিমাণ এবং তারিখ লিখুন।" />
       
-      <AdBanner page="expenses-top" />
+      <AdBanner page="expenses-top" variant="square" />
 
       <Card className="max-w-2xl mx-auto">
         <form onSubmit={handleSubmit} ref={formRef}>

@@ -85,7 +85,7 @@ export default function IncomePage() {
     <div className="flex-1 space-y-4">
       <PageHeader title="নতুন আয় যোগ করুন" description="আপনার আয়ের উৎস, পরিমাণ এবং তারিখ লিখুন।" />
       
-      <AdBanner page="income-top" />
+      <AdBanner page="income-top" variant="square" />
 
       <Card className="max-w-2xl mx-auto">
         <form onSubmit={handleSubmit} ref={formRef}>

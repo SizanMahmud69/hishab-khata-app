@@ -182,7 +182,7 @@ export default function DebtsPage() {
             </div>
         </TabsContent>
       </Tabs>
-      <AdBanner page="debts" />
+      <AdBanner page="debts" variant="square" />
     </div>
   )
 }

@@ -123,7 +123,7 @@ export default function NotificationsPage() {
                                     )}
                                 </div>
                                 {(index + 1) % 5 === 0 && (
-                                    <AdBanner page="notifications" adIndex={(index + 1) / 5} />
+                                    <AdBanner page="notifications" adIndex={(index + 1) / 5} variant="inline" />
                                 )}
                             </Fragment>
                         ))

@@ -245,7 +245,7 @@ export default function PointIncomePage() {
                     </Card>
                 ))}
             </div>
-            <AdBanner page="point-income" />
+            <AdBanner page="point-income" variant="square" />
         </div>
     );
 }

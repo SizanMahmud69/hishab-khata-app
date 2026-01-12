@@ -148,7 +148,7 @@ function RewardsPageContent() {
                             </p>
                         </div>
                         {(index + 1) % 5 === 0 && (
-                            <AdBanner page="rewards" adIndex={(index + 1) / 5} />
+                            <AdBanner page="rewards" adIndex={(index + 1) / 5} variant="inline" />
                         )}
                     </Fragment>
                 ))

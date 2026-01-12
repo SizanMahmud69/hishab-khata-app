@@ -64,7 +64,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 gap-6">
         <RecentTransactions />
       </div>
-      <AdBanner page="dashboard" />
+      <AdBanner page="dashboard" variant="square" />
     </div>
   )
 }

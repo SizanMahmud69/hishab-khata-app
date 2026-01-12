@@ -12,15 +12,34 @@ declare global {
     }
 }
 
-export function AdBanner({ page, adIndex = 1 }: { page: string; adIndex?: number }) {
+interface AdConfig {
+    key: string;
+    height: number;
+    width: number;
+}
+
+const adConfigs: Record<string, AdConfig> = {
+    inline: {
+        key: '3ba7137cf83e3b9991ea29595a11120e',
+        height: 50,
+        width: 320,
+    },
+    square: {
+        key: '743a0dc9bc3be759b21e51982c52beb6',
+        height: 250,
+        width: 300,
+    },
+};
+
+export function AdBanner({ page, adIndex = 1, variant = 'square' }: { page: string; adIndex?: number, variant?: 'inline' | 'square' }) {
     const { premiumStatus } = useBudget();
 
     if (premiumStatus === 'premium') {
         return null;
     }
 
-    const adKey = '3ba7137cf83e3b9991ea29595a11120e';
-    const adContainerId = `ad-container-${page}-${adIndex}`;
+    const config = adConfigs[variant];
+    const adContainerId = `ad-container-${page}-${variant}-${adIndex}`;
 
      useEffect(() => {
         // Ensure the container is empty before appending scripts
@@ -32,10 +51,10 @@ export function AdBanner({ page, adIndex = 1 }: { page: string; adIndex?: number
         adScript.type = 'text/javascript';
         adScript.innerHTML = `
             var atOptions = {
-                'key' : '${adKey}',
+                'key' : '${config.key}',
                 'format' : 'iframe',
-                'height' : 50,
-                'width' : 320,
+                'height' : ${config.height},
+                'width' : ${config.width},
                 'params' : {}
             };
         `;
@@ -43,7 +62,7 @@ export function AdBanner({ page, adIndex = 1 }: { page: string; adIndex?: number
 
         const invokeScript = document.createElement('script');
         invokeScript.type = 'text/javascript';
-        invokeScript.src = `//www.highperformanceformat.com/${adKey}/invoke.js`;
+        invokeScript.src = `//www.highperformanceformat.com/${config.key}/invoke.js`;
         invokeScript.async = true;
         container.appendChild(invokeScript);
 
@@ -52,11 +71,11 @@ export function AdBanner({ page, adIndex = 1 }: { page: string; adIndex?: number
                 container.innerHTML = '';
              }
         }
-    }, [adKey, adContainerId]);
+    }, [config, adContainerId]);
 
 
     return (
-        <div id={adContainerId} className="flex justify-center items-center my-4 min-h-[50px] min-w-[320px]">
+        <div id={adContainerId} className="flex justify-center items-center my-4" style={{ minHeight: `${config.height}px`, minWidth: `${config.width}px`}}>
         </div>
     );
 }

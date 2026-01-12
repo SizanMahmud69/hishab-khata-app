@@ -106,7 +106,6 @@ export default function AddShopDuePage() {
     return (
     <div className="flex-1 space-y-4">
         <PageHeader title="নতুন বাকির হিসাব" description="দোকানের নাম এবং বাকির পরিমাণ লিখুন।" />
-        <AdBanner page="add-shop-due" />
         <Card className="max-w-2xl mx-auto">
             <form onSubmit={handleAddNewDue}>
                 <CardHeader>
@@ -197,6 +196,7 @@ export default function AddShopDuePage() {
                 </CardFooter>
             </form>
         </Card>
+        <AdBanner page="add-shop-due" variant="square" />
     </div>
     );
 }
