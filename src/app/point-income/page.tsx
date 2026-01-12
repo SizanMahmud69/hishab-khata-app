@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { useBudget } from "@/context/budget-context";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, updateDoc, increment, serverTimestamp, getDoc, setDoc, addDoc, collection } from 'firebase/firestore';
+import { doc, updateDoc, increment, serverTimestamp, getDoc, setDoc, addDoc, collection, query, where, getDocs, Timestamp, startOfDay, endOfDay } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CheckCircle, MousePointerClick, Star, Tv } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -19,6 +19,11 @@ const CLICK_AD_INDEX = 4; // The 5th ad (index 4) is for clicking
 
 interface AdTaskStatus {
     lastCompletedDate: string; // YYYY-MM-DD
+}
+
+interface AdTask {
+    points: number;
+    date: Timestamp;
 }
 
 declare global {
@@ -33,10 +38,10 @@ export default function PointIncomePage() {
     const firestore = useFirestore();
     const { toast } = useToast();
 
-    const [viewedAds, setViewedAds] = useState<number[]>([]);
     const [isWaiting, setIsWaiting] = useState(false);
     const [taskCompletedToday, setTaskCompletedToday] = useState(false);
     const [isStatusLoading, setIsStatusLoading] = useState(true);
+    const [viewedAdsCount, setViewedAdsCount] = useState(0);
 
     const todayStr = new Date().toISOString().split('T')[0];
 
@@ -46,29 +51,47 @@ export default function PointIncomePage() {
     }, [user, firestore]);
 
     useEffect(() => {
-        if (!adTaskStatusRef) return;
-        
-        const getStatus = async () => {
+        if (!user || !firestore) return;
+
+        const checkStatusAndProgress = async () => {
+            setIsStatusLoading(true);
             try {
-                const docSnap = await getDoc(adTaskStatusRef);
-                if (docSnap.exists()) {
-                    const data = docSnap.data() as AdTaskStatus;
-                    if (data.lastCompletedDate === todayStr) {
-                        setTaskCompletedToday(true);
-                    }
+                // Check if the entire task for the day is marked as complete
+                const statusDocSnap = await getDoc(adTaskStatusRef);
+                if (statusDocSnap.exists() && statusDocSnap.data().lastCompletedDate === todayStr) {
+                    setTaskCompletedToday(true);
+                    setViewedAdsCount(TOTAL_ADS_TO_VIEW + 1);
+                    setIsStatusLoading(false);
+                    return;
                 }
+
+                // If not fully complete, fetch today's ad tasks to determine progress
+                const today = new Date();
+                const startOfTodayDate = startOfDay(today);
+                const endOfTodayDate = endOfDay(today);
+
+                const adTasksQuery = query(
+                    collection(firestore, `users/${user.uid}/adTasks`),
+                    where('date', '>=', startOfTodayDate),
+                    where('date', '<=', endOfTodayDate)
+                );
+
+                const querySnapshot = await getDocs(adTasksQuery);
+                setViewedAdsCount(querySnapshot.size);
+
             } catch (error) {
-                console.error("Error fetching ad task status:", error);
+                console.error("Error fetching ad task status/progress:", error);
             } finally {
                 setIsStatusLoading(false);
             }
         };
 
-        getStatus();
-    }, [adTaskStatusRef, todayStr]);
+        checkStatusAndProgress();
+    }, [user, firestore, adTaskStatusRef, todayStr]);
+
 
     const rewardUser = async () => {
-        const rewardPoints = adTaskPoints[viewedAds.length];
+        const rewardPoints = adTaskPoints[viewedAdsCount];
         if (rewardPoints && user && firestore) {
              const completeTask = async () => {
                 const userDocRef = doc(firestore, 'users', user.uid);
@@ -79,14 +102,16 @@ export default function PointIncomePage() {
                 const adTasksCollectionRef = collection(firestore, `users/${user.uid}/adTasks`);
                 await addDoc(adTasksCollectionRef, {
                     points: rewardPoints,
-                    date: serverTimestamp(),
+                    date: serverTimestamp(), // Use server timestamp for accuracy
                     createdAt: serverTimestamp()
                 });
                 
-                if (adTaskStatusRef) {
-                     if (viewedAds.length === CLICK_AD_INDEX) {
-                        await setDoc(adTaskStatusRef, { lastCompletedDate: todayStr });
-                    }
+                const newViewCount = viewedAdsCount + 1;
+                setViewedAdsCount(newViewCount);
+                
+                if (adTaskStatusRef && newViewCount > TOTAL_ADS_TO_VIEW) {
+                    await setDoc(adTaskStatusRef, { lastCompletedDate: todayStr });
+                    setTaskCompletedToday(true);
                 }
 
                 await createNotification({
@@ -99,15 +124,7 @@ export default function PointIncomePage() {
                     title: "অভিনন্দন!",
                     description: `আপনি ${rewardPoints} পয়েন্ট অর্জন করেছেন।`
                 });
-                
-                const currentAdIndex = viewedAds.length;
-                if (!viewedAds.includes(currentAdIndex)) {
-                   setViewedAds(prev => [...prev, currentAdIndex]);
-                }
 
-                if (viewedAds.length === CLICK_AD_INDEX) {
-                    setTaskCompletedToday(true);
-                }
             };
             await completeTask();
         }
@@ -143,15 +160,15 @@ export default function PointIncomePage() {
         if (taskCompletedToday) {
             return "আপনি আজকের টাস্ক সম্পন্ন করেছেন। অনুগ্রহ করে আগামীকাল আবার আসুন।";
         }
-        if (viewedAds.length <= CLICK_AD_INDEX) {
-            return `বিজ্ঞাপন ${viewedAds.length + 1} দেখুন (${viewedAds.length + 1}/${TOTAL_ADS_TO_VIEW + 1})`;
+        if (viewedAdsCount <= TOTAL_ADS_TO_VIEW) {
+            return `বিজ্ঞাপন ${viewedAdsCount + 1} দেখুন (${viewedAdsCount + 1}/${TOTAL_ADS_TO_VIEW + 1})`;
         }
         return `আজকের সকল টাস্ক সম্পন্ন।`;
     };
 
     const isCardDisabled = (index: number) => {
         if (taskCompletedToday || isWaiting) return true;
-        if (viewedAds.length !== index) return true;
+        if (viewedAdsCount !== index) return true;
         return false;
     }
 
@@ -159,7 +176,7 @@ export default function PointIncomePage() {
         return (
             <div className="flex-1 space-y-4">
                 <PageHeader title="পয়েন্ট ইনকাম" description="বিজ্ঞাপন দেখে পয়েন্ট অর্জন করুন।" />
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                     {[...Array(5)].map((_, i) => (
                         <Card key={i}><CardContent className="p-6"><Skeleton className="h-24 w-full" /></CardContent></Card>
                     ))}
@@ -220,7 +237,7 @@ export default function PointIncomePage() {
                                 onClick={() => handleAdClick(index)}
                                 disabled={isCardDisabled(index)}
                             >
-                                {viewedAds.includes(index) ? 'সম্পন্ন' : (isWaiting && viewedAds.length === index) ? 'লোড হচ্ছে...' : 'কাজ শুরু করুন'}
+                                {viewedAdsCount > index ? 'সম্পন্ন' : (isWaiting && viewedAdsCount === index) ? 'লোড হচ্ছে...' : 'কাজ শুরু করুন'}
                             </Button>
                         </CardFooter>
                     </Card>
@@ -229,3 +246,5 @@ export default function PointIncomePage() {
         </div>
     );
 }
+
+    
