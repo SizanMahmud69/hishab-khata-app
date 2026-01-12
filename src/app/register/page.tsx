@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import Link from "next/link"
@@ -164,6 +165,7 @@ function RegisterPageContent() {
             referrerBonusPoints: 100,
             referredUserBonusPoints: 50,
             bdtPer100Points: 5,
+            adTaskPoints: [10, 10, 10, 10, 50],
            });
         }
         
@@ -289,7 +291,7 @@ function RegisterPageContent() {
               <div className="space-y-1.5">
                 <Label htmlFor="referral-code">রেফার কোড (ঐচ্ছিক)</Label>
                 <Input 
-                  id="referral-code" 
+                  id="referral-code" _
                   placeholder="রেফারেল কোড"
                   value={referralCode}
                   onChange={(e) => setReferralCode(e.target.value)}

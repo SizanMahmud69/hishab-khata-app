@@ -282,10 +282,10 @@
           "items": {
             "type": "number"
           },
-          "description": "Points awarded for completing each of the 4 ad-watching tasks."
+          "description": "Points awarded for completing each of the ad-watching tasks."
         }
       },
-      "required": ["minWithdrawalPoints", "referrerBonusPoints", "referredUserBonusPoints", "bdtPer100Points"]
+      "required": ["minWithdrawalPoints", "referrerBonusPoints", "referredUserBonusPoints", "bdtPer100Points", "adTaskPoints"]
     },
     "Notification": {
       "$schema": "http://json-schema.org/draft-07/schema#",
