@@ -66,6 +66,7 @@ interface AppConfig {
     referrerBonusPoints: number;
     referredUserBonusPoints: number;
     bdtPer100Points: number;
+    adTaskPoints: number[];
 }
 
 export interface Referral {
@@ -110,6 +111,7 @@ interface BudgetContextType {
     referrerBonusPoints: number;
     referredUserBonusPoints: number;
     bdtPer100Points: number;
+    adTaskPoints: number[];
     isLoading: boolean;
     premiumStatus: 'free' | 'premium';
     premiumExpiryDate: Date | null;
@@ -292,6 +294,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const referrerBonusPoints = appConfig?.referrerBonusPoints ?? 100;
     const referredUserBonusPoints = appConfig?.referredUserBonusPoints ?? 50;
     const bdtPer100Points = appConfig?.bdtPer100Points ?? 5;
+    const adTaskPoints = appConfig?.adTaskPoints ?? [10, 10, 10, 10, 50]; // Default points
     const rewardPoints = userProfile?.points ?? 0;
     
     const totalIncome = useMemo(() => (transactions || []).filter(t => t.type === 'income').reduce((sum, item) => sum + item.amount, 0), [transactions]);
@@ -461,6 +464,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         referrerBonusPoints,
         referredUserBonusPoints,
         bdtPer100Points,
+        adTaskPoints,
         isLoading,
         premiumStatus,
         premiumExpiryDate,
@@ -473,7 +477,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     }), [
         transactions, debtNotes, referrals, pointHistory,
         totalIncome, totalExpense, totalSavings,
-        rewardPoints, minWithdrawalPoints, referrerBonusPoints, referredUserBonusPoints, bdtPer100Points,
+        rewardPoints, minWithdrawalPoints, referrerBonusPoints, referredUserBonusPoints, bdtPer100Points, adTaskPoints,
         isLoading, premiumStatus, premiumExpiryDate, userProfile, premiumSubscriptions, 
         pendingSubscriptionPlanIds, activePremiumPlan, isSubscriptionsLoading, hasUsedFreeTrial,
         addTransaction, addDebtNote, updateDebtNote
@@ -496,6 +500,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             referrerBonusPoints: 100,
             referredUserBonusPoints: 50,
             bdtPer100Points: 5,
+            adTaskPoints: [10, 10, 10, 10, 50],
             isLoading: true,
             premiumStatus: 'free',
             premiumExpiryDate: null,

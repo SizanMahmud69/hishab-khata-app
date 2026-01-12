@@ -17,6 +17,7 @@ import {
   Store,
   User,
   Users,
+  DollarSign,
 } from "lucide-react"
 import Script from "next/script"
 
@@ -70,6 +71,11 @@ const menuItems = [
         href: "/rewards",
         label: "রিওয়ার্ড",
         icon: Award,
+    },
+    {
+        href: "/point-income",
+        label: "পয়েন্ট ইনকাম",
+        icon: DollarSign,
     },
     {
         href: "/refer",

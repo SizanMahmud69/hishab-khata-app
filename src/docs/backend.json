@@ -276,6 +276,13 @@
         "bdtPer100Points": {
             "type": "number",
             "description": "The amount of BDT equivalent to 100 reward points."
+        },
+        "adTaskPoints": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "Points awarded for completing each of the 4 ad-watching tasks."
         }
       },
       "required": ["minWithdrawalPoints", "referrerBonusPoints", "referredUserBonusPoints", "bdtPer100Points"]
@@ -461,5 +468,3 @@
     ]
   }
 }
-
-    
