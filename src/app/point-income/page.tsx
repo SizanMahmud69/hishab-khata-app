@@ -1,8 +1,7 @@
 
-
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, Fragment } from 'react';
 import PageHeader from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,10 +16,15 @@ import { createNotification } from '@/components/app-header';
 
 const TOTAL_ADS_TO_VIEW = 4;
 const CLICK_AD_INDEX = 4; // The 5th ad (index 4) is for clicking
-const WAIT_SECONDS = 10;
 
 interface AdTaskStatus {
     lastCompletedDate: string; // YYYY-MM-DD
+}
+
+declare global {
+    interface Window {
+        show_10446368: () => Promise<void>;
+    }
 }
 
 export default function PointIncomePage() {
@@ -31,7 +35,6 @@ export default function PointIncomePage() {
 
     const [viewedAds, setViewedAds] = useState<number[]>([]);
     const [isWaiting, setIsWaiting] = useState(false);
-    const [countdown, setCountdown] = useState(WAIT_SECONDS);
     const [taskCompletedToday, setTaskCompletedToday] = useState(false);
     const [isStatusLoading, setIsStatusLoading] = useState(true);
 
@@ -64,61 +67,76 @@ export default function PointIncomePage() {
         getStatus();
     }, [adTaskStatusRef, todayStr]);
 
+    const rewardUser = async () => {
+        const rewardPoints = adTaskPoints[viewedAds.length];
+        if (rewardPoints && user && firestore) {
+             const completeTask = async () => {
+                setIsWaiting(true);
+                const userDocRef = doc(firestore, 'users', user.uid);
+                await updateDoc(userDocRef, {
+                    points: increment(rewardPoints)
+                });
 
-    useEffect(() => {
-        let timer: NodeJS.Timeout;
-        if (isWaiting && countdown > 0) {
-            timer = setTimeout(() => setCountdown(c => c - 1), 1000);
-        } else if (isWaiting && countdown === 0) {
-            const rewardPoints = adTaskPoints[CLICK_AD_INDEX];
-            if (rewardPoints && user && firestore) {
-                 const completeTask = async () => {
-                    const userDocRef = doc(firestore, 'users', user.uid);
-                    await updateDoc(userDocRef, {
-                        points: increment(rewardPoints)
-                    });
-
-                    const adTasksCollectionRef = collection(firestore, `users/${user.uid}/adTasks`);
-                    await addDoc(adTasksCollectionRef, {
-                        points: rewardPoints,
-                        date: serverTimestamp(),
-                        createdAt: serverTimestamp()
-                    });
-                    
-                    if (adTaskStatusRef) {
+                const adTasksCollectionRef = collection(firestore, `users/${user.uid}/adTasks`);
+                await addDoc(adTasksCollectionRef, {
+                    points: rewardPoints,
+                    date: serverTimestamp(),
+                    createdAt: serverTimestamp()
+                });
+                
+                if (adTaskStatusRef) {
+                     if (viewedAds.length === CLICK_AD_INDEX) {
                         await setDoc(adTaskStatusRef, { lastCompletedDate: todayStr });
                     }
+                }
 
-                    await createNotification({
-                        title: "পয়েন্ট অর্জন করেছেন!",
-                        description: `বিজ্ঞাপন দেখার টাস্ক সম্পন্ন করার জন্য আপনি ${rewardPoints} পয়েন্ট পেয়েছেন।`,
-                        link: "/rewards?section=history"
-                    }, user.uid, firestore);
+                await createNotification({
+                    title: "পয়েন্ট অর্জন করেছেন!",
+                    description: `বিজ্ঞাপন দেখার টাস্ক সম্পন্ন করার জন্য আপনি ${rewardPoints} পয়েন্ট পেয়েছেন।`,
+                    link: "/rewards?section=history"
+                }, user.uid, firestore);
 
-                    toast({
-                        title: "অভিনন্দন!",
-                        description: `আপনি ${rewardPoints} পয়েন্ট অর্জন করেছেন।`
-                    });
+                toast({
+                    title: "অভিনন্দন!",
+                    description: `আপনি ${rewardPoints} পয়েন্ট অর্জন করেছেন।`
+                });
+                
+                const currentAdIndex = viewedAds.length;
+                if (!viewedAds.includes(currentAdIndex)) {
+                   setViewedAds(prev => [...prev, currentAdIndex]);
+                }
 
-                    setIsWaiting(false);
+                if (viewedAds.length === CLICK_AD_INDEX) {
                     setTaskCompletedToday(true);
-                };
-                completeTask();
-            }
+                }
+                setIsWaiting(false);
+            };
+            await completeTask();
         }
-        return () => clearTimeout(timer);
-    }, [isWaiting, countdown, user, firestore, adTaskPoints, toast, todayStr, adTaskStatusRef]);
+    }
+
 
     const handleAdClick = (index: number) => {
-        const adUrl = 'https://pl28428118.effectivegatecpm.com/0c/22/02/0c220271b2d231c2e61062d769563457';
-        window.open(adUrl, '_blank');
-
-        if (viewedAds.length < CLICK_AD_INDEX) {
-            if (!viewedAds.includes(index)) {
-                setViewedAds(prev => [...prev, index]);
-            }
-        } else if (viewedAds.length === CLICK_AD_INDEX && index === CLICK_AD_INDEX) {
+        if (typeof window.show_10446368 === 'function') {
             setIsWaiting(true);
+            window.show_10446368().then(() => {
+                rewardUser();
+            }).catch((error) => {
+                console.error("Ad error:", error);
+                toast({
+                    variant: "destructive",
+                    title: "বিজ্ঞাপন দেখাতে সমস্যা",
+                    description: "বিজ্ঞাপনটি লোড করা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।"
+                });
+                setIsWaiting(false);
+            });
+        } else {
+            console.error("Ad function not found");
+             toast({
+                variant: "destructive",
+                title: "ত্রুটি",
+                description: "বিজ্ঞাপন লোড করার ফাংশনটি পাওয়া যায়নি।"
+            });
         }
     };
     
@@ -126,16 +144,15 @@ export default function PointIncomePage() {
         if (taskCompletedToday) {
             return "আপনি আজকের টাস্ক সম্পন্ন করেছেন। অনুগ্রহ করে আগামীকাল আবার আসুন।";
         }
-        if (viewedAds.length < CLICK_AD_INDEX) {
+        if (viewedAds.length <= CLICK_AD_INDEX) {
             return `বিজ্ঞাপন ${viewedAds.length + 1} দেখুন (${viewedAds.length + 1}/${TOTAL_ADS_TO_VIEW + 1})`;
         }
-        return `বিজ্ঞাপন ${CLICK_AD_INDEX + 1}-এ ক্লিক করে ${WAIT_SECONDS} সেকেন্ড অপেক্ষা করুন।`;
+        return `আজকের সকল টাস্ক সম্পন্ন।`;
     };
 
     const isCardDisabled = (index: number) => {
         if (taskCompletedToday || isWaiting) return true;
-        if (viewedAds.length < index) return true;
-        if (viewedAds.length < CLICK_AD_INDEX && viewedAds.includes(index)) return true;
+        if (viewedAds.length !== index) return true;
         return false;
     }
 
@@ -173,16 +190,6 @@ export default function PointIncomePage() {
                 </Card>
             )}
 
-            {isWaiting && (
-                <Card className="border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20">
-                    <CardContent className="p-6 text-center">
-                         <div className="text-6xl font-bold text-yellow-500 mb-4">{countdown}</div>
-                         <p className="text-lg font-semibold">অনুগ্রহ করে অপেক্ষা করুন...</p>
-                         <p className="text-muted-foreground">পয়েন্ট যোগ হওয়ার জন্য এই পেজটি খোলা রাখুন।</p>
-                    </CardContent>
-                </Card>
-            )}
-
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                 {(adTaskPoints || []).slice(0, TOTAL_ADS_TO_VIEW + 1).map((points, index) => (
                     <Card 
@@ -191,20 +198,17 @@ export default function PointIncomePage() {
                     >
                         <CardHeader>
                             <div className={cn("mx-auto flex h-16 w-16 items-center justify-center rounded-full",
-                                index < CLICK_AD_INDEX ? 'bg-blue-100 dark:bg-blue-900' : 'bg-green-100 dark:bg-green-900'
+                               'bg-blue-100 dark:bg-blue-900'
                             )}>
-                               {index < CLICK_AD_INDEX 
-                                    ? <Tv className="h-8 w-8 text-blue-500" />
-                                    : <MousePointerClick className="h-8 w-8 text-green-500" />
-                               }
+                               <Tv className="h-8 w-8 text-blue-500" />
                             </div>
                         </CardHeader>
                         <CardContent>
                             <CardTitle>
-                                {index < CLICK_AD_INDEX ? `বিজ্ঞাপন ${index + 1}` : `বিজ্ঞাপনে ক্লিক`}
+                                {`বিজ্ঞাপন ${index + 1}`}
                             </CardTitle>
                              <CardDescription>
-                                {index < CLICK_AD_INDEX ? 'দেখুন' : 'ক্লিক করুন'}
+                                টাস্ক
                             </CardDescription>
                         </CardContent>
                         <CardFooter className="flex-col gap-4">
@@ -217,7 +221,7 @@ export default function PointIncomePage() {
                                 onClick={() => handleAdClick(index)}
                                 disabled={isCardDisabled(index)}
                             >
-                                {viewedAds.includes(index) ? 'দেখা হয়েছে' : 'কাজ শুরু করুন'}
+                                {viewedAds.includes(index) ? 'সম্পন্ন' : (isWaiting && viewedAds.length === index) ? 'লোড হচ্ছে...' : 'কাজ শুরু করুন'}
                             </Button>
                         </CardFooter>
                     </Card>
