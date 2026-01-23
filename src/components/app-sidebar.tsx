@@ -1,4 +1,3 @@
-
 "use client"
 
 import Link from "next/link"
@@ -17,7 +16,6 @@ import {
   Store,
   User,
   Users,
-  DollarSign,
 } from "lucide-react"
 
 import {
