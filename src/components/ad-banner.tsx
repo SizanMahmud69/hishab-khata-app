@@ -3,59 +3,72 @@
 import React, { useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 
-// The adIndex prop is crucial for creating unique script environments,
-// which helps ad networks serve different ads in different slots on the same page.
-export function AdBanner({ adIndex = 1 }: { adIndex?: number }) {
+const adConfigs = {
+    inline: {
+        key: '3ba7137cf83e3b9991ea29595a11120e',
+        height: 50,
+        width: 320,
+    },
+    square: {
+        key: '743a0dc9bc3be759b21e51982c52beb6',
+        height: 250,
+        width: 300,
+    },
+};
+
+interface AdBannerProps {
+    adIndex?: number;
+    variant?: keyof typeof adConfigs;
+    className?: string;
+}
+
+export function AdBanner({ adIndex = 1, variant = 'inline', className }: AdBannerProps) {
     const adContainerRef = useRef<HTMLDivElement>(null);
-    // Use a key to force re-mounting and re-running the effect if the index changes.
-    // This ensures that each ad slot is treated independently.
-    const key = `ad-banner-${adIndex}`;
+    const config = adConfigs[variant];
+    const key = `ad-banner-${config?.key}-${adIndex}`;
 
     useEffect(() => {
         const container = adContainerRef.current;
-        if (!container) return;
+        if (!container || !config) return;
 
-        // Clear any previous script to avoid duplicates on re-renders
         container.innerHTML = '';
 
-        const adKey = '3ba7137cf83e3b9991ea29595a11120e';
-        
         const optionsScript = document.createElement('script');
         optionsScript.type = 'text/javascript';
         optionsScript.innerHTML = `
             atOptions = {
-                'key' : '${adKey}',
+                'key' : '${config.key}',
                 'format' : 'iframe',
-                'height' : 50,
-                'width' : 320,
+                'height' : ${config.height},
+                'width' : ${config.width},
                 'params' : {}
             };
         `;
 
         const invokeScript = document.createElement('script');
-        invokeScript.src = `https://www.highperformanceformat.com/${adKey}/invoke.js`;
+        invokeScript.src = `https://www.highperformanceformat.com/${config.key}/invoke.js`;
 
-        // Append scripts to the container
         container.appendChild(optionsScript);
         container.appendChild(invokeScript);
 
-        // Cleanup function to remove scripts when the component unmounts
         return () => {
             if (container) {
                 container.innerHTML = '';
             }
         };
-    }, [key]); // Effect depends on the unique key
+    }, [key, config]);
 
+    if (!config) return null;
 
     return (
         <div 
-            key={key} // Use the key here
+            key={key}
             ref={adContainerRef}
             className={cn(
-                "flex items-center justify-center my-2",
-                "h-[50px] w-[320px] mx-auto"
+                "flex items-center justify-center my-2 mx-auto",
+                className
             )}
+            style={{ height: `${config.height}px`, width: `${config.width}px` }}
         >
         </div>
     );
