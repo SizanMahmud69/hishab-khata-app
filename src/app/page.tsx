@@ -1,9 +1,8 @@
-
 import Link from 'next/link';
-import Script from 'next/script';
 import { Button } from '@/components/ui/button';
-import { BookMarked, ShieldCheck, TrendingUp, TrendingDown, HandCoins, Award, Users, Crown, MoveRight } from 'lucide-react';
+import { BookMarked, ShieldCheck, TrendingUp, HandCoins, Award, Users, Crown, MoveRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AdBanner } from '@/components/ad-banner';
 
 const features = [
   {
@@ -107,6 +106,13 @@ export default function Home() {
                 </Card>
               ))}
             </div>
+            <div className="mt-16">
+              <AdBanner variant="leaderboard" />
+            </div>
+          </section>
+
+          <section className="container pb-20">
+             <AdBanner variant="square" />
           </section>
         </main>
 
