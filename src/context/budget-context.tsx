@@ -66,7 +66,6 @@ interface AppConfig {
     referrerBonusPoints: number;
     referredUserBonusPoints: number;
     bdtPer100Points: number;
-    adTaskPoints: number[];
 }
 
 export interface Referral {
@@ -84,13 +83,6 @@ interface CheckInRecord {
     points: number;
     createdAt: any;
 }
-
-interface AdTaskRecord {
-    id: string;
-    points: number;
-    date: any; // Firestore Timestamp
-}
-
 
 export interface PointHistoryItem {
     type: 'earned' | 'spent' | 'refunded';
@@ -117,7 +109,6 @@ interface BudgetContextType {
     referrerBonusPoints: number;
     referredUserBonusPoints: number;
     bdtPer100Points: number;
-    adTaskPoints: number[];
     isLoading: boolean;
     premiumStatus: 'free' | 'premium';
     premiumExpiryDate: Date | null;
@@ -181,12 +172,6 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         return query(collection(firestore, `users/${user.uid}/checkIns`), orderBy("createdAt", "desc"));
     }, [user, firestore]);
     const { data: checkIns = [], isLoading: isCheckInsLoading } = useCollection<CheckInRecord>(checkInsQuery);
-    
-    const adTasksQuery = useMemoFirebase(() => {
-        if (!user) return null;
-        return query(collection(firestore, `users/${user.uid}/adTasks`), orderBy("createdAt", "desc"));
-    }, [user, firestore]);
-    const { data: adTasks = [], isLoading: areAdTasksLoading } = useCollection<AdTaskRecord>(adTasksQuery);
     
     const withdrawalsQuery = useMemoFirebase(() => {
         if (!user || !firestore) return null;
@@ -306,7 +291,6 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const referrerBonusPoints = appConfig?.referrerBonusPoints ?? 100;
     const referredUserBonusPoints = appConfig?.referredUserBonusPoints ?? 50;
     const bdtPer100Points = appConfig?.bdtPer100Points ?? 5;
-    const adTaskPoints = appConfig?.adTaskPoints ?? [10, 10, 10, 10, 50]; // Default points for 4 views + 1 click
     const rewardPoints = userProfile?.points ?? 0;
     
     const totalIncome = useMemo(() => (transactions || []).filter(t => t.type === 'income').reduce((sum, item) => sum + item.amount, 0), [transactions]);
@@ -403,19 +387,6 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             });
         }
 
-        if (adTasks) {
-            adTasks.forEach(task => {
-                if (task.date) {
-                    history.push({
-                        type: 'earned',
-                        source: 'বিজ্ঞাপন টাস্ক',
-                        points: task.points,
-                        date: task.date.toDate()
-                    });
-                }
-            });
-        }
-        
         if (referrals) {
             referrals.forEach(ref => {
                  if (ref.createdAt) {
@@ -469,9 +440,9 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         
         return history.sort((a, b) => b.date.getTime() - a.date.getTime());
 
-    }, [checkIns, adTasks, allWithdrawals, referrals, premiumSubscriptions]);
+    }, [checkIns, allWithdrawals, referrals, premiumSubscriptions]);
     
-    const isLoading = isUserLoading || isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || isSubscriptionsLoading || isCheckInsLoading || areReferralsLoading || isWithdrawalsLoading || areAdTasksLoading;
+    const isLoading = isUserLoading || isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || isSubscriptionsLoading || isCheckInsLoading || areReferralsLoading || isWithdrawalsLoading;
 
     const contextValue = useMemo(() => ({
         transactions, 
@@ -489,7 +460,6 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         referrerBonusPoints,
         referredUserBonusPoints,
         bdtPer100Points,
-        adTaskPoints,
         isLoading,
         premiumStatus,
         premiumExpiryDate,
@@ -502,7 +472,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     }), [
         transactions, debtNotes, referrals, pointHistory,
         totalIncome, totalExpense, totalSavings,
-        rewardPoints, minWithdrawalPoints, referrerBonusPoints, referredUserBonusPoints, bdtPer100Points, adTaskPoints,
+        rewardPoints, minWithdrawalPoints, referrerBonusPoints, referredUserBonusPoints, bdtPer100Points,
         isLoading, premiumStatus, premiumExpiryDate, userProfile, premiumSubscriptions, 
         pendingSubscriptionPlanIds, activePremiumPlan, isSubscriptionsLoading, hasUsedFreeTrial,
         addTransaction, addDebtNote, updateDebtNote
@@ -525,7 +495,6 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             referrerBonusPoints: 100,
             referredUserBonusPoints: 50,
             bdtPer100Points: 5,
-            adTaskPoints: [10, 10, 10, 10, 50],
             isLoading: true,
             premiumStatus: 'free',
             premiumExpiryDate: null,

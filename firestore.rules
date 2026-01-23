@@ -48,16 +48,6 @@ service cloud.firestore {
         allow read, write: if isOwner(userId);
       }
       
-      // Sub-collection for daily ad tasks
-      match /adTasks/{taskId} {
-        allow read, write: if isOwner(userId);
-      }
-      
-      // Sub-collection for daily ad task status
-      match /adTaskStatus/{taskId} {
-        allow read, write: if isOwner(userId);
-      }
-
       // Sub-collection for NID verification requests (user-facing)
       match /verificationRequests/{requestId} {
         allow get, create, list: if isOwner(userId);

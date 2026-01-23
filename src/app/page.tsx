@@ -1,5 +1,4 @@
 
-
 import Link from 'next/link';
 import Script from 'next/script';
 import { Button } from '@/components/ui/button';
@@ -42,7 +41,6 @@ const features = [
 export default function Home() {
   return (
     <>
-      <Script src="https://pl28428118.effectivegatecpm.com/0c/22/02/0c220271b2d231c2e61062d769563457.js"></Script>
       <div className="flex min-h-dvh flex-col bg-gradient-to-br from-blue-500 to-green-500">
         <header className="sticky top-0 z-50 w-full border-b border-white/20 bg-gradient-to-r from-blue-400 to-green-400 text-white">
           <div className="container flex h-16 items-center justify-between">

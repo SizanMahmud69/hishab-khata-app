@@ -72,11 +72,6 @@ const menuItems = [
         icon: Award,
     },
     {
-        href: "/point-income",
-        label: "পয়েন্ট ইনকাম",
-        icon: DollarSign,
-    },
-    {
         href: "/refer",
         label: "রেফার",
         icon: Users,
