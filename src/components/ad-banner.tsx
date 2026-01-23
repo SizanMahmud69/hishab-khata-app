@@ -14,6 +14,11 @@ const adConfigs = {
         height: 250,
         width: 300,
     },
+    leaderboard: {
+        key: '18077c532637bbe2ddcab04535aa15bf',
+        height: 60,
+        width: 468,
+    },
 };
 
 interface AdBannerProps {
@@ -65,10 +70,14 @@ export function AdBanner({ adIndex = 1, variant = 'inline', className }: AdBanne
             key={key}
             ref={adContainerRef}
             className={cn(
-                "flex items-center justify-center my-2 mx-auto",
+                "flex items-center justify-center my-2 mx-auto bg-transparent",
                 className
             )}
-            style={{ height: `${config.height}px`, width: `${config.width}px` }}
+            style={{ 
+                height: `${config.height}px`, 
+                width: '100%',
+                maxWidth: `${config.width}px`
+            }}
         >
         </div>
     );
