@@ -29,7 +29,6 @@ import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { AdBanner } from "@/components/ad-banner";
 
 
 interface ShopDueSummary {
@@ -283,7 +282,6 @@ export default function ShopDuesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <AdBanner page="shop-dues" variant="square" />
     </div>
   )
 }

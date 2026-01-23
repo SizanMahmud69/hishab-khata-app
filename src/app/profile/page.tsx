@@ -14,7 +14,6 @@ import { format, parseISO } from "date-fns";
 import { bn } from "date-fns/locale";
 import { useBudget } from "@/context/budget-context";
 import { doc } from "firebase/firestore";
-import { AdBanner } from "@/components/ad-banner";
 
 interface VerificationRequest {
     status: 'pending' | 'approved' | 'rejected';
@@ -267,7 +266,6 @@ export default function ProfilePage() {
             </CardContent>
         </Card>
       )}
-       <AdBanner page="profile" adIndex={1} />
     </div>
   )
 }

@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useMemo, useRef, useEffect, useState, Fragment } from 'react';
@@ -146,7 +147,7 @@ function RewardsPageContent() {
                             </p>
                         </div>
                         {(index + 1) % 5 === 0 && (
-                            <AdBanner page="rewards" adIndex={(index + 1) / 5} variant="inline" />
+                            <AdBanner adIndex={(index + 1) / 5} />
                         )}
                     </Fragment>
                 ))
