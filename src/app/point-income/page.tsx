@@ -1,10 +1,11 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
 import PageHeader from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Film, RefreshCw, Loader2 } from "lucide-react";
 import { useBudget } from "@/context/budget-context";
 import { useToast } from "@/hooks/use-toast";
@@ -45,7 +46,7 @@ export default function PointIncomePage() {
                 });
             }
             setIsAdDialogOpen(false);
-        }, 5000); // 5 seconds ad watch time
+        }, 8000); // 8 seconds ad watch time
     };
 
     const handleSpin = async () => {
@@ -112,14 +113,22 @@ export default function PointIncomePage() {
                                     {isAdDialogOpen ? 'বিজ্ঞাপন লোড হচ্ছে...' : (canWatchAd ? 'বিজ্ঞাপন দেখুন' : 'আজকের জন্য সম্পন্ন')}
                                 </Button>
                             </DialogTrigger>
-                            <DialogContent>
+                             <DialogContent>
                                 <DialogHeader>
-                                    <DialogTitle>বিজ্ঞাপন</DialogTitle>
+                                    <DialogTitle>বিজ্ঞাপন দেখুন</DialogTitle>
+                                    <DialogDescription>
+                                       পয়েন্ট পেতে কিছুক্ষণ অপেক্ষা করুন। বিজ্ঞাপনটি দেখা শেষ হলে আপনার পয়েন্ট স্বয়ংক্রিয়ভাবে যোগ হয়ে যাবে।
+                                    </DialogDescription>
                                 </DialogHeader>
-                                <div className="flex items-center justify-center p-4">
-                                     <AdBanner variant="square" />
+                                <div className="flex items-center justify-center rounded-md overflow-hidden aspect-square mx-auto w-full max-w-[300px]">
+                                    <iframe
+                                        src="https://www.effectivegatecpm.com/asn6e88m1?key=f54f7591b556a8df09aa30fadc35caac"
+                                        width="300"
+                                        height="250"
+                                        scrolling="no"
+                                        frameBorder="0"
+                                    />
                                 </div>
-                                <p className="text-center text-sm text-muted-foreground">কিছুক্ষণ অপেক্ষা করুন...</p>
                             </DialogContent>
                         </Dialog>
                     </CardContent>
