@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PageHeader from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,13 @@ export default function PointIncomePage() {
     const [isSpinning, setIsSpinning] = useState(false);
     const [spinResult, setSpinResult] = useState<number | null>(null);
     const [isAdDialogOpen, setIsAdDialogOpen] = useState(false);
+    const [adForSpinShown, setAdForSpinShown] = useState(false);
+
+    useEffect(() => {
+        if (remainingSpins === 2) {
+            setAdForSpinShown(false);
+        }
+    }, [remainingSpins]);
 
     const handleWatchAd = async () => {
         setIsAdDialogOpen(true);
@@ -42,7 +49,19 @@ export default function PointIncomePage() {
     };
 
     const handleSpin = async () => {
-        if (remainingSpins <= 0 || isTaskLoading) return;
+        if (remainingSpins <= 0 || isTaskLoading || isSpinning) return;
+
+        // For the first spin, show an ad and return.
+        if (remainingSpins === 2 && !adForSpinShown) {
+            window.open('https://www.effectivegatecpm.com/esdyih69?key=7f8888474725ab0962c50482d2412b06', '_blank');
+            setAdForSpinShown(true);
+            toast({
+                title: "বিজ্ঞাপন দেখানো হয়েছে",
+                description: "স্পিন সম্পন্ন করতে আবার বাটনে ক্লিক করুন।",
+            });
+            return; // Wait for the user to click again.
+        }
+
 
         setIsSpinning(true);
         setSpinResult(null);
@@ -121,7 +140,10 @@ export default function PointIncomePage() {
                                 </div>
                              )}
                         </div>
-                        <p className="text-muted-foreground mb-4">আজকের জন্য স্পিন বাকি: {remainingSpins}</p>
+                         <p className="text-muted-foreground mb-4">
+                            আজকের জন্য স্পিন বাকি: {remainingSpins}
+                            {adForSpinShown && remainingSpins === 2 && <span className='block text-xs'>(বিজ্ঞাপন দেখেছেন, এখন স্পিন করুন)</span>}
+                        </p>
                         <Button
                             size="lg"
                             onClick={handleSpin}
