@@ -93,6 +93,20 @@
             "type": "string",
             "format": "date-time",
             "description": "The date when the premium subscription expires."
+        },
+        "lastAdWatchDate": {
+            "type": "string",
+            "format": "date",
+            "description": "The date of the user's last ad watch for points."
+        },
+        "lastSpinDate": {
+            "type": "string",
+            "format": "date",
+            "description": "The date of the user's last spin for points."
+        },
+        "spinsToday": {
+            "type": "number",
+            "description": "The number of spins the user has done today."
         }
       },
       "required": ["id", "email", "name"]
@@ -462,5 +476,3 @@
   }
 }
 
-
-    

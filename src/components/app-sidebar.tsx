@@ -6,6 +6,7 @@ import {
   Award,
   BookMarked,
   Crown,
+  DollarSign,
   HandCoins,
   History,
   LayoutDashboard,
@@ -68,6 +69,11 @@ const menuItems = [
         href: "/rewards",
         label: "রিওয়ার্ড",
         icon: Award,
+    },
+    {
+        href: "/point-income",
+        label: "পয়েন্ট ইনকাম",
+        icon: DollarSign,
     },
     {
         href: "/refer",

@@ -4,7 +4,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
-import { collection, onSnapshot, addDoc, doc, updateDoc, serverTimestamp, setDoc, query, getDocs, writeBatch, increment, arrayUnion, orderBy, Unsubscribe, where, limit, Firestore } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, doc, updateDoc, serverTimestamp, setDoc, query, getDocs, writeBatch, increment, arrayUnion, orderBy, Unsubscribe, where, limit, Firestore, getDoc } from 'firebase/firestore';
 import { createNotification } from '@/components/app-header';
 import { type WithdrawalRequest } from '@/app/withdraw/page';
 import { isAfter, addDays, parseISO } from 'date-fns';
@@ -45,6 +45,9 @@ interface UserProfile {
     premiumStatus?: 'free' | 'premium';
     premiumPlanId?: string;
     premiumExpiryDate?: any; // firestore timestamp
+    lastAdWatchDate?: string; // YYYY-MM-DD
+    lastSpinDate?: string; // YYYY-MM-DD
+    spinsToday?: number;
 }
 
 export interface PremiumSubscription {
@@ -118,6 +121,10 @@ interface BudgetContextType {
     activePremiumPlan: PremiumPlan | null;
     isSubscriptionsLoading: boolean;
     hasUsedFreeTrial: boolean;
+    awardPointsForTask: (task: 'ad' | 'spin') => Promise<{ success: boolean; points: number; message: string; }>;
+    canWatchAd: boolean;
+    remainingSpins: number;
+    isTaskLoading: boolean;
 }
 
 const BudgetContext = createContext<BudgetContextType | undefined>(undefined);
@@ -129,6 +136,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const { user, isLoading: isUserLoading } = useUser();
     const firestore = useFirestore();
     const prevReferralsRef = useRef<Referral[]>();
+    const [isTaskLoading, setIsTaskLoading] = useState(false);
 
     const userDocRef = useMemoFirebase(() => {
         if (!user) return null;
@@ -442,6 +450,75 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
 
     }, [checkIns, allWithdrawals, referrals, premiumSubscriptions]);
     
+    const canWatchAd = useMemo(() => {
+        const today = new Date().toISOString().split('T')[0];
+        return userProfile?.lastAdWatchDate !== today;
+    }, [userProfile]);
+
+    const remainingSpins = useMemo(() => {
+        const today = new Date().toISOString().split('T')[0];
+        if (userProfile?.lastSpinDate !== today) {
+            return 2;
+        }
+        return Math.max(0, 2 - (userProfile?.spinsToday || 0));
+    }, [userProfile]);
+
+    const awardPointsForTask = useCallback(async (task: 'ad' | 'spin'): Promise<{ success: boolean; points: number; message: string; }> => {
+        if (!user || !userDocRef) {
+            return { success: false, points: 0, message: "ব্যবহারকারী খুঁজে পাওয়া যায়নি।" };
+        }
+        setIsTaskLoading(true);
+
+        try {
+            const today = new Date().toISOString().split('T')[0];
+            // Get the latest profile data before making a decision
+            const currentUserProfile = (await getDoc(userDocRef)).data() as UserProfile;
+
+            if (task === 'ad') {
+                if (currentUserProfile.lastAdWatchDate === today) {
+                    return { success: false, points: 0, message: "আপনি আজকের জন্য ইতিমধ্যে বিজ্ঞাপন দেখেছেন।" };
+                }
+                const points = 20;
+                await updateDoc(userDocRef, {
+                    points: increment(points),
+                    lastAdWatchDate: today
+                });
+                return { success: true, points, message: "সফল!" };
+            }
+
+            if (task === 'spin') {
+                const currentSpins = currentUserProfile.lastSpinDate === today ? currentUserProfile.spinsToday || 0 : 0;
+                if (currentSpins >= 2) {
+                    return { success: false, points: 0, message: "আপনি আজকের জন্য আপনার সমস্ত স্পিন ব্যবহার করেছেন।" };
+                }
+                const points = [5, 10, 15, 20, 25, 30, 40, 50][Math.floor(Math.random() * 8)];
+                
+                const updateData: any = {
+                    points: increment(points),
+                    lastSpinDate: today,
+                };
+            
+                if (currentUserProfile.lastSpinDate === today) {
+                    updateData.spinsToday = increment(1);
+                } else {
+                    updateData.spinsToday = 1;
+                }
+            
+                await updateDoc(userDocRef, updateData);
+
+                return { success: true, points, message: "সফল!" };
+            }
+
+            return { success: false, points: 0, message: "অজানা টাস্ক।" };
+        } catch (error) {
+            console.error("Error awarding points:", error);
+            return { success: false, points: 0, message: "একটি সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।" };
+        } finally {
+            setIsTaskLoading(false);
+        }
+    }, [user, userDocRef]);
+
+
     const isLoading = isUserLoading || isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || isSubscriptionsLoading || isCheckInsLoading || areReferralsLoading || isWithdrawalsLoading;
 
     const contextValue = useMemo(() => ({
@@ -469,13 +546,17 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         activePremiumPlan,
         isSubscriptionsLoading,
         hasUsedFreeTrial,
+        awardPointsForTask,
+        canWatchAd,
+        remainingSpins,
+        isTaskLoading,
     }), [
         transactions, debtNotes, referrals, pointHistory,
         totalIncome, totalExpense, totalSavings,
         rewardPoints, minWithdrawalPoints, referrerBonusPoints, referredUserBonusPoints, bdtPer100Points,
         isLoading, premiumStatus, premiumExpiryDate, userProfile, premiumSubscriptions, 
         pendingSubscriptionPlanIds, activePremiumPlan, isSubscriptionsLoading, hasUsedFreeTrial,
-        addTransaction, addDebtNote, updateDebtNote
+        addTransaction, addDebtNote, updateDebtNote, awardPointsForTask, canWatchAd, remainingSpins, isTaskLoading
     ]);
 
      if (!user && !isUserLoading) {
@@ -504,6 +585,10 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             activePremiumPlan: null,
             isSubscriptionsLoading: true,
             hasUsedFreeTrial: false,
+            awardPointsForTask: async () => ({ success: false, points: 0, message: 'Not loaded' }),
+            canWatchAd: false,
+            remainingSpins: 0,
+            isTaskLoading: true,
         };
         return (
             <BudgetContext.Provider value={emptyContext}>
