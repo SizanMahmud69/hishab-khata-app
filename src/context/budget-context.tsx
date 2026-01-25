@@ -87,6 +87,14 @@ interface CheckInRecord {
     createdAt: any;
 }
 
+export interface PointTransaction {
+    id?: string;
+    userId: string;
+    source: 'ad-watch' | 'spin';
+    points: number;
+    createdAt: any;
+}
+
 export interface PointHistoryItem {
     type: 'earned' | 'spent' | 'refunded';
     source: string;
@@ -186,6 +194,12 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         return query(collection(firestore, `users/${user.uid}/withdrawalRequests`), orderBy("requestedAt", "desc"));
     }, [user, firestore]);
     const { data: allWithdrawals = [], isLoading: isWithdrawalsLoading } = useCollection<WithdrawalRequest>(withdrawalsQuery);
+    
+    const pointTransactionsQuery = useMemoFirebase(() => {
+        if (!user) return null;
+        return query(collection(firestore, `users/${user.uid}/pointTransactions`), orderBy("createdAt", "desc"));
+    }, [user, firestore]);
+    const { data: pointTransactions = [], isLoading: arePointTransactionsLoading } = useCollection<PointTransaction>(pointTransactionsQuery);
     
     
      useEffect(() => {
@@ -445,10 +459,27 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                 }
             });
         }
+
+        if (pointTransactions) {
+            pointTransactions.forEach(pt => {
+                let sourceText = '';
+                if (pt.source === 'ad-watch') sourceText = 'বিজ্ঞাপন দেখা';
+                else if (pt.source === 'spin') sourceText = 'চাকা ঘোরানো';
+
+                if (sourceText && pt.createdAt) {
+                    history.push({
+                        type: 'earned',
+                        source: sourceText,
+                        points: pt.points,
+                        date: pt.createdAt.toDate()
+                    });
+                }
+            });
+        }
         
         return history.sort((a, b) => b.date.getTime() - a.date.getTime());
 
-    }, [checkIns, allWithdrawals, referrals, premiumSubscriptions]);
+    }, [checkIns, allWithdrawals, referrals, premiumSubscriptions, pointTransactions]);
     
     const canWatchAd = useMemo(() => {
         const today = new Date().toISOString().split('T')[0];
@@ -464,31 +495,43 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     }, [userProfile]);
 
     const awardPointsForTask = useCallback(async (task: 'ad' | 'spin'): Promise<{ success: boolean; points: number; message: string; }> => {
-        if (!user || !userDocRef) {
+        if (!user || !userDocRef || !firestore) {
             return { success: false, points: 0, message: "ব্যবহারকারী খুঁজে পাওয়া যায়নি।" };
         }
         setIsTaskLoading(true);
 
         try {
             const today = new Date().toISOString().split('T')[0];
-            // Get the latest profile data before making a decision
             const currentUserProfile = (await getDoc(userDocRef)).data() as UserProfile;
+            
+            const batch = writeBatch(firestore);
+            const pointTransactionRef = doc(collection(firestore, `users/${user.uid}/pointTransactions`));
 
             if (task === 'ad') {
                 if (currentUserProfile.lastAdWatchDate === today) {
+                    setIsTaskLoading(false);
                     return { success: false, points: 0, message: "আপনি আজকের জন্য ইতিমধ্যে বিজ্ঞাপন দেখেছেন।" };
                 }
                 const points = 20;
-                await updateDoc(userDocRef, {
+                batch.update(userDocRef, {
                     points: increment(points),
                     lastAdWatchDate: today
                 });
+                batch.set(pointTransactionRef, {
+                    userId: user.uid,
+                    source: 'ad-watch',
+                    points: points,
+                    createdAt: serverTimestamp(),
+                });
+                await batch.commit();
+                setIsTaskLoading(false);
                 return { success: true, points, message: "সফল!" };
             }
 
             if (task === 'spin') {
                 const currentSpins = currentUserProfile.lastSpinDate === today ? currentUserProfile.spinsToday || 0 : 0;
                 if (currentSpins >= 2) {
+                    setIsTaskLoading(false);
                     return { success: false, points: 0, message: "আপনি আজকের জন্য আপনার সমস্ত স্পিন ব্যবহার করেছেন।" };
                 }
                 const points = [5, 10, 15, 20, 25, 30, 40, 50][Math.floor(Math.random() * 8)];
@@ -504,22 +547,30 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                     updateData.spinsToday = 1;
                 }
             
-                await updateDoc(userDocRef, updateData);
+                batch.update(userDocRef, updateData);
+                batch.set(pointTransactionRef, {
+                    userId: user.uid,
+                    source: 'spin',
+                    points: points,
+                    createdAt: serverTimestamp(),
+                });
 
+                await batch.commit();
+                setIsTaskLoading(false);
                 return { success: true, points, message: "সফল!" };
             }
 
+            setIsTaskLoading(false);
             return { success: false, points: 0, message: "অজানা টাস্ক।" };
         } catch (error) {
             console.error("Error awarding points:", error);
-            return { success: false, points: 0, message: "একটি সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।" };
-        } finally {
             setIsTaskLoading(false);
+            return { success: false, points: 0, message: "একটি সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।" };
         }
-    }, [user, userDocRef]);
+    }, [user, userDocRef, firestore]);
 
 
-    const isLoading = isUserLoading || isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || isSubscriptionsLoading || isCheckInsLoading || areReferralsLoading || isWithdrawalsLoading;
+    const isLoading = isUserLoading || isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || isSubscriptionsLoading || isCheckInsLoading || areReferralsLoading || isWithdrawalsLoading || arePointTransactionsLoading;
 
     const contextValue = useMemo(() => ({
         transactions, 
@@ -556,7 +607,8 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         rewardPoints, minWithdrawalPoints, referrerBonusPoints, referredUserBonusPoints, bdtPer100Points,
         isLoading, premiumStatus, premiumExpiryDate, userProfile, premiumSubscriptions, 
         pendingSubscriptionPlanIds, activePremiumPlan, isSubscriptionsLoading, hasUsedFreeTrial,
-        addTransaction, addDebtNote, updateDebtNote, awardPointsForTask, canWatchAd, remainingSpins, isTaskLoading
+        addTransaction, addDebtNote, updateDebtNote, awardPointsForTask, canWatchAd, remainingSpins, isTaskLoading,
+        pointTransactions
     ]);
 
      if (!user && !isUserLoading) {
