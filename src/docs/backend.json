@@ -358,20 +358,6 @@
           "rejectionReason": { "type": "string" }
         },
         "required": ["id", "userId", "planId", "status", "paymentMethod", "createdAt"]
-    },
-    "PointTransaction": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "PointTransaction",
-      "type": "object",
-      "description": "Represents a single transaction where a user earned points from a task.",
-      "properties": {
-        "id": { "type": "string" },
-        "userId": { "type": "string" },
-        "source": { "type": "string", "enum": ["ad-watch", "spin"] },
-        "points": { "type": "number" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "userId", "source", "points", "createdAt"]
     }
   },
   "auth": {
@@ -447,6 +433,14 @@
         }
       },
       {
+        "path": "/app_config/{configId}",
+        "definition": {
+          "entityName": "AppConfig",
+          "schema": { "$ref": "#/backend/entities/AppConfig" },
+          "description": "Stores global application settings. Should be publicly readable."
+        }
+      },
+      {
         "path": "/users/{userId}/notifications/{notificationId}",
         "definition": {
             "entityName": "Notification",
@@ -460,22 +454,6 @@
             "entityName": "Referral",
             "schema": { "$ref": "#/backend/entities/Referral" },
             "description": "Stores a record of users referred by the parent user."
-        }
-      },
-      {
-        "path": "/users/{userId}/pointTransactions/{transactionId}",
-        "definition": {
-            "entityName": "PointTransaction",
-            "schema": { "$ref": "#/backend/entities/PointTransaction" },
-            "description": "Stores records of points earned from specific tasks like watching ads or spins."
-        }
-      },
-      {
-        "path": "/app_config/{configId}",
-        "definition": {
-          "entityName": "AppConfig",
-          "schema": { "$ref": "#/backend/entities/AppConfig" },
-          "description": "Stores global application settings. Should be publicly readable."
         }
       },
       {
@@ -497,3 +475,4 @@
     ]
   }
 }
+
