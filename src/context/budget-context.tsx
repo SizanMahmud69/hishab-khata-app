@@ -195,8 +195,11 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     }, [user, firestore]);
     const { data: allWithdrawals = [], isLoading: isWithdrawalsLoading } = useCollection<WithdrawalRequest>(withdrawalsQuery);
     
-    const pointTransactions: PointTransaction[] = [];
-    const arePointTransactionsLoading = false;
+    const pointTransactionsQuery = useMemoFirebase(() => {
+        if (!user || !firestore) return null;
+        return query(collection(firestore, `users/${user.uid}/pointTransactions`), orderBy("createdAt", "desc"));
+    }, [user, firestore]);
+    const { data: pointTransactions = [], isLoading: arePointTransactionsLoading } = useCollection<PointTransaction>(pointTransactionsQuery);
     
     
      useEffect(() => {
@@ -502,6 +505,8 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             const currentUserProfile = (await getDoc(userDocRef)).data() as UserProfile;
             
             const batch = writeBatch(firestore);
+            const pointTransactionRef = doc(collection(firestore, `users/${user.uid}/pointTransactions`));
+
             
             if (task === 'ad') {
                 if (currentUserProfile.lastAdWatchDate === today) {
@@ -513,6 +518,13 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                     points: increment(points),
                     lastAdWatchDate: today
                 });
+                batch.set(pointTransactionRef, {
+                    userId: user.uid,
+                    source: 'ad-watch',
+                    points: points,
+                    createdAt: serverTimestamp(),
+                });
+
 
                 await batch.commit();
                 setIsTaskLoading(false);
@@ -539,6 +551,13 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                 }
             
                 batch.update(userDocRef, updateData);
+                batch.set(pointTransactionRef, {
+                    userId: user.uid,
+                    source: 'spin',
+                    points: points,
+                    createdAt: serverTimestamp(),
+                });
+
 
                 await batch.commit();
                 setIsTaskLoading(false);

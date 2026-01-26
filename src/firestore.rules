@@ -88,6 +88,11 @@ service cloud.firestore {
         // Only admin should delete from console
         allow delete: if false;
       }
+
+      // Sub-collection for point earnings from tasks
+      match /pointTransactions/{transactionId} {
+        allow read, write: if isOwner(userId);
+      }
     }
     
     // Global app configuration
