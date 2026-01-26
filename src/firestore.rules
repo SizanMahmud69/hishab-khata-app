@@ -91,8 +91,7 @@ service cloud.firestore {
 
       // Sub-collection for point earnings from tasks
       match /pointTransactions/{transactionId} {
-        // Allow full read/write access to the owner of the document.
-        allow get, list, create, update, delete: if isOwner(userId);
+        allow read, write: if isOwner(userId);
       }
     }
     
