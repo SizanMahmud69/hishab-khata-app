@@ -45,7 +45,7 @@ service cloud.firestore {
       
       // Sub-collection for daily check-ins
       match /checkIns/{checkInId} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if request.auth.uid == userId;
       }
       
       // Sub-collection for NID verification requests (user-facing)
@@ -120,5 +120,3 @@ service cloud.firestore {
     }
   }
 }
-
-  
