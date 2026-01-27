@@ -78,6 +78,11 @@ service cloud.firestore {
         allow create: if isSignedIn();
         allow update, delete: if false;
       }
+
+      // Sub-collection for point transactions
+      match /pointTransactions/{transactionId} {
+        allow read, write: if request.auth.uid == userId;
+      }
       
       // Sub-collection for premium subscriptions
       match /premium_subscriptions/{subscriptionId} {
