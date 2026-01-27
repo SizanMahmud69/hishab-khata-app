@@ -182,70 +182,60 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const prevReferralsRef = useRef<Referral[]>();
     const [isTaskLoading, setIsTaskLoading] = useState(false);
 
-    // This is the main fix. If on a public route, or if the user is not logged in,
-    // we return the provider with an empty/loading state and do not proceed to call any hooks.
-    if (isPublicRoute) {
-        return (
-            <BudgetContext.Provider value={emptyContext}>
-                {children}
-            </BudgetContext.Provider>
-        );
-    }
-    
-    // Hooks are now only called for authenticated routes.
+    // Hooks are now always called. They are disabled via `isPublicRoute` flag.
     const userDocRef = useMemoFirebase(() => {
-        if (!user || !firestore) return null;
+        if (isPublicRoute || !user || !firestore) return null;
         return doc(firestore, `users/${user.uid}`);
-    }, [user, firestore]);
+    }, [user, firestore, isPublicRoute]);
     
     const { data: userProfile, isLoading: isUserDocLoading } = useDoc<UserProfile>(userDocRef);
     
     const transactionsQuery = useMemoFirebase(() => {
-        if (!user || !firestore) return null;
+        if (isPublicRoute || !user || !firestore) return null;
         return query(collection(firestore, `users/${user.uid}/transactions`), orderBy("createdAt", "desc"));
-    }, [user, firestore]);
+    }, [user, firestore, isPublicRoute]);
     const { data: transactions = [], isLoading: areTransactionsLoading } = useCollection<Transaction>(transactionsQuery);
 
     const debtNotesQuery = useMemoFirebase(() => {
-        if (!user || !firestore) return null;
+        if (isPublicRoute || !user || !firestore) return null;
         return query(collection(firestore, `users/${user.uid}/debtNotes`), orderBy("createdAt", "desc"));
-    }, [user, firestore]);
+    }, [user, firestore, isPublicRoute]);
     const { data: debtNotes = [], isLoading: areDebtNotesLoading } = useCollection<DebtNote>(debtNotesQuery);
 
     const referralsQuery = useMemoFirebase(() => {
-        if (!user || !firestore) return null;
+        if (isPublicRoute || !user || !firestore) return null;
         return query(collection(firestore, `users/${user.uid}/referrals`), orderBy("createdAt", "desc"));
-    }, [user, firestore]);
+    }, [user, firestore, isPublicRoute]);
     const { data: referrals = [], isLoading: areReferralsLoading } = useCollection<Referral>(referralsQuery);
     
     const appConfigRef = useMemoFirebase(() => {
-        if (!firestore) return null;
+        if (isPublicRoute || !firestore) return null;
         return doc(firestore, 'app_config', 'settings');
-    }, [firestore]);
+    }, [firestore, isPublicRoute]);
     const { data: appConfig, isLoading: isConfigLoading } = useDoc<AppConfig>(appConfigRef);
 
     const subscriptionsQuery = useMemoFirebase(() => {
-        if (!user || !firestore) return null;
+        if (isPublicRoute || !user || !firestore) return null;
         return query(collection(firestore, `users/${user.uid}/premium_subscriptions`), orderBy("createdAt", "desc"));
-    }, [user, firestore]);
+    }, [user, firestore, isPublicRoute]);
     const { data: premiumSubscriptions = [], isLoading: isSubscriptionsLoading } = useCollection<PremiumSubscription>(subscriptionsQuery);
     
     const checkInsQuery = useMemoFirebase(() => {
-        if (!user || !firestore) return null;
+        if (isPublicRoute || !user || !firestore) return null;
         return query(collection(firestore, `users/${user.uid}/checkIns`), orderBy("createdAt", "desc"));
-    }, [user, firestore]);
+    }, [user, firestore, isPublicRoute]);
     const { data: checkIns = [], isLoading: isCheckInsLoading } = useCollection<CheckInRecord>(checkInsQuery);
     
     const withdrawalsQuery = useMemoFirebase(() => {
-        if (!user || !firestore) return null;
+        if (isPublicRoute || !user || !firestore) return null;
         return query(collection(firestore, `users/${user.uid}/withdrawalRequests`), orderBy("requestedAt", "desc"));
-    }, [user, firestore]);
+    }, [user, firestore, isPublicRoute]);
     const { data: allWithdrawals = [], isLoading: isWithdrawalsLoading } = useCollection<WithdrawalRequest>(withdrawalsQuery);
     
     const pointTransactionsQuery = useMemoFirebase(() => {
-        if (!user || !firestore) return null;
+        if (isPublicRoute || !user || !firestore) return null;
         return query(collection(firestore, `users/${user.uid}/pointTransactions`), orderBy("createdAt", "desc"));
-    }, [user, firestore]);
+    }, [user, firestore, isPublicRoute]);
     const { data: pointTransactions = [], isLoading: arePointTransactionsLoading } = useCollection<PointTransaction>(pointTransactionsQuery);
     
     
@@ -677,4 +667,5 @@ export const useBudget = () => {
     }
     return context;
 };
+
 
