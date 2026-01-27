@@ -9,7 +9,6 @@ import { createNotification } from '@/components/app-header';
 import { type WithdrawalRequest } from '@/app/withdraw/page';
 import { isAfter, addDays, parseISO } from 'date-fns';
 import { premiumPlans, type PremiumPlan } from '@/lib/data';
-import { usePathname } from 'next/navigation';
 
 // New unified Transaction interface
 export interface Transaction {
@@ -142,79 +141,33 @@ const SAVINGS_MILESTONES = [1000, 5000, 10000, 20000, 30000, 40000, 50000, 10000
 
 
 export const BudgetProvider = ({ children }: { children: ReactNode }) => {
-    const pathname = usePathname();
-    const isPublicRoute = useMemo(() => {
-        const publicRoutes = ['/', '/login', '/register', '/forgot-password', '/terms-and-conditions', '/privacy-policy'];
-        return publicRoutes.includes(pathname);
-    }, [pathname]);
-
     const { user, isLoading: isUserLoading } = useUser();
     const firestore = useFirestore();
-    
-    // If it's a public route, return an empty/default context immediately
-    // to prevent any data fetching hooks from running.
-    if (isPublicRoute) {
-        const emptyContext: BudgetContextType = {
-            transactions: [],
-            debtNotes: [],
-            referrals: [],
-            pointHistory: [],
-            addTransaction: async () => {},
-            addDebtNote: async () => {},
-            updateDebtNote: async () => {},
-            totalIncome: 0,
-            totalExpense: 0,
-            totalSavings: 0,
-            rewardPoints: 0,
-            minWithdrawalPoints: 1000,
-            referrerBonusPoints: 100,
-            referredUserBonusPoints: 50,
-            bdtPer100Points: 5,
-            isLoading: true,
-            premiumStatus: 'free',
-            premiumExpiryDate: null,
-            userProfile: null,
-            premiumSubscriptions: [],
-            pendingSubscriptionPlanIds: [],
-            activePremiumPlan: null,
-            isSubscriptionsLoading: true,
-            hasUsedFreeTrial: false,
-            awardPointsForTask: async () => ({ success: false, points: 0, message: 'Not loaded' }),
-            canWatchAd: false,
-            remainingSpins: 0,
-            isTaskLoading: true,
-        };
-        return (
-            <BudgetContext.Provider value={emptyContext}>
-                {children}
-            </BudgetContext.Provider>
-        );
-    }
     
     const prevReferralsRef = useRef<Referral[]>();
     const [isTaskLoading, setIsTaskLoading] = useState(false);
 
     const userDocRef = useMemoFirebase(() => {
-        if (!user) return null;
+        if (!user || !firestore) return null;
         return doc(firestore, `users/${user.uid}`);
     }, [user, firestore]);
     
     const { data: userProfile, isLoading: isUserDocLoading } = useDoc<UserProfile>(userDocRef);
     
     const transactionsQuery = useMemoFirebase(() => {
-        if (!user) return null;
+        if (!user || !firestore) return null;
         return query(collection(firestore, `users/${user.uid}/transactions`), orderBy("createdAt", "desc"));
     }, [user, firestore]);
     const { data: transactions = [], isLoading: areTransactionsLoading } = useCollection<Transaction>(transactionsQuery);
 
     const debtNotesQuery = useMemoFirebase(() => {
-        if (!user) return null;
+        if (!user || !firestore) return null;
         return query(collection(firestore, `users/${user.uid}/debtNotes`), orderBy("createdAt", "desc"));
     }, [user, firestore]);
     const { data: debtNotes = [], isLoading: areDebtNotesLoading } = useCollection<DebtNote>(debtNotesQuery);
 
     const referralsQuery = useMemoFirebase(() => {
-        if (!user) return null;
+        if (!user || !firestore) return null;
         return query(collection(firestore, `users/${user.uid}/referrals`), orderBy("createdAt", "desc"));
     }, [user, firestore]);
     const { data: referrals = [], isLoading: areReferralsLoading } = useCollection<Referral>(referralsQuery);

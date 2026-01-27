@@ -12,17 +12,24 @@ import "./globals.css"
 import { Toaster } from "@/components/ui/toaster"
 import { GlobalAdScripts } from "@/components/GlobalAdScripts";
 
-function AuthenticatedLayout({ children }: { children: ReactNode }) {
-    const { user, isLoading: isAuthLoading } = useUser();
-    const { isLoading: isDataLoading } = useBudget(); // Safe to call now
+function MainContent({ children }: { children: ReactNode }) {
+    const pathname = usePathname();
     const router = useRouter();
-    
+    const { user, isLoading: isAuthLoading } = useUser();
+    const { isLoading: isDataLoading } = useBudget();
+
+    const noLayoutRoutes = ['/login', '/register', '/forgot-password', '/terms-and-conditions', '/privacy-policy'];
+    const isPublicRoute = noLayoutRoutes.includes(pathname) || pathname === '/';
+
     useEffect(() => {
-        // Redirect to login if not authenticated on a protected route
-        if (!isAuthLoading && !user) {
+        if (!isPublicRoute && !isAuthLoading && !user) {
             router.push('/login');
         }
-    }, [user, isAuthLoading, router]);
+    }, [user, isAuthLoading, router, isPublicRoute, pathname]);
+
+    if (isPublicRoute) {
+        return <>{children}</>;
+    }
 
     const isLoading = isAuthLoading || !user || isDataLoading;
 
@@ -72,23 +79,13 @@ function AuthenticatedLayout({ children }: { children: ReactNode }) {
 
 
 export default function RootLayout({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
-  const noLayoutRoutes = ['/login', '/register', '/forgot-password', '/terms-and-conditions', '/privacy-policy'];
-  const isPublicRoute = noLayoutRoutes.includes(pathname) || pathname === '/';
-  
   return (
      <html lang="en" suppressHydrationWarning>
       <body>
         <FirebaseClientProvider>
-          {isPublicRoute ? (
-            <>
-              {children}
-            </>
-          ) : (
-            <BudgetClientProvider>
-              <AuthenticatedLayout>{children}</AuthenticatedLayout>
-            </BudgetClientProvider>
-          )}
+          <BudgetClientProvider>
+            <MainContent>{children}</MainContent>
+          </BudgetClientProvider>
           <Toaster />
           <GlobalAdScripts />
         </FirebaseClientProvider>
