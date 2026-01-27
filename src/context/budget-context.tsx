@@ -140,47 +140,16 @@ const BudgetContext = createContext<BudgetContextType | undefined>(undefined);
 
 const SAVINGS_MILESTONES = [1000, 5000, 10000, 20000, 30000, 40000, 50000, 100000];
 
-const emptyContext: BudgetContextType = {
-    transactions: [],
-    debtNotes: [],
-    referrals: [],
-    pointHistory: [],
-    addTransaction: async () => {},
-    addDebtNote: async () => {},
-    updateDebtNote: async () => {},
-    totalIncome: 0,
-    totalExpense: 0,
-    totalSavings: 0,
-    rewardPoints: 0,
-    minWithdrawalPoints: 1000,
-    referrerBonusPoints: 100,
-    referredUserBonusPoints: 50,
-    bdtPer100Points: 5,
-    isLoading: true,
-    premiumStatus: 'free',
-    premiumExpiryDate: null,
-    userProfile: null,
-    premiumSubscriptions: [],
-    pendingSubscriptionPlanIds: [],
-    activePremiumPlan: null,
-    isSubscriptionsLoading: true,
-    hasUsedFreeTrial: false,
-    awardPointsForTask: async () => ({ success: false, points: 0, message: 'Not loaded' }),
-    canWatchAd: false,
-    remainingSpins: 0,
-    isTaskLoading: true,
-};
-
 export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const { user, isLoading: isUserLoading } = useUser();
     const firestore = useFirestore();
     const pathname = usePathname();
 
-    const noLayoutRoutes = ['/login', '/register', '/forgot-password', '/terms-and-conditions', '/privacy-policy'];
-    const isPublicRoute = noLayoutRoutes.includes(pathname) || pathname === '/';
-    
     const prevReferralsRef = useRef<Referral[]>();
     const [isTaskLoading, setIsTaskLoading] = useState(false);
+
+    const noLayoutRoutes = ['/login', '/register', '/forgot-password', '/terms-and-conditions', '/privacy-policy'];
+    const isPublicRoute = noLayoutRoutes.includes(pathname) || pathname === '/';
 
     // Hooks are now always called. They are disabled via `isPublicRoute` flag.
     const userDocRef = useMemoFirebase(() => {
@@ -194,19 +163,22 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         if (isPublicRoute || !user || !firestore) return null;
         return query(collection(firestore, `users/${user.uid}/transactions`), orderBy("createdAt", "desc"));
     }, [user, firestore, isPublicRoute]);
-    const { data: transactions = [], isLoading: areTransactionsLoading } = useCollection<Transaction>(transactionsQuery);
+    const { data: transactionsData, isLoading: areTransactionsLoading } = useCollection<Transaction>(transactionsQuery);
+    const transactions = transactionsData ?? [];
 
     const debtNotesQuery = useMemoFirebase(() => {
         if (isPublicRoute || !user || !firestore) return null;
         return query(collection(firestore, `users/${user.uid}/debtNotes`), orderBy("createdAt", "desc"));
     }, [user, firestore, isPublicRoute]);
-    const { data: debtNotes = [], isLoading: areDebtNotesLoading } = useCollection<DebtNote>(debtNotesQuery);
+    const { data: debtNotesData, isLoading: areDebtNotesLoading } = useCollection<DebtNote>(debtNotesQuery);
+    const debtNotes = debtNotesData ?? [];
 
     const referralsQuery = useMemoFirebase(() => {
         if (isPublicRoute || !user || !firestore) return null;
         return query(collection(firestore, `users/${user.uid}/referrals`), orderBy("createdAt", "desc"));
     }, [user, firestore, isPublicRoute]);
-    const { data: referrals = [], isLoading: areReferralsLoading } = useCollection<Referral>(referralsQuery);
+    const { data: referralsData, isLoading: areReferralsLoading } = useCollection<Referral>(referralsQuery);
+    const referrals = referralsData ?? [];
     
     const appConfigRef = useMemoFirebase(() => {
         if (isPublicRoute || !firestore) return null;
@@ -218,25 +190,29 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         if (isPublicRoute || !user || !firestore) return null;
         return query(collection(firestore, `users/${user.uid}/premium_subscriptions`), orderBy("createdAt", "desc"));
     }, [user, firestore, isPublicRoute]);
-    const { data: premiumSubscriptions = [], isLoading: isSubscriptionsLoading } = useCollection<PremiumSubscription>(subscriptionsQuery);
+    const { data: premiumSubscriptionsData, isLoading: isSubscriptionsLoading } = useCollection<PremiumSubscription>(subscriptionsQuery);
+    const premiumSubscriptions = premiumSubscriptionsData ?? [];
     
     const checkInsQuery = useMemoFirebase(() => {
         if (isPublicRoute || !user || !firestore) return null;
         return query(collection(firestore, `users/${user.uid}/checkIns`), orderBy("createdAt", "desc"));
     }, [user, firestore, isPublicRoute]);
-    const { data: checkIns = [], isLoading: isCheckInsLoading } = useCollection<CheckInRecord>(checkInsQuery);
+    const { data: checkInsData, isLoading: isCheckInsLoading } = useCollection<CheckInRecord>(checkInsQuery);
+    const checkIns = checkInsData ?? [];
     
     const withdrawalsQuery = useMemoFirebase(() => {
         if (isPublicRoute || !user || !firestore) return null;
         return query(collection(firestore, `users/${user.uid}/withdrawalRequests`), orderBy("requestedAt", "desc"));
     }, [user, firestore, isPublicRoute]);
-    const { data: allWithdrawals = [], isLoading: isWithdrawalsLoading } = useCollection<WithdrawalRequest>(withdrawalsQuery);
+    const { data: allWithdrawalsData, isLoading: isWithdrawalsLoading } = useCollection<WithdrawalRequest>(withdrawalsQuery);
+    const allWithdrawals = allWithdrawalsData ?? [];
     
     const pointTransactionsQuery = useMemoFirebase(() => {
         if (isPublicRoute || !user || !firestore) return null;
         return query(collection(firestore, `users/${user.uid}/pointTransactions`), orderBy("createdAt", "desc"));
     }, [user, firestore, isPublicRoute]);
-    const { data: pointTransactions = [], isLoading: arePointTransactionsLoading } = useCollection<PointTransaction>(pointTransactionsQuery);
+    const { data: pointTransactionsData, isLoading: arePointTransactionsLoading } = useCollection<PointTransaction>(pointTransactionsQuery);
+    const pointTransactions = pointTransactionsData ?? [];
     
     
      useEffect(() => {
@@ -649,7 +625,6 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         isLoading, premiumStatus, premiumExpiryDate, userProfile, premiumSubscriptions, 
         pendingSubscriptionPlanIds, activePremiumPlan, isSubscriptionsLoading, hasUsedFreeTrial,
         addTransaction, addDebtNote, updateDebtNote, awardPointsForTask, canWatchAd, remainingSpins, isTaskLoading,
-        pointTransactions
     ]);
 
 
@@ -669,3 +644,6 @@ export const useBudget = () => {
 };
 
 
+
+
+    
