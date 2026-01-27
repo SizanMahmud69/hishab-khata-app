@@ -16,8 +16,7 @@ function MainContent({ children }: { children: ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
     const { user, isLoading: isAuthLoading } = useUser();
-    const { isLoading: isDataLoading } = useBudget();
-
+    
     const noLayoutRoutes = ['/login', '/register', '/forgot-password', '/terms-and-conditions', '/privacy-policy'];
     const isPublicRoute = noLayoutRoutes.includes(pathname) || pathname === '/';
 
@@ -31,7 +30,7 @@ function MainContent({ children }: { children: ReactNode }) {
         return <>{children}</>;
     }
 
-    const isLoading = isAuthLoading || !user || isDataLoading;
+    const isLoading = isAuthLoading || !user;
 
     if (isLoading) {
         return (

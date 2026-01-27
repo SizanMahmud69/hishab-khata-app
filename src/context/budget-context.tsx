@@ -3,6 +3,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo, useCallback, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { collection, onSnapshot, addDoc, doc, updateDoc, serverTimestamp, setDoc, query, getDocs, writeBatch, increment, arrayUnion, orderBy, Unsubscribe, where, limit, Firestore, getDoc } from 'firebase/firestore';
 import { createNotification } from '@/components/app-header';
@@ -139,14 +140,59 @@ const BudgetContext = createContext<BudgetContextType | undefined>(undefined);
 
 const SAVINGS_MILESTONES = [1000, 5000, 10000, 20000, 30000, 40000, 50000, 100000];
 
+const emptyContext: BudgetContextType = {
+    transactions: [],
+    debtNotes: [],
+    referrals: [],
+    pointHistory: [],
+    addTransaction: async () => {},
+    addDebtNote: async () => {},
+    updateDebtNote: async () => {},
+    totalIncome: 0,
+    totalExpense: 0,
+    totalSavings: 0,
+    rewardPoints: 0,
+    minWithdrawalPoints: 1000,
+    referrerBonusPoints: 100,
+    referredUserBonusPoints: 50,
+    bdtPer100Points: 5,
+    isLoading: true,
+    premiumStatus: 'free',
+    premiumExpiryDate: null,
+    userProfile: null,
+    premiumSubscriptions: [],
+    pendingSubscriptionPlanIds: [],
+    activePremiumPlan: null,
+    isSubscriptionsLoading: true,
+    hasUsedFreeTrial: false,
+    awardPointsForTask: async () => ({ success: false, points: 0, message: 'Not loaded' }),
+    canWatchAd: false,
+    remainingSpins: 0,
+    isTaskLoading: true,
+};
 
 export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const { user, isLoading: isUserLoading } = useUser();
     const firestore = useFirestore();
+    const pathname = usePathname();
+
+    const noLayoutRoutes = ['/login', '/register', '/forgot-password', '/terms-and-conditions', '/privacy-policy'];
+    const isPublicRoute = noLayoutRoutes.includes(pathname) || pathname === '/';
     
     const prevReferralsRef = useRef<Referral[]>();
     const [isTaskLoading, setIsTaskLoading] = useState(false);
 
+    // This is the main fix. If on a public route, or if the user is not logged in,
+    // we return the provider with an empty/loading state and do not proceed to call any hooks.
+    if (isPublicRoute) {
+        return (
+            <BudgetContext.Provider value={emptyContext}>
+                {children}
+            </BudgetContext.Provider>
+        );
+    }
+    
+    // Hooks are now only called for authenticated routes.
     const userDocRef = useMemoFirebase(() => {
         if (!user || !firestore) return null;
         return doc(firestore, `users/${user.uid}`);
@@ -615,44 +661,6 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         addTransaction, addDebtNote, updateDebtNote, awardPointsForTask, canWatchAd, remainingSpins, isTaskLoading,
         pointTransactions
     ]);
-
-     if (!user && !isUserLoading) {
-         const emptyContext: BudgetContextType = {
-            transactions: [],
-            debtNotes: [],
-            referrals: [],
-            pointHistory: [],
-            addTransaction: async () => {},
-            addDebtNote: async () => {},
-            updateDebtNote: async () => {},
-            totalIncome: 0,
-            totalExpense: 0,
-            totalSavings: 0,
-            rewardPoints: 0,
-            minWithdrawalPoints: 1000,
-            referrerBonusPoints: 100,
-            referredUserBonusPoints: 50,
-            bdtPer100Points: 5,
-            isLoading: true,
-            premiumStatus: 'free',
-            premiumExpiryDate: null,
-            userProfile: null,
-            premiumSubscriptions: [],
-            pendingSubscriptionPlanIds: [],
-            activePremiumPlan: null,
-            isSubscriptionsLoading: true,
-            hasUsedFreeTrial: false,
-            awardPointsForTask: async () => ({ success: false, points: 0, message: 'Not loaded' }),
-            canWatchAd: false,
-            remainingSpins: 0,
-            isTaskLoading: true,
-        };
-        return (
-            <BudgetContext.Provider value={emptyContext}>
-                {children}
-            </BudgetContext.Provider>
-        );
-    }
 
 
     return (
