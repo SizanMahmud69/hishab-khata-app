@@ -167,6 +167,11 @@ function RegisterPageContent() {
             bdtPer100Points: 5,
             adWatchPoints: 20,
             spinPointsOptions: [5, 10, 15, 20, 25, 30, 40, 50],
+            globalPopup: {
+                isEnabled: false,
+                title: "",
+                message: ""
+            }
            });
         }
         

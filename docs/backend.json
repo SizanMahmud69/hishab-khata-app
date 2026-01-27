@@ -240,23 +240,11 @@
       "type": "object",
       "description": "Represents a transaction where a user earns points from various activities.",
       "properties": {
-        "id": {
-          "type": "string"
-        },
-        "userId": {
-          "type": "string"
-        },
-        "source": {
-          "type": "string",
-          "enum": ["daily-check-in", "ad-watch", "spin", "referral-bonus", "welcome-bonus"]
-        },
-        "points": {
-          "type": "number"
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "source": { "type": "string", "enum": ["daily-check-in", "ad-watch", "spin", "referral-bonus", "welcome-bonus"] },
+        "points": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "userId", "source", "points", "createdAt"]
     },
@@ -321,9 +309,36 @@
         "bdtPer100Points": {
             "type": "number",
             "description": "The amount of BDT equivalent to 100 reward points."
+        },
+        "adWatchPoints": {
+            "type": "number",
+            "description": "Points awarded for watching a single ad."
+        },
+        "spinPointsOptions": {
+            "type": "array",
+            "items": { "type": "number" },
+            "description": "A list of possible point values a user can win from a spin."
+        },
+        "globalPopup": {
+            "type": "object",
+            "description": "Configuration for the global user-facing popup message.",
+            "properties": {
+                "isEnabled": {
+                    "type": "boolean",
+                    "description": "If true, the popup will be shown to users."
+                },
+                "title": {
+                    "type": "string",
+                    "description": "The title of the popup dialog."
+                },
+                "message": {
+                    "type": "string",
+                    "description": "The main content/message of the popup dialog."
+                }
+            }
         }
       },
-      "required": ["minWithdrawalPoints", "referrerBonusPoints", "referredUserBonusPoints", "bdtPer100Points"]
+      "required": ["minWithdrawalPoints", "referrerBonusPoints", "referredUserBonusPoints", "bdtPer100Points", "adWatchPoints", "spinPointsOptions"]
     },
     "Notification": {
       "$schema": "http://json-schema.org/draft-07/schema#",

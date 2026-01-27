@@ -71,6 +71,11 @@ interface AppConfig {
     bdtPer100Points: number;
     adWatchPoints?: number;
     spinPointsOptions?: number[];
+    globalPopup?: {
+        isEnabled: boolean;
+        title: string;
+        message: string;
+    };
 }
 
 export interface Referral {
@@ -128,6 +133,7 @@ interface BudgetContextType {
     canWatchAd: boolean;
     remainingSpins: number;
     isTaskLoading: boolean;
+    globalPopup: AppConfig['globalPopup'] | null;
 }
 
 const BudgetContext = createContext<BudgetContextType | undefined>(undefined);
@@ -309,6 +315,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const referredUserBonusPoints = appConfig?.referredUserBonusPoints ?? 50;
     const bdtPer100Points = appConfig?.bdtPer100Points ?? 5;
     const rewardPoints = userProfile?.points ?? 0;
+    const globalPopup = appConfig?.globalPopup ?? null;
     
     const totalIncome = useMemo(() => transactions.filter(t => t.type === 'income').reduce((sum, item) => sum + item.amount, 0), [transactions]);
     const totalExpense = useMemo(() => transactions.filter(t => t.type === 'expense').reduce((sum, item) => sum + item.amount, 0), [transactions]);
@@ -606,6 +613,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         canWatchAd,
         remainingSpins,
         isTaskLoading,
+        globalPopup,
     }), [
         transactions, debtNotes, referrals, pointHistory,
         totalIncome, totalExpense, totalSavings,
@@ -613,6 +621,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         isLoading, premiumStatus, premiumExpiryDate, userProfile, premiumSubscriptions, 
         pendingSubscriptionPlanIds, activePremiumPlan, isSubscriptionsLoading, hasUsedFreeTrial,
         addTransaction, addDebtNote, updateDebtNote, awardPointsForTask, canWatchAd, remainingSpins, isTaskLoading,
+        globalPopup,
     ]);
 
 
