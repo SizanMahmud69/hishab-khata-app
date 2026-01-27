@@ -33,32 +33,44 @@ export default function CheckInPage() {
     const firestore = useFirestore();
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const checkInsQuery = useMemoFirebase(() => {
+    // Fetch all recent check-ins, then filter on the client.
+    // This avoids a complex query that might be failing due to security rules/indexing issues.
+    const allCheckInsQuery = useMemoFirebase(() => {
         if (!user || !firestore) return null;
         return query(
             collection(firestore, `users/${user.uid}/checkIns`), 
-            where("source", "==", "daily-check-in"),
             orderBy("createdAt", "desc"), 
-            limit(30)
+            limit(100) // Fetch a larger number to ensure we get enough daily check-ins
         );
     }, [user, firestore]);
     
-    const { data: history = [], isLoading } = useCollection<CheckInRecord>(checkInsQuery);
+    const { data: allHistory = [], isLoading } = useCollection<CheckInRecord>(allCheckInsQuery);
+    
+    // Client-side filtering for daily check-ins for the history table
+    const history = useMemo(() => {
+        return allHistory.filter(item => item.source === 'daily-check-in').slice(0, 30);
+    }, [allHistory]);
+
+    // For streak calculation, we still need to look at the daily check-ins from all fetched records
+    const dailyCheckInHistory = useMemo(() => {
+        return allHistory.filter(item => item.source === 'daily-check-in');
+    }, [allHistory]);
+
 
     const { consecutiveDays, isCheckedInToday } = useMemo(() => {
-        if (!history || history.length === 0) {
+        if (!dailyCheckInHistory || dailyCheckInHistory.length === 0) {
             return { consecutiveDays: 0, isCheckedInToday: false };
         }
 
-        const latestCheckIn = history[0];
+        const latestCheckIn = dailyCheckInHistory[0];
         const lastDate = parseISO(latestCheckIn.date);
         
         const checkedInToday = isToday(lastDate);
         if (checkedInToday) {
              let streak = 1;
              let lastStreakDate = lastDate;
-             for (let i = 1; i < history.length; i++) {
-                 const currentCheckInDate = parseISO(history[i].date);
+             for (let i = 1; i < dailyCheckInHistory.length; i++) {
+                 const currentCheckInDate = parseISO(dailyCheckInHistory[i].date);
                  const expectedPreviousDate = subDays(lastStreakDate, 1);
                  if (currentCheckInDate.toDateString() === expectedPreviousDate.toDateString()) {
                      streak++;
@@ -73,8 +85,8 @@ export default function CheckInPage() {
         if (isYesterday(lastDate)) {
              let streak = 1;
              let lastStreakDate = lastDate;
-             for (let i = 1; i < history.length; i++) {
-                 const currentCheckInDate = parseISO(history[i].date);
+             for (let i = 1; i < dailyCheckInHistory.length; i++) {
+                 const currentCheckInDate = parseISO(dailyCheckInHistory[i].date);
                  const expectedPreviousDate = subDays(lastStreakDate, 1);
 
                  if (currentCheckInDate.toDateString() === expectedPreviousDate.toDateString()) {
@@ -89,7 +101,7 @@ export default function CheckInPage() {
         
         return { consecutiveDays: 0, isCheckedInToday: false };
 
-    }, [history]);
+    }, [dailyCheckInHistory]);
 
     const calculateReward = (streak: number) => {
         const effectiveStreak = Math.min(streak, MAX_STREAK_DAYS);
@@ -212,7 +224,7 @@ export default function CheckInPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {history.slice(0, 30).map((record, index) => (
+                        {history.map((record, index) => (
                            <Fragment key={record.id}>
                              <TableRow>
                                  <TableCell className='font-medium'>
