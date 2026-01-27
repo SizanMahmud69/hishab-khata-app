@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { format, isToday, isYesterday, parseISO, subDays } from 'date-fns';
 import { bn } from 'date-fns/locale';
 import { useUser, useFirestore, useCollection, useMemoFirebase, FirestorePermissionError, errorEmitter } from '@/firebase';
-import { collection, addDoc, serverTimestamp, query, orderBy, limit, updateDoc, doc, increment } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, orderBy, limit, updateDoc, doc, increment, where } from 'firebase/firestore';
 import { AdBanner } from '@/components/ad-banner';
 
 const MAX_STREAK_DAYS = 30;
@@ -23,6 +23,7 @@ interface CheckInRecord {
     date: string; // ISO String
     points: number;
     createdAt: any;
+    source?: 'daily-check-in' | 'ad-watch' | 'spin';
 }
 
 export default function CheckInPage() {
@@ -34,7 +35,12 @@ export default function CheckInPage() {
 
     const checkInsQuery = useMemoFirebase(() => {
         if (!user || !firestore) return null;
-        return query(collection(firestore, `users/${user.uid}/checkIns`), orderBy("createdAt", "desc"), limit(30));
+        return query(
+            collection(firestore, `users/${user.uid}/checkIns`), 
+            where("source", "==", "daily-check-in"),
+            orderBy("createdAt", "desc"), 
+            limit(30)
+        );
     }, [user, firestore]);
     
     const { data: history = [], isLoading } = useCollection<CheckInRecord>(checkInsQuery);
@@ -233,5 +239,3 @@ export default function CheckInPage() {
     </div>
   )
 }
-
-  
