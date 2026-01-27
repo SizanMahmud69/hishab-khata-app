@@ -1,7 +1,9 @@
+
 "use client";
 
 import React, { useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
+import { useBudget } from '@/context/budget-context';
 
 const adConfigs = {
     inline: {
@@ -28,11 +30,14 @@ interface AdBannerProps {
 }
 
 export function AdBanner({ adIndex = 1, variant = 'inline', className }: AdBannerProps) {
+    const { premiumStatus } = useBudget();
     const adContainerRef = useRef<HTMLDivElement>(null);
     const config = adConfigs[variant];
     const key = `ad-banner-${config?.key}-${adIndex}`;
 
     useEffect(() => {
+        if (premiumStatus === 'premium') return;
+
         const container = adContainerRef.current;
         if (!container || !config) return;
 
@@ -61,7 +66,11 @@ export function AdBanner({ adIndex = 1, variant = 'inline', className }: AdBanne
                 container.innerHTML = '';
             }
         };
-    }, [key, config]);
+    }, [key, config, premiumStatus]);
+
+    if (premiumStatus === 'premium') {
+        return null;
+    }
 
     if (!config) return null;
 

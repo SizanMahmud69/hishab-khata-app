@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator"
 import { useBudget } from "@/context/budget-context";
 
 export default function DashboardPage() {
-    const { totalIncome, totalExpense, totalSavings } = useBudget();
+    const { totalIncome, totalExpense, totalSavings, premiumStatus } = useBudget();
     const balance = totalIncome - totalExpense;
 
     const formatCurrency = (amount: number) => {
@@ -24,7 +24,7 @@ export default function DashboardPage() {
 
   return (
     <>
-      <Script src="https://pl28428118.effectivegatecpm.com/0c/22/02/0c220271b2d231c2e61062d769563457.js" />
+      {premiumStatus !== 'premium' && <Script src="https://pl28428118.effectivegatecpm.com/0c/22/02/0c220271b2d231c2e61062d769563457.js" />}
       <div className="flex-1 space-y-4">
         <div className="grid gap-4 grid-cols-2">
           <OverviewCards />

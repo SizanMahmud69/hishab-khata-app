@@ -1,8 +1,17 @@
+
 "use client";
 
 import Script from 'next/script';
+import { useBudget } from '@/context/budget-context';
 
 export function GlobalAdScripts() {
+    const { premiumStatus, isLoading } = useBudget();
+    
+    // Don't render ad scripts if the budget context is still loading or if the user is premium.
+    if (isLoading || premiumStatus === 'premium') {
+        return null;
+    }
+
     return (
         <Script
             id="social-bar-ad"

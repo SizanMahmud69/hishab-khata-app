@@ -84,9 +84,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <FirebaseClientProvider>
             <BudgetClientProvider>
                 {isPublicRoute ? children : <MainContent>{children}</MainContent>}
+                <Toaster />
+                <GlobalAdScripts />
             </BudgetClientProvider>
-            <Toaster />
-            <GlobalAdScripts />
         </FirebaseClientProvider>
       </body>
     </html>
