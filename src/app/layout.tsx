@@ -2,7 +2,6 @@
 "use client";
 
 import type { ReactNode } from "react"
-import Script from "next/script";
 import { AppHeader } from "@/components/app-header"
 import { BudgetClientProvider, useBudget } from "@/context/budget-context-provider"
 import { usePathname, useRouter } from "next/navigation";
@@ -13,28 +12,17 @@ import "./globals.css"
 import { Toaster } from "@/components/ui/toaster"
 import { GlobalAdScripts } from "@/components/GlobalAdScripts";
 
-function AppContent({ children }: { children: ReactNode }) {
+function AuthenticatedLayout({ children }: { children: ReactNode }) {
     const { user, isLoading: isAuthLoading } = useUser();
-    const pathname = usePathname();
+    const { isLoading: isDataLoading } = useBudget(); // Safe to call now
     const router = useRouter();
-
-    const noLayoutRoutes = ['/login', '/register', '/forgot-password', '/terms-and-conditions', '/privacy-policy'];
-    const isPublicRoute = noLayoutRoutes.includes(pathname) || pathname === '/';
     
-    // Always call hooks at the top level.
-    const budgetHookResult = useBudget();
-    // Conditionally use the result.
-    const isDataLoading = isPublicRoute ? false : budgetHookResult.isLoading;
-
     useEffect(() => {
-        if (!isAuthLoading && !user && !isPublicRoute) {
+        // Redirect to login if not authenticated on a protected route
+        if (!isAuthLoading && !user) {
             router.push('/login');
         }
-    }, [user, isAuthLoading, router, isPublicRoute]);
-
-    if (isPublicRoute) {
-        return <>{children}</>
-    }
+    }, [user, isAuthLoading, router]);
 
     const isLoading = isAuthLoading || !user || isDataLoading;
 
@@ -84,15 +72,25 @@ function AppContent({ children }: { children: ReactNode }) {
 
 
 export default function RootLayout({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const noLayoutRoutes = ['/login', '/register', '/forgot-password', '/terms-and-conditions', '/privacy-policy'];
+  const isPublicRoute = noLayoutRoutes.includes(pathname) || pathname === '/';
+  
   return (
      <html lang="en" suppressHydrationWarning>
       <body>
         <FirebaseClientProvider>
-          <BudgetClientProvider>
-            <AppContent>{children}</AppContent>
-            <Toaster />
-            <GlobalAdScripts />
-          </BudgetClientProvider>
+          {isPublicRoute ? (
+            <>
+              {children}
+            </>
+          ) : (
+            <BudgetClientProvider>
+              <AuthenticatedLayout>{children}</AuthenticatedLayout>
+            </BudgetClientProvider>
+          )}
+          <Toaster />
+          <GlobalAdScripts />
         </FirebaseClientProvider>
       </body>
     </html>
