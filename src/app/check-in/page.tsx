@@ -44,15 +44,17 @@ export default function CheckInPage() {
         );
     }, [user, firestore]);
     
-    const { data: allHistory = [], isLoading } = useCollection<CheckInRecord>(allCheckInsQuery);
+    const { data: allHistory, isLoading } = useCollection<CheckInRecord>(allCheckInsQuery);
     
     // Client-side filtering for daily check-ins for the history table
     const history = useMemo(() => {
+        if (!allHistory) return [];
         return allHistory.filter(item => item.source === 'daily-check-in').slice(0, 30);
     }, [allHistory]);
 
     // For streak calculation, we still need to look at the daily check-ins from all fetched records
     const dailyCheckInHistory = useMemo(() => {
+        if (!allHistory) return [];
         return allHistory.filter(item => item.source === 'daily-check-in');
     }, [allHistory]);
 
