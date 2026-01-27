@@ -111,6 +111,7 @@ export default function CheckInPage() {
             date: today.toISOString(),
             points: points,
             createdAt: serverTimestamp(),
+            source: 'daily-check-in',
         };
 
         const userUpdateData = {
@@ -232,3 +233,5 @@ export default function CheckInPage() {
     </div>
   )
 }
+
+  

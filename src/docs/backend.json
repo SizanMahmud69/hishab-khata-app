@@ -217,6 +217,11 @@
           "type": "string",
           "description": "Reference to User. (Relationship: User 1:N CheckIn)"
         },
+        "source": {
+            "type": "string",
+            "enum": ["daily-check-in", "ad-watch", "spin"],
+            "description": "Source of the points."
+        },
         "date": {
           "type": "string",
           "format": "date-time",
@@ -227,21 +232,7 @@
           "description": "Points awarded for this check-in."
         }
       },
-      "required": ["id", "userId", "date", "points"]
-    },
-    "PointTransaction": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "PointTransaction",
-      "type": "object",
-      "description": "Represents a point earning record from a specific task.",
-      "properties": {
-        "id": { "type": "string" },
-        "userId": { "type": "string" },
-        "source": { "type": "string", "enum": ["ad-watch", "spin"] },
-        "points": { "type": "number" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "userId", "source", "points", "createdAt"]
+      "required": ["id", "userId", "source", "date", "points"]
     },
     "VerificationRequest": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -422,16 +413,6 @@
           "description": "Stores daily check-in records for a user to track streaks and rewards."
         }
       },
-       {
-        "path": "/users/{userId}/pointTransactions/{transactionId}",
-        "definition": {
-          "entityName": "PointTransaction",
-          "schema": {
-            "$ref": "#/backend/entities/PointTransaction"
-          },
-          "description": "Stores records of points earned from tasks like watching ads or spinning a wheel."
-        }
-      },
       {
         "path": "/users/{userId}/verificationRequests/{requestId}",
         "definition": {
@@ -499,3 +480,5 @@
     ]
   }
 }
+
+  

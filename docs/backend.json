@@ -217,6 +217,11 @@
           "type": "string",
           "description": "Reference to User. (Relationship: User 1:N CheckIn)"
         },
+        "source": {
+            "type": "string",
+            "enum": ["daily-check-in", "ad-watch", "spin"],
+            "description": "Source of the points."
+        },
         "date": {
           "type": "string",
           "format": "date-time",
@@ -227,7 +232,7 @@
           "description": "Points awarded for this check-in."
         }
       },
-      "required": ["id", "userId", "date", "points"]
+      "required": ["id", "userId", "source", "date", "points"]
     },
     "VerificationRequest": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -476,3 +481,5 @@
   }
 }
 
+
+  

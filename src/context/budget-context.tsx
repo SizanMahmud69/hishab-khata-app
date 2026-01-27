@@ -85,14 +85,7 @@ interface CheckInRecord {
     date: string; // ISO String
     points: number;
     createdAt: any;
-}
-
-export interface PointTransaction {
-    id?: string;
-    userId: string;
-    source: 'ad-watch' | 'spin';
-    points: number;
-    createdAt: any;
+    source?: 'daily-check-in' | 'ad-watch' | 'spin';
 }
 
 export interface PointHistoryItem {
@@ -200,13 +193,6 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     }, [user, firestore]);
     const { data: allWithdrawalsData, isLoading: isWithdrawalsLoading } = useCollection<WithdrawalRequest>(withdrawalsQuery);
     const allWithdrawals = allWithdrawalsData ?? [];
-    
-    const pointTransactionsQuery = useMemoFirebase(() => {
-        if (!user || !firestore) return null;
-        return query(collection(firestore, `users/${user.uid}/pointTransactions`), orderBy("createdAt", "desc"));
-    }, [user, firestore]);
-    const { data: pointTransactionsData, isLoading: arePointTransactionsLoading } = useCollection<PointTransaction>(pointTransactionsQuery);
-    const pointTransactions = pointTransactionsData ?? [];
     
     
      useEffect(() => {
@@ -407,11 +393,23 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
 
         if (checkIns) {
             checkIns.forEach(ci => {
+                let sourceText = 'অজানা উৎস';
+                switch (ci.source) {
+                    case 'daily-check-in':
+                        sourceText = 'দৈনিক চেক-ইন';
+                        break;
+                    case 'ad-watch':
+                        sourceText = 'বিজ্ঞাপন দেখা';
+                        break;
+                    case 'spin':
+                        sourceText = 'চাকা ঘোরানো';
+                        break;
+                }
                 history.push({
                     type: 'earned',
-                    source: 'দৈনিক চেক-ইন',
+                    source: sourceText,
                     points: ci.points,
-                    date: parseISO(ci.date)
+                    date: ci.createdAt ? ci.createdAt.toDate() : parseISO(ci.date)
                 });
             });
         }
@@ -466,27 +464,10 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                 }
             });
         }
-
-        if (pointTransactions) {
-            pointTransactions.forEach(pt => {
-                let sourceText = '';
-                if (pt.source === 'ad-watch') sourceText = 'বিজ্ঞাপন দেখা';
-                else if (pt.source === 'spin') sourceText = 'চাকা ঘোরানো';
-
-                if (sourceText && pt.createdAt) {
-                    history.push({
-                        type: 'earned',
-                        source: sourceText,
-                        points: pt.points,
-                        date: pt.createdAt.toDate()
-                    });
-                }
-            });
-        }
         
         return history.sort((a, b) => b.date.getTime() - a.date.getTime());
 
-    }, [checkIns, allWithdrawals, referrals, premiumSubscriptions, pointTransactions]);
+    }, [checkIns, allWithdrawals, referrals, premiumSubscriptions]);
     
     const canWatchAd = useMemo(() => {
         const today = new Date().toISOString().split('T')[0];
@@ -508,27 +489,29 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         setIsTaskLoading(true);
 
         try {
-            const today = new Date().toISOString().split('T')[0];
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
             const currentUserProfile = (await getDoc(userDocRef)).data() as UserProfile;
             
             const batch = writeBatch(firestore);
-            const pointTransactionRef = doc(collection(firestore, `users/${user.uid}/pointTransactions`));
+            const checkInRef = doc(collection(firestore, `users/${user.uid}/checkIns`));
 
             
             if (task === 'ad') {
-                if (currentUserProfile.lastAdWatchDate === today) {
+                if (currentUserProfile.lastAdWatchDate === todayStr) {
                     setIsTaskLoading(false);
                     return { success: false, points: 0, message: "আপনি আজকের জন্য ইতিমধ্যে বিজ্ঞাপন দেখেছেন।" };
                 }
                 const points = 20;
                 batch.update(userDocRef, {
                     points: increment(points),
-                    lastAdWatchDate: today
+                    lastAdWatchDate: todayStr
                 });
-                batch.set(pointTransactionRef, {
+                batch.set(checkInRef, {
                     userId: user.uid,
                     source: 'ad-watch',
                     points: points,
+                    date: today.toISOString(),
                     createdAt: serverTimestamp(),
                 });
 
@@ -539,7 +522,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             }
 
             if (task === 'spin') {
-                const currentSpins = currentUserProfile.lastSpinDate === today ? currentUserProfile.spinsToday || 0 : 0;
+                const currentSpins = currentUserProfile.lastSpinDate === todayStr ? currentUserProfile.spinsToday || 0 : 0;
                 if (currentSpins >= 2) {
                     setIsTaskLoading(false);
                     return { success: false, points: 0, message: "আপনি আজকের জন্য আপনার সমস্ত স্পিন ব্যবহার করেছেন।" };
@@ -548,20 +531,21 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                 
                 const updateData: any = {
                     points: increment(points),
-                    lastSpinDate: today,
+                    lastSpinDate: todayStr,
                 };
             
-                if (currentUserProfile.lastSpinDate === today) {
+                if (currentUserProfile.lastSpinDate === todayStr) {
                     updateData.spinsToday = increment(1);
                 } else {
                     updateData.spinsToday = 1;
                 }
             
                 batch.update(userDocRef, updateData);
-                batch.set(pointTransactionRef, {
+                batch.set(checkInRef, {
                     userId: user.uid,
                     source: 'spin',
                     points: points,
+                    date: today.toISOString(),
                     createdAt: serverTimestamp(),
                 });
 
@@ -581,7 +565,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     }, [user, userDocRef, firestore]);
 
 
-    const isLoading = isUserLoading || isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || isSubscriptionsLoading || isCheckInsLoading || areReferralsLoading || isWithdrawalsLoading || arePointTransactionsLoading;
+    const isLoading = isUserLoading || isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || isSubscriptionsLoading || isCheckInsLoading || areReferralsLoading || isWithdrawalsLoading;
 
     const contextValue = useMemo(() => ({
         transactions, 
@@ -636,3 +620,5 @@ export const useBudget = () => {
     }
     return context;
 };
+
+  
