@@ -322,12 +322,12 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const bdtPer100Points = appConfig?.bdtPer100Points ?? 5;
     const rewardPoints = userProfile?.points ?? 0;
     
-    const totalIncome = useMemo(() => (transactions || []).filter(t => t.type === 'income').reduce((sum, item) => sum + item.amount, 0), [transactions]);
-    const totalExpense = useMemo(() => (transactions || []).filter(t => t.type === 'expense').reduce((sum, item) => sum + item.amount, 0), [transactions]);
+    const totalIncome = useMemo(() => transactions.filter(t => t.type === 'income').reduce((sum, item) => sum + item.amount, 0), [transactions]);
+    const totalExpense = useMemo(() => transactions.filter(t => t.type === 'expense').reduce((sum, item) => sum + item.amount, 0), [transactions]);
     
     const totalSavings = useMemo(() => {
-        const deposits = (transactions || []).filter(t => t.type === 'expense' && t.category === 'সঞ্চয় ডিপোজিট').reduce((sum, item) => sum + item.amount, 0);
-        const withdrawals = (transactions || []).filter(t => t.type === 'income' && t.category === 'সঞ্চয় উত্তোলন').reduce((sum, item) => sum + item.amount, 0);
+        const deposits = transactions.filter(t => t.type === 'expense' && t.category === 'সঞ্চয় ডিপোজিট').reduce((sum, item) => sum + item.amount, 0);
+        const withdrawals = transactions.filter(t => t.type === 'income' && t.category === 'সঞ্চয় উত্তোলন').reduce((sum, item) => sum + item.amount, 0);
         return deposits - withdrawals;
     }, [transactions]);
 
