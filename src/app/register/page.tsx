@@ -160,12 +160,13 @@ function RegisterPageContent() {
         const configDocRef = doc(firestore, "app_config", "settings");
         const configDocSnap = await getDoc(configDocRef);
         if (!configDocSnap.exists()) {
-          userBatch.set(configDocRef, { 
+          userBatch.set(configDocRef, {
             minWithdrawalPoints: 1000,
             referrerBonusPoints: 100,
             referredUserBonusPoints: 50,
             bdtPer100Points: 5,
-            adTaskPoints: [10, 10, 10, 10, 50],
+            adWatchPoints: 20,
+            spinPointsOptions: [5, 10, 15, 20, 25, 30, 40, 50],
            });
         }
         

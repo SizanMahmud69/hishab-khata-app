@@ -234,6 +234,20 @@
       },
       "required": ["id", "userId", "source", "date", "points"]
     },
+    "PointTransaction": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PointTransaction",
+      "type": "object",
+      "description": "Represents a transaction where a user earns points from various activities.",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "source": { "type": "string", "enum": ["daily-check-in", "ad-watch", "spin", "referral-bonus", "welcome-bonus"] },
+        "points": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "source", "points", "createdAt"]
+    },
     "VerificationRequest": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "VerificationRequest",
@@ -295,9 +309,18 @@
         "bdtPer100Points": {
             "type": "number",
             "description": "The amount of BDT equivalent to 100 reward points."
+        },
+        "adWatchPoints": {
+            "type": "number",
+            "description": "Points awarded for watching a single ad."
+        },
+        "spinPointsOptions": {
+            "type": "array",
+            "items": { "type": "number" },
+            "description": "A list of possible point values a user can win from a spin."
         }
       },
-      "required": ["minWithdrawalPoints", "referrerBonusPoints", "referredUserBonusPoints", "bdtPer100Points"]
+      "required": ["minWithdrawalPoints", "referrerBonusPoints", "referredUserBonusPoints", "bdtPer100Points", "adWatchPoints", "spinPointsOptions"]
     },
     "Notification": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -414,6 +437,16 @@
         }
       },
       {
+        "path": "/users/{userId}/pointTransactions/{transactionId}",
+        "definition": {
+          "entityName": "PointTransaction",
+          "schema": {
+            "$ref": "#/backend/entities/PointTransaction"
+          },
+          "description": "Stores a record of all points earned by a user."
+        }
+      },
+      {
         "path": "/users/{userId}/verificationRequests/{requestId}",
         "definition": {
           "entityName": "VerificationRequest",
@@ -480,5 +513,3 @@
     ]
   }
 }
-
-  

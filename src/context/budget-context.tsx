@@ -69,6 +69,8 @@ interface AppConfig {
     referrerBonusPoints: number;
     referredUserBonusPoints: number;
     bdtPer100Points: number;
+    adWatchPoints?: number;
+    spinPointsOptions?: number[];
 }
 
 export interface Referral {
@@ -502,7 +504,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                     setIsTaskLoading(false);
                     return { success: false, points: 0, message: "আপনি আজকের জন্য ইতিমধ্যে বিজ্ঞাপন দেখেছেন।" };
                 }
-                const points = 20;
+                const points = appConfig?.adWatchPoints ?? 20;
                 batch.update(userDocRef, {
                     points: increment(points),
                     lastAdWatchDate: todayStr
@@ -527,7 +529,9 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                     setIsTaskLoading(false);
                     return { success: false, points: 0, message: "আপনি আজকের জন্য আপনার সমস্ত স্পিন ব্যবহার করেছেন।" };
                 }
-                const points = [5, 10, 15, 20, 25, 30, 40, 50][Math.floor(Math.random() * 8)];
+                
+                const spinOptions = appConfig?.spinPointsOptions ?? [5, 10, 15, 20, 25, 30, 40, 50];
+                const points = spinOptions[Math.floor(Math.random() * spinOptions.length)];
                 
                 const updateData: any = {
                     points: increment(points),
@@ -562,7 +566,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             setIsTaskLoading(false);
             return { success: false, points: 0, message: "একটি সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।" };
         }
-    }, [user, userDocRef, firestore]);
+    }, [user, userDocRef, firestore, appConfig]);
 
 
     const isLoading = isUserLoading || isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || isSubscriptionsLoading || isCheckInsLoading || areReferralsLoading || isWithdrawalsLoading;
