@@ -1,9 +1,8 @@
-
 "use client";
 
 import type { ReactNode } from "react"
 import { AppHeader } from "@/components/app-header"
-import { BudgetClientProvider, useBudget } from "@/context/budget-context-provider"
+import { BudgetClientProvider } from "@/context/budget-context-provider"
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -60,19 +59,21 @@ function MainContent({ children }: { children: ReactNode }) {
     }
 
     return (
-        <div className="flex flex-col min-h-screen">
-            <AppHeader>{children}</AppHeader>
-             <footer className="py-4 mt-auto w-full shrink-0 items-center px-4 md:px-6 border-t border-white/20 bg-gradient-to-r from-blue-400 to-green-400 text-white">
-                <div className="container mx-auto flex flex-col items-center justify-center gap-2 text-center sm:flex-row sm:justify-between">
-                    <p className='text-[10px] sm:text-xs text-blue-100'>
-                        © 2025 <span className='font-bold'>হিসাব খাতা</span>. All rights reserved.
-                    </p>
-                    <p className='text-[10px] sm:text-xs text-blue-100 whitespace-nowrap'>
-                        Developer: <span className="font-semibold">Sizan Mahmud</span> & Designer: <span className="font-semibold">Black Dimond</span>
-                    </p>
-                </div>
-            </footer>
-        </div>
+        <BudgetClientProvider>
+            <div className="flex flex-col min-h-screen">
+                <AppHeader>{children}</AppHeader>
+                 <footer className="py-4 mt-auto w-full shrink-0 items-center px-4 md:px-6 border-t border-white/20 bg-gradient-to-r from-blue-400 to-green-400 text-white">
+                    <div className="container mx-auto flex flex-col items-center justify-center gap-2 text-center sm:flex-row sm:justify-between">
+                        <p className='text-[10px] sm:text-xs text-blue-100'>
+                            © 2025 <span className='font-bold'>হিসাব খাতা</span>. All rights reserved.
+                        </p>
+                        <p className='text-[10px] sm:text-xs text-blue-100 whitespace-nowrap'>
+                            Developer: <span className="font-semibold">Sizan Mahmud</span> & Designer: <span className="font-semibold">Black Dimond</span>
+                        </p>
+                    </div>
+                </footer>
+            </div>
+        </BudgetClientProvider>
     )
 }
 
@@ -82,9 +83,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
      <html lang="en" suppressHydrationWarning>
       <body>
         <FirebaseClientProvider>
-          <BudgetClientProvider>
-            <MainContent>{children}</MainContent>
-          </BudgetClientProvider>
+          <MainContent>{children}</MainContent>
           <Toaster />
           <GlobalAdScripts />
         </FirebaseClientProvider>
