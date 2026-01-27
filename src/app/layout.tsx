@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { ReactNode } from "react"
@@ -37,7 +38,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 </>
             ) : (
                 <BudgetClientProvider>
-                    { (isAuthLoading || !user) ? (
+                    { isAuthLoading ? (
                         <div className="flex flex-col h-screen">
                             {/* Loading Skeleton */}
                             <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between border-b bg-gradient-to-r from-blue-400 to-green-400 text-white px-4">
