@@ -530,8 +530,14 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                     return { success: false, points: 0, message: "আপনি আজকের জন্য আপনার সমস্ত স্পিন ব্যবহার করেছেন।" };
                 }
                 
-                const spinOptions = appConfig?.spinPointsOptions ?? [5, 10, 15, 20, 25, 30, 40, 50];
-                const points = spinOptions[Math.floor(Math.random() * spinOptions.length)];
+                let spinOptions = appConfig?.spinPointsOptions;
+                // Fallback for old/incorrect field name from user's database
+                if (!spinOptions && Array.isArray((appConfig as any)?.adTaskPoints)) {
+                    spinOptions = (appConfig as any).adTaskPoints;
+                }
+
+                const finalSpinOptions = spinOptions && spinOptions.length > 0 ? spinOptions : [5, 10, 15, 20, 25, 30, 40, 50];
+                const points = finalSpinOptions[Math.floor(Math.random() * finalSpinOptions.length)];
                 
                 const updateData: any = {
                     points: increment(points),
@@ -626,3 +632,4 @@ export const useBudget = () => {
 };
 
   
+
