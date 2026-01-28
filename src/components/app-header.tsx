@@ -19,7 +19,6 @@ import { isToday, isBefore, startOfToday, parseISO, format as formatDate, differ
 import { useBudget } from "@/context/budget-context"
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from "@/firebase"
 import { collection, query, where, addDoc, serverTimestamp, doc, updateDoc, writeBatch, getDocs, setDoc, orderBy, getDoc } from 'firebase/firestore'
-import { AdBanner } from "@/components/ad-banner"
 
 interface Notification {
     id?: string;
@@ -253,9 +252,7 @@ export function AppHeader({children}: {children: ReactNode}) {
                 </div>
             </header>
             <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-blue-500 to-green-500">
-                <AdBanner variant="leaderboard" className="mb-6" />
                 {children}
-                <AdBanner variant="square" className="mt-8" />
             </main>
         </div>
     )

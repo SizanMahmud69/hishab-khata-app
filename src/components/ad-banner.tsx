@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useRef } from 'react';
@@ -33,7 +32,7 @@ export function AdBanner({ adIndex = 1, variant = 'inline', className }: AdBanne
     const { premiumStatus } = useBudget();
     const adContainerRef = useRef<HTMLDivElement>(null);
     const config = adConfigs[variant];
-    const key = `ad-banner-${config?.key}-${adIndex}`;
+    const key = `ad-banner-${variant}-${adIndex}`;
 
     useEffect(() => {
         if (premiumStatus === 'premium') return;
@@ -56,7 +55,8 @@ export function AdBanner({ adIndex = 1, variant = 'inline', className }: AdBanne
         `;
 
         const invokeScript = document.createElement('script');
-        invokeScript.src = `https://www.highperformanceformat.com/${config.key}/invoke.js`;
+        invokeScript.type = 'text/javascript';
+        invokeScript.src = `https://www.profitablecreativeformat.com/${config.key}/invoke.js`;
 
         container.appendChild(optionsScript);
         container.appendChild(invokeScript);
@@ -83,7 +83,7 @@ export function AdBanner({ adIndex = 1, variant = 'inline', className }: AdBanne
                 className
             )}
             style={{ 
-                height: `${config.height}px`, 
+                minHeight: `${config.height}px`,
                 width: '100%',
                 maxWidth: `${config.width}px`
             }}

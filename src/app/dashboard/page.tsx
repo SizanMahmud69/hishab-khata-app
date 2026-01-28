@@ -1,4 +1,3 @@
-
 "use client";
 
 import Script from 'next/script';
@@ -9,6 +8,7 @@ import { OverviewPieChart } from "@/components/overview-pie-chart"
 import { Wallet, Landmark } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { useBudget } from "@/context/budget-context";
+import { AdBanner } from '@/components/ad-banner';
 
 export default function DashboardPage() {
     const { totalIncome, totalExpense, totalSavings, premiumStatus } = useBudget();
@@ -26,6 +26,7 @@ export default function DashboardPage() {
     <>
       {premiumStatus !== 'premium' && <Script src="https://pl28428118.effectivegatecpm.com/0c/22/02/0c220271b2d231c2e61062d769563457.js" />}
       <div className="flex-1 space-y-4">
+        <AdBanner variant="leaderboard" className="mb-4" />
         <div className="grid gap-4 grid-cols-2">
           <OverviewCards />
         </div>
@@ -66,6 +67,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 gap-6">
           <RecentTransactions />
         </div>
+        <AdBanner variant="square" className="mt-4" />
       </div>
     </>
   )
