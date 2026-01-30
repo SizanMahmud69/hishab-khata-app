@@ -43,6 +43,36 @@ export default function ShopDetailsPage() {
             .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }, [debtNotes, shopName]);
 
+    const processedShopCycles = useMemo(() => {
+        return shopCycles.map(cycle => {
+            let remainingPaid = cycle.paidAmount;
+            const sortedEntries = [...(cycle.entries || [])].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+            const entriesWithStatus = sortedEntries.map(entry => {
+                const paidForThisEntry = Math.min(remainingPaid, entry.amount);
+                remainingPaid -= paidForThisEntry;
+                
+                let status: 'paid' | 'partial' | 'unpaid' = 'unpaid';
+                if (paidForThisEntry >= entry.amount) {
+                    status = 'paid';
+                } else if (paidForThisEntry > 0) {
+                    status = 'partial';
+                }
+
+                return {
+                    ...entry,
+                    status: status,
+                };
+            });
+
+            // Re-sort to display newest first
+            return {
+                ...cycle,
+                processedEntries: entriesWithStatus.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+            };
+        });
+    }, [shopCycles]);
+
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat("bn-BD", {
           style: "currency",
@@ -95,8 +125,8 @@ export default function ShopDetailsPage() {
                 description="এই দোকানের সমস্ত মাসিক বাকির তালিকা।" 
             />
             <div className="space-y-4">
-                {shopCycles.length > 0 ? (
-                    shopCycles.map(cycle => (
+                {processedShopCycles.length > 0 ? (
+                    processedShopCycles.map(cycle => (
                          <Card key={cycle.id}>
                             <CardHeader>
                                 <CardTitle>{formatCycle(cycle.cycleId)}</CardTitle>
@@ -105,7 +135,7 @@ export default function ShopDetailsPage() {
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
-                                {cycle.entries && cycle.entries.length > 0 ? (
+                                {cycle.processedEntries && cycle.processedEntries.length > 0 ? (
                                     <Table>
                                         <TableHeader>
                                             <TableRow>
@@ -115,11 +145,15 @@ export default function ShopDetailsPage() {
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {cycle.entries.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((entry, index) => (
+                                            {cycle.processedEntries.map((entry, index) => (
                                                 <TableRow key={index}>
                                                     <TableCell className="whitespace-nowrap">{format(new Date(entry.date), "d MMM, yy", { locale: bn })}</TableCell>
                                                     <TableCell className="text-muted-foreground">{entry.description || "-"}</TableCell>
-                                                    <TableCell className="font-medium text-right">{formatCurrency(entry.amount)}</TableCell>
+                                                    <TableCell className="font-medium text-right space-x-2">
+                                                        <span>{formatCurrency(entry.amount)}</span>
+                                                        {entry.status === 'paid' && <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300 dark:bg-green-900/50 dark:text-green-300 dark:border-green-700">পরিশোধিত</Badge>}
+                                                        {entry.status === 'partial' && <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/50 dark:text-yellow-300 dark:border-yellow-700">আংশিক</Badge>}
+                                                    </TableCell>
                                                 </TableRow>
                                             ))}
                                         </TableBody>
