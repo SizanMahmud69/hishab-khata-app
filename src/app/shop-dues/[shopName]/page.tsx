@@ -62,6 +62,7 @@ export default function ShopDetailsPage() {
                 return {
                     ...entry,
                     status: status,
+                    paidAmount: paidForThisEntry,
                 };
             });
 
@@ -141,7 +142,9 @@ export default function ShopDetailsPage() {
                                             <TableRow>
                                                 <TableHead>তারিখ</TableHead>
                                                 <TableHead>বিবরণ</TableHead>
-                                                <TableHead className="text-right">পরিমাণ</TableHead>
+                                                <TableHead className="text-right">বাকি</TableHead>
+                                                <TableHead className="text-right">পরিশোধিত</TableHead>
+                                                <TableHead className="text-right">স্ট্যাটাস</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -149,10 +152,12 @@ export default function ShopDetailsPage() {
                                                 <TableRow key={index}>
                                                     <TableCell className="whitespace-nowrap">{format(new Date(entry.date), "d MMM, yy", { locale: bn })}</TableCell>
                                                     <TableCell className="text-muted-foreground">{entry.description || "-"}</TableCell>
-                                                    <TableCell className="font-medium text-right space-x-2">
-                                                        <span>{formatCurrency(entry.amount)}</span>
+                                                    <TableCell className="font-medium text-right">{formatCurrency(entry.amount)}</TableCell>
+                                                    <TableCell className="font-medium text-right text-green-600 dark:text-green-400">{formatCurrency(entry.paidAmount)}</TableCell>
+                                                    <TableCell className="text-right">
                                                         {entry.status === 'paid' && <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300 dark:bg-green-900/50 dark:text-green-300 dark:border-green-700">পরিশোধিত</Badge>}
                                                         {entry.status === 'partial' && <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/50 dark:text-yellow-300 dark:border-yellow-700">আংশিক</Badge>}
+                                                        {entry.status === 'unpaid' && <Badge variant="outline" className="border-red-300 bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700">অপরিশোধিত</Badge>}
                                                     </TableCell>
                                                 </TableRow>
                                             ))}
