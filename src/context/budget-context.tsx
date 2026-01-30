@@ -50,6 +50,7 @@ export interface DebtNote {
 // UserProfile to match new structure
 interface UserProfile {
     points?: number;
+    isAdmin?: boolean;
     joinDate?: string;
     notifiedMilestones?: number[];
     premiumStatus?: 'free' | 'premium';
@@ -718,6 +719,7 @@ export const useBudget = () => {
 };
 
   
+
 
 
 
