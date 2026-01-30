@@ -1,4 +1,5 @@
 
+
 {
   "entities": {
     "User": {
@@ -199,6 +200,23 @@
         "description": {
           "type": "string",
           "description": "A brief description of the debt."
+        },
+        "cycleId": {
+            "type": "string",
+            "description": "The billing cycle ID for shop dues, e.g., '2024-01'."
+        },
+        "entries": {
+            "type": "array",
+            "description": "List of individual due entries for a shop due cycle.",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "date": { "type": "string", "format": "date-time" },
+                    "amount": { "type": "number" },
+                    "description": { "type": "string" }
+                },
+                "required": ["date", "amount"]
+            }
         }
       },
       "required": ["id", "userId", "type", "person", "amount", "paidAmount", "status", "date"]
@@ -531,3 +549,4 @@
     ]
   }
 }
+

@@ -10,6 +10,12 @@ import { type WithdrawalRequest } from '@/app/withdraw/page';
 import { isAfter, addDays, parseISO } from 'date-fns';
 import { premiumPlans, type PremiumPlan } from '@/lib/data';
 
+export interface ShopDueEntry {
+    date: string;
+    amount: number;
+    description?: string;
+}
+
 // New unified Transaction interface
 export interface Transaction {
     id?: string;
@@ -31,10 +37,14 @@ export interface DebtNote {
     amount: number;
     paidAmount: number;
     status: 'unpaid' | 'partially-paid' | 'paid';
-    date: string;
+    date: string; // For lent/borrowed, date of debt. For shopDue, start of cycle.
     repaymentDate?: string;
     description?: string;
     createdAt?: any;
+
+    // New fields for shopDue
+    cycleId?: string; // e.g., '2024-01'
+    entries?: ShopDueEntry[];
 }
 
 // UserProfile to match new structure
@@ -361,14 +371,81 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const addTransaction = useCallback(async (transaction: Omit<Transaction, 'id' | 'createdAt' | 'userId'>) => {
-        if(!user) return;
         await addDocToCollection('transactions', transaction);
-    }, [user]);
+    }, [user, firestore]);
 
     const addDebtNote = useCallback(async (debtNote: Omit<DebtNote, 'id' | 'createdAt' | 'userId'>) => {
-        if(!user) return;
-        await addDocToCollection('debtNotes', debtNote);
-    }, [user]);
+        if (!user || !firestore) return;
+
+        if (debtNote.type === 'shopDue') {
+            const getCycleId = (dateStr: string) => {
+                const d = new Date(dateStr);
+                let year = d.getFullYear();
+                let month = d.getMonth();
+                if (d.getDate() < 6) {
+                    month -= 1;
+                    if (month < 0) {
+                        month = 11;
+                        year -= 1;
+                    }
+                }
+                return `${year}-${String(month + 1).padStart(2, '0')}`;
+            };
+
+            const cycleId = getCycleId(debtNote.date);
+            const shopName = debtNote.person;
+            const newEntryAmount = debtNote.amount;
+            const newEntryDescription = debtNote.description;
+
+            const q = query(
+                collection(firestore, `users/${user.uid}/debtNotes`),
+                where('type', '==', 'shopDue'),
+                where('person', '==', shopName),
+                where('cycleId', '==', cycleId),
+                limit(1)
+            );
+
+            const querySnapshot = await getDocs(q);
+
+            if (!querySnapshot.empty) {
+                const docToUpdate = querySnapshot.docs[0];
+                const docRef = docToUpdate.ref;
+
+                const newEntry: ShopDueEntry = {
+                    date: debtNote.date,
+                    amount: newEntryAmount,
+                    description: newEntryDescription,
+                };
+
+                await updateDoc(docRef, {
+                    amount: increment(newEntryAmount),
+                    entries: arrayUnion(newEntry)
+                });
+            } else {
+                const cycleStartDate = new Date(cycleId + '-06');
+                const newEntry: ShopDueEntry = {
+                    date: debtNote.date,
+                    amount: newEntryAmount,
+                    description: newEntryDescription,
+                };
+
+                const newShopDueDoc: Omit<DebtNote, 'id' | 'createdAt' | 'userId'> = {
+                    person: shopName,
+                    type: 'shopDue',
+                    cycleId: cycleId,
+                    amount: newEntryAmount,
+                    paidAmount: 0,
+                    status: 'unpaid',
+                    date: cycleStartDate.toISOString(),
+                    entries: [newEntry]
+                };
+                await addDocToCollection('debtNotes', newShopDueDoc);
+            }
+        } else {
+            await addDocToCollection('debtNotes', debtNote);
+        }
+    }, [user, firestore]);
+
 
     const updateDebtNote = useCallback(async (debtNote: DebtNote, paymentAmount?: number) => {
         if (!user || !firestore || !debtNote.id) return;
@@ -385,7 +462,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             const transactionData: Omit<Transaction, 'id' | 'createdAt'> = {
                 userId: user.uid,
                 type: debtNote.type === 'lent' ? 'income' : 'expense',
-                category: debtNote.type === 'lent' ? 'ধার ফেরত' : 'ধার পরিশোধ',
+                category: debtNote.type === 'shopDue' ? 'দোকান বাকি পরিশোধ' : (debtNote.type === 'lent' ? 'ধার ফেরত' : 'ধার পরিশোধ'),
                 amount: paymentAmount,
                 date: new Date().toISOString(),
                 description: `${debtNote.person} ${debtNote.type === 'lent' ? 'থেকে প্রাপ্তি' : 'কে পরিশোধ'}`,
@@ -641,4 +718,6 @@ export const useBudget = () => {
 };
 
   
+
+
 
