@@ -95,6 +95,10 @@
             "format": "date-time",
             "description": "The date when the premium subscription expires."
         },
+        "isAdmin": {
+            "type": "boolean",
+            "description": "Set to true if the user is an administrator."
+        },
         "lastAdWatchDate": {
             "type": "string",
             "format": "date",

@@ -16,112 +16,88 @@ service cloud.firestore {
       return request.auth.uid == userId;
     }
 
+    function isAdmin() {
+      // An admin is a signed-in user with an 'isAdmin' flag set to true in their user document.
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
     // ------------------------------------------------------------------------
     // Collection Rules
     // ------------------------------------------------------------------------
     
     match /users/{userId} {
-      // A user can get their own document.
-      allow get: if isOwner(userId);
-      // Allow querying for a single user by referral code during registration
-      allow list: if request.query.limit <= 1;
+      // Admins can get/list any user. Users can only get their own document.
+      allow get, list: if isOwner(userId) || isAdmin();
       // A signed-in user can create their own user document.
       allow create: if isSignedIn();
-      // A user can update their own document.
-      // A signed-in user (the new referred user) can also update ONLY the referrer's points.
-      allow update: if isOwner(userId) || (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['points', 'premiumStatus', 'premiumPlanId', 'premiumExpiryDate', 'lastAdWatchDate', 'lastSpinDate', 'spinsToday']));
-      // Users should not be able to delete their own accounts this way.
-      allow delete: if false;
+      // Admins can update any user. Users can only update their own.
+      // A referred user can also update some fields on the referrer.
+      allow update: if isOwner(userId) || isAdmin() || (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['points', 'premiumStatus', 'premiumPlanId', 'premiumExpiryDate', 'lastAdWatchDate', 'lastSpinDate', 'spinsToday']));
+      // Only admins can delete users.
+      allow delete: if isAdmin();
 
-      // Sub-collection for all financial transactions (income/expense)
+      // Sub-collections are accessible to the owner or an admin.
       match /transactions/{transactionId} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if isOwner(userId) || isAdmin();
       }
-
-      // Sub-collection for all debt records (lent, borrowed, shop dues)
       match /debtNotes/{debtNoteId} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if isOwner(userId) || isAdmin();
       }
-      
-      // Sub-collection for daily check-ins
       match /checkIns/{checkInId} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if isOwner(userId) || isAdmin();
       }
-      
-      // Sub-collection for NID verification requests (user-facing)
       match /verificationRequests/{requestId} {
-        allow get, create, list: if isOwner(userId);
-        // Only admin should be able to update (approve/reject) or delete requests.
-        allow update, delete: if false; 
+        allow read, write: if isOwner(userId) || isAdmin();
       }
-
-      // Sub-collection for reward point withdrawal requests
       match /withdrawalRequests/{requestId} {
-        allow get, create, list, delete: if isOwner(userId);
-        // User can update only specific fields. They can update isRefunded to true
-        // but cannot change status or rejection reasons set by admin.
-        allow update: if isOwner(userId) && 
-                         request.resource.data.diff(resource.data).affectedKeys()
-                           .hasOnly(['isRefunded', 'processedAt']);
+        allow read, write: if isOwner(userId) || isAdmin();
       }
-      
-      // Sub-collection for notifications
       match /notifications/{notificationId} {
-        allow write, read, update: if isOwner(userId);
-        allow delete: if false;
+        allow read, write: if isOwner(userId) || isAdmin();
       }
-      
-      // Sub-collection for referral records
       match /referrals/{referralId} {
-        allow read: if isOwner(userId);
-        // Allow any signed-in user to create a referral record for another user.
-        allow create: if isSignedIn();
-        allow update, delete: if false;
+        // Referral records can be created by any signed-in user for another.
+        // Reading is restricted to the owner of the referral list or an admin.
+        allow read: if isOwner(userId) || isAdmin();
+        allow create: if isSignedIn() || isAdmin();
+        allow update, delete: if false; // Disallow updates/deletes from client.
       }
-
-      // Sub-collection for point transactions
       match /pointTransactions/{transactionId} {
-        allow read, write: if request.auth.uid == userId;
+        allow read, write: if isOwner(userId) || isAdmin();
       }
-      
-      // Sub-collection for premium subscriptions
       match /premium_subscriptions/{subscriptionId} {
-        allow get, list: if request.auth.uid == userId;
-        allow create: if isOwner(userId);
-        // Allow user to update only specific fields for activation
-        allow update: if isOwner(userId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['activatedAt', 'status', 'expiresAt']);
-        // Only admin should delete from console
-        allow delete: if false;
+        allow read, write: if isOwner(userId) || isAdmin();
       }
     }
     
     // Global app configuration
     match /app_config/{configId} {
-      allow get: if true;
-      // Allow any signed-in user to create the config document (e.g., on first registration).
+      allow get: if true; // Publicly readable
+      // Admins can manage the entire config.
+      allow list, write: if isAdmin();
+      // Allow any signed-in user to create the config document if it doesn't exist.
       allow create: if isSignedIn();
-      // Prevent clients from listing, updating, or deleting config.
-      allow list, update, delete: if false; 
     }
     
     // Root collection for verification requests for admin and uniqueness checks
     match /verificationRequests/{requestId} {
-      // Allow any signed-in user to read (for uniqueness checks)
-      allow get, list: if isSignedIn();
-      // Allow creation only if the NID and phone are unique among pending/approved requests.
+      // Any signed-in user can read for uniqueness checks. Admins can read too.
+      allow get, list: if isSignedIn() || isAdmin();
+      // Only users can create requests for themselves under certain conditions.
       allow create: if isSignedIn()
+                      && request.resource.data.userId == request.auth.uid
                       && !exists(/databases/$(database)/documents/verificationRequests/$(request.resource.data.nidNumber))
                       && !exists(/databases/$(database)/documents/verificationRequests/$(request.resource.data.phone));
-      // Only admins should update/delete from the console.
-      allow update, delete: if false;
+      // Only admins can update (approve/reject) or delete.
+      allow update, delete: if isAdmin();
     }
 
     // Root collection for advertisements
     match /ads/{adId} {
       // Anyone can read the ads.
       allow get, list: if true;
-      // Only admins should create, update, or delete ads from the console.
-      allow write: if false;
+      // Only admins can create, update, or delete ads.
+      allow write: if isAdmin();
     }
   }
 }
