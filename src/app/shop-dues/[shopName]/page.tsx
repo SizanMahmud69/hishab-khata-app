@@ -46,9 +46,17 @@ export default function ShopDetailsPage() {
     const processedShopCycles = useMemo(() => {
         return shopCycles.map(cycle => {
             let remainingPaid = cycle.paidAmount;
-            const sortedEntries = [...(cycle.entries || [])].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+            
+            // Sort entries: smallest amount first. If amounts are equal, oldest date first.
+            const sortedEntriesForProcessing = [...(cycle.entries || [])].sort((a, b) => {
+                const amountDiff = a.amount - b.amount;
+                if (amountDiff !== 0) {
+                    return amountDiff;
+                }
+                return new Date(a.date).getTime() - new Date(b.date).getTime();
+            });
 
-            const entriesWithStatus = sortedEntries.map(entry => {
+            const entriesWithStatus = sortedEntriesForProcessing.map(entry => {
                 const paidForThisEntry = Math.min(remainingPaid, entry.amount);
                 remainingPaid -= paidForThisEntry;
                 
@@ -66,7 +74,7 @@ export default function ShopDetailsPage() {
                 };
             });
 
-            // Re-sort to display newest first
+            // Re-sort to display newest first for the UI
             return {
                 ...cycle,
                 processedEntries: entriesWithStatus.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
