@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { createNotification } from '@/components/app-header';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
-import { doc, addDoc, collection, serverTimestamp, query, orderBy, writeBatch, increment } from 'firebase/firestore';
+import { doc, collection, serverTimestamp, query, orderBy, writeBatch, increment } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { paymentMethods } from '@/lib/data';
@@ -125,10 +125,8 @@ export default function WithdrawPage() {
         try {
             const batch = writeBatch(firestore);
             
-            // Create in user's subcollection
             const userWithdrawalRef = doc(collection(firestore, `users/${user.uid}/withdrawalRequests`));
-            // Also create in the root collection for admin view
-            const rootWithdrawalRef = doc(collection(firestore, 'withdrawalRequests'), userWithdrawalRef.id);
+            const rootWithdrawalRef = doc(firestore, 'withdrawalRequests', userWithdrawalRef.id);
             
             const requestData = {
                 id: userWithdrawalRef.id,
@@ -150,7 +148,6 @@ export default function WithdrawPage() {
             await batch.commit();
 
             createNotification({
-                id: `withdraw-request-${userWithdrawalRef.id}`,
                 title: "উইথড্র অনুরোধ সফল হয়েছে",
                 description: `${pointsToDeduct} পয়েন্টের বিনিময়ে ${withdrawnTkAmount} টাকা পাঠানোর অনুরোধ প্রক্রিয়াধীন আছে।`,
                 link: "/withdraw?section=history",

@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { premiumPlans as allPlans, type PremiumPlan, paymentMethods } from "@/lib/data";
 import { useUser, useFirestore } from '@/firebase';
 import { useBudget } from '@/context/budget-context';
-import { doc, collection, serverTimestamp, increment, writeBatch, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, collection, serverTimestamp, increment, writeBatch } from 'firebase/firestore';
 import { addDays } from 'date-fns';
 import { createNotification } from '@/components/app-header';
 
@@ -111,7 +111,6 @@ function CheckoutPageContent() {
             await batch.commit();
 
             await createNotification({
-                id: `premium-activated-${newUserSubscriptionRef.id}`,
                 title: "সাবস্ক্রিপশন সক্রিয় হয়েছে!",
                 description: `আপনার "${selectedPlan.title}" প্ল্যানটি সফলভাবে সক্রিয় করা হয়েছে।`,
                 link: "/profile",
@@ -142,7 +141,7 @@ function CheckoutPageContent() {
             const batch = writeBatch(firestore);
 
             const userSubRef = doc(collection(firestore, `users/${user.uid}/premium_subscriptions`));
-            const rootSubRef = doc(collection(firestore, 'premiumSubscriptions'), userSubRef.id);
+            const rootSubRef = doc(firestore, 'premiumSubscriptions', userSubRef.id);
 
             const subscriptionData = {
                 id: userSubRef.id,

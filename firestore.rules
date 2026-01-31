@@ -3,53 +3,8 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // =================================================================
-    // Helper Functions
-    // =================================================================
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    // =================================================================
-    // User-specific Data (/users/{userId}/...)
-    // =================================================================
-    match /users/{userId} {
-      allow get: if isOwner(userId);
-      allow update: if isOwner(userId);
-      
-      allow create: if isSignedIn();
-      allow list: if request.query.limit <= 1; // For referral code check
-
-      // Sub-collections are only accessible by their owner.
-      match /transactions/{transactionId} { allow read, write: if isOwner(userId); }
-      match /debtNotes/{debtNoteId} { allow read, write: if isOwner(userId); }
-      match /checkIns/{checkInId} { allow read, write: if isOwner(userId); }
-      match /pointTransactions/{transactionId} { allow read, write: if isOwner(userId); }
-      match /notifications/{notificationId} { allow read, write: if isOwner(userId); }
-      match /referrals/{referralId} { allow read, write: if isOwner(userId); }
-      
-      // Sub-collections for user-specific requests
-      match /verificationRequests/{requestId} { allow get, list, create, update: if isOwner(userId); }
-      match /withdrawalRequests/{requestId} { allow get, list, create, update: if isOwner(userId); }
-      match /premium_subscriptions/{subscriptionId} { allow get, list, create, update: if isOwner(userId); }
-    }
-    
-    // =================================================================
-    // Public & Global Collections
-    // =================================================================
-    match /app_config/{configId} {
-      allow get: if true; // Publicly readable
-      allow write: if false; // Only manageable from console
-    }
-
-    match /ads/{adId} {
-      allow get, list: if true; // Ads are public
-      allow write: if false; // Only manageable from console
+    match /{document=**} {
+      allow read, write: if true;
     }
   }
 }

@@ -1,11 +1,10 @@
 
-
 "use client";
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
-import { doc, setDoc, addDoc, collection, serverTimestamp, query, where, getDocs, limit } from "firebase/firestore";
+import { doc, setDoc, collection, serverTimestamp, query, where, getDocs, limit, writeBatch } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import PageHeader from "@/components/page-header";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,7 +49,6 @@ export default function VerifyNidPage() {
         }
 
         try {
-            // Check for uniqueness of NID and Phone across all verification requests
             const verificationRequestsRef = collection(firestore, 'verificationRequests');
             
             const nidQuery = query(verificationRequestsRef, where("nidNumber", "==", nid), where("status", "in", ["pending", "approved"]), limit(1));
@@ -89,18 +87,20 @@ export default function VerifyNidPage() {
                 phone: phone,
             };
 
-            // Add to both the user's sub-collection and the root collection
-            const userVerificationRequestRef = collection(firestore, `users/${user.uid}/verificationRequests`);
-            const newRequestDoc = await addDoc(userVerificationRequestRef, requestData);
-            
-            // Also add to the root-level collection for admin and uniqueness checks
-            const rootRequestDocRef = doc(verificationRequestsRef, newRequestDoc.id);
-            await setDoc(rootRequestDocRef, requestData);
+            const batch = writeBatch(firestore);
 
-            await setDoc(userDocRef, {
-                verificationRequestId: newRequestDoc.id,
+            const newUserRequestRef = doc(collection(firestore, `users/${user.uid}/verificationRequests`));
+            const rootRequestRef = doc(firestore, 'verificationRequests', newUserRequestRef.id);
+
+            batch.set(newUserRequestRef, {...requestData, id: newUserRequestRef.id });
+            batch.set(rootRequestRef, {...requestData, id: rootRequestRef.id });
+
+            batch.update(userDocRef, {
+                verificationRequestId: newUserRequestRef.id,
                 phone: phone,
-            }, { merge: true });
+            });
+
+            await batch.commit();
 
             toast({
                 title: "আবেদন জমা হয়েছে",

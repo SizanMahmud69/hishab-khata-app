@@ -3,7 +3,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, writeBatch, serverTimestamp, query, orderBy, increment } from 'firebase/firestore';
+import { collection, doc, writeBatch, serverTimestamp, query, orderBy, increment, setDoc } from 'firebase/firestore';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,31 @@ import { bn } from 'date-fns/locale';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { createNotification } from '@/components/app-header';
+
+interface Notification {
+    id?: string;
+    title: string;
+    description: string;
+    read: boolean;
+    link?: string;
+    createdAt?: any;
+}
+
+const createNotification = async (notification: Omit<Notification, 'createdAt' | 'read'>, userId: string, firestore: any) => {
+    if (!userId || !firestore) return;
+    try {
+        const notificationsRef = collection(firestore, `users/${userId}/notifications`);
+        const docRef = doc(notificationsRef);
+        await setDoc(docRef, {
+            ...notification,
+            id: docRef.id,
+            createdAt: serverTimestamp(),
+            read: false,
+        });
+    } catch(e) {
+        console.error("Error creating notification:", e)
+    }
+};
 
 interface WithdrawalRequest {
     id: string;
