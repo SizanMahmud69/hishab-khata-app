@@ -79,13 +79,15 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     const pathname = usePathname();
     const noLayoutRoutes = ['/login', '/register', '/forgot-password', '/terms-and-conditions', '/privacy-policy'];
     const isPublicRoute = noLayoutRoutes.includes(pathname) || pathname === '/';
+    const isAdminRoute = pathname.startsWith('/admin');
+
 
   return (
      <html lang="en" suppressHydrationWarning>
       <body>
         <FirebaseClientProvider>
             <BudgetClientProvider>
-                {isPublicRoute ? children : <MainContent>{children}</MainContent>}
+                {isPublicRoute || isAdminRoute ? children : <MainContent>{children}</MainContent>}
                 <Toaster />
                 <GlobalAdScripts />
             </BudgetClientProvider>
