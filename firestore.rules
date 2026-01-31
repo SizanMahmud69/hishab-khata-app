@@ -70,8 +70,10 @@ service cloud.firestore {
     }
     
     match /admins/{adminId} {
-        // Only other admins can read or write the admins collection.
-        allow read, write: if isAdmin();
+        // A user can read their own document in the admins collection to verify their role.
+        allow get: if request.auth.uid == adminId;
+        // Only existing admins can list all admins or write to the collection.
+        allow list, write: if isAdmin();
     }
 
 
@@ -89,5 +91,3 @@ service cloud.firestore {
     }
   }
 }
-
-    
