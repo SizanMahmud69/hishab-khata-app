@@ -14,7 +14,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const { userProfile, isLoading } = useBudget();
     const router = useRouter();
 
-    // While loading user profile, show a loader. This prevents hydration errors.
+    useEffect(() => {
+        // If loading is finished and we have a user profile that is NOT an admin, redirect.
+        if (!isLoading && userProfile && !userProfile.isAdmin) {
+            router.replace('/dashboard');
+        }
+    }, [userProfile, isLoading, router]);
+
+    // While loading the user profile, or if the profile is not yet available, show a loader.
+    // This is crucial to prevent the admin page content from attempting to load for a non-admin user.
     if (isLoading || !userProfile) {
         return (
             <div className="flex h-screen w-full items-center justify-center bg-background">
@@ -23,7 +31,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         );
     }
 
+    // If the profile is loaded but the user is not an admin, show a loader while the redirection is happening.
+    // This prevents the admin layout from flashing on the screen for non-admin users.
+    if (!userProfile.isAdmin) {
+        return (
+            <div className="flex h-screen w-full items-center justify-center bg-background">
+                <Loader2 className="h-16 w-16 animate-spin text-primary" />
+            </div>
+        );
+    }
 
+
+    // If we've reached here, the user is loaded and confirmed to be an admin.
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
             <AdminSidebar />
