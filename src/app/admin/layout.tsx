@@ -1,7 +1,7 @@
 
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useBudget } from '@/context/budget-context';
 import { useRouter } from 'next/navigation';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
@@ -15,7 +15,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const { userProfile, isLoading } = useBudget();
     const router = useRouter();
 
-    if (isLoading) {
+    useEffect(() => {
+        // Once loading is complete and we have a profile, check for admin status.
+        if (!isLoading && userProfile && !userProfile.isAdmin) {
+            router.replace('/dashboard');
+        }
+    }, [isLoading, userProfile, router]);
+    
+    // While loading, or if the user profile isn't loaded yet, or if the user is not an admin,
+    // show a loading screen. This ensures the server and initial client render match,
+    // and prevents non-admins from seeing any admin content.
+    if (isLoading || !userProfile?.isAdmin) {
         return (
             <div className="flex h-screen w-full items-center justify-center bg-background">
                 <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -23,17 +33,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         );
     }
 
-    if (!userProfile?.isAdmin) {
-        React.useEffect(() => {
-            router.replace('/dashboard');
-        }, [router]);
-        return (
-            <div className="flex h-screen w-full items-center justify-center bg-background">
-                <p>Access Denied. Redirecting...</p>
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-        );
-    }
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
