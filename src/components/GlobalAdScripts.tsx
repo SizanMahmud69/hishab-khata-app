@@ -5,10 +5,10 @@ import Script from 'next/script';
 import { useBudget } from '@/context/budget-context';
 
 export function GlobalAdScripts() {
-    const { premiumStatus, isLoading } = useBudget();
+    const { premiumStatus, isLoading, userProfile } = useBudget();
     
-    // Don't render ad scripts if the budget context is still loading or if the user is premium.
-    if (isLoading || premiumStatus === 'premium') {
+    // Don't render ad scripts if the context is loading, user is premium, or user is an admin.
+    if (isLoading || premiumStatus === 'premium' || userProfile?.isAdmin) {
         return null;
     }
 

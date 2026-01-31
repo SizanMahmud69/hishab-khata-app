@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useRef } from 'react';
@@ -29,13 +30,13 @@ interface AdBannerProps {
 }
 
 export function AdBanner({ adIndex = 1, variant = 'inline', className }: AdBannerProps) {
-    const { premiumStatus } = useBudget();
+    const { premiumStatus, userProfile } = useBudget();
     const adContainerRef = useRef<HTMLDivElement>(null);
     const config = adConfigs[variant];
     const key = `ad-banner-${variant}-${adIndex}`;
 
     useEffect(() => {
-        if (premiumStatus === 'premium') return;
+        if (premiumStatus === 'premium' || userProfile?.isAdmin) return;
 
         const container = adContainerRef.current;
         if (!container || !config) return;
@@ -66,9 +67,9 @@ export function AdBanner({ adIndex = 1, variant = 'inline', className }: AdBanne
                 container.innerHTML = '';
             }
         };
-    }, [key, config, premiumStatus]);
+    }, [key, config, premiumStatus, userProfile?.isAdmin]);
 
-    if (premiumStatus === 'premium') {
+    if (premiumStatus === 'premium' || userProfile?.isAdmin) {
         return null;
     }
 
