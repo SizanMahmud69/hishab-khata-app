@@ -44,8 +44,9 @@ export default function LoginPage() {
           description: "আপনাকে ড্যাশবোর্ডে নিয়ে যাওয়া হচ্ছে।",
         });
 
-        if (userCredential.user.email === 'hisabkhata.maintanance@gmail.com') {
-            router.push('/admin/dashboard');
+        // Check if the user is an admin
+        if (email === 'hisabkhata.maintanance@gmail.com') {
+             router.push('/admin/dashboard');
         } else {
             router.push('/dashboard');
         }
