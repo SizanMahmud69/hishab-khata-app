@@ -1,5 +1,6 @@
 
 
+
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -50,7 +51,6 @@ export interface DebtNote {
 // UserProfile to match new structure
 interface UserProfile {
     points?: number;
-    isAdmin?: boolean;
     joinDate?: string;
     notifiedMilestones?: number[];
     premiumStatus?: 'free' | 'premium';
@@ -132,6 +132,7 @@ interface BudgetContextType {
     referredUserBonusPoints: number;
     bdtPer100Points: number;
     isLoading: boolean;
+    isAdmin: boolean;
     premiumStatus: 'free' | 'premium';
     premiumExpiryDate: Date | null;
     userProfile: UserProfile | null;
@@ -157,6 +158,25 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
 
     const prevReferralsRef = useRef<Referral[]>();
     const [isTaskLoading, setIsTaskLoading] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [isCheckingAdmin, setIsCheckingAdmin] = useState(true);
+
+    useEffect(() => {
+        if (user && firestore) {
+            setIsCheckingAdmin(true);
+            const adminDocRef = doc(firestore, 'admins', user.uid);
+            getDoc(adminDocRef).then(docSnap => {
+                setIsAdmin(docSnap.exists());
+                setIsCheckingAdmin(false);
+            }).catch(() => {
+                setIsAdmin(false);
+                setIsCheckingAdmin(false);
+            });
+        } else if (!isUserLoading) {
+            setIsAdmin(false);
+            setIsCheckingAdmin(false);
+        }
+    }, [user, firestore, isUserLoading]);
 
     const userDocRef = useMemoFirebase(() => {
         if (!user || !firestore) return null;
@@ -660,7 +680,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     }, [user, userDocRef, firestore, appConfig]);
 
 
-    const isLoading = isUserLoading || isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || isSubscriptionsLoading || isCheckInsLoading || areReferralsLoading || isWithdrawalsLoading;
+    const isLoading = isUserLoading || isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || isSubscriptionsLoading || isCheckInsLoading || areReferralsLoading || isWithdrawalsLoading || isCheckingAdmin;
 
     const contextValue = useMemo(() => ({
         transactions, 
@@ -679,6 +699,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         referredUserBonusPoints,
         bdtPer100Points,
         isLoading,
+        isAdmin,
         premiumStatus,
         premiumExpiryDate,
         userProfile,
@@ -696,7 +717,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         transactions, debtNotes, referrals, pointHistory,
         totalIncome, totalExpense, totalSavings,
         rewardPoints, minWithdrawalPoints, referrerBonusPoints, referredUserBonusPoints, bdtPer100Points,
-        isLoading, premiumStatus, premiumExpiryDate, userProfile, premiumSubscriptions, 
+        isLoading, isAdmin, premiumStatus, premiumExpiryDate, userProfile, premiumSubscriptions, 
         pendingSubscriptionPlanIds, activePremiumPlan, isSubscriptionsLoading, hasUsedFreeTrial,
         addTransaction, addDebtNote, updateDebtNote, awardPointsForTask, canWatchAd, remainingSpins, isTaskLoading,
         globalPopup,
@@ -723,3 +744,6 @@ export const useBudget = () => {
 
 
 
+
+
+    

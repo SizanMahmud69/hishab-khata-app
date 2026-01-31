@@ -95,10 +95,6 @@
             "format": "date-time",
             "description": "The date when the premium subscription expires."
         },
-        "isAdmin": {
-            "type": "boolean",
-            "description": "Set to true if the user is an administrator."
-        },
         "lastAdWatchDate": {
             "type": "string",
             "format": "date",
@@ -115,6 +111,34 @@
         }
       },
       "required": ["id", "email", "name"]
+    },
+    "Admin": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Admin",
+      "type": "object",
+      "description": "Represents an administrator user with special privileges.",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "The Firebase Auth UID of the admin user, matching a document in the /users collection."
+        },
+        "role": {
+          "type": "string",
+          "const": "admin",
+          "description": "The role of the user, which must be 'admin'."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The email address of the admin."
+        },
+        "registrationDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date when the user was granted admin privileges."
+        }
+      },
+      "required": ["uid", "role", "email", "registrationDate"]
     },
     "Transaction": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -565,8 +589,19 @@
             "schema": { "$ref": "#/backend/entities/Ad" },
             "description": "Stores advertisements to be displayed in the app. Publicly readable."
         }
+      },
+      {
+        "path": "/admins/{adminId}",
+        "definition": {
+          "entityName": "Admin",
+          "schema": { "$ref": "#/backend/entities/Admin" },
+          "description": "Stores a list of admin user UIDs for role-based access control."
+        }
       }
     ]
   }
 }
 
+
+
+    

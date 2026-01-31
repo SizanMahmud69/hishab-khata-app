@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link"
@@ -39,11 +40,11 @@ export default function LoginPage() {
     signInWithEmailAndPassword(auth, email, password)
       .then(async (userCredential) => {
         const user = userCredential.user;
-        const userDocRef = doc(firestore, "users", user.uid);
+        const adminDocRef = doc(firestore, "admins", user.uid);
         
         try {
-            const userDoc = await getDoc(userDocRef);
-            if (userDoc.exists() && userDoc.data().isAdmin) {
+            const adminDoc = await getDoc(adminDocRef);
+            if (adminDoc.exists()) {
                 toast({
                   title: "অ্যাডমিন লগইন সফল!",
                   description: "আপনাকে অ্যাডমিন ড্যাশবোর্ডে নিয়ে যাওয়া হচ্ছে।",
@@ -173,3 +174,5 @@ export default function LoginPage() {
     </div>
   )
 }
+
+    

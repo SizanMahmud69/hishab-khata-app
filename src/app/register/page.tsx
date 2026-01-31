@@ -1,5 +1,6 @@
 
 
+
 "use client";
 
 import Link from "next/link"
@@ -140,7 +141,6 @@ function RegisterPageContent() {
             premiumStatus: 'free',
             premiumPlanId: null,
             premiumExpiryDate: null,
-            isAdmin: false,
         });
 
         // Welcome bonus notification for the new user if they were referred
@@ -364,3 +364,5 @@ export default function RegisterPage() {
         </BudgetClientProvider>
     )
 }
+
+    

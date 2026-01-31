@@ -16,7 +16,7 @@ const pointValues = [5, 10, 15, 20, 25, 30, 40, 50];
 
 export default function PointIncomePage() {
     const { toast } = useToast();
-    const { awardPointsForTask, canWatchAd, remainingSpins, isTaskLoading, userProfile } = useBudget();
+    const { awardPointsForTask, canWatchAd, remainingSpins, isTaskLoading, isAdmin } = useBudget();
     const [isSpinning, setIsSpinning] = useState(false);
     const [spinResult, setSpinResult] = useState<number | null>(null);
     const [isAdDialogOpen, setIsAdDialogOpen] = useState(false);
@@ -120,7 +120,7 @@ export default function PointIncomePage() {
                                        পয়েন্ট পেতে কিছুক্ষণ অপেক্ষা করুন। বিজ্ঞাপনটি দেখা শেষ হলে আপনার পয়েন্ট স্বয়ংক্রিয়ভাবে যোগ হয়ে যাবে।
                                     </DialogDescription>
                                 </DialogHeader>
-                                {userProfile?.isAdmin ? (
+                                {isAdmin ? (
                                     <div className="flex items-center justify-center rounded-md overflow-hidden aspect-square mx-auto w-full max-w-[300px] bg-muted">
                                         <p className="p-4 text-center text-muted-foreground">অ্যাডমিন অ্যাকাউন্টের জন্য বিজ্ঞাপন দেখানো বন্ধ আছে।</p>
                                     </div>
@@ -195,3 +195,5 @@ export default function PointIncomePage() {
         </div>
     );
 }
+
+    

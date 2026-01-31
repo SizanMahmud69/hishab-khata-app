@@ -1,16 +1,33 @@
+
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import Link from 'next/link';
-import { BookMarked, Home, ShieldCheck, Banknote, Users2, PanelLeft, Package, Crown, Megaphone, SlidersHorizontal } from 'lucide-react';
+import { BookMarked, Home, ShieldCheck, Banknote, Users2, PanelLeft, Package, Crown, Megaphone, SlidersHorizontal, Loader2 } from 'lucide-react';
+import { useBudget } from '@/context/budget-context';
+import { useRouter } from 'next/navigation';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-    // The isAdmin check has been removed to align with the open Firestore rules.
-    // Any logged-in user can now access the admin panel structure.
-    // The underlying data fetching will rely on the now-open Firestore rules.
+    const { isAdmin, isLoading } = useBudget();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!isLoading && !isAdmin) {
+            router.replace('/dashboard');
+        }
+    }, [isLoading, isAdmin, router]);
+
+    if (isLoading || !isAdmin) {
+        return (
+            <div className="flex h-screen w-full items-center justify-center bg-background">
+                <Loader2 className="h-16 w-16 animate-spin text-primary" />
+            </div>
+        );
+    }
+    
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
             <AdminSidebar />
@@ -25,9 +42,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="left" className="sm:max-w-xs">
-                            <SheetHeader>
-                                <SheetTitle>অ্যাডমিন মেনু</SheetTitle>
-                            </SheetHeader>
+                             <SheetHeader>
+                                <SheetTitle className="sr-only">Admin Menu</SheetTitle>
+                             </SheetHeader>
                             <nav className="grid gap-6 text-lg font-medium">
                                 <Link
                                     href="/admin"
@@ -57,3 +74,5 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
     );
 }
+
+    
