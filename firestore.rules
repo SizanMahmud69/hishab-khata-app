@@ -80,27 +80,33 @@ service cloud.firestore {
     }
     
     // Root collection for verification requests for admin and uniqueness checks
+    match /verificationRequests {
+      allow list: if isSignedIn() || isAdmin();
+    }
     match /verificationRequests/{requestId} {
-      // Any signed-in user can read for uniqueness checks. Admins can read too.
-      allow get, list: if isSignedIn() || isAdmin();
-      // Only users can create requests for themselves under certain conditions.
+      allow get: if isSignedIn() || isAdmin();
       allow create: if isSignedIn()
                       && request.resource.data.userId == request.auth.uid
                       && !exists(/databases/$(database)/documents/verificationRequests/$(request.resource.data.nidNumber))
                       && !exists(/databases/$(database)/documents/verificationRequests/$(request.resource.data.phone));
-      // Only admins can update (approve/reject) or delete.
       allow update, delete: if isAdmin();
     }
     
     // Root collection for withdrawal requests for admin
+    match /withdrawalRequests {
+      allow list: if isAdmin();
+    }
     match /withdrawalRequests/{requestId} {
-        allow read, write: if isAdmin();
+        allow get, write: if isAdmin();
         allow create: if isOwner(request.resource.data.userId);
     }
 
     // Root collection for subscription requests for admin
+    match /premiumSubscriptions {
+        allow list: if isAdmin();
+    }
     match /premiumSubscriptions/{subscriptionId} {
-        allow read, write: if isAdmin();
+        allow get, write: if isAdmin();
         allow create: if isOwner(request.resource.data.userId);
     }
 
