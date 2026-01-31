@@ -11,8 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format, isToday, isYesterday, parseISO, subDays } from 'date-fns';
 import { bn } from 'date-fns/locale';
-import { useUser, useFirestore, useCollection, useMemoFirebase, FirestorePermissionError, errorEmitter } from '@/firebase';
-import { collection, addDoc, serverTimestamp, query, orderBy, limit, updateDoc, doc, increment, where } from 'firebase/firestore';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, addDoc, serverTimestamp, query, orderBy, limit, updateDoc, doc, increment } from 'firebase/firestore';
 import { AdBanner } from '@/components/ad-banner';
 
 const MAX_STREAK_DAYS = 30;
@@ -153,16 +153,11 @@ export default function CheckInPage() {
             });
         } catch (error) {
             console.error("Error adding check-in:", error);
-            const userDocRef = doc(firestore, `users/${user.uid}`);
-             if (error instanceof FirestorePermissionError) {
-                errorEmitter.emit('permission-error', error);
-            } else {
-                 toast({
-                    variant: "destructive",
-                    title: "ত্রুটি",
-                    description: "চেক-ইন করার সময় একটি সমস্যা হয়েছে।",
-                });
-            }
+            toast({
+                variant: "destructive",
+                title: "ত্রুটি",
+                description: "চেক-ইন করার সময় একটি সমস্যা হয়েছে।",
+            });
         } finally {
             setIsSubmitting(false);
         }

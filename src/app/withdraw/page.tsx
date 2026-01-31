@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { createNotification } from '@/components/app-header';
-import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection, FirestorePermissionError } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { doc, addDoc, collection, serverTimestamp, query, orderBy, writeBatch, increment } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -23,7 +23,6 @@ import { format } from 'date-fns';
 import { bn } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { errorEmitter } from '@/firebase/error-emitter';
 import { AdBanner } from '@/components/ad-banner';
 
 interface UserProfile {
@@ -166,15 +165,11 @@ export default function WithdrawPage() {
 
         } catch (error) {
             console.error("Withdrawal error: ", error);
-             if (error instanceof FirestorePermissionError) {
-                errorEmitter.emit('permission-error', error);
-            } else {
-                 toast({
-                    variant: "destructive",
-                    title: "ত্রুটি",
-                    description: "আপনার উইথড্র অনুরোধ প্রক্রিয়া করার সময় একটি সমস্যা হয়েছে।",
-                });
-            }
+            toast({
+                variant: "destructive",
+                title: "ত্রুটি",
+                description: "আপনার উইথড্র অনুরোধ প্রক্রিয়া করার সময় একটি সমস্যা হয়েছে।",
+            });
         } finally {
             setIsSubmitting(false);
         }
