@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link"
@@ -20,7 +19,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { useAuth } from "@/firebase";
+import { useAuth, useFirestore } from "@/firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -29,19 +29,41 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
+  const firestore = useFirestore();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth) return;
+    if (!auth || !firestore) return;
     setIsLoading(true);
 
     signInWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        toast({
-          title: "লগইন সফল হয়েছে!",
-          description: "আপনাকে ড্যাশবোর্ডে নিয়ে যাওয়া হচ্ছে।",
-        });
-        router.push('/dashboard');
+      .then(async (userCredential) => {
+        const user = userCredential.user;
+        const userDocRef = doc(firestore, "users", user.uid);
+        
+        try {
+            const userDoc = await getDoc(userDocRef);
+            if (userDoc.exists() && userDoc.data().isAdmin) {
+                toast({
+                  title: "অ্যাডমিন লগইন সফল!",
+                  description: "আপনাকে অ্যাডমিন ড্যাশবোর্ডে নিয়ে যাওয়া হচ্ছে।",
+                });
+                router.push('/admin/dashboard');
+            } else {
+                 toast({
+                  title: "লগইন সফল হয়েছে!",
+                  description: "আপনাকে ড্যাশবোর্ডে নিয়ে যাওয়া হচ্ছে।",
+                });
+                router.push('/dashboard');
+            }
+        } catch (docError) {
+             console.error("Error checking admin status:", docError);
+             toast({
+              title: "লগইন সফল হয়েছে!",
+              description: "আপনাকে ড্যাশবোর্ডে নিয়ে যাওয়া হচ্ছে।",
+            });
+            router.push('/dashboard');
+        }
       })
       .catch((error: any) => {
         let errorMessage = "লগইন করার সময় একটি সমস্যা হয়েছে।";
