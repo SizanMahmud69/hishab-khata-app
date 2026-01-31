@@ -9,7 +9,7 @@ import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import Link from 'next/link';
-import { BookMarked, Home, ShieldCheck, Banknote, Users2, PanelLeft, Package } from 'lucide-react';
+import { BookMarked, Home, ShieldCheck, Banknote, Users2, PanelLeft, Package, Crown, Megaphone, SlidersHorizontal } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const { userProfile, isLoading } = useBudget();
@@ -62,8 +62,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                 </Link>
                                 <Link href="/admin/dashboard" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"><Home className="h-5 w-5" />Dashboard</Link>
                                 <Link href="/admin/verifications" className="flex items-center gap-4 px-2.5 text-foreground"><ShieldCheck className="h-5 w-5" />Verifications</Link>
-                                {/* <Link href="/admin/withdrawals" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"><Banknote className="h-5 w-5" />Withdrawals</Link> */}
-                                {/* <Link href="/admin/users" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"><Users2 className="h-5 w-5" />Users</Link> */}
+                                <Link href="/admin/withdrawals" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"><Banknote className="h-5 w-5" />Withdrawals</Link>
+                                <Link href="/admin/users" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"><Users2 className="h-5 w-5" />Users</Link>
+                                <Link href="/admin/subscriptions" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"><Crown className="h-5 w-5" />Subscriptions</Link>
+                                <Link href="/admin/ads" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"><Megaphone className="h-5 w-5" />Ads</Link>
+                                <Link href="/admin/config" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"><SlidersHorizontal className="h-5 w-5" />App Config</Link>
                                 <Link href="/dashboard" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"><Package className="h-5 w-5" />Back to App</Link>
                             </nav>
                         </SheetContent>

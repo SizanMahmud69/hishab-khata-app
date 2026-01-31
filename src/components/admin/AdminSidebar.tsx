@@ -10,6 +10,9 @@ import {
   Users2,
   BookMarked,
   Package,
+  Crown,
+  Megaphone,
+  SlidersHorizontal,
 } from "lucide-react"
 
 import {
@@ -25,8 +28,11 @@ export function AdminSidebar() {
     const menuItems = [
         { href: "/admin/dashboard", label: "Dashboard", icon: Home },
         { href: "/admin/verifications", label: "Verifications", icon: ShieldCheck },
-        // { href: "/admin/withdrawals", label: "Withdrawals", icon: Banknote },
-        // { href: "/admin/users", label: "Users", icon: Users2 },
+        { href: "/admin/withdrawals", label: "Withdrawals", icon: Banknote },
+        { href: "/admin/users", label: "Users", icon: Users2 },
+        { href: "/admin/subscriptions", label: "Subscriptions", icon: Crown },
+        { href: "/admin/ads", label: "Ads", icon: Megaphone },
+        { href: "/admin/config", label: "App Config", icon: SlidersHorizontal },
     ];
   
   return (
