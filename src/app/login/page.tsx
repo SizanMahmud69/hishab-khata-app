@@ -39,32 +39,11 @@ export default function LoginPage() {
 
     signInWithEmailAndPassword(auth, email, password)
       .then(async (userCredential) => {
-        const user = userCredential.user;
-        const adminDocRef = doc(firestore, "admins", user.uid);
-        
-        try {
-            const adminDoc = await getDoc(adminDocRef);
-            if (adminDoc.exists()) {
-                toast({
-                  title: "অ্যাডমিন লগইন সফল!",
-                  description: "আপনাকে অ্যাডমিন ড্যাশবোর্ডে নিয়ে যাওয়া হচ্ছে।",
-                });
-                router.push('/admin/dashboard');
-            } else {
-                 toast({
-                  title: "লগইন সফল হয়েছে!",
-                  description: "আপনাকে ড্যাশবোর্ডে নিয়ে যাওয়া হচ্ছে।",
-                });
-                router.push('/dashboard');
-            }
-        } catch (docError) {
-             console.error("Error checking admin status:", docError);
-             toast({
-              title: "লগইন সফল হয়েছে!",
-              description: "আপনাকে ড্যাশবোর্ডে নিয়ে যাওয়া হচ্ছে।",
-            });
-            router.push('/dashboard');
-        }
+        toast({
+          title: "লগইন সফল হয়েছে!",
+          description: "আপনাকে ড্যাশবোর্ডে নিয়ে যাওয়া হচ্ছে।",
+        });
+        router.push('/dashboard');
       })
       .catch((error: any) => {
         let errorMessage = "লগইন করার সময় একটি সমস্যা হয়েছে।";
@@ -174,5 +153,3 @@ export default function LoginPage() {
     </div>
   )
 }
-
-    

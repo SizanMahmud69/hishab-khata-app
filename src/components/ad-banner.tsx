@@ -30,13 +30,13 @@ interface AdBannerProps {
 }
 
 export function AdBanner({ adIndex = 1, variant = 'inline', className }: AdBannerProps) {
-    const { premiumStatus, isAdmin } = useBudget();
+    const { premiumStatus } = useBudget();
     const adContainerRef = useRef<HTMLDivElement>(null);
     const config = adConfigs[variant];
     const key = `ad-banner-${variant}-${adIndex}`;
 
     useEffect(() => {
-        if (premiumStatus === 'premium' || isAdmin) return;
+        if (premiumStatus === 'premium') return;
 
         const container = adContainerRef.current;
         if (!container || !config) return;
@@ -67,9 +67,9 @@ export function AdBanner({ adIndex = 1, variant = 'inline', className }: AdBanne
                 container.innerHTML = '';
             }
         };
-    }, [key, config, premiumStatus, isAdmin]);
+    }, [key, config, premiumStatus]);
 
-    if (premiumStatus === 'premium' || isAdmin) {
+    if (premiumStatus === 'premium') {
         return null;
     }
 
@@ -92,5 +92,3 @@ export function AdBanner({ adIndex = 1, variant = 'inline', className }: AdBanne
         </div>
     );
 }
-
-    

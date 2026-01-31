@@ -15,21 +15,13 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    function isAdmin() {
-      // Check if the user's UID exists as a document in the /admins collection.
-      return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
-    }
-
     // =================================================================
     // User-specific Data (/users/{userId}/...)
     // =================================================================
     match /users/{userId} {
-      // Users can read and update their own profiles. Admins can read any user's profile.
-      allow get: if isOwner(userId) || isAdmin();
-      allow update: if isOwner(userId) || isAdmin();
+      allow get: if isOwner(userId);
+      allow update: if isOwner(userId);
       
-      // Allow creating a user profile during registration.
-      // Allow listing only for referral code checks during registration.
       allow create: if isSignedIn();
       allow list: if request.query.limit <= 1; // For referral code check
 
@@ -41,53 +33,23 @@ service cloud.firestore {
       match /notifications/{notificationId} { allow read, write: if isOwner(userId); }
       match /referrals/{referralId} { allow read, write: if isOwner(userId); }
       
-      // Sub-collections that also have a root collection counterpart.
-      // Users can create and read their own requests.
+      // Sub-collections for user-specific requests
       match /verificationRequests/{requestId} { allow get, list, create, update: if isOwner(userId); }
       match /withdrawalRequests/{requestId} { allow get, list, create, update: if isOwner(userId); }
       match /premium_subscriptions/{subscriptionId} { allow get, list, create, update: if isOwner(userId); }
     }
-
-    // =================================================================
-    // Admin-specific Root Collections
-    // =================================================================
     
-    match /verificationRequests/{requestId} {
-      // Admins can manage all requests.
-      allow read, list, update: if isAdmin();
-      // Users can create their own request here (mirrored from their subcollection).
-      allow create: if isSignedIn();
-    }
-
-    match /withdrawalRequests/{requestId} {
-      allow read, list, update: if isAdmin();
-      allow create: if isSignedIn();
-    }
-
-    match /premiumSubscriptions/{subscriptionId} {
-      allow read, list, update: if isAdmin();
-      allow create: if isSignedIn();
-    }
-    
-    match /admins/{adminId} {
-        // A user can read their own document in the admins collection to verify their role.
-        allow get: if request.auth.uid == adminId;
-        // Only existing admins can list all admins or write to the collection.
-        allow list, write: if isAdmin();
-    }
-
-
     // =================================================================
     // Public & Global Collections
     // =================================================================
     match /app_config/{configId} {
       allow get: if true; // Publicly readable
-      allow write: if isAdmin(); // Only admins can change config
+      allow write: if false; // Only manageable from console
     }
 
     match /ads/{adId} {
       allow get, list: if true; // Ads are public
-      allow write: if isAdmin(); // Only admins can manage ads
+      allow write: if false; // Only manageable from console
     }
   }
 }

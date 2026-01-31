@@ -112,34 +112,6 @@
       },
       "required": ["id", "email", "name"]
     },
-    "Admin": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Admin",
-      "type": "object",
-      "description": "Represents an administrator user with special privileges.",
-      "properties": {
-        "uid": {
-          "type": "string",
-          "description": "The Firebase Auth UID of the admin user, matching a document in the /users collection."
-        },
-        "role": {
-          "type": "string",
-          "const": "admin",
-          "description": "The role of the user, which must be 'admin'."
-        },
-        "email": {
-          "type": "string",
-          "format": "email",
-          "description": "The email address of the admin."
-        },
-        "registrationDate": {
-          "type": "string",
-          "format": "date-time",
-          "description": "The date when the user was granted admin privileges."
-        }
-      },
-      "required": ["uid", "role", "email", "registrationDate"]
-    },
     "Transaction": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Transaction",
@@ -515,7 +487,7 @@
         "definition": {
           "entityName": "VerificationRequest",
           "schema": { "$ref": "#/backend/entities/VerificationRequest" },
-          "description": "Stores a user's NID verification requests. Admins can update status from the console."
+          "description": "Stores a user's NID verification requests."
         }
       },
       {
@@ -557,51 +529,7 @@
             "schema": { "$ref": "#/backend/entities/Referral" },
             "description": "Stores a record of users referred by the parent user."
         }
-      },
-      {
-        "path": "/verificationRequests/{requestId}",
-        "definition": {
-          "entityName": "VerificationRequest",
-          "schema": { "$ref": "#/backend/entities/VerificationRequest" },
-          "description": "Root collection for all verification requests, used for admin purposes and ensuring uniqueness of NID and phone numbers across all users."
-        }
-      },
-      {
-        "path": "/withdrawalRequests/{requestId}",
-        "definition": {
-          "entityName": "WithdrawalRequest",
-          "schema": { "$ref": "#/backend/entities/WithdrawalRequest" },
-          "description": "Root collection for all withdrawal requests, used for admin purposes."
-        }
-      },
-      {
-        "path": "/premiumSubscriptions/{subscriptionId}",
-        "definition": {
-          "entityName": "PremiumSubscription",
-          "schema": { "$ref": "#/backend/entities/PremiumSubscription" },
-          "description": "Root collection for all premium subscription requests, used for admin purposes."
-        }
-      },
-      {
-        "path": "/ads/{adId}",
-        "definition": {
-            "entityName": "Ad",
-            "schema": { "$ref": "#/backend/entities/Ad" },
-            "description": "Stores advertisements to be displayed in the app. Publicly readable."
-        }
-      },
-      {
-        "path": "/admins/{adminId}",
-        "definition": {
-          "entityName": "Admin",
-          "schema": { "$ref": "#/backend/entities/Admin" },
-          "description": "Stores a list of admin user UIDs for role-based access control."
-        }
       }
     ]
   }
 }
-
-
-
-    

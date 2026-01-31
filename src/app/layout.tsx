@@ -79,7 +79,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     const pathname = usePathname();
     const noLayoutRoutes = ['/login', '/register', '/forgot-password', '/terms-and-conditions', '/privacy-policy'];
     const isPublicRoute = noLayoutRoutes.includes(pathname) || pathname === '/';
-    const isAdminRoute = pathname.startsWith('/admin');
 
 
   return (
@@ -87,7 +86,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <FirebaseClientProvider>
             <BudgetClientProvider>
-                {isPublicRoute || isAdminRoute ? children : <MainContent>{children}</MainContent>}
+                {isPublicRoute ? children : <MainContent>{children}</MainContent>}
                 <Toaster />
                 {!isPublicRoute && <GlobalAdScripts />}
             </BudgetClientProvider>
