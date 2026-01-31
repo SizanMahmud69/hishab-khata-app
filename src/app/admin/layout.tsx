@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import Link from 'next/link';
 import { BookMarked, Home, ShieldCheck, Banknote, Users2, PanelLeft, Package } from 'lucide-react';
 
@@ -49,6 +49,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="left" className="sm:max-w-xs">
+                            <SheetHeader>
+                                <SheetTitle className="sr-only">অ্যাডমিন মেনু</SheetTitle>
+                            </SheetHeader>
                             <nav className="grid gap-6 text-lg font-medium">
                                 <Link
                                     href="/admin"
