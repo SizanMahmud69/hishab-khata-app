@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect } from 'react';
@@ -15,17 +14,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const { userProfile, isLoading } = useBudget();
     const router = useRouter();
 
-    useEffect(() => {
-        // Once loading is complete and we have a profile, check for admin status.
-        if (!isLoading && userProfile && !userProfile.isAdmin) {
-            router.replace('/dashboard');
-        }
-    }, [isLoading, userProfile, router]);
-    
-    // While loading, or if the user profile isn't loaded yet, or if the user is not an admin,
-    // show a loading screen. This ensures the server and initial client render match,
-    // and prevents non-admins from seeing any admin content.
-    if (isLoading || !userProfile?.isAdmin) {
+    // While loading user profile, show a loader. This prevents hydration errors.
+    if (isLoading || !userProfile) {
         return (
             <div className="flex h-screen w-full items-center justify-center bg-background">
                 <Loader2 className="h-16 w-16 animate-spin text-primary" />
