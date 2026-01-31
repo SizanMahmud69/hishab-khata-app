@@ -543,6 +543,22 @@
         }
       },
       {
+        "path": "/withdrawalRequests/{requestId}",
+        "definition": {
+          "entityName": "WithdrawalRequest",
+          "schema": { "$ref": "#/backend/entities/WithdrawalRequest" },
+          "description": "Root collection for all withdrawal requests, used for admin purposes."
+        }
+      },
+      {
+        "path": "/premiumSubscriptions/{subscriptionId}",
+        "definition": {
+          "entityName": "PremiumSubscription",
+          "schema": { "$ref": "#/backend/entities/PremiumSubscription" },
+          "description": "Root collection for all premium subscription requests, used for admin purposes."
+        }
+      },
+      {
         "path": "/ads/{adId}",
         "definition": {
             "entityName": "Ad",

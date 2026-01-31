@@ -139,10 +139,13 @@ function CheckoutPageContent() {
         }
 
         try {
-            const newUserSubscriptionRef = doc(collection(firestore, `users/${user.uid}/premium_subscriptions`));
+            const batch = writeBatch(firestore);
+
+            const userSubRef = doc(collection(firestore, `users/${user.uid}/premium_subscriptions`));
+            const rootSubRef = doc(collection(firestore, 'premiumSubscriptions'), userSubRef.id);
 
             const subscriptionData = {
-                id: newUserSubscriptionRef.id,
+                id: userSubRef.id,
                 userId: user.uid,
                 planId: selectedPlan.id,
                 status: 'pending',
@@ -153,7 +156,10 @@ function CheckoutPageContent() {
                 createdAt: serverTimestamp(),
             };
 
-            await setDoc(newUserSubscriptionRef, subscriptionData);
+            batch.set(userSubRef, subscriptionData);
+            batch.set(rootSubRef, subscriptionData);
+            
+            await batch.commit();
 
             toast({ title: "অনুরোধ সফল হয়েছে", description: "আপনার সাবস্ক্রিপশন অনুরোধটি পর্যালোচনার জন্য জমা দেওয়া হয়েছে। ২৪ ঘণ্টার মধ্যে এটি সক্রিয় করা হবে।" });
             router.push('/profile');

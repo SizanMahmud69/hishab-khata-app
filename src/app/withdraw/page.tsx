@@ -123,27 +123,35 @@ export default function WithdrawPage() {
 
         const withdrawnTkAmount = (pointsToDeduct / 100) * bdtPer100Points;
         
-        const batch = writeBatch(firestore);
-            
-        const withdrawalRequestRef = doc(collection(firestore, `users/${user.uid}/withdrawalRequests`));
-        batch.set(withdrawalRequestRef, {
-            userId: user.uid,
-            status: 'pending',
-            points: pointsToDeduct,
-            amountBdt: withdrawnTkAmount,
-            paymentMethod: paymentMethod,
-            accountNumber: accountNumber,
-            requestedAt: serverTimestamp(),
-            isRefunded: false,
-        });
-
-        batch.update(userDocRef, { points: increment(-pointsToDeduct) });
-
         try {
+            const batch = writeBatch(firestore);
+            
+            // Create in user's subcollection
+            const userWithdrawalRef = doc(collection(firestore, `users/${user.uid}/withdrawalRequests`));
+            // Also create in the root collection for admin view
+            const rootWithdrawalRef = doc(collection(firestore, 'withdrawalRequests'), userWithdrawalRef.id);
+            
+            const requestData = {
+                id: userWithdrawalRef.id,
+                userId: user.uid,
+                status: 'pending',
+                points: pointsToDeduct,
+                amountBdt: withdrawnTkAmount,
+                paymentMethod: paymentMethod,
+                accountNumber: accountNumber,
+                requestedAt: serverTimestamp(),
+                isRefunded: false,
+            };
+            
+            batch.set(userWithdrawalRef, requestData);
+            batch.set(rootWithdrawalRef, requestData);
+
+            batch.update(userDocRef, { points: increment(-pointsToDeduct) });
+
             await batch.commit();
 
             createNotification({
-                id: `withdraw-request-${withdrawalRequestRef.id}`,
+                id: `withdraw-request-${userWithdrawalRef.id}`,
                 title: "উইথড্র অনুরোধ সফল হয়েছে",
                 description: `${pointsToDeduct} পয়েন্টের বিনিময়ে ${withdrawnTkAmount} টাকা পাঠানোর অনুরোধ প্রক্রিয়াধীন আছে।`,
                 link: "/withdraw?section=history",

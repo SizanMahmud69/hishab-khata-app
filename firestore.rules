@@ -91,6 +91,18 @@ service cloud.firestore {
       // Only admins can update (approve/reject) or delete.
       allow update, delete: if isAdmin();
     }
+    
+    // Root collection for withdrawal requests for admin
+    match /withdrawalRequests/{requestId} {
+        allow read, write: if isAdmin();
+        allow create: if isOwner(request.resource.data.userId);
+    }
+
+    // Root collection for subscription requests for admin
+    match /premiumSubscriptions/{subscriptionId} {
+        allow read, write: if isAdmin();
+        allow create: if isOwner(request.resource.data.userId);
+    }
 
     // Root collection for advertisements
     match /ads/{adId} {
