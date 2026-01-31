@@ -1,48 +1,16 @@
 "use client";
 
-import React, { useEffect } from 'react';
-import { useBudget } from '@/context/budget-context';
-import { useRouter } from 'next/navigation';
+import React from 'react';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
-import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import Link from 'next/link';
 import { BookMarked, Home, ShieldCheck, Banknote, Users2, PanelLeft, Package, Crown, Megaphone, SlidersHorizontal } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-    const { userProfile, isLoading } = useBudget();
-    const router = useRouter();
-
-    useEffect(() => {
-        // If loading is finished and we have a user profile that is NOT an admin, redirect.
-        if (!isLoading && userProfile && !userProfile.isAdmin) {
-            router.replace('/dashboard');
-        }
-    }, [userProfile, isLoading, router]);
-
-    // While loading the user profile, or if the profile is not yet available, show a loader.
-    // This is crucial to prevent the admin page content from attempting to load for a non-admin user.
-    if (isLoading || !userProfile) {
-        return (
-            <div className="flex h-screen w-full items-center justify-center bg-background">
-                <Loader2 className="h-16 w-16 animate-spin text-primary" />
-            </div>
-        );
-    }
-
-    // If the profile is loaded but the user is not an admin, show a loader while the redirection is happening.
-    // This prevents the admin layout from flashing on the screen for non-admin users.
-    if (!userProfile.isAdmin) {
-        return (
-            <div className="flex h-screen w-full items-center justify-center bg-background">
-                <Loader2 className="h-16 w-16 animate-spin text-primary" />
-            </div>
-        );
-    }
-
-
-    // If we've reached here, the user is loaded and confirmed to be an admin.
+    // The isAdmin check has been removed to align with the open Firestore rules.
+    // Any logged-in user can now access the admin panel structure.
+    // The underlying data fetching will rely on the now-open Firestore rules.
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
             <AdminSidebar />
@@ -58,7 +26,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         </SheetTrigger>
                         <SheetContent side="left" className="sm:max-w-xs">
                             <SheetHeader>
-                                <SheetTitle className="sr-only">অ্যাডমিন মেনু</SheetTitle>
+                                <SheetTitle>অ্যাডমিন মেনু</SheetTitle>
                             </SheetHeader>
                             <nav className="grid gap-6 text-lg font-medium">
                                 <Link
@@ -69,7 +37,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                     <span className="sr-only">Hishab Khata Admin</span>
                                 </Link>
                                 <Link href="/admin/dashboard" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"><Home className="h-5 w-5" />Dashboard</Link>
-                                <Link href="/admin/verifications" className="flex items-center gap-4 px-2.5 text-foreground"><ShieldCheck className="h-5 w-5" />Verifications</Link>
+                                <Link href="/admin/verifications" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"><ShieldCheck className="h-5 w-5" />Verifications</Link>
                                 <Link href="/admin/withdrawals" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"><Banknote className="h-5 w-5" />Withdrawals</Link>
                                 <Link href="/admin/users" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"><Users2 className="h-5 w-5" />Users</Link>
                                 <Link href="/admin/subscriptions" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"><Crown className="h-5 w-5" />Subscriptions</Link>
