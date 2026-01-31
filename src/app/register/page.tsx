@@ -140,6 +140,7 @@ function RegisterPageContent() {
             premiumStatus: 'free',
             premiumPlanId: null,
             premiumExpiryDate: null,
+            isAdmin: false,
         });
 
         // Welcome bonus notification for the new user if they were referred
@@ -297,7 +298,7 @@ function RegisterPageContent() {
               <div className="space-y-1.5">
                 <Label htmlFor="referral-code">রেফার কোড (ঐচ্ছিক)</Label>
                 <Input 
-                  id="referral-code" _
+                  id="referral-code"
                   placeholder="রেফারেল কোড"
                   value={referralCode}
                   onChange={(e) => setReferralCode(e.target.value)}
