@@ -45,7 +45,7 @@ export default function LoginPage() {
         });
 
         // Check if the user is an admin
-        if (email === 'hisabkhata.maintanance@gmail.com') {
+        if (userCredential.user.email === 'hisabkhata.maintanance@gmail.com') {
              router.push('/admin/dashboard');
         } else {
             router.push('/dashboard');

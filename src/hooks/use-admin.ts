@@ -1,8 +1,7 @@
 
 "use client";
 
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useUser } from '@/firebase';
 
 export function useAdmin() {
     const { user, isLoading: isUserLoading } = useUser();
