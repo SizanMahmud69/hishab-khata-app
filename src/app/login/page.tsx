@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link"
@@ -44,7 +45,7 @@ export default function LoginPage() {
         });
 
         // Check if the user is an admin
-        if (userCredential.user.email === 'hisabkhata.maintenance@gmail.com') {
+        if (userCredential.user.email === 'hisabkhata.maintanance@gmail.com') {
              router.push('/admin/dashboard');
         } else {
             router.push('/dashboard');
