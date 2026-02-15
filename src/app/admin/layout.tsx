@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect } from 'react';
@@ -8,25 +7,26 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import Link from 'next/link';
 import { BookMarked, Home, ShieldCheck, Banknote, Users2, PanelLeft, Package, Crown, Megaphone, SlidersHorizontal, Loader2 } from 'lucide-react';
-import { useAdmin } from '@/hooks/use-admin'; // New hook
-import { useUser } from '@/firebase'; // To check for user existence
+import { useUser } from '@/firebase'; // The only hook we need for auth check
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-    const { user, isLoading: isUserLoading } = useUser();
-    const { isAdmin, isLoading: isAdminLoading } = useAdmin();
+    const { user, isLoading } = useUser();
     const router = useRouter();
+
+    // Directly check for admin status here.
+    const isAdmin = user?.email === 'hisabkhata.maintanance@gmail.com';
 
     useEffect(() => {
         // If loading is finished and there's no user, or the user is not an admin, redirect.
-        if (!isUserLoading && !isAdminLoading) {
+        if (!isLoading) {
             if (!user || !isAdmin) {
                 router.replace('/dashboard');
             }
         }
-    }, [user, isAdmin, isUserLoading, isAdminLoading, router]);
+    }, [user, isAdmin, isLoading, router]);
 
-    // Show a loader while we verify the user's admin status.
-    if (isUserLoading || isAdminLoading) {
+    // Show a loader while we verify the user's status.
+    if (isLoading) {
         return (
             <div className="flex h-screen w-full items-center justify-center bg-muted/40">
                 <Loader2 className="h-16 w-16 animate-spin text-primary" />
