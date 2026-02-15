@@ -43,13 +43,7 @@ export default function LoginPage() {
           title: "লগইন সফল হয়েছে!",
           description: "আপনাকে ড্যাশবোর্ডে নিয়ে যাওয়া হচ্ছে।",
         });
-
-        // Check if the user is an admin
-        if (userCredential.user.email === 'hisabkhata.maintanance@gmail.com') {
-             router.push('/admin/dashboard');
-        } else {
-            router.push('/dashboard');
-        }
+        router.push('/dashboard');
       })
       .catch((error: any) => {
         let errorMessage = "লগইন করার সময় একটি সমস্যা হয়েছে।";

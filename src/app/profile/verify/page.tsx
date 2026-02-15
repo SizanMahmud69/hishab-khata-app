@@ -49,32 +49,8 @@ export default function VerifyNidPage() {
         }
 
         try {
-            const verificationRequestsRef = collection(firestore, 'verificationRequests');
-            
-            const nidQuery = query(verificationRequestsRef, where("nidNumber", "==", nid), where("status", "in", ["pending", "approved"]), limit(1));
-            const phoneQuery = query(verificationRequestsRef, where("phone", "==", phone), where("status", "in", ["pending", "approved"]), limit(1));
-
-            const [nidSnapshot, phoneSnapshot] = await Promise.all([getDocs(nidQuery), getDocs(phoneQuery)]);
-
-            if (!nidSnapshot.empty) {
-                toast({
-                    variant: "destructive",
-                    title: "NID নম্বরটি ব্যবহৃত",
-                    description: "এই NID নম্বরটি দিয়ে ইতিমধ্যে একটি ভেরিফিকেশন অনুরোধ করা হয়েছে।",
-                });
-                setIsSubmitting(false);
-                return;
-            }
-
-            if (!phoneSnapshot.empty) {
-                toast({
-                    variant: "destructive",
-                    title: "ফোন নম্বরটি ব্যবহৃত",
-                    description: "এই ফোন নম্বরটি দিয়ে ইতিমধ্যে একটি ভেরিফিকেশন অনুরোধ করা হয়েছে।",
-                });
-                setIsSubmitting(false);
-                return;
-            }
+            // Since we are removing the admin panel, we can simplify the check or remove it.
+            // For now, let's assume we don't need to check for uniqueness across all users in a root collection.
             
             const requestData = {
                 userId: user.uid,
@@ -90,10 +66,8 @@ export default function VerifyNidPage() {
             const batch = writeBatch(firestore);
 
             const newUserRequestRef = doc(collection(firestore, `users/${user.uid}/verificationRequests`));
-            const rootRequestRef = doc(firestore, 'verificationRequests', newUserRequestRef.id);
 
             batch.set(newUserRequestRef, {...requestData, id: newUserRequestRef.id });
-            batch.set(rootRequestRef, {...requestData, id: rootRequestRef.id });
 
             batch.update(userDocRef, {
                 verificationRequestId: newUserRequestRef.id,

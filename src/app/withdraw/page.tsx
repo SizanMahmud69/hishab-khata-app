@@ -126,7 +126,6 @@ export default function WithdrawPage() {
             const batch = writeBatch(firestore);
             
             const userWithdrawalRef = doc(collection(firestore, `users/${user.uid}/withdrawalRequests`));
-            const rootWithdrawalRef = doc(firestore, 'withdrawalRequests', userWithdrawalRef.id);
             
             const requestData = {
                 id: userWithdrawalRef.id,
@@ -141,7 +140,6 @@ export default function WithdrawPage() {
             };
             
             batch.set(userWithdrawalRef, requestData);
-            batch.set(rootWithdrawalRef, requestData);
 
             batch.update(userDocRef, { points: increment(-pointsToDeduct) });
 

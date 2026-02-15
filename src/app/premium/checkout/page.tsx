@@ -141,8 +141,7 @@ function CheckoutPageContent() {
             const batch = writeBatch(firestore);
 
             const userSubRef = doc(collection(firestore, `users/${user.uid}/premium_subscriptions`));
-            const rootSubRef = doc(firestore, 'premiumSubscriptions', userSubRef.id);
-
+            
             const subscriptionData = {
                 id: userSubRef.id,
                 userId: user.uid,
@@ -156,7 +155,6 @@ function CheckoutPageContent() {
             };
 
             batch.set(userSubRef, subscriptionData);
-            batch.set(rootSubRef, subscriptionData);
             
             await batch.commit();
 

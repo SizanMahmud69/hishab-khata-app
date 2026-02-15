@@ -529,30 +529,6 @@
             "schema": { "$ref": "#/backend/entities/Referral" },
             "description": "Stores a record of users referred by the parent user."
         }
-      },
-      {
-        "path": "/verificationRequests/{requestId}",
-        "definition": {
-          "entityName": "VerificationRequest",
-          "schema": { "$ref": "#/backend/entities/VerificationRequest" },
-          "description": "Root collection for all verification requests, used for admin purposes."
-        }
-      },
-       {
-        "path": "/withdrawalRequests/{requestId}",
-        "definition": {
-          "entityName": "WithdrawalRequest",
-          "schema": { "$ref": "#/backend/entities/WithdrawalRequest" },
-          "description": "Root collection for all withdrawal requests, used for admin purposes."
-        }
-      },
-       {
-        "path": "/premiumSubscriptions/{subscriptionId}",
-        "definition": {
-          "entityName": "PremiumSubscription",
-          "schema": { "$ref": "#/backend/entities/PremiumSubscription" },
-          "description": "Root collection for all premium subscription requests, used for admin purposes."
-        }
       }
     ]
   }

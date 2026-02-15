@@ -3,56 +3,27 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // This helper function checks if the requesting user's UID exists in the /admins collection.
-    function isAdmin() {
-      // The document must exist for the user to be considered an admin.
-      return exists(/databases/$(database)/documents/admins/$(request.auth.uid));
-    }
-    
-    // Rules for the 'admins' collection itself.
-    match /admins/{userId} {
-      // Any authenticated user can check if they are an admin (by reading their own doc).
-      allow get: if request.auth.uid == userId;
-      // Only existing admins can see the full list of other admins or modify the list.
-      allow list, write, delete: if isAdmin();
-    }
-
     // Rules for user-specific data.
     match /users/{userId}/{documents=**} {
-      // A user can access their own sub-collections. Admins can also access for support.
-      allow read, write: if request.auth.uid == userId || isAdmin();
+      // A user can access their own sub-collections.
+      allow read, write: if request.auth.uid == userId;
     }
     match /users/{userId} {
       // A user can create their own profile.
       allow create: if request.auth.uid == userId;
-      // A user can read/update their own profile. Admins can too.
-      allow read, update: if request.auth.uid == userId || isAdmin();
+      // A user can read/update their own profile.
+      allow read, update: if request.auth.uid == userId;
     }
 
-    // Root collections for admin management panels.
-    // Users create requests, but only admins can view the list and process them.
-    match /verificationRequests/{requestId} {
-      allow create: if request.auth != null;
-      allow get, list, update: if isAdmin();
-    }
-    match /withdrawalRequests/{requestId} {
-      allow create: if request.auth != null;
-      allow get, list, update: if isAdmin();
-    }
-    match /premiumSubscriptions/{subscriptionId} {
-      allow create: if request.auth != null;
-      allow get, list, update: if isAdmin();
-    }
-    
-    // Publicly readable collections that are managed by admins.
+    // Publicly readable collections.
     match /app_config/{docId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if false; // Managed from console
     }
     
     match /ads/{adId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if false; // Managed from console
     }
   }
 }
