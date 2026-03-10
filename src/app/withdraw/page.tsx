@@ -65,12 +65,11 @@ export default function WithdrawPage() {
     
     const [pointsToWithdraw, setPointsToWithdraw] = useState(rewardPoints);
 
-    // Now fetching from the root collection 'withdrawalRequests' filtered by userId
+    // Primary history source is the user's private sub-collection to avoid permission errors
     const withdrawalHistoryQuery = useMemoFirebase(() => {
         if (!user || !firestore) return null;
         return query(
-            collection(firestore, 'withdrawalRequests'), 
-            where('userId', '==', user.uid),
+            collection(firestore, `users/${user.uid}/withdrawalRequests`), 
             orderBy("requestedAt", "desc")
         );
     }, [user, firestore]);
@@ -133,11 +132,17 @@ export default function WithdrawPage() {
         try {
             const batch = writeBatch(firestore);
             
-            // Generate a unique ID for the withdrawal request in the root collection
-            const rootWithdrawalRef = doc(collection(firestore, 'withdrawalRequests'));
+            // Unique ID for the request
+            const requestId = doc(collection(firestore, 'withdrawalRequests')).id;
+            
+            // Root collection reference (for Admin Console)
+            const rootWithdrawalRef = doc(firestore, 'withdrawalRequests', requestId);
+            
+            // User sub-collection reference (for App History - Safe from permission errors)
+            const userSubWithdrawalRef = doc(firestore, `users/${user.uid}/withdrawalRequests`, requestId);
             
             const requestData: WithdrawalRequest = {
-                id: rootWithdrawalRef.id,
+                id: requestId,
                 userId: user.uid,
                 userName: userProfile?.name || user.displayName || 'Unknown User',
                 status: 'pending',
@@ -149,8 +154,9 @@ export default function WithdrawPage() {
                 isRefunded: false,
             };
             
-            // Set data in root collection for admin console visibility
+            // Write to both locations
             batch.set(rootWithdrawalRef, requestData);
+            batch.set(userSubWithdrawalRef, requestData);
 
             // Deduct points from user's profile
             batch.update(userDocRef, { points: increment(-pointsToDeduct) });
@@ -232,20 +238,23 @@ export default function WithdrawPage() {
                     <div className="grid sm:grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <Label htmlFor="points-to-withdraw">কত পয়েন্ট উইথড্র করবেন?</Label>
-                            <Input 
+                            <input 
                                 id="points-to-withdraw"
                                 type="number"
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                 value={pointsToWithdraw}
                                 onChange={(e) => handlePointsChange(Number(e.target.value))}
                                 max={rewardPoints}
                                 min="0"
                             />
-                            <Slider
-                                value={[pointsToWithdraw]}
-                                max={rewardPoints}
-                                step={100}
-                                onValueChange={(value) => handlePointsChange(value[0])}
-                            />
+                            <div className="py-4">
+                                <Slider
+                                    value={[pointsToWithdraw]}
+                                    max={rewardPoints}
+                                    step={100}
+                                    onValueChange={(value) => handlePointsChange(value[0])}
+                                />
+                            </div>
                             <p className="text-sm text-muted-foreground text-center pt-2">
                                 আপনি পাবেন: <span className="font-bold text-primary text-lg">{formatCurrency(selectedAmountBdt)}</span>
                             </p>

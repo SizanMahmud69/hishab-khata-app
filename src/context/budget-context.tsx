@@ -15,7 +15,6 @@ export interface ShopDueEntry {
     description?: string;
 }
 
-// New unified Transaction interface
 export interface Transaction {
     id?: string;
     userId: string;
@@ -27,35 +26,31 @@ export interface Transaction {
     createdAt?: any;
 }
 
-// New unified DebtNote interface
 export interface DebtNote {
     id?: string;
     userId: string;
     type: 'lent' | 'borrowed' | 'shopDue';
-    person: string; // Name of person or shop
+    person: string;
     amount: number;
     paidAmount: number;
     status: 'unpaid' | 'partially-paid' | 'paid';
-    date: string; // For lent/borrowed, date of debt. For shopDue, start of cycle.
+    date: string;
     repaymentDate?: string;
     description?: string;
     createdAt?: any;
-
-    // New fields for shopDue
-    cycleId?: string; // e.g., '2024-01'
+    cycleId?: string;
     entries?: ShopDueEntry[];
 }
 
-// UserProfile to match new structure
 interface UserProfile {
     points?: number;
     joinDate?: string;
     notifiedMilestones?: number[];
     premiumStatus?: 'free' | 'premium';
     premiumPlanId?: string;
-    premiumExpiryDate?: any; // firestore timestamp
-    lastAdWatchDate?: string; // YYYY-MM-DD
-    lastSpinDate?: string; // YYYY-MM-DD
+    premiumExpiryDate?: any;
+    lastAdWatchDate?: string;
+    lastSpinDate?: string;
     spinsToday?: number;
 }
 
@@ -65,7 +60,7 @@ export interface PremiumSubscription {
     planId: string;
     status: 'pending' | 'approved' | 'rejected';
     activatedAt?: any;
-    expiresAt?: any; // Firestore Timestamp
+    expiresAt?: any;
     createdAt: any;
     paymentMethod?: string;
     pointsSpent?: number;
@@ -98,7 +93,7 @@ export interface Referral {
 
 interface CheckInRecord {
     id: string;
-    date: string; // ISO String
+    date: string;
     points: number;
     createdAt: any;
     source?: 'daily-check-in' | 'ad-watch' | 'spin';
@@ -204,50 +199,62 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const { data: checkInsData, isLoading: isCheckInsLoading } = useCollection<CheckInRecord>(checkInsQuery);
     const checkIns = checkInsData ?? [];
     
+    // FETCH FROM SUB-COLLECTION (Private, no permission errors)
     const withdrawalsQuery = useMemoFirebase(() => {
         if (!user || !firestore) return null;
-        return query(collection(firestore, 'withdrawalRequests'), where('userId', '==', user.uid), orderBy("requestedAt", "desc"));
+        return query(collection(firestore, `users/${user.uid}/withdrawalRequests`), orderBy("requestedAt", "desc"));
     }, [user, firestore]);
     const { data: allWithdrawalsData, isLoading: isWithdrawalsLoading } = useCollection<WithdrawalRequest>(withdrawalsQuery);
     const allWithdrawals = allWithdrawalsData ?? [];
     
     
-    // Automatic logic to handle status changes from Firebase Console
+    // SYNC FROM ROOT COLLECTION (Watch specific docs for admin changes in console)
     useEffect(() => {
         if (!user || !firestore || !allWithdrawals) return;
 
-        allWithdrawals.forEach(async (request) => {
-            // Case 1: Withdrawal Rejected by Admin in Console -> Automatic Refund
-            if (request.status === 'rejected' && request.isRefunded === false) {
-                try {
-                    const batch = writeBatch(firestore);
-                    const userRef = doc(firestore, 'users', user.uid);
-                    const requestRef = doc(firestore, 'withdrawalRequests', request.id);
+        const unsubscribes: Unsubscribe[] = [];
 
-                    // Add points back to user
-                    batch.update(userRef, { points: increment(request.points) });
-                    
-                    // Mark as refunded to prevent infinite loop
-                    batch.update(requestRef, { isRefunded: true });
+        allWithdrawals.forEach((localRequest) => {
+            if (localRequest.status === 'pending') {
+                const rootDocRef = doc(firestore, 'withdrawalRequests', localRequest.id);
+                const unsub = onSnapshot(rootDocRef, async (snapshot) => {
+                    if (snapshot.exists()) {
+                        const rootData = snapshot.data() as WithdrawalRequest;
+                        
+                        // If root status changed, sync to sub-collection
+                        if (rootData.status !== localRequest.status) {
+                            const userSubDocRef = doc(firestore, `users/${user.uid}/withdrawalRequests`, localRequest.id);
+                            const batch = writeBatch(firestore);
+                            
+                            batch.update(userSubDocRef, { 
+                                status: rootData.status, 
+                                processedAt: rootData.processedAt || serverTimestamp(),
+                                rejectionReason: rootData.rejectionReason || "" 
+                            });
 
-                    await batch.commit();
+                            // Handle Auto-Refund if Rejected in Console
+                            if (rootData.status === 'rejected' && rootData.isRefunded === false) {
+                                batch.update(userDocRef!, { points: increment(rootData.points) });
+                                batch.update(doc(firestore, 'withdrawalRequests', localRequest.id), { isRefunded: true });
+                                batch.update(userSubDocRef, { isRefunded: true });
 
-                    createNotification({
-                        title: 'উইথড্র বাতিল এবং রিফান্ড',
-                        description: `আপনার উইথড্র অনুরোধটি বাতিল করা হয়েছে এবং ${request.points} পয়েন্ট ফেরত দেওয়া হয়েছে।`,
-                        link: '/withdraw?section=history',
-                    }, user.uid, firestore);
+                                createNotification({
+                                    title: 'উইথড্র বাতিল এবং রিফান্ড',
+                                    description: `আপনার উইথড্র অনুরোধটি বাতিল করা হয়েছে এবং ${rootData.points} পয়েন্ট ফেরত দেওয়া হয়েছে।`,
+                                    link: '/withdraw?section=history',
+                                }, user.uid, firestore);
+                            }
 
-                } catch (e) {
-                    console.error("Auto-refund failed:", e);
-                }
+                            await batch.commit();
+                        }
+                    }
+                });
+                unsubscribes.push(unsub);
             }
-
-            // Case 2: Withdrawal Approved by Admin in Console -> Notify User
-            // Note: We might need a flag to only notify once. For simplicity, we assume 'processedAt' 
-            // is set by admin or just rely on the user seeing the 'approved' status.
         });
-    }, [allWithdrawals, user, firestore]);
+
+        return () => unsubscribes.forEach(u => u());
+    }, [allWithdrawals, user, firestore, userDocRef]);
 
 
      useEffect(() => {
@@ -269,10 +276,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const activateSubscription = useCallback(async (firestore: Firestore, userId: string, subscriptionId: string, planId: string) => {
         const userDocRef = doc(firestore, 'users', userId);
         const plan = premiumPlans.find(p => p.id === planId);
-        if (!plan) {
-            console.error(`Plan with id ${planId} not found.`);
-            return;
-        }
+        if (!plan) return;
 
         const batch = writeBatch(firestore);
         const expiryDate = plan.durationDays ? addDays(new Date(), plan.durationDays) : null;
@@ -287,7 +291,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         batch.update(subRef, {
             activatedAt: serverTimestamp(),
             expiresAt: expiryDate ? expiryDate : null,
-            status: 'approved' // ensure status is approved
+            status: 'approved'
         });
 
         await batch.commit();
@@ -311,7 +315,6 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         const unsubscribe = onSnapshot(q, (snapshot) => {
             snapshot.docs.forEach(subDoc => {
                 const subscriptionData = subDoc.data();
-                // Activate only if it hasn't been activated before
                 if (!subscriptionData.activatedAt) {
                     activateSubscription(firestore, user.uid, subDoc.id, subscriptionData.planId)
                         .catch(err => console.error("Failed to auto-activate subscription:", err));
@@ -319,7 +322,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             });
         });
     
-        return () => unsubscribe(); // Cleanup the listener
+        return () => unsubscribe();
     }, [user, firestore, activateSubscription]);
     
     const { premiumStatus, premiumExpiryDate } = useMemo(() => {
@@ -518,15 +521,9 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             checkIns.forEach(ci => {
                 let sourceText = 'অজানা উৎস';
                 switch (ci.source) {
-                    case 'daily-check-in':
-                        sourceText = 'দৈনিক চেক-ইন';
-                        break;
-                    case 'ad-watch':
-                        sourceText = 'বিজ্ঞাপন দেখা';
-                        break;
-                    case 'spin':
-                        sourceText = 'চাকা ঘোরানো';
-                        break;
+                    case 'daily-check-in': sourceText = 'দৈনিক চেক-ইন'; break;
+                    case 'ad-watch': sourceText = 'বিজ্ঞাপন দেখা'; break;
+                    case 'spin': sourceText = 'চাকা ঘোরানো'; break;
                 }
                 history.push({
                     type: 'earned',
@@ -582,7 +579,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                         source: 'পয়েন্ট রিফান্ড',
                         points: wd.points,
                         date: wd.processedAt.toDate(),
-                        status: 'approved' // To show it as a completed transaction
+                        status: 'approved'
                     });
                 }
             });
@@ -651,14 +648,8 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                     return { success: false, points: 0, message: "আপনি আজকের জন্য আপনার সমস্ত স্পিন ব্যবহার করেছেন।" };
                 }
                 
-                let spinOptions = appConfig?.spinPointsOptions;
-                // Fallback for old/incorrect field name from user's database
-                if (!spinOptions && Array.isArray((appConfig as any)?.adTaskPoints)) {
-                    spinOptions = (appConfig as any).adTaskPoints;
-                }
-
-                const finalSpinOptions = spinOptions && spinOptions.length > 0 ? spinOptions : [5, 10, 15, 20, 25, 30, 40, 50];
-                const points = finalSpinOptions[Math.floor(Math.random() * finalSpinOptions.length)];
+                let spinOptions = appConfig?.spinPointsOptions || [5, 10, 15, 20, 25, 30, 40, 50];
+                const points = spinOptions[Math.floor(Math.random() * spinOptions.length)];
                 
                 const updateData: any = {
                     points: increment(points),
