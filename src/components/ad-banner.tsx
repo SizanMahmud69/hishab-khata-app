@@ -80,7 +80,7 @@ export function AdBanner({ adIndex = 1, variant = 'inline', className }: AdBanne
             key={key}
             ref={adContainerRef}
             className={cn(
-                "flex items-center justify-center my-2 mx-auto bg-transparent",
+                "flex items-center justify-center mx-auto bg-transparent",
                 className
             )}
             style={{ 

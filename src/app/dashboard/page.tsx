@@ -27,7 +27,6 @@ export default function DashboardPage() {
     <>
       {premiumStatus !== 'premium' && <Script src="https://pl28428118.effectivegatecpm.com/0c/22/02/0c220271b2d231c2e61062d769563457.js" />}
       <div className="flex-1 space-y-4">
-        <AdBanner variant="leaderboard" className="mb-4" />
         <div className="grid gap-4 grid-cols-2">
           <OverviewCards />
         </div>
@@ -65,6 +64,7 @@ export default function DashboardPage() {
               <OverviewPieChart />
           </div>
         </div>
+        <AdBanner variant="leaderboard" />
         <div className="grid grid-cols-1 gap-6">
           <RecentTransactions />
         </div>
