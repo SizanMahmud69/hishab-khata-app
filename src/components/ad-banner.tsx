@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { cn } from '@/lib/utils';
 import { useBudget } from '@/context/budget-context';
 
@@ -31,56 +31,39 @@ interface AdBannerProps {
 
 export function AdBanner({ adIndex = 1, variant = 'inline', className }: AdBannerProps) {
     const { premiumStatus } = useBudget();
-    const adContainerRef = useRef<HTMLDivElement>(null);
     const config = adConfigs[variant];
-    const key = `ad-banner-${variant}-${adIndex}`;
 
-    useEffect(() => {
-        if (premiumStatus === 'premium') return;
-
-        const container = adContainerRef.current;
-        if (!container || !config) return;
-
-        container.innerHTML = '';
-
-        const optionsScript = document.createElement('script');
-        optionsScript.type = 'text/javascript';
-        optionsScript.innerHTML = `
-            atOptions = {
-                'key' : '${config.key}',
-                'format' : 'iframe',
-                'height' : ${config.height},
-                'width' : ${config.width},
-                'params' : {}
-            };
-        `;
-
-        const invokeScript = document.createElement('script');
-        invokeScript.type = 'text/javascript';
-        invokeScript.src = `https://www.profitablecreativeformat.com/${config.key}/invoke.js`;
-
-        container.appendChild(optionsScript);
-        container.appendChild(invokeScript);
-
-        return () => {
-            if (container) {
-                container.innerHTML = '';
-            }
-        };
-    }, [key, config, premiumStatus]);
-
-    if (premiumStatus === 'premium') {
+    if (premiumStatus === 'premium' || !config) {
         return null;
     }
 
-    if (!config) return null;
+    const adHtml = `
+        <!DOCTYPE html>
+        <html>
+            <head>
+                <style>
+                    body { margin: 0; padding: 0; overflow: hidden; display: flex; justify-content: center; align-items: center; background: transparent; }
+                </style>
+            </head>
+            <body>
+                <script type="text/javascript">
+                    atOptions = {
+                        'key' : '${config.key}',
+                        'format' : 'iframe',
+                        'height' : ${config.height},
+                        'width' : ${config.width},
+                        'params' : {}
+                    };
+                </script>
+                <script type="text/javascript" src="https://www.profitablecreativeformat.com/${config.key}/invoke.js"></script>
+            </body>
+        </html>
+    `;
 
     return (
         <div 
-            key={key}
-            ref={adContainerRef}
             className={cn(
-                "flex items-center justify-center mx-auto bg-transparent",
+                "flex items-center justify-center mx-auto bg-transparent overflow-hidden my-2",
                 className
             )}
             style={{ 
@@ -89,6 +72,15 @@ export function AdBanner({ adIndex = 1, variant = 'inline', className }: AdBanne
                 maxWidth: `${config.width}px`
             }}
         >
+            <iframe
+                title={`ad-${variant}-${adIndex}`}
+                srcDoc={adHtml}
+                width={config.width}
+                height={config.height}
+                frameBorder="0"
+                scrolling="no"
+                style={{ border: 'none', width: '100%', height: `${config.height}px` }}
+            />
         </div>
     );
 }
