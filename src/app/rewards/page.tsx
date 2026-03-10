@@ -110,11 +110,20 @@ function RewardsPageContent() {
             </CardContent>
         </Card>
       ) : (
-        <Card className="flex flex-col items-center justify-center text-center p-6 text-card-foreground">
-            <Gift className="w-12 h-12 text-primary mb-4" />
-            <CardTitle className="text-lg font-semibold mb-2">অপর্যাপ্ত পয়েন্ট</CardTitle>
-            <CardDescription>
-                উইথড্র করার জন্য আপনার কমপক্ষে {minWithdrawalPoints} পয়েন্ট প্রয়োজন। নিয়মিত অ্যাপ ব্যবহার করে আরও পয়েন্ট অর্জন করুন!
+        <Card className="relative flex flex-col items-center justify-center text-center p-8 text-card-foreground border-dashed border-2">
+            <Button 
+                variant="ghost" 
+                size="sm" 
+                className="absolute top-2 right-2 text-muted-foreground"
+                onClick={() => historyRef.current?.scrollIntoView({ behavior: 'smooth' })}
+            >
+                <History className="h-4 w-4 mr-1" />
+                হিস্টোরি
+            </Button>
+            <Gift className="w-12 h-12 text-primary/40 mb-4" />
+            <CardTitle className="text-lg font-bold mb-2">পয়েন্ট ব্যালেন্স কম</CardTitle>
+            <CardDescription className="max-w-[280px]">
+                উইথড্র করার জন্য কমপক্ষে {minWithdrawalPoints} পয়েন্ট প্রয়োজন। নিয়মিত অ্যাপ ব্যবহার করে আরও পয়েন্ট অর্জন করুন!
             </CardDescription>
         </Card>
       )}

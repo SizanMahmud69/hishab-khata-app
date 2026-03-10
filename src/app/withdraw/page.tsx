@@ -276,11 +276,22 @@ export default function WithdrawPage() {
             </CardContent>
         </Card>
       ) : (
-        <Card className="flex flex-col items-center justify-center h-60 text-card-foreground">
-            <Gift className="w-16 h-16 text-primary mb-4" />
-            <p className="font-semibold text-lg">অপর্যাপ্ত পয়েন্ট</p>
-            <p className="text-muted-foreground">
-                উইথড্র করার জন্য আপনার কমপক্ষে {minWithdrawalPoints} পয়েন্ট প্রয়োজন।
+        <Card className="relative flex flex-col items-center justify-center min-h-[240px] p-6 text-card-foreground border-dashed border-2">
+            <Button 
+                variant="outline" 
+                size="sm" 
+                className="absolute top-3 right-3 flex items-center gap-2"
+                onClick={() => historyRef.current?.scrollIntoView({ behavior: 'smooth' })}
+            >
+                <History className="h-4 w-4" />
+                হিস্টোরি
+            </Button>
+            <div className="bg-primary/10 p-4 rounded-full mb-4">
+                <Gift className="w-10 h-10 text-primary" />
+            </div>
+            <p className="font-bold text-lg">অপর্যাপ্ত পয়েন্ট</p>
+            <p className="text-muted-foreground text-center text-sm max-w-[250px] mt-1">
+                উইথড্র করার জন্য আপনার কমপক্ষে <span className='font-bold text-foreground'>{minWithdrawalPoints}</span> পয়েন্ট প্রয়োজন।
             </p>
         </Card>
       )}
