@@ -206,12 +206,50 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     
     const withdrawalsQuery = useMemoFirebase(() => {
         if (!user || !firestore) return null;
-        return query(collection(firestore, `users/${user.uid}/withdrawalRequests`), orderBy("requestedAt", "desc"));
+        return query(collection(firestore, 'withdrawalRequests'), where('userId', '==', user.uid), orderBy("requestedAt", "desc"));
     }, [user, firestore]);
     const { data: allWithdrawalsData, isLoading: isWithdrawalsLoading } = useCollection<WithdrawalRequest>(withdrawalsQuery);
     const allWithdrawals = allWithdrawalsData ?? [];
     
     
+    // Automatic logic to handle status changes from Firebase Console
+    useEffect(() => {
+        if (!user || !firestore || !allWithdrawals) return;
+
+        allWithdrawals.forEach(async (request) => {
+            // Case 1: Withdrawal Rejected by Admin in Console -> Automatic Refund
+            if (request.status === 'rejected' && request.isRefunded === false) {
+                try {
+                    const batch = writeBatch(firestore);
+                    const userRef = doc(firestore, 'users', user.uid);
+                    const requestRef = doc(firestore, 'withdrawalRequests', request.id);
+
+                    // Add points back to user
+                    batch.update(userRef, { points: increment(request.points) });
+                    
+                    // Mark as refunded to prevent infinite loop
+                    batch.update(requestRef, { isRefunded: true });
+
+                    await batch.commit();
+
+                    createNotification({
+                        title: 'উইথড্র বাতিল এবং রিফান্ড',
+                        description: `আপনার উইথড্র অনুরোধটি বাতিল করা হয়েছে এবং ${request.points} পয়েন্ট ফেরত দেওয়া হয়েছে।`,
+                        link: '/withdraw?section=history',
+                    }, user.uid, firestore);
+
+                } catch (e) {
+                    console.error("Auto-refund failed:", e);
+                }
+            }
+
+            // Case 2: Withdrawal Approved by Admin in Console -> Notify User
+            // Note: We might need a flag to only notify once. For simplicity, we assume 'processedAt' 
+            // is set by admin or just rely on the user seeing the 'approved' status.
+        });
+    }, [allWithdrawals, user, firestore]);
+
+
      useEffect(() => {
         if (user && firestore && referrals && prevReferralsRef.current && referrals.length > prevReferralsRef.current.length) {
             const newReferrals = referrals.filter(r => !prevReferralsRef.current!.some(pr => pr.id === r.id));

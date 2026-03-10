@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { createNotification } from '@/components/app-header';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
-import { doc, collection, serverTimestamp, query, orderBy, writeBatch, increment } from 'firebase/firestore';
+import { doc, collection, serverTimestamp, query, orderBy, writeBatch, increment, where } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { paymentMethods } from '@/lib/data';
@@ -27,10 +27,12 @@ import { AdBanner } from '@/components/ad-banner';
 
 interface UserProfile {
     points?: number;
+    name?: string;
 }
 
 export interface WithdrawalRequest {
     id: string;
+    userId: string;
     status: 'pending' | 'approved' | 'rejected';
     points: number;
     amountBdt: number;
@@ -40,6 +42,7 @@ export interface WithdrawalRequest {
     processedAt?: any;
     rejectionReason?: string;
     isRefunded?: boolean;
+    userName?: string;
 }
 
 export default function WithdrawPage() {
@@ -62,9 +65,14 @@ export default function WithdrawPage() {
     
     const [pointsToWithdraw, setPointsToWithdraw] = useState(rewardPoints);
 
+    // Now fetching from the root collection 'withdrawalRequests' filtered by userId
     const withdrawalHistoryQuery = useMemoFirebase(() => {
         if (!user || !firestore) return null;
-        return query(collection(firestore, `users/${user.uid}/withdrawalRequests`), orderBy("requestedAt", "desc"));
+        return query(
+            collection(firestore, 'withdrawalRequests'), 
+            where('userId', '==', user.uid),
+            orderBy("requestedAt", "desc")
+        );
     }, [user, firestore]);
 
     const { data: history, isLoading: isHistoryLoading } = useCollection<WithdrawalRequest>(withdrawalHistoryQuery);
@@ -125,11 +133,13 @@ export default function WithdrawPage() {
         try {
             const batch = writeBatch(firestore);
             
-            const userWithdrawalRef = doc(collection(firestore, `users/${user.uid}/withdrawalRequests`));
+            // Generate a unique ID for the withdrawal request in the root collection
+            const rootWithdrawalRef = doc(collection(firestore, 'withdrawalRequests'));
             
-            const requestData = {
-                id: userWithdrawalRef.id,
+            const requestData: WithdrawalRequest = {
+                id: rootWithdrawalRef.id,
                 userId: user.uid,
+                userName: userProfile?.name || user.displayName || 'Unknown User',
                 status: 'pending',
                 points: pointsToDeduct,
                 amountBdt: withdrawnTkAmount,
@@ -139,8 +149,10 @@ export default function WithdrawPage() {
                 isRefunded: false,
             };
             
-            batch.set(userWithdrawalRef, requestData);
+            // Set data in root collection for admin console visibility
+            batch.set(rootWithdrawalRef, requestData);
 
+            // Deduct points from user's profile
             batch.update(userDocRef, { points: increment(-pointsToDeduct) });
 
             await batch.commit();
@@ -156,7 +168,7 @@ export default function WithdrawPage() {
                 description: `আপনার উইথড্র অনুরোধ সফল হয়েছে। ${pointsToDeduct} পয়েন্ট আপনার অ্যাকাউন্ট থেকে কেটে নেওয়া হয়েছে।`,
             });
             
-            setPointsToWithdraw(rewardPoints - pointsToDeduct);
+            setPointsToWithdraw(0);
 
         } catch (error) {
             console.error("Withdrawal error: ", error);
