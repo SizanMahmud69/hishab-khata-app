@@ -3,9 +3,56 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow read/write access to all documents to prevent permission errors as requested
+    // রুট কালেকশন: উইথড্র রিকোয়েস্ট (কনসোলের জন্য)
+    match /withdrawalRequests/{requestId} {
+      allow read, create: if request.auth != null;
+      allow update, delete: if true; // কনসোল থেকে পরিবর্তনের অনুমতি
+    }
+
+    // ইউজার ডেটা এবং তাদের নিজস্ব সাব-কালেকশন
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // ইউজারের নিজস্ব উইথড্র হিস্টোরি
+      match /withdrawalRequests/{requestId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      match /notifications/{id} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      match /transactions/{id} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      match /debtNotes/{id} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      match /referrals/{id} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if false; 
+      }
+      
+      match /checkIns/{id} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      match /premium_subscriptions/{id} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // অ্যাপ কনফিগারেশন (সবার জন্য রিড-অনলি)
+    match /app_config/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ডিফল্ট ফলব্যাক
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if request.auth != null;
     }
   }
 }

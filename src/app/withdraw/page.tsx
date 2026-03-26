@@ -63,9 +63,16 @@ export default function WithdrawPage() {
     const { data: userProfile, isLoading: isUserLoading } = useDoc<UserProfile>(userDocRef);
     const rewardPoints = userProfile?.points ?? 0;
     
-    const [pointsToWithdraw, setPointsToWithdraw] = useState(rewardPoints);
+    const [pointsToWithdraw, setPointsToWithdraw] = useState(0);
 
-    // Primary history source is the user's private sub-collection to avoid permission errors
+    // Initial value for slider
+    useEffect(() => {
+        if (rewardPoints >= minWithdrawalPoints && pointsToWithdraw === 0) {
+            setPointsToWithdraw(rewardPoints);
+        }
+    }, [rewardPoints, minWithdrawalPoints, pointsToWithdraw]);
+
+    // History from private sub-collection
     const withdrawalHistoryQuery = useMemoFirebase(() => {
         if (!user || !firestore) return null;
         return query(
@@ -99,6 +106,17 @@ export default function WithdrawPage() {
         event.preventDefault();
         if (!user || !firestore || !userDocRef) return;
         
+        const pointsToDeduct = Math.floor(pointsToWithdraw / 100) * 100;
+        
+        if (pointsToDeduct < minWithdrawalPoints) {
+             toast({
+                variant: "destructive",
+                title: "অপর্যাপ্ত পয়েন্ট",
+                description: `উইথড্র করার জন্য কমপক্ষে ${minWithdrawalPoints} পয়েন্ট প্রয়োজন।`,
+            });
+            return;
+        }
+
         setIsSubmitting(true);
 
         const formData = new FormData(event.currentTarget);
@@ -114,37 +132,24 @@ export default function WithdrawPage() {
             setIsSubmitting(false);
             return;
         }
-        
-        const pointsToDeduct = Math.floor(pointsToWithdraw / 100) * 100;
-        
-        if (pointsToDeduct < minWithdrawalPoints) {
-             toast({
-                variant: "destructive",
-                title: "অপর্যাপ্ত পয়েন্ট",
-                description: `উইথড্র করার জন্য কমপক্ষে ${minWithdrawalPoints} পয়েন্ট প্রয়োজন।`,
-            });
-            setIsSubmitting(false);
-            return;
-        }
 
         const withdrawnTkAmount = (pointsToDeduct / 100) * bdtPer100Points;
         
         try {
             const batch = writeBatch(firestore);
             
-            // Unique ID for the request
-            const requestId = doc(collection(firestore, 'withdrawalRequests')).id;
+            // Unique ID from root collection
+            const requestsRef = collection(firestore, 'withdrawalRequests');
+            const newRootDocRef = doc(requestsRef);
+            const requestId = newRootDocRef.id;
             
-            // Root collection reference (for Admin Console)
-            const rootWithdrawalRef = doc(firestore, 'withdrawalRequests', requestId);
-            
-            // User sub-collection reference (for App History - Safe from permission errors)
+            // User sub-collection reference
             const userSubWithdrawalRef = doc(firestore, `users/${user.uid}/withdrawalRequests`, requestId);
             
             const requestData: WithdrawalRequest = {
                 id: requestId,
                 userId: user.uid,
-                userName: userProfile?.name || user.displayName || 'Unknown User',
+                userName: userProfile?.name || user.displayName || 'ব্যবহারকারী',
                 status: 'pending',
                 points: pointsToDeduct,
                 amountBdt: withdrawnTkAmount,
@@ -154,16 +159,16 @@ export default function WithdrawPage() {
                 isRefunded: false,
             };
             
-            // Write to both locations
-            batch.set(rootWithdrawalRef, requestData);
+            // Write to both root and sub-collection
+            batch.set(newRootDocRef, requestData);
             batch.set(userSubWithdrawalRef, requestData);
 
-            // Deduct points from user's profile
+            // Deduct points from user's main profile
             batch.update(userDocRef, { points: increment(-pointsToDeduct) });
 
             await batch.commit();
 
-            createNotification({
+            await createNotification({
                 title: "উইথড্র অনুরোধ সফল হয়েছে",
                 description: `${pointsToDeduct} পয়েন্টের বিনিময়ে ${withdrawnTkAmount} টাকা পাঠানোর অনুরোধ প্রক্রিয়াধীন আছে।`,
                 link: "/withdraw?section=history",
@@ -176,12 +181,12 @@ export default function WithdrawPage() {
             
             setPointsToWithdraw(0);
 
-        } catch (error) {
+        } catch (error: any) {
             console.error("Withdrawal error: ", error);
             toast({
                 variant: "destructive",
                 title: "ত্রুটি",
-                description: "আপনার উইথড্র অনুরোধ প্রক্রিয়া করার সময় একটি সমস্যা হয়েছে।",
+                description: "আপনার উইথড্র অনুরোধ প্রক্রিয়া করার সময় একটি সমস্যা হয়েছে। অনুগ্রহ করে ইন্টারনেট সংযোগ চেক করে আবার চেষ্টা করুন।",
             });
         } finally {
             setIsSubmitting(false);
@@ -223,7 +228,7 @@ export default function WithdrawPage() {
       <PageHeader title="পয়েন্ট উইথড্র" description="আপনার অর্জিত পয়েন্ট টাকাতে রূপান্তর করুন।" />
       
       {canWithdraw ? (
-        <Card className="border-primary">
+        <Card className="border-primary shadow-sm">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <Banknote className="text-primary" />
@@ -285,7 +290,7 @@ export default function WithdrawPage() {
             </CardContent>
         </Card>
       ) : (
-        <Card className="relative flex flex-col items-center justify-center min-h-[240px] p-6 text-card-foreground border-dashed border-2">
+        <Card className="relative flex flex-col items-center justify-center min-h-[240px] p-6 text-card-foreground border-dashed border-2 bg-muted/30">
             <Button 
                 variant="outline" 
                 size="sm" 
@@ -305,7 +310,7 @@ export default function WithdrawPage() {
         </Card>
       )}
 
-      <Card ref={historyRef}>
+      <Card ref={historyRef} className="shadow-sm">
         <CardHeader>
             <CardTitle className='flex items-center gap-2'>
                 <History className='w-5 h-5' />
@@ -317,54 +322,56 @@ export default function WithdrawPage() {
             {isHistoryLoading ? <Skeleton className="h-40 w-full" /> : 
             history && history.length > 0 ? (
                 <TooltipProvider>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>তারিখ</TableHead>
-                                <TableHead>মাধ্যম</TableHead>
-                                <TableHead>পয়েন্ট</TableHead>
-                                <TableHead>টাকা</TableHead>
-                                <TableHead className='text-right'>স্ট্যাটাস</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {history.map((req, index) => (
-                                <Fragment key={req.id}>
-                                    <TableRow>
-                                        <TableCell className='font-medium'>
-                                            {req.requestedAt ? format(req.requestedAt.toDate(), "d MMM, yyyy", { locale: bn }) : '-'}
-                                        </TableCell>
-                                        <TableCell>{req.paymentMethod}</TableCell>
-                                        <TableCell className='text-muted-foreground'>{req.points}</TableCell>
-                                        <TableCell className='font-semibold'>{formatCurrency(req.amountBdt)}</TableCell>
-                                        <TableCell className='text-right flex justify-end items-center gap-2'>
-                                            {getStatusBadge(req.status)}
-                                            {req.status === 'rejected' && req.rejectionReason && (
-                                                <Tooltip>
-                                                    <TooltipTrigger>
-                                                        <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>{req.rejectionReason}</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            )}
-                                        </TableCell>
-                                    </TableRow>
-                                    {(index + 1) % 5 === 0 && (
+                    <div className="overflow-x-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>তারিখ</TableHead>
+                                    <TableHead>মাধ্যম</TableHead>
+                                    <TableHead>পয়েন্ট</TableHead>
+                                    <TableHead>টাকা</TableHead>
+                                    <TableHead className='text-right'>স্ট্যাটাস</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {history.map((req, index) => (
+                                    <Fragment key={req.id}>
                                         <TableRow>
-                                            <TableCell colSpan={5} className="p-0">
-                                                <AdBanner adIndex={(index + 1) / 5} />
+                                            <TableCell className='font-medium whitespace-nowrap'>
+                                                {req.requestedAt ? format(req.requestedAt.toDate(), "d MMM, yyyy", { locale: bn }) : '-'}
+                                            </TableCell>
+                                            <TableCell>{req.paymentMethod}</TableCell>
+                                            <TableCell className='text-muted-foreground'>{req.points}</TableCell>
+                                            <TableCell className='font-semibold whitespace-nowrap'>{formatCurrency(req.amountBdt)}</TableCell>
+                                            <TableCell className='text-right flex justify-end items-center gap-2'>
+                                                {getStatusBadge(req.status)}
+                                                {req.status === 'rejected' && req.rejectionReason && (
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>{req.rejectionReason}</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                )}
                                             </TableCell>
                                         </TableRow>
-                                    )}
-                                </Fragment>
-                            ))}
-                        </TableBody>
-                    </Table>
+                                        {(index + 1) % 5 === 0 && (
+                                            <TableRow>
+                                                <TableCell colSpan={5} className="p-0">
+                                                    <AdBanner adIndex={(index + 1) / 5} />
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </Fragment>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </TooltipProvider>
             ) : (
-                <p className='text-sm text-muted-foreground text-center py-4'>কোনো হিস্টোরি পাওয়া যায়নি।</p>
+                <p className='text-sm text-muted-foreground text-center py-10'>এখনও কোনো উইথড্র হিস্টোরি পাওয়া যায়নি।</p>
             )}
         </CardContent>
       </Card>
