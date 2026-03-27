@@ -210,58 +210,53 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const allWithdrawals = allWithdrawalsData ?? [];
     
     
-    // SYNC FROM ROOT COLLECTION
+    // REFRESH REFUND LOGIC: Monitor user's sub-collection for rejections from Console
     useEffect(() => {
         if (!user?.uid || !firestore || !allWithdrawals || allWithdrawals.length === 0 || !userDocRef) return;
 
-        const unsubscribes: Unsubscribe[] = [];
-
-        allWithdrawals.forEach((localRequest) => {
-            // Only listen to pending requests to catch status changes from the console
-            if (localRequest.status === 'pending' && localRequest.id) {
-                const rootDocRef = doc(firestore, 'withdrawalRequests', localRequest.id);
-                
-                const unsub = onSnapshot(rootDocRef, async (snapshot) => {
-                    if (!snapshot.exists()) return;
+        const handleStatusChange = async (req: WithdrawalRequest) => {
+            // Only process if status is rejected and not already refunded locally
+            if (req.status === 'rejected' && req.isRefunded === false) {
+                try {
+                    const batch = writeBatch(firestore);
+                    const userSubDocRef = doc(firestore, `users/${user.uid}/withdrawalRequests`, req.id);
                     
-                    const rootData = snapshot.data() as WithdrawalRequest;
-                    if (rootData.status !== localRequest.status) {
-                        try {
-                            const userSubDocRef = doc(firestore, `users/${user.uid}/withdrawalRequests`, localRequest.id);
-                            const batch = writeBatch(firestore);
-                            
-                            batch.update(userSubDocRef, { 
-                                status: rootData.status, 
-                                processedAt: rootData.processedAt || serverTimestamp(),
-                                rejectionReason: rootData.rejectionReason || "" 
-                            });
+                    // Mark as refunded locally first to prevent loops
+                    batch.update(userSubDocRef, { isRefunded: true, processedAt: serverTimestamp() });
+                    // Refund the points to the user profile
+                    batch.update(userDocRef, { points: increment(req.points) });
 
-                            // Auto-Refund logic for console rejections
-                            if (rootData.status === 'rejected' && rootData.isRefunded === false) {
-                                batch.update(userDocRef!, { points: increment(rootData.points) });
-                                batch.update(doc(firestore, 'withdrawalRequests', localRequest.id), { isRefunded: true });
-                                batch.update(userSubDocRef, { isRefunded: true });
+                    await batch.commit();
 
-                                await createNotification({
-                                    title: 'উইথড্র বাতিল এবং রিফান্ড',
-                                    description: `আপনার উইথড্র অনুরোধটি বাতিল করা হয়েছে এবং ${rootData.points} পয়েন্ট ফেরত দেওয়া হয়েছে।`,
-                                    link: '/withdraw?section=history',
-                                }, user.uid, firestore);
-                            }
+                    await createNotification({
+                        title: 'উইথড্র বাতিল এবং রিফান্ড',
+                        description: `আপনার উইথড্র অনুরোধটি বাতিল করা হয়েছে এবং ${req.points} পয়েন্ট ফেরত দেওয়া হয়েছে।`,
+                        link: '/withdraw?section=history',
+                    }, user.uid, firestore);
+                } catch (e) {
+                    console.error("Client-side refund failed:", e);
+                }
+            } else if (req.status === 'approved' && !req.processedAt) {
+                // If admin marks as approved in console, just update processing timestamp
+                try {
+                    const userSubDocRef = doc(firestore, `users/${user.uid}/withdrawalRequests`, req.id);
+                    await updateDoc(userSubDocRef, { processedAt: serverTimestamp() });
+                    
+                    await createNotification({
+                        title: 'উইথড্র সফল হয়েছে',
+                        description: `আপনার ${req.amountBdt} টাকার উইথড্র অনুরোধটি সম্পন্ন হয়েছে।`,
+                        link: '/rewards',
+                    }, user.uid, firestore);
+                } catch (e) {}
+            }
+        };
 
-                            await batch.commit();
-                        } catch (e) {
-                            // Suppress errors during auth state transitions or rule propagation
-                        }
-                    }
-                }, (error) => {
-                    // Suppress harmless permission-denied errors during state transitions
-                });
-                unsubscribes.push(unsub);
+        allWithdrawals.forEach(req => {
+            if (req.status !== 'pending' && (!req.processedAt || req.isRefunded === false)) {
+                handleStatusChange(req);
             }
         });
 
-        return () => unsubscribes.forEach(u => u());
     }, [allWithdrawals, user?.uid, firestore, userDocRef]);
 
 

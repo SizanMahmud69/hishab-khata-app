@@ -3,17 +3,7 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Root Collection: withdrawalRequests (For Console Management)
-    match /withdrawalRequests/{requestId} {
-      // Allow any authenticated user to create a withdrawal request
-      allow create: if request.auth != null;
-      // Allow a user to read their own request if it exists and matches their UID
-      allow read: if request.auth != null && (resource == null || resource.data.userId == request.auth.uid);
-      // Allow updates/deletes for admin management via console
-      allow update, delete: if true; 
-    }
-
-    // User Data and Sub-collections
+    // Basic user protection: Users can only read and write their own data
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
       
@@ -23,10 +13,10 @@ service cloud.firestore {
       }
     }
 
-    // App Config (Publicly Readable)
+    // App Config (Publicly Readable for global settings)
     match /app_config/{docId} {
       allow read: if true;
-      allow write: if false;
+      allow write: if false; 
     }
 
     // Default Fallback (Authenticated only)

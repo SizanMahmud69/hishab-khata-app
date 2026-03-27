@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { createNotification } from '@/components/app-header';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
-import { doc, collection, serverTimestamp, query, orderBy, writeBatch, increment, where } from 'firebase/firestore';
+import { doc, collection, serverTimestamp, query, orderBy, writeBatch, increment } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { paymentMethods } from '@/lib/data';
@@ -138,13 +138,10 @@ export default function WithdrawPage() {
         try {
             const batch = writeBatch(firestore);
             
-            // Generate a single ID for both locations
-            const requestsRef = collection(firestore, 'withdrawalRequests');
-            const newRootDocRef = doc(requestsRef);
-            const requestId = newRootDocRef.id;
-            
-            // User sub-collection reference
-            const userSubWithdrawalRef = doc(firestore, `users/${user.uid}/withdrawalRequests`, requestId);
+            // Generate a single ID for the user's sub-collection only
+            const userSubCollectionRef = collection(firestore, `users/${user.uid}/withdrawalRequests`);
+            const newDocRef = doc(userSubCollectionRef);
+            const requestId = newDocRef.id;
             
             const requestData: WithdrawalRequest = {
                 id: requestId,
@@ -159,9 +156,8 @@ export default function WithdrawPage() {
                 isRefunded: false,
             };
             
-            // Write to root and sub-collection simultaneously
-            batch.set(newRootDocRef, requestData);
-            batch.set(userSubWithdrawalRef, requestData);
+            // Only write to the user's private sub-collection to avoid permission issues
+            batch.set(newDocRef, requestData);
 
             // Deduct points from user's main profile
             batch.update(userDocRef, { points: increment(-pointsToDeduct) });
@@ -186,7 +182,7 @@ export default function WithdrawPage() {
             toast({
                 variant: "destructive",
                 title: "উইথড্র ব্যর্থ হয়েছে",
-                description: "পারমিশন বা অন্য কোনো কারণে রিকোয়েস্ট জমা দেওয়া যায়নি। আবার চেষ্টা করুন।",
+                description: "অনুরোধ জমা দেওয়া যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।",
             });
         } finally {
             setIsSubmitting(false);
