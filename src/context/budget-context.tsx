@@ -225,9 +225,9 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const { data: allWithdrawalsData, isLoading: isWithdrawalsLoading } = useCollection<WithdrawalRequest>(withdrawalsQuery);
     const allWithdrawals = allWithdrawalsData ?? [];
     
-    // Auto-seed missing configurations if admin is logged in
+    // Auto-seed missing configurations for any logged in user if they don't exist
     useEffect(() => {
-        if (!user || !firestore || user.email !== 'hisabkhata.maintanance@gmail.com') return;
+        if (!user || !firestore) return;
 
         const seedMissingConfigs = async () => {
             try {
@@ -266,7 +266,8 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                     console.log("Settings config seeded successfully.");
                 }
             } catch (error) {
-                console.error("Error seeding configs:", error);
+                // Creation might fail if doc already exists or permission denied
+                console.error("Config check/seeding status:", error);
             }
         };
 
