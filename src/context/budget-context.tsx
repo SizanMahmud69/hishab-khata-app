@@ -199,54 +199,70 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const { data: checkInsData, isLoading: isCheckInsLoading } = useCollection<CheckInRecord>(checkInsQuery);
     const checkIns = checkInsData ?? [];
     
-    // FETCH FROM SUB-COLLECTION (Private, no permission errors)
+    // FETCH FROM SUB-COLLECTION (Private, owner-only)
     const withdrawalsQuery = useMemoFirebase(() => {
         if (!user || !firestore) return null;
-        return query(collection(firestore, `users/${user.uid}/withdrawalRequests`), orderBy("requestedAt", "desc"));
+        return query(
+            collection(firestore, `users/${user.uid}/withdrawalRequests`), 
+            orderBy("requestedAt", "desc")
+        );
     }, [user, firestore]);
     const { data: allWithdrawalsData, isLoading: isWithdrawalsLoading } = useCollection<WithdrawalRequest>(withdrawalsQuery);
     const allWithdrawals = allWithdrawalsData ?? [];
     
     
-    // SYNC FROM ROOT COLLECTION (Watch specific docs for admin changes in console)
+    // SYNC FROM ROOT COLLECTION (Safely watch for console changes)
     useEffect(() => {
-        if (!user || !firestore || !allWithdrawals) return;
+        // Ensure user is truly authenticated and data is ready before setting up doc-level listeners
+        if (!user?.uid || !firestore || !allWithdrawals || !userDocRef) return;
 
         const unsubscribes: Unsubscribe[] = [];
 
         allWithdrawals.forEach((localRequest) => {
-            if (localRequest.status === 'pending') {
+            // Only listen to pending requests to catch status changes
+            if (localRequest.status === 'pending' && localRequest.id) {
                 const rootDocRef = doc(firestore, 'withdrawalRequests', localRequest.id);
+                
+                // Add error handling to prevent "Uncaught Error in snapshot listener"
                 const unsub = onSnapshot(rootDocRef, async (snapshot) => {
                     if (snapshot.exists()) {
                         const rootData = snapshot.data() as WithdrawalRequest;
                         
                         // If root status changed, sync to sub-collection
                         if (rootData.status !== localRequest.status) {
-                            const userSubDocRef = doc(firestore, `users/${user.uid}/withdrawalRequests`, localRequest.id);
-                            const batch = writeBatch(firestore);
-                            
-                            batch.update(userSubDocRef, { 
-                                status: rootData.status, 
-                                processedAt: rootData.processedAt || serverTimestamp(),
-                                rejectionReason: rootData.rejectionReason || "" 
-                            });
+                            try {
+                                const userSubDocRef = doc(firestore, `users/${user.uid}/withdrawalRequests`, localRequest.id);
+                                const batch = writeBatch(firestore);
+                                
+                                batch.update(userSubDocRef, { 
+                                    status: rootData.status, 
+                                    processedAt: rootData.processedAt || serverTimestamp(),
+                                    rejectionReason: rootData.rejectionReason || "" 
+                                });
 
-                            // Handle Auto-Refund if Rejected in Console
-                            if (rootData.status === 'rejected' && rootData.isRefunded === false) {
-                                batch.update(userDocRef!, { points: increment(rootData.points) });
-                                batch.update(doc(firestore, 'withdrawalRequests', localRequest.id), { isRefunded: true });
-                                batch.update(userSubDocRef, { isRefunded: true });
+                                // Handle Auto-Refund if Rejected in Console
+                                if (rootData.status === 'rejected' && rootData.isRefunded === false) {
+                                    batch.update(userDocRef!, { points: increment(rootData.points) });
+                                    batch.update(doc(firestore, 'withdrawalRequests', localRequest.id), { isRefunded: true });
+                                    batch.update(userSubDocRef, { isRefunded: true });
 
-                                createNotification({
-                                    title: 'উইথড্র বাতিল এবং রিফান্ড',
-                                    description: `আপনার উইথড্র অনুরোধটি বাতিল করা হয়েছে এবং ${rootData.points} পয়েন্ট ফেরত দেওয়া হয়েছে।`,
-                                    link: '/withdraw?section=history',
-                                }, user.uid, firestore);
+                                    await createNotification({
+                                        title: 'উইথড্র বাতিল এবং রিফান্ড',
+                                        description: `আপনার উইথড্র অনুরোধটি বাতিল করা হয়েছে এবং ${rootData.points} পয়েন্ট ফেরত দেওয়া হয়েছে।`,
+                                        link: '/withdraw?section=history',
+                                    }, user.uid, firestore);
+                                }
+
+                                await batch.commit();
+                            } catch (e) {
+                                console.error("Error syncing withdrawal status:", e);
                             }
-
-                            await batch.commit();
                         }
+                    }
+                }, (error) => {
+                    // Suppress permission errors if they happen during auth transition
+                    if (error.code !== 'permission-denied') {
+                        console.error("Root withdrawal listener error:", error);
                     }
                 });
                 unsubscribes.push(unsub);
@@ -254,7 +270,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         });
 
         return () => unsubscribes.forEach(u => u());
-    }, [allWithdrawals, user, firestore, userDocRef]);
+    }, [allWithdrawals, user?.uid, firestore, userDocRef]);
 
 
      useEffect(() => {
@@ -320,6 +336,10 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                         .catch(err => console.error("Failed to auto-activate subscription:", err));
                 }
             });
+        }, (error) => {
+            if (error.code !== 'permission-denied') {
+                console.error("Premium subscription listener error:", error);
+            }
         });
     
         return () => unsubscribe();

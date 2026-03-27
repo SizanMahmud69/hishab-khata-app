@@ -3,17 +3,21 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // রুট কালেকশন: উইথড্র রিকোয়েস্ট (কনসোলের জন্য)
+    // Root Collection: withdrawalRequests (For Console Management)
     match /withdrawalRequests/{requestId} {
-      allow read, create: if request.auth != null;
-      allow update, delete: if true; // কনসোল থেকে পরিবর্তনের অনুমতি
+      // Allow any authenticated user to create a request
+      allow create: if request.auth != null;
+      // Allow a user to read their own request from root OR if it doesn't exist yet
+      allow read: if request.auth != null && (resource == null || resource.data.userId == request.auth.uid);
+      // Allow updates (for console status changes)
+      allow update, delete: if true; 
     }
 
-    // ইউজার ডেটা এবং তাদের নিজস্ব সাব-কালেকশন
+    // User Data and Sub-collections
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
       
-      // ইউজারের নিজস্ব উইথড্র হিস্টোরি
+      // Explicit rules for nested sub-collections to ensure path-based access
       match /withdrawalRequests/{requestId} {
         allow read, write: if request.auth != null && request.auth.uid == userId;
       }
@@ -42,15 +46,19 @@ service cloud.firestore {
       match /premium_subscriptions/{id} {
         allow read, write: if request.auth != null && request.auth.uid == userId;
       }
+
+      match /verificationRequests/{id} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
     }
 
-    // অ্যাপ কনফিগারেশন (সবার জন্য রিড-অনলি)
+    // App Config (Publicly Readable)
     match /app_config/{docId} {
       allow read: if true;
       allow write: if false;
     }
 
-    // ডিফল্ট ফলব্যাক
+    // Default Fallback (Authenticated only)
     match /{document=**} {
       allow read, write: if request.auth != null;
     }
