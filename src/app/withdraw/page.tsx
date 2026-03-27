@@ -138,7 +138,7 @@ export default function WithdrawPage() {
         try {
             const batch = writeBatch(firestore);
             
-            // Unique ID from root collection
+            // Generate a single ID for both locations
             const requestsRef = collection(firestore, 'withdrawalRequests');
             const newRootDocRef = doc(requestsRef);
             const requestId = newRootDocRef.id;
@@ -159,7 +159,7 @@ export default function WithdrawPage() {
                 isRefunded: false,
             };
             
-            // Write to both root and sub-collection
+            // Write to root and sub-collection simultaneously
             batch.set(newRootDocRef, requestData);
             batch.set(userSubWithdrawalRef, requestData);
 
@@ -185,8 +185,8 @@ export default function WithdrawPage() {
             console.error("Withdrawal error: ", error);
             toast({
                 variant: "destructive",
-                title: "ত্রুটি",
-                description: "আপনার উইথড্র অনুরোধ প্রক্রিয়া করার সময় একটি সমস্যা হয়েছে। অনুগ্রহ করে ইন্টারনেট সংযোগ চেক করে আবার চেষ্টা করুন।",
+                title: "উইথড্র ব্যর্থ হয়েছে",
+                description: "পারমিশন বা অন্য কোনো কারণে রিকোয়েস্ট জমা দেওয়া যায়নি। আবার চেষ্টা করুন।",
             });
         } finally {
             setIsSubmitting(false);
