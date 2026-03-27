@@ -1,37 +1,45 @@
 
 "use client";
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { useBudget } from '@/context/budget-context';
 
-const adConfigs = {
-    inline: {
-        key: '3ba7137cf83e3b9991ea29595a11120e',
-        height: 50,
-        width: 320,
-    },
-    square: {
-        key: '743a0dc9bc3be759b21e51982c52beb6',
-        height: 250,
-        width: 300,
-    },
-    leaderboard: {
-        key: '18077c532637bbe2ddcab04535aa15bf',
-        height: 60,
-        width: 468,
-    },
-};
-
 interface AdBannerProps {
     adIndex?: number;
-    variant?: keyof typeof adConfigs;
+    variant?: 'inline' | 'square' | 'leaderboard';
     className?: string;
 }
 
 export function AdBanner({ adIndex = 1, variant = 'inline', className }: AdBannerProps) {
-    const { premiumStatus } = useBudget();
-    const config = adConfigs[variant];
+    const { premiumStatus, adConfig } = useBudget();
+
+    const config = useMemo(() => {
+        if (!adConfig) return null;
+        
+        switch (variant) {
+            case 'inline':
+                return {
+                    key: adConfig.inlineKey || '3ba7137cf83e3b9991ea29595a11120e',
+                    height: 50,
+                    width: 320,
+                };
+            case 'square':
+                return {
+                    key: adConfig.squareKey || '743a0dc9bc3be759b21e51982c52beb6',
+                    height: 250,
+                    width: 300,
+                };
+            case 'leaderboard':
+                return {
+                    key: adConfig.leaderboardKey || '18077c532637bbe2ddcab04535aa15bf',
+                    height: 60,
+                    width: 468,
+                };
+            default:
+                return null;
+        }
+    }, [variant, adConfig]);
 
     if (premiumStatus === 'premium' || !config) {
         return null;

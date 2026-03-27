@@ -10,13 +10,10 @@ import { Film, RefreshCw, Loader2 } from "lucide-react";
 import { useBudget } from "@/context/budget-context";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { AdBanner } from '@/components/ad-banner';
-
-const pointValues = [5, 10, 15, 20, 25, 30, 40, 50];
 
 export default function PointIncomePage() {
     const { toast } = useToast();
-    const { awardPointsForTask, canWatchAd, remainingSpins, isTaskLoading } = useBudget();
+    const { awardPointsForTask, canWatchAd, remainingSpins, isTaskLoading, adConfig } = useBudget();
     const [isSpinning, setIsSpinning] = useState(false);
     const [spinResult, setSpinResult] = useState<number | null>(null);
     const [isAdDialogOpen, setIsAdDialogOpen] = useState(false);
@@ -54,7 +51,8 @@ export default function PointIncomePage() {
 
         // For the first spin, show an ad and return.
         if (remainingSpins === 2 && !adForSpinShown) {
-            window.open('https://www.effectivegatecpm.com/esdyih69?key=7f8888474725ab0962c50482d2412b06', '_blank');
+            const spinAdUrl = adConfig?.spinDirectLink || 'https://www.effectivegatecpm.com/esdyih69?key=7f8888474725ab0962c50482d2412b06';
+            window.open(spinAdUrl, '_blank');
             setAdForSpinShown(true);
             toast({
                 title: "বিজ্ঞাপন দেখানো হয়েছে",
@@ -122,7 +120,7 @@ export default function PointIncomePage() {
                                 </DialogHeader>
                                 <div className="flex items-center justify-center rounded-md overflow-hidden aspect-square mx-auto w-full max-w-[300px]">
                                     <iframe
-                                        src="https://www.effectivegatecpm.com/asn6e88m1?key=f54f7591b556a8df09aa30fadc35caac"
+                                        src={adConfig?.rewardedIframeUrl || "https://www.effectivegatecpm.com/asn6e88m1?key=f54f7591b556a8df09aa30fadc35caac"}
                                         width="300"
                                         height="250"
                                         scrolling="no"
@@ -189,5 +187,3 @@ export default function PointIncomePage() {
         </div>
     );
 }
-
-    

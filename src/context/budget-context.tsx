@@ -82,6 +82,15 @@ interface AppConfig {
     };
 }
 
+export interface AdConfig {
+    socialBarScriptUrl: string;
+    inlineKey: string;
+    squareKey: string;
+    leaderboardKey: string;
+    spinDirectLink: string;
+    rewardedIframeUrl: string;
+}
+
 export interface Referral {
     id: string;
     userId: string;
@@ -138,6 +147,7 @@ interface BudgetContextType {
     remainingSpins: number;
     isTaskLoading: boolean;
     globalPopup: AppConfig['globalPopup'] | null;
+    adConfig: AdConfig | null;
 }
 
 const BudgetContext = createContext<BudgetContextType | undefined>(undefined);
@@ -184,6 +194,12 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         return doc(firestore, 'app_config', 'settings');
     }, [firestore]);
     const { data: appConfig, isLoading: isConfigLoading } = useDoc<AppConfig>(appConfigRef);
+
+    const adConfigRef = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return doc(firestore, 'app_config', 'ads');
+    }, [firestore]);
+    const { data: adConfig, isLoading: isAdConfigLoading } = useDoc<AdConfig>(adConfigRef);
 
     const subscriptionsQuery = useMemoFirebase(() => {
         if (!user || !firestore) return null;
@@ -692,7 +708,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     }, [user, userDocRef, firestore, appConfig]);
 
 
-    const isLoading = isUserLoading || isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || isSubscriptionsLoading || isCheckInsLoading || areReferralsLoading || isWithdrawalsLoading;
+    const isLoading = isUserLoading || isUserDocLoading || areTransactionsLoading || areDebtNotesLoading || isConfigLoading || isSubscriptionsLoading || isCheckInsLoading || areReferralsLoading || isWithdrawalsLoading || isAdConfigLoading;
 
     const contextValue = useMemo(() => ({
         transactions, 
@@ -724,6 +740,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         remainingSpins,
         isTaskLoading,
         globalPopup,
+        adConfig,
     }), [
         transactions, debtNotes, referrals, pointHistory,
         totalIncome, totalExpense, totalSavings,
@@ -731,7 +748,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         isLoading, premiumStatus, premiumExpiryDate, userProfile, premiumSubscriptions, 
         pendingSubscriptionPlanIds, activePremiumPlan, isSubscriptionsLoading, hasUsedFreeTrial,
         addTransaction, addDebtNote, updateDebtNote, awardPointsForTask, canWatchAd, remainingSpins, isTaskLoading,
-        globalPopup,
+        globalPopup, adConfig,
     ]);
 
 
