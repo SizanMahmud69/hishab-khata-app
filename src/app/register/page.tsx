@@ -155,10 +155,10 @@ function RegisterPageContent() {
             });
         }
         
-        // Ensure app_config exists
+        // Ensure app_config exists (Note: will only work if admin registers or via rules exception)
         const configDocRef = doc(firestore, "app_config", "settings");
         const configDocSnap = await getDoc(configDocRef);
-        if (!configDocSnap.exists()) {
+        if (!configDocSnap.exists() && user.email === 'hisabkhata.maintanance@gmail.com') {
           userBatch.set(configDocRef, {
             minWithdrawalPoints: 1000,
             referrerBonusPoints: 100,
@@ -174,10 +174,10 @@ function RegisterPageContent() {
            });
         }
 
-        // Ensure ads config exists
+        // Ensure ads config exists (Note: will only work if admin registers or via rules exception)
         const adConfigDocRef = doc(firestore, "app_config", "ads");
         const adConfigDocSnap = await getDoc(adConfigDocRef);
-        if (!adConfigDocSnap.exists()) {
+        if (!adConfigDocSnap.exists() && user.email === 'hisabkhata.maintanance@gmail.com') {
             userBatch.set(adConfigDocRef, {
                 socialBarScriptUrl: "https://pl28457235.effectivegatecpm.com/8e/dd/54/8edd54854e77a6161245532c7f56ec4b.js",
                 inlineKey: "3ba7137cf83e3b9991ea29595a11120e",

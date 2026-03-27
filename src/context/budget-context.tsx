@@ -225,6 +225,53 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const { data: allWithdrawalsData, isLoading: isWithdrawalsLoading } = useCollection<WithdrawalRequest>(withdrawalsQuery);
     const allWithdrawals = allWithdrawalsData ?? [];
     
+    // Auto-seed missing configurations if admin is logged in
+    useEffect(() => {
+        if (!user || !firestore || user.email !== 'hisabkhata.maintanance@gmail.com') return;
+
+        const seedMissingConfigs = async () => {
+            try {
+                // Ensure ads config exists
+                const adRef = doc(firestore, 'app_config', 'ads');
+                const adSnap = await getDoc(adRef);
+                if (!adSnap.exists()) {
+                    await setDoc(adRef, {
+                        socialBarScriptUrl: "https://pl28457235.effectivegatecpm.com/8e/dd/54/8edd54854e77a6161245532c7f56ec4b.js",
+                        inlineKey: "3ba7137cf83e3b9991ea29595a11120e",
+                        squareKey: "743a0dc9bc3be759b21e51982c52beb6",
+                        leaderboardKey: "18077c532637bbe2ddcab04535aa15bf",
+                        spinDirectLink: "https://www.effectivegatecpm.com/esdyih69?key=7f8888474725ab0962c50482d2412b06",
+                        rewardedIframeUrl: "https://www.effectivegatecpm.com/asn6e88m1?key=f54f7591b556a8df09aa30fadc35caac"
+                    });
+                    console.log("Ads config seeded successfully.");
+                }
+
+                // Ensure settings config exists
+                const settingsRef = doc(firestore, 'app_config', 'settings');
+                const settingsSnap = await getDoc(settingsRef);
+                if (!settingsSnap.exists()) {
+                    await setDoc(settingsRef, {
+                        minWithdrawalPoints: 1000,
+                        referrerBonusPoints: 100,
+                        referredUserBonusPoints: 50,
+                        bdtPer100Points: 5,
+                        adWatchPoints: 20,
+                        spinPointsOptions: [5, 10, 15, 20, 25, 30, 40, 50],
+                        globalPopup: {
+                            isEnabled: false,
+                            title: "",
+                            message: ""
+                        }
+                    });
+                    console.log("Settings config seeded successfully.");
+                }
+            } catch (error) {
+                console.error("Error seeding configs:", error);
+            }
+        };
+
+        seedMissingConfigs();
+    }, [user, firestore]);
     
     // REFRESH REFUND LOGIC: Monitor user's sub-collection for rejections from Console
     useEffect(() => {
