@@ -84,6 +84,11 @@ const menuItems = [
         href: "/premium",
         label: "সাবস্ক্রিপশন",
         icon: Crown,
+    },
+    {
+        href: "/live-support",
+        label: "লাইভ সাপোর্ট",
+        icon: LifeBuoy,
     }
 ]
 
