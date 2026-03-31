@@ -8,7 +8,7 @@ export function LiveSupport() {
     const { adConfig, isLoading } = useBudget();
     
     // Default property ID if not loaded from Firebase yet
-    const propertyId = adConfig?.tawkToPropertyId || '69cbfd719c82221c37327fe6';
+    const propertyId = adConfig?.tawkToPropertyId || '69cc0cd7ecf7021c366810cd';
 
     if (isLoading && !adConfig) return null;
 

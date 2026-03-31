@@ -243,7 +243,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                         leaderboardKey: "18077c532637bbe2ddcab04535aa15bf",
                         spinDirectLink: "https://www.effectivegatecpm.com/esdyih69?key=7f8888474725ab0962c50482d2412b06",
                         rewardedIframeUrl: "https://www.effectivegatecpm.com/asn6e88m1?key=f54f7591b556a8df09aa30fadc35caac",
-                        tawkToPropertyId: "69cbfd719c82221c37327fe6"
+                        tawkToPropertyId: "69cc0cd7ecf7021c366810cd"
                     });
                     console.log("Ads config seeded successfully.");
                 }
