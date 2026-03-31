@@ -12,6 +12,7 @@ import "./globals.css"
 import { Toaster } from "@/components/ui/toaster"
 import { GlobalAdScripts } from "@/components/GlobalAdScripts";
 import { GlobalPopup } from "@/components/global-popup";
+import { LiveSupport } from "@/components/LiveSupport";
 
 
 // This new component will handle the authenticated view, including the loading state.
@@ -61,6 +62,7 @@ function MainContent({ children }: { children: ReactNode }) {
         <div className="flex flex-col min-h-screen">
             <AppHeader>{children}</AppHeader>
             <GlobalPopup />
+            <LiveSupport />
              <footer className="py-4 mt-auto w-full shrink-0 items-center px-4 md:px-6 border-t border-white/20 bg-gradient-to-r from-blue-400 to-green-400 text-white">
                 <div className="container mx-auto flex flex-col items-center justify-center gap-2 text-center sm:flex-row sm:justify-between">
                     <p className='text-[10px] sm:text-xs text-blue-100'>

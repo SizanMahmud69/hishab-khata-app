@@ -89,6 +89,7 @@ export interface AdConfig {
     leaderboardKey: string;
     spinDirectLink: string;
     rewardedIframeUrl: string;
+    tawkToPropertyId?: string;
 }
 
 export interface Referral {
@@ -241,7 +242,8 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                         squareKey: "743a0dc9bc3be759b21e51982c52beb6",
                         leaderboardKey: "18077c532637bbe2ddcab04535aa15bf",
                         spinDirectLink: "https://www.effectivegatecpm.com/esdyih69?key=7f8888474725ab0962c50482d2412b06",
-                        rewardedIframeUrl: "https://www.effectivegatecpm.com/asn6e88m1?key=f54f7591b556a8df09aa30fadc35caac"
+                        rewardedIframeUrl: "https://www.effectivegatecpm.com/asn6e88m1?key=f54f7591b556a8df09aa30fadc35caac",
+                        tawkToPropertyId: "69cbfd719c82221c37327fe6"
                     });
                     console.log("Ads config seeded successfully.");
                 }
