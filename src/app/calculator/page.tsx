@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -6,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Trash2, Calculator } from "lucide-react";
+import { Trash2, Calculator, ArrowRight } from "lucide-react";
 
 const denominations = [1000, 500, 200, 100, 50, 20, 10, 5, 2];
 
@@ -43,68 +44,82 @@ export default function CalculatorPage() {
     };
 
     return (
-        <div className="flex-1 space-y-6">
+        <div className="flex-1 space-y-4 max-w-lg mx-auto">
             <PageHeader 
                 title="হিসাব ক্যালকুলেটর" 
-                description="নোটের সংখ্যা লিখে আপনার ক্যাশ দ্রুত গণনা করুন।" 
+                description="নোটের সংখ্যা লিখে দ্রুত মোট টাকা গণনা করুন।" 
             />
 
-            <Card className="max-w-2xl mx-auto shadow-lg border-primary/20">
-                <CardHeader className="bg-primary/5 border-b">
-                    <CardTitle className="flex items-center gap-2">
-                        <Calculator className="text-primary h-5 w-5" />
-                        ক্যাশ কাউন্টার
-                    </CardTitle>
+            <Card className="shadow-lg border-primary/20 overflow-hidden">
+                <CardHeader className="bg-slate-900 text-white p-4">
+                    <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                            <Calculator className="h-5 w-5 text-primary" />
+                            ক্যাশ কাউন্টার
+                        </CardTitle>
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={resetCalculator} 
+                            className="text-red-400 hover:text-red-300 hover:bg-white/10"
+                        >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            পরিষ্কার
+                        </Button>
+                    </div>
                 </CardHeader>
-                <CardContent className="pt-6 space-y-4">
-                    {denominations.map((den) => (
-                        <div key={den} className="flex items-center gap-4 border-b pb-3 last:border-0 last:pb-0">
-                            <div className="w-24 text-right">
-                                <Label className="text-lg font-bold">
-                                    {den} <span className='text-xs font-normal text-muted-foreground'>টাকা</span>
-                                </Label>
+                
+                <CardContent className="p-0">
+                    <div className="divide-y divide-slate-100">
+                        {denominations.map((den) => (
+                            <div key={den} className="flex items-center p-3 gap-2 hover:bg-slate-50/50 transition-colors">
+                                <div className="w-16 flex flex-col">
+                                    <span className="text-sm font-black text-slate-700">{den}</span>
+                                    <span className="text-[10px] text-muted-foreground uppercase leading-none">টাকা</span>
+                                </div>
+                                
+                                <div className="flex-shrink-0 text-slate-300 text-xs">×</div>
+                                
+                                <div className="flex-1 px-2">
+                                    <Input
+                                        type="number"
+                                        inputMode="numeric"
+                                        placeholder="০"
+                                        value={counts[den]}
+                                        onChange={(e) => handleCountChange(e.target.value, den)}
+                                        className="h-9 text-center font-bold text-slate-900 border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary"
+                                    />
+                                </div>
+                                
+                                <div className="flex-shrink-0 text-slate-300 text-xs">
+                                    <ArrowRight className="h-3 w-3" />
+                                </div>
+                                
+                                <div className="w-24 text-right">
+                                    <p className="font-bold text-sm text-slate-900">
+                                        {formatCurrency(parseInt(counts[den] || "0", 10) * den).replace('৳', '')}
+                                    </p>
+                                </div>
                             </div>
-                            <div className="flex-shrink-0 text-muted-foreground">×</div>
-                            <div className="flex-1">
-                                <Input
-                                    type="number"
-                                    inputMode="numeric"
-                                    placeholder="০"
-                                    value={counts[den]}
-                                    onChange={(e) => handleCountChange(e.target.value, den)}
-                                    className="text-center font-bold text-lg h-12 border-primary/30 focus:border-primary"
-                                />
-                            </div>
-                            <div className="flex-shrink-0 text-muted-foreground">=</div>
-                            <div className="w-32 text-right">
-                                <p className="font-bold text-lg text-primary">
-                                    {formatCurrency(parseInt(counts[den] || "0", 10) * den)}
-                                </p>
-                            </div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </CardContent>
-                <CardFooter className="bg-muted/30 border-t flex flex-col sm:flex-row items-center justify-between gap-4 p-6">
-                    <Button variant="outline" onClick={resetCalculator} className="w-full sm:w-auto text-red-500 border-red-200 hover:bg-red-50">
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        সব পরিষ্কার করুন
-                    </Button>
-                    <div className="text-center sm:text-right w-full sm:w-auto">
-                        <p className="text-sm text-muted-foreground">সর্বমোট টাকা</p>
-                        <p className="text-3xl font-black text-primary drop-shadow-sm">
+
+                <CardFooter className="bg-slate-50 flex flex-col items-center justify-center p-4 border-t-2 border-primary/20">
+                    <div className="text-center">
+                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-1">সর্বমোট টাকা</p>
+                        <p className="text-4xl font-black text-slate-900 drop-shadow-sm">
                             {formatCurrency(totals.grandTotal)}
                         </p>
                     </div>
                 </CardFooter>
             </Card>
 
-            <Card className="max-w-2xl mx-auto bg-blue-50/50 border-blue-100 border-dashed">
-                <CardContent className="p-4 text-center">
-                    <p className="text-xs text-blue-600 font-medium italic">
-                        * এই ক্যালকুলেটরটি শুধুমাত্র আপনার ব্যক্তিগত ব্যবহারের জন্য। এটি আপনার মূল ব্যালেন্স বা ট্রানজিশনে কোনো পরিবর্তন করবে না।
-                    </p>
-                </CardContent>
-            </Card>
+            <div className="bg-white/50 backdrop-blur-sm border rounded-lg p-3 text-center">
+                <p className="text-[10px] text-muted-foreground italic">
+                    * এই হিসাবটি শুধুমাত্র আপনার তাৎক্ষণিক গণনার জন্য। এটি আপনার মূল ব্যালেন্সের কোনো পরিবর্তন করবে না।
+                </p>
+            </div>
         </div>
     );
 }
