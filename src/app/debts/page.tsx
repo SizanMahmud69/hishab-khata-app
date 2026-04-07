@@ -44,6 +44,9 @@ export default function DebtsPage() {
     const lentDebts = debtNotes.filter(d => d.type === 'lent');
     const borrowedDebts = debtNotes.filter(d => d.type === 'borrowed');
 
+    const activeLentCount = lentDebts.filter(d => d.status !== 'paid').length;
+    const activeBorrowedCount = borrowedDebts.filter(d => d.status !== 'paid').length;
+
     const totalLent = lentDebts.reduce((sum, debt) => sum + (debt.amount - debt.paidAmount), 0);
     const totalBorrowed = borrowedDebts.reduce((sum, debt) => sum + (debt.amount - debt.paidAmount), 0);
 
@@ -83,8 +86,8 @@ export default function DebtsPage() {
       
       <Tabs defaultValue="lent" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="lent">ধার দিয়েছি ({lentDebts.length})</TabsTrigger>
-          <TabsTrigger value="borrowed">ধার নিয়েছি ({borrowedDebts.length})</TabsTrigger>
+          <TabsTrigger value="lent">ধার দিয়েছি ({activeLentCount})</TabsTrigger>
+          <TabsTrigger value="borrowed">ধার নিয়েছি ({activeBorrowedCount})</TabsTrigger>
         </TabsList>
         <TabsContent value="lent">
             <div className="space-y-3">
