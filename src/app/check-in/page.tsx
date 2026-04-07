@@ -5,7 +5,7 @@ import React, { useState, useEffect, useMemo, Fragment } from 'react';
 import PageHeader from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { CheckCircle, Gift, Star, History, Loader2 } from "lucide-react"
+import { CheckCircle, Gift, Star, History, Loader2, Info } from "lucide-react"
 import { useBudget } from "@/context/budget-context";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -15,7 +15,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebas
 import { collection, addDoc, serverTimestamp, query, orderBy, limit, updateDoc, doc, increment } from 'firebase/firestore';
 import { AdBanner } from '@/components/ad-banner';
 
-const MAX_STREAK_DAYS = 30;
+const MAX_STREAK_DAYS = 10;
 const BASE_REWARD = 5;
 
 interface CheckInRecord {
@@ -34,13 +34,12 @@ export default function CheckInPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Fetch all recent check-ins, then filter on the client.
-    // This avoids a complex query that might be failing due to security rules/indexing issues.
     const allCheckInsQuery = useMemoFirebase(() => {
         if (!user || !firestore) return null;
         return query(
             collection(firestore, `users/${user.uid}/checkIns`), 
             orderBy("createdAt", "desc"), 
-            limit(100) // Fetch a larger number to ensure we get enough daily check-ins
+            limit(100) 
         );
     }, [user, firestore]);
     
@@ -189,7 +188,7 @@ export default function CheckInPage() {
                      <div className='flex flex-col items-center gap-1'>
                         <p className="text-lg font-semibold">আজকের পুরস্কার</p>
                         <div className="flex items-center gap-2 text-2xl font-bold text-primary">
-                            <Star className="w-6 h-6" />
+                            < Star className="w-6 h-6" />
                             <span>{rewardForToday} পয়েন্ট</span>
                         </div>
                         <p className="text-sm text-muted-foreground">আপনার বর্তমান ধারাবাহিকতা: {consecutiveDays} দিন।</p>
@@ -200,6 +199,20 @@ export default function CheckInPage() {
                     </Button>
                 </div>
             )}
+        </CardContent>
+      </Card>
+
+      <Card className="max-w-md mx-auto border-dashed bg-muted/20">
+        <CardContent className="p-4 space-y-2">
+            <div className="flex items-center gap-2 text-primary font-semibold text-sm">
+                <Info className="w-4 h-4" />
+                কিভাবে কাজ করে?
+            </div>
+            <ul className="text-xs text-muted-foreground space-y-1 list-disc pl-4">
+                <li>প্রতিদিন চেক-ইন করলে ৫ পয়েন্ট করে বাড়তে থাকবে।</li>
+                <li>১০ম দিন এবং এর পর প্রতিদিন ৫০ পয়েন্ট করে পাবেন।</li>
+                <li>যদি একদিন চেক-ইন মিস হয়, তবে পয়েন্ট আবার ৫ থেকে শুরু হবে।</li>
+            </ul>
         </CardContent>
       </Card>
       
