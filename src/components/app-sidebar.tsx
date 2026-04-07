@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation"
 import {
   Award,
   BookMarked,
+  Calculator,
   Crown,
   DollarSign,
   HandCoins,
@@ -84,6 +85,11 @@ const menuItems = [
         href: "/premium",
         label: "সাবস্ক্রিপশন",
         icon: Crown,
+    },
+    {
+        href: "/calculator",
+        label: "হিসাব ক্যালকুলেটর",
+        icon: Calculator,
     },
     {
         href: "/live-support",
