@@ -12,7 +12,7 @@ import { useBudget } from "@/context/budget-context";
 import { AdBanner } from '@/components/ad-banner';
 
 export default function DashboardPage() {
-    const { totalIncome, totalExpense, totalSavings, premiumStatus } = useBudget();
+    const { totalIncome, totalExpense, totalSavings, premiumStatus, savingsBreakdown } = useBudget();
     const balance = totalIncome - totalExpense;
 
     const formatCurrency = (amount: number) => {
@@ -54,6 +54,20 @@ export default function DashboardPage() {
                           </div>
                           <div className="text-sm font-semibold text-blue-600">{formatCurrency(totalSavings)}</div>
                       </div>
+                      
+                      {/* Detailed Savings Breakdown */}
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2 pt-2 border-t border-blue-200/50 dark:border-blue-800/50 border-dashed">
+                         {Object.entries(savingsBreakdown).map(([name, amount]) => (
+                             amount !== 0 && (
+                                <div key={name} className="flex justify-between items-center text-[10px] text-muted-foreground">
+                                    <span className="opacity-80">{name}:</span>
+                                    <span className={cn("font-medium", amount > 0 ? "text-blue-600 dark:text-blue-400" : "text-red-500")}>
+                                        {formatCurrency(amount).replace('৳', '')}
+                                    </span>
+                                </div>
+                             )
+                         ))}
+                      </div>
                   </div>
               </>
             )}
@@ -73,3 +87,4 @@ export default function DashboardPage() {
     </>
   )
 }
+import { cn } from '@/lib/utils';

@@ -7,7 +7,7 @@ import { collection, onSnapshot, addDoc, doc, updateDoc, serverTimestamp, setDoc
 import { createNotification } from '@/components/app-header';
 import { type WithdrawalRequest } from '@/app/withdraw/page';
 import { isAfter, addDays, parseISO } from 'date-fns';
-import { premiumPlans, type PremiumPlan } from '@/lib/data';
+import { premiumPlans, type PremiumPlan, savingsDestinations } from '@/lib/data';
 
 export interface ShopDueEntry {
     date: string;
@@ -129,6 +129,7 @@ interface BudgetContextType {
     totalIncome: number;
     totalExpense: number;
     totalSavings: number;
+    savingsBreakdown: Record<string, number>;
     rewardPoints: number;
     minWithdrawalPoints: number;
     referrerBonusPoints: number;
@@ -226,13 +227,11 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const { data: allWithdrawalsData, isLoading: isWithdrawalsLoading } = useCollection<WithdrawalRequest>(withdrawalsQuery);
     const allWithdrawals = allWithdrawalsData ?? [];
     
-    // Auto-seed missing configurations for any logged in user if they don't exist
     useEffect(() => {
         if (!user || !firestore) return;
 
         const seedMissingConfigs = async () => {
             try {
-                // Ensure ads config exists
                 const adRef = doc(firestore, 'app_config', 'ads');
                 const adSnap = await getDoc(adRef);
                 if (!adSnap.exists()) {
@@ -245,10 +244,8 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                         rewardedIframeUrl: "https://www.effectivegatecpm.com/asn6e88m1?key=f54f7591b556a8df09aa30fadc35caac",
                         tawkToPropertyId: "69cc0cd7ecf7021c366810cd"
                     });
-                    console.log("Ads config seeded successfully.");
                 }
 
-                // Ensure settings config exists
                 const settingsRef = doc(firestore, 'app_config', 'settings');
                 const settingsSnap = await getDoc(settingsRef);
                 if (!settingsSnap.exists()) {
@@ -265,10 +262,8 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                             message: ""
                         }
                     });
-                    console.log("Settings config seeded successfully.");
                 }
             } catch (error) {
-                // Creation might fail if doc already exists or permission denied
                 console.error("Config check/seeding status:", error);
             }
         };
@@ -276,20 +271,16 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         seedMissingConfigs();
     }, [user, firestore]);
     
-    // REFRESH REFUND LOGIC: Monitor user's sub-collection for rejections from Console
     useEffect(() => {
         if (!user?.uid || !firestore || !allWithdrawals || allWithdrawals.length === 0 || !userDocRef) return;
 
         const handleStatusChange = async (req: WithdrawalRequest) => {
-            // Only process if status is rejected and not already refunded locally
             if (req.status === 'rejected' && req.isRefunded === false) {
                 try {
                     const batch = writeBatch(firestore);
                     const userSubDocRef = doc(firestore, `users/${user.uid}/withdrawalRequests`, req.id);
                     
-                    // Mark as refunded locally first to prevent loops
                     batch.update(userSubDocRef, { isRefunded: true, processedAt: serverTimestamp() });
-                    // Refund the points to the user profile
                     batch.update(userDocRef, { points: increment(req.points) });
 
                     await batch.commit();
@@ -303,7 +294,6 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                     console.error("Client-side refund failed:", e);
                 }
             } else if (req.status === 'approved' && !req.processedAt) {
-                // If admin marks as approved in console, just update processing timestamp
                 try {
                     const userSubDocRef = doc(firestore, `users/${user.uid}/withdrawalRequests`, req.id);
                     await updateDoc(userSubDocRef, { processedAt: serverTimestamp() });
@@ -390,7 +380,6 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                 }
             });
         }, (error) => {
-            // Suppress standard auth transition errors
         });
     
         return () => unsubscribe();
@@ -445,6 +434,29 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         const deposits = transactions.filter(t => t.type === 'expense' && t.category === 'সঞ্চয় ডিপোজিট').reduce((sum, item) => sum + item.amount, 0);
         const withdrawals = transactions.filter(t => t.type === 'income' && t.category === 'সঞ্চয় উত্তোলন').reduce((sum, item) => sum + item.amount, 0);
         return deposits - withdrawals;
+    }, [transactions]);
+
+    const savingsBreakdown = useMemo(() => {
+        const breakdown: Record<string, number> = {};
+        savingsDestinations.forEach(dest => {
+            breakdown[dest] = 0;
+        });
+
+        transactions.forEach(t => {
+            if (t.category === 'সঞ্চয় ডিপোজিট') {
+                const dest = t.description;
+                if (breakdown[dest] !== undefined) {
+                    breakdown[dest] += t.amount;
+                }
+            } else if (t.category === 'সঞ্চয় উত্তোলন') {
+                const dest = t.description;
+                if (breakdown[dest] !== undefined) {
+                    breakdown[dest] -= t.amount;
+                }
+            }
+        });
+        
+        return breakdown;
     }, [transactions]);
 
 
@@ -771,6 +783,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         totalIncome, 
         totalExpense, 
         totalSavings, 
+        savingsBreakdown,
         rewardPoints,
         minWithdrawalPoints,
         referrerBonusPoints,
@@ -793,7 +806,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         adConfig,
     }), [
         transactions, debtNotes, referrals, pointHistory,
-        totalIncome, totalExpense, totalSavings,
+        totalIncome, totalExpense, totalSavings, savingsBreakdown,
         rewardPoints, minWithdrawalPoints, referrerBonusPoints, referredUserBonusPoints, bdtPer100Points,
         isLoading, premiumStatus, premiumExpiryDate, userProfile, premiumSubscriptions, 
         pendingSubscriptionPlanIds, activePremiumPlan, isSubscriptionsLoading, hasUsedFreeTrial,
