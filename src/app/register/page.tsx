@@ -9,13 +9,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { useAuth, useFirestore } from "@/firebase";
-import { doc, setDoc, serverTimestamp, getDoc, query, collection, where, getDocs, writeBatch, increment, limit, addDoc } from "firebase/firestore";
+import { createUserWithEmailAndPassword, updateProfile, setPersistence, browserLocalPersistence } from "firebase/auth";
+import { useAuth, useFirestore, useUser } from "@/firebase";
+import { doc, serverTimestamp, getDoc, query, collection, where, getDocs, writeBatch, increment, limit } from "firebase/firestore";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BudgetClientProvider, useBudget } from "@/context/budget-context-provider";
 import { useDebounce } from "react-use";
-import { createNotification } from "@/components/app-header";
 
 
 function RegisterPageContent() {
@@ -33,6 +32,14 @@ function RegisterPageContent() {
   const auth = useAuth();
   const firestore = useFirestore();
   const { referrerBonusPoints, referredUserBonusPoints } = useBudget();
+  const { user, isLoading: isAuthLoading } = useUser();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!isAuthLoading && user) {
+      router.replace('/dashboard');
+    }
+  }, [user, isAuthLoading, router]);
 
   const checkReferralCode = useCallback(async (code: string) => {
     if (!code.trim() || !firestore) {
@@ -108,26 +115,27 @@ function RegisterPageContent() {
         return;
       }
       
+      // Ensure persistence is set to local
+      await setPersistence(auth, browserLocalPersistence);
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      const newUser = userCredential.user;
       
-      if(user) {
-        await updateProfile(user, {
+      if(newUser) {
+        await updateProfile(newUser, {
           displayName: fullName
         });
 
-        // Batch 1: Create the new user's own data
         const userBatch = writeBatch(firestore);
-        const userDocRef = doc(firestore, "users", user.uid);
+        const userDocRef = doc(firestore, "users", newUser.uid);
         const ownReferralCode = `#${fullName.split(' ')[0].toLowerCase().replace(/[^a-z0-9]/g, '')}-${Math.random().toString(36).substr(2, 4)}`;
         
         userBatch.set(userDocRef, {
-            id: user.uid,
+            id: newUser.uid,
             userId: `#hishab-${Math.random().toString(36).substr(2, 4)}`,
             name: fullName,
-            email: user.email,
-            avatar: user.photoURL || `https://i.pravatar.cc/150?u=${user.email}`,
-            phone: user.phoneNumber || '',
+            email: newUser.email,
+            avatar: newUser.photoURL || `https://i.pravatar.cc/150?u=${newUser.email}`,
+            phone: newUser.phoneNumber || '',
             address: '',
             points: referrer ? referredUserBonusPoints : 0,
             joinDate: serverTimestamp(),
@@ -141,12 +149,11 @@ function RegisterPageContent() {
             premiumExpiryDate: null,
         });
 
-        // Welcome bonus notification for the new user if they were referred
         if (referrer) {
-            const welcomeNotifRef = doc(collection(firestore, `users/${user.uid}/notifications`));
+            const welcomeNotifRef = doc(collection(firestore, `users/${newUser.uid}/notifications`));
             userBatch.set(welcomeNotifRef, {
-                id: `welcome-bonus-${user.uid}`,
-                userId: user.uid,
+                id: `welcome-bonus-${newUser.uid}`,
+                userId: newUser.uid,
                 title: 'স্বাগতম বোনাস!',
                 description: `রেফার কোড ব্যবহার করার জন্য আপনি ${referredUserBonusPoints} পয়েন্ট পেয়েছেন।`,
                 link: `/congratulations?title=স্বাগতম বোনাস&description=আমাদের অ্যাপে আপনাকে স্বাগতম!&points=${referredUserBonusPoints}`,
@@ -155,42 +162,8 @@ function RegisterPageContent() {
             });
         }
         
-        // Ensure app_config exists (Note: will only work if admin registers or via rules exception)
-        const configDocRef = doc(firestore, "app_config", "settings");
-        const configDocSnap = await getDoc(configDocRef);
-        if (!configDocSnap.exists() && user.email === 'hisabkhata.maintanance@gmail.com') {
-          userBatch.set(configDocRef, {
-            minWithdrawalPoints: 1000,
-            referrerBonusPoints: 100,
-            referredUserBonusPoints: 50,
-            bdtPer100Points: 5,
-            adWatchPoints: 20,
-            spinPointsOptions: [5, 10, 15, 20, 25, 30, 40, 50],
-            globalPopup: {
-                isEnabled: false,
-                title: "",
-                message: ""
-            }
-           });
-        }
+        await userBatch.commit();
 
-        // Ensure ads config exists (Note: will only work if admin registers or via rules exception)
-        const adConfigDocRef = doc(firestore, "app_config", "ads");
-        const adConfigDocSnap = await getDoc(adConfigDocRef);
-        if (!adConfigDocSnap.exists() && user.email === 'hisabkhata.maintanance@gmail.com') {
-            userBatch.set(adConfigDocRef, {
-                socialBarScriptUrl: "https://pl28457235.effectivegatecpm.com/8e/dd/54/8edd54854e77a6161245532c7f56ec4b.js",
-                inlineKey: "3ba7137cf83e3b9991ea29595a11120e",
-                squareKey: "743a0dc9bc3be759b21e51982c52beb6",
-                leaderboardKey: "18077c532637bbe2ddcab04535aa15bf",
-                spinDirectLink: "https://www.effectivegatecpm.com/esdyih69?key=7f8888474725ab0962c50482d2412b06",
-                rewardedIframeUrl: "https://www.effectivegatecpm.com/asn6e88m1?key=f54f7591b556a8df09aa30fadc35caac"
-            });
-        }
-        
-        await userBatch.commit(); // Commit user data first
-
-        // Batch 2: Update referrer's data. This runs after the new user is successfully created.
         if (referrer) {
             const referrerBatch = writeBatch(firestore);
             const referrerDocRef = doc(firestore, "users", referrer.id);
@@ -198,14 +171,13 @@ function RegisterPageContent() {
             
             referrerBatch.set(referralRecordRef, {
                 userId: referrer.id,
-                referredUserId: user.uid,
+                referredUserId: newUser.uid,
                 referredUserName: fullName,
                 bonusPoints: referrerBonusPoints,
                 createdAt: serverTimestamp(),
             });
 
             referrerBatch.update(referrerDocRef, { points: increment(referrerBonusPoints) });
-            
             await referrerBatch.commit();
         }
       }
@@ -225,8 +197,6 @@ function RegisterPageContent() {
         errorMessage = "অনুগ্রহ করে একটি সঠিক ইমেইল ঠিকানা দিন।";
       } else if (error.code === 'auth/weak-password') {
         errorMessage = "পাসওয়ার্ডটি দুর্বল। অনুগ্রহ করে আরও শক্তিশালী পাসওয়ার্ড ব্যবহার করুন।";
-      } else if (error.code === 'permission-denied') {
-          errorMessage = "নিবন্ধন প্রক্রিয়া সম্পন্ন করার জন্য আপনার অনুমতি নেই। অনুগ্রহ করে অ্যাডমিনের সাথে যোগাযোগ করুন।";
       }
       toast({
         variant: "destructive",
@@ -238,14 +208,22 @@ function RegisterPageContent() {
     }
   };
 
+  if (isAuthLoading) {
+    return (
+        <div className="flex h-screen w-full items-center justify-center bg-gradient-to-br from-blue-500 to-green-500">
+            <Loader2 className="h-12 w-12 animate-spin text-white" />
+        </div>
+    )
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-500 to-green-500 p-4">
       <Link
         href="/"
         className="absolute left-4 top-4 md:left-8 md:top-8"
       >
-        <Button variant="ghost">
-           <ArrowRight className="mr-2 h-4 w-4" />
+        <Button variant="ghost" className="text-white hover:bg-white/20">
+           <ArrowRight className="mr-2 h-4 w-4 rotate-180" />
           হোমপেজে ফিরে যান
         </Button>
       </Link>
@@ -333,15 +311,17 @@ function RegisterPageContent() {
                 </div>
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isLoading ? "লোড হচ্ছে..." : "নিবন্ধন করুন"}
-                {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
+                {isLoading ? (
+                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> লোড হচ্ছে...</>
+                ) : (
+                    <>নিবন্ধন করুন <ArrowRight className="ml-2 h-4 w-4" /></>
+                )}
               </Button>
             </div>
           </form>
-          <div className="mt-4 text-center text-sm">
+          <div className="mt-4 text-center text-sm text-muted-foreground">
             ইতিমধ্যে একটি অ্যাকাউন্ট আছে?{" "}
-            <Link href="/login" className="underline">
+            <Link href="/login" className="underline text-foreground font-semibold">
               লগইন করুন
             </Link>
           </div>

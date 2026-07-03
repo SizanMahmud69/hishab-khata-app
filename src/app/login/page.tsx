@@ -2,11 +2,9 @@
 "use client";
 
 import Link from "next/link"
-import Image from "next/image";
-import { BookMarked, ArrowRight } from "lucide-react"
-import { useState } from "react";
+import { BookMarked, ArrowRight, Loader2 } from "lucide-react"
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 import { Button } from "@/components/ui/button"
 import {
@@ -19,33 +17,41 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { useAuth, useFirestore } from "@/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from "firebase/auth";
+import { useAuth, useUser } from "@/firebase";
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
-  const firestore = useFirestore();
+  const { user, isLoading: isAuthLoading } = useUser();
 
-  const handleLogin = (e: React.FormEvent) => {
+  // If user is already logged in, send them to dashboard immediately
+  useEffect(() => {
+    if (!isAuthLoading && user) {
+      router.replace('/dashboard');
+    }
+  }, [user, isAuthLoading, router]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth || !firestore) return;
-    setIsLoading(true);
+    if (!auth) return;
+    setIsLoggingIn(true);
 
-    signInWithEmailAndPassword(auth, email, password)
-      .then(async (userCredential) => {
+    try {
+        // Explicitly set persistence to local (keeps user logged in even after browser close)
+        await setPersistence(auth, browserLocalPersistence);
+        await signInWithEmailAndPassword(auth, email, password);
+        
         toast({
           title: "লগইন সফল হয়েছে!",
           description: "আপনাকে ড্যাশবোর্ডে নিয়ে যাওয়া হচ্ছে।",
         });
         router.push('/dashboard');
-      })
-      .catch((error: any) => {
+    } catch (error: any) {
         let errorMessage = "লগইন করার সময় একটি সমস্যা হয়েছে।";
         if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
           errorMessage = "আপনার দেওয়া ইমেইল অথবা পাসওয়ার্ড সঠিক নয়।";
@@ -58,11 +64,18 @@ export default function LoginPage() {
           title: "লগইন ব্যর্থ হয়েছে",
           description: errorMessage,
         });
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+    } finally {
+        setIsLoggingIn(false);
+    }
   };
+
+  if (isAuthLoading) {
+      return (
+          <div className="flex h-screen w-full items-center justify-center bg-gradient-to-br from-blue-500 to-green-500">
+              <Loader2 className="h-12 w-12 animate-spin text-white" />
+          </div>
+      )
+  }
 
   return (
      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-500 to-green-500 p-4">
@@ -70,8 +83,8 @@ export default function LoginPage() {
           href="/"
           className="absolute left-4 top-4 md:left-8 md:top-8"
         >
-          <Button variant="ghost">
-             <ArrowRight className="mr-2 h-4 w-4" />
+          <Button variant="ghost" className="text-white hover:bg-white/20">
+             <ArrowRight className="mr-2 h-4 w-4 rotate-180" />
             হোমপেজে ফিরে যান
           </Button>
         </Link>
@@ -97,7 +110,7 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  disabled={isLoading}
+                  disabled={isLoggingIn}
                 />
               </div>
               <div className="space-y-1.5">
@@ -116,18 +129,21 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  disabled={isLoading}
+                  disabled={isLoggingIn}
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "লোড হচ্ছে..." : "লগইন"}
-                {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
+              <Button type="submit" className="w-full" disabled={isLoggingIn}>
+                {isLoggingIn ? (
+                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> লোড হচ্ছে...</>
+                ) : (
+                    <>লগইন <ArrowRight className="ml-2 h-4 w-4" /></>
+                )}
               </Button>
             </div>
           </form>
-          <div className="mt-4 text-center text-sm">
+          <div className="mt-4 text-center text-sm text-muted-foreground">
             এখনো কোনো অ্যাকাউন্ট নেই?{" "}
-            <Link href="/register" className="underline">
+            <Link href="/register" className="underline text-foreground font-semibold">
               নিবন্ধন করুন
             </Link>
           </div>
