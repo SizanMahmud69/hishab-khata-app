@@ -10,6 +10,7 @@ import { Wallet, Landmark } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { useBudget } from "@/context/budget-context";
 import { AdBanner } from '@/components/ad-banner';
+import { cn } from '@/lib/utils';
 
 export default function DashboardPage() {
     const { totalIncome, totalExpense, totalSavings, premiumStatus, savingsBreakdown } = useBudget();
@@ -55,17 +56,23 @@ export default function DashboardPage() {
                           <div className="text-sm font-semibold text-blue-600">{formatCurrency(totalSavings)}</div>
                       </div>
                       
-                      {/* Detailed Savings Breakdown */}
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2 pt-2 border-t border-blue-200/50 dark:border-blue-800/50 border-dashed">
-                         {Object.entries(savingsBreakdown).map(([name, amount]) => (
-                             amount !== 0 && (
-                                <div key={name} className="flex justify-between items-center text-[10px] text-muted-foreground">
-                                    <span className="opacity-80">{name}:</span>
-                                    <span className={cn("font-medium", amount > 0 ? "text-blue-600 dark:text-blue-400" : "text-red-500")}>
-                                        {formatCurrency(amount).replace('৳', '')}
-                                    </span>
-                                </div>
-                             )
+                      {/* Detailed Savings Breakdown - 4 Column Grid */}
+                      <div className="grid grid-cols-4 gap-1 mt-4 pt-3 border-t border-blue-200/50 dark:border-blue-800/50 border-dashed">
+                         {[
+                             { name: 'ব্যাংক', key: 'ব্যাংক' },
+                             { name: 'বিকাশ', key: 'বিকাশ' },
+                             { name: 'নগদ', key: 'নগদ' },
+                             { name: 'রকেট', key: 'রকেট' }
+                         ].map((item, idx) => (
+                             <div key={item.key} className={cn("text-center space-y-1", idx > 0 && "border-l border-blue-100 dark:border-blue-900/50")}>
+                                 <p className="text-[9px] font-bold text-muted-foreground uppercase leading-none">{item.name}</p>
+                                 <p className={cn(
+                                     "text-[10px] font-black tracking-tight leading-none", 
+                                     (savingsBreakdown[item.key] || 0) > 0 ? "text-blue-600 dark:text-blue-400" : "text-slate-400"
+                                 )}>
+                                     {formatCurrency(savingsBreakdown[item.key] || 0).replace('৳', '')}
+                                 </p>
+                             </div>
                          ))}
                       </div>
                   </div>
@@ -87,4 +94,3 @@ export default function DashboardPage() {
     </>
   )
 }
-import { cn } from '@/lib/utils';
