@@ -84,7 +84,8 @@ export default function PayDebtPage() {
             return;
         }
         
-        if (debtNote.type === 'borrowed' && paymentAmount > balance) {
+        // Balance check for both borrowed money and shop dues
+        if ((debtNote.type === 'borrowed' || debtNote.type === 'shopDue') && paymentAmount > balance) {
             toast({
                 variant: "destructive",
                 title: "অপর্যাপ্ত ব্যালেন্স",
@@ -109,7 +110,7 @@ export default function PayDebtPage() {
                 description: "পরিশোধের হিসাব সফলভাবে আপডেট করা হয়েছে।",
             });
 
-            router.push('/debts');
+            router.push(debtNote.type === 'shopDue' ? '/shop-dues' : '/debts');
         } catch (error) {
             console.error("Error confirming payment:", error);
             toast({ variant: "destructive", title: "ত্রুটি", description: "একটি সমস্যা হয়েছে।" });
@@ -144,7 +145,7 @@ export default function PayDebtPage() {
         notFound();
     }
     
-    const headerTitle = debtNote.type === 'lent' ? 'ধার আদায়' : 'ধার পরিশোধ';
+    const headerTitle = debtNote.type === 'lent' ? 'ধার আদায়' : (debtNote.type === 'shopDue' ? 'বাকি পরিশোধ' : 'ধার পরিশোধ');
     const headerDescription = `${debtNote.person}-এর সাথে আপনার লেনদেন নিষ্পত্তি করুন।`;
 
 
