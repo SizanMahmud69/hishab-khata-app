@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -7,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const features = [
   {
@@ -52,11 +54,30 @@ export default function Home() {
     }
   }, [user, isLoading, router]);
 
-  // If loading or already logged in (waiting for redirect), show a loader
+  // If loading or already logged in (waiting for redirect), show a professional skeleton loader
   if (isLoading || user) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-gradient-to-br from-blue-500 to-green-500">
-        <Loader2 className="h-12 w-12 animate-spin text-white" />
+      <div className="flex min-h-dvh flex-col bg-gradient-to-br from-blue-500 to-green-500">
+        <header className="h-16 border-b border-white/20 bg-gradient-to-r from-blue-400 to-green-400 px-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+                <Skeleton className="h-8 w-8 rounded-md bg-white/20" />
+                <Skeleton className="h-6 w-32 bg-white/20" />
+            </div>
+            <div className="flex gap-2">
+                <Skeleton className="h-9 w-20 bg-white/20" />
+                <Skeleton className="h-9 w-32 bg-white/20" />
+            </div>
+        </header>
+        <main className="flex-1 container py-20 flex flex-col items-center">
+            <Skeleton className="h-12 w-3/4 max-w-2xl bg-white/20 mb-6" />
+            <Skeleton className="h-6 w-2/3 max-w-xl bg-white/20 mb-8" />
+            <Skeleton className="h-12 w-48 bg-white/20 mb-20" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
+                {[1, 2, 3, 4, 5, 6].map(i => (
+                    <Skeleton key={i} className="h-48 w-full bg-white/10 rounded-xl" />
+                ))}
+            </div>
+        </main>
       </div>
     );
   }

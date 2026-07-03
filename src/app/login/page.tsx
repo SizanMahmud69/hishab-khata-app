@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast";
 import { signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from "firebase/auth";
 import { useAuth, useUser } from "@/firebase";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -71,8 +72,19 @@ export default function LoginPage() {
 
   if (isAuthLoading) {
       return (
-          <div className="flex h-screen w-full items-center justify-center bg-gradient-to-br from-blue-500 to-green-500">
-              <Loader2 className="h-12 w-12 animate-spin text-white" />
+          <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-500 to-green-500 p-4">
+              <Card className="w-full max-w-sm">
+                <CardHeader className="space-y-4">
+                    <Skeleton className="h-12 w-12 rounded-full mx-auto" />
+                    <Skeleton className="h-8 w-3/4 mx-auto" />
+                    <Skeleton className="h-4 w-full mx-auto" />
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                </CardContent>
+              </Card>
           </div>
       )
   }

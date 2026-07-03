@@ -31,26 +31,26 @@ function MainContent({ children }: { children: ReactNode }) {
     // Show a skeleton loader while auth or budget data is loading.
     if (isAuthLoading || isLoading) {
         return (
-            <div className="flex flex-col h-screen">
+            <div className="flex flex-col h-screen bg-gradient-to-br from-blue-500 to-green-500">
                 {/* Loading Skeleton */}
-                <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between border-b bg-gradient-to-r from-blue-400 to-green-400 text-white px-4">
+                <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between border-b border-white/20 bg-gradient-to-r from-blue-400 to-green-400 text-white px-4">
                     <div className="flex items-center gap-2">
-                         <Skeleton className="h-8 w-8" />
-                         <Skeleton className="h-6 w-32" />
+                         <Skeleton className="h-8 w-8 bg-white/20" />
+                         <Skeleton className="h-6 w-32 bg-white/20" />
                     </div>
                     <div className="flex items-center gap-2">
-                        <Skeleton className="h-8 w-8 rounded-full" />
-                        <Skeleton className="h-8 w-8 rounded-full" />
+                        <Skeleton className="h-8 w-8 rounded-full bg-white/20" />
+                        <Skeleton className="h-8 w-8 rounded-full bg-white/20" />
                     </div>
                 </header>
-                <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-blue-500 to-green-500">
+                <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
                     <div className="flex-1 space-y-4">
                         <div className="grid gap-4 grid-cols-2">
-                            <Skeleton className="h-28" />
-                            <Skeleton className="h-28" />
+                            <Skeleton className="h-28 bg-white/10" />
+                            <Skeleton className="h-28 bg-white/10" />
                         </div>
-                        <Skeleton className="h-36" />
-                        <Skeleton className="h-72" />
+                        <Skeleton className="h-36 bg-white/10" />
+                        <Skeleton className="h-72 bg-white/10" />
                     </div>
                 </main>
             </div>
