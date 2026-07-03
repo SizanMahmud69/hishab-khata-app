@@ -24,11 +24,19 @@ import { Loader2 } from "lucide-react";
 const months = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
 
 export default function IncomePage() {
-    const { addTransaction } = useBudget();
+    const { addTransaction, savingsBreakdown } = useBudget();
     const { toast } = useToast();
     const formRef = useRef<HTMLFormElement>(null);
     const [selectedSource, setSelectedSource] = React.useState<string | undefined>(undefined);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat("bn-BD", {
+          style: "currency",
+          currency: "BDT",
+          minimumFractionDigits: 0,
+        }).format(amount)
+    }
     
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -47,6 +55,20 @@ export default function IncomePage() {
             });
             setIsSubmitting(false);
             return;
+        }
+
+        // Validation for Savings Withdrawal
+        if (source === 'সঞ্চয় উত্তোলন') {
+            const availableInDestination = savingsBreakdown[descriptionInput] || 0;
+            if (amount > availableInDestination) {
+                toast({
+                    variant: "destructive",
+                    title: "অপর্যাপ্ত সঞ্চয়",
+                    description: `আপনার "${descriptionInput}"-এ পর্যাপ্ত ব্যালেন্স নেই। আপনার বর্তমান ${descriptionInput} ব্যালেন্স ${formatCurrency(availableInDestination)}।`,
+                });
+                setIsSubmitting(false);
+                return;
+            }
         }
 
         try {
