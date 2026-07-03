@@ -54,7 +54,9 @@ export default function IncomePage() {
             if (selectedSource === 'মাসিক বেতন') {
                 description = `${descriptionInput} মাসের বেতন`;
             } else if (selectedSource === 'সঞ্চয় উত্তোলন') {
-                description = `${descriptionInput} থেকে উত্তোলন`;
+                // For savings withdrawal, we just keep the destination name directly 
+                // to maintain consistent calculation in context
+                description = descriptionInput;
             }
 
             await addTransaction({

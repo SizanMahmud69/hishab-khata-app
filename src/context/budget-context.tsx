@@ -449,7 +449,12 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                     breakdown[dest] += t.amount;
                 }
             } else if (t.category === 'সঞ্চয় উত্তোলন') {
-                const dest = t.description;
+                // Handling both direct destination name and those with suffix " থেকে উত্তোলন"
+                let dest = t.description;
+                if (dest.endsWith(' থেকে উত্তোলন')) {
+                    dest = dest.replace(' থেকে উত্তোলন', '');
+                }
+                
                 if (breakdown[dest] !== undefined) {
                     breakdown[dest] -= t.amount;
                 }
