@@ -1,7 +1,12 @@
+"use client";
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { BookMarked, ShieldCheck, TrendingUp, HandCoins, Award, Users, Crown, MoveRight } from 'lucide-react';
+import { BookMarked, ShieldCheck, TrendingUp, HandCoins, Award, Users, Crown, MoveRight, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useUser } from '@/firebase';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 const features = [
   {
@@ -37,6 +42,25 @@ const features = [
 ];
 
 export default function Home() {
+  const { user, isLoading } = useUser();
+  const router = useRouter();
+
+  // Automatically redirect to dashboard if user is already logged in
+  useEffect(() => {
+    if (!isLoading && user) {
+      router.replace('/dashboard');
+    }
+  }, [user, isLoading, router]);
+
+  // If loading or already logged in (waiting for redirect), show a loader
+  if (isLoading || user) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-gradient-to-br from-blue-500 to-green-500">
+        <Loader2 className="h-12 w-12 animate-spin text-white" />
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="flex min-h-dvh flex-col bg-gradient-to-br from-blue-500 to-green-500">
