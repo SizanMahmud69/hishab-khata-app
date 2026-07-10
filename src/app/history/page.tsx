@@ -13,7 +13,6 @@ import { type DateRange } from "react-day-picker";
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { AdBanner } from '@/components/ad-banner';
 
 export default function HistoryPage() {
   const { transactions } = useBudget();
@@ -199,31 +198,26 @@ export default function HistoryPage() {
 
       {filteredTransactions.length > 0 ? (
         <div className="space-y-3">
-          {filteredTransactions.map((transaction, index) => (
-            <Fragment key={transaction.id}>
-                <Card className={cn("overflow-hidden", transaction.type === 'income' ? 'border-green-200 dark:border-green-800' : 'border-red-200 dark:border-red-800')}>
-                    <CardContent className="p-4">
-                        <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
-                            <div className="flex items-center gap-2">
-                                {transaction.type === 'income' ? 
-                                    <TrendingUp className="h-4 w-4 text-green-600" /> : 
-                                    <TrendingDown className="h-4 w-4 text-red-500" />}
-                                <span>{transaction.category}</span>
-                            </div>
-                            {transaction.date && <span>{format(parseISO(transaction.date), "d MMM, yyyy", { locale: bn })}</span>}
+          {filteredTransactions.map((transaction) => (
+            <Card key={transaction.id} className={cn("overflow-hidden", transaction.type === 'income' ? 'border-green-200 dark:border-green-800' : 'border-red-200 dark:border-red-800')}>
+                <CardContent className="p-4">
+                    <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
+                        <div className="flex items-center gap-2">
+                            {transaction.type === 'income' ? 
+                                <TrendingUp className="h-4 w-4 text-green-600" /> : 
+                                <TrendingDown className="h-4 w-4 text-red-500" />}
+                            <span>{transaction.category}</span>
                         </div>
-                        
-                        <h3 className={cn("text-2xl font-bold", transaction.type === 'income' ? 'text-green-700 dark:text-green-500' : 'text-red-600 dark:text-red-400')}>
-                            {formatCurrency(transaction.amount)}
-                        </h3>
+                        {transaction.date && <span>{format(parseISO(transaction.date), "d MMM, yyyy", { locale: bn })}</span>}
+                    </div>
+                    
+                    <h3 className={cn("text-2xl font-bold", transaction.type === 'income' ? 'text-green-700 dark:text-green-500' : 'text-red-600 dark:text-red-400')}>
+                        {formatCurrency(transaction.amount)}
+                    </h3>
 
-                        {transaction.description && <p className="text-sm text-muted-foreground mt-1">{transaction.description}</p>}
-                    </CardContent>
-                </Card>
-                {(index + 1) % 5 === 0 && (
-                    <AdBanner adIndex={(index + 1) / 5} />
-                )}
-            </Fragment>
+                    {transaction.description && <p className="text-sm text-muted-foreground mt-1">{transaction.description}</p>}
+                </CardContent>
+            </Card>
           ))}
         </div>
       ) : (

@@ -10,29 +10,24 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useUser, FirebaseClientProvider } from "@/firebase";
 import "./globals.css"
 import { Toaster } from "@/components/ui/toaster"
-import { GlobalAdScripts } from "@/components/GlobalAdScripts";
 import { GlobalPopup } from "@/components/global-popup";
 import { LiveSupport } from "@/components/LiveSupport";
 
 
-// This new component will handle the authenticated view, including the loading state.
 function MainContent({ children }: { children: ReactNode }) {
     const { isLoading } = useBudget();
     const { isLoading: isAuthLoading, user } = useUser();
     const router = useRouter();
 
-    // Redirect if not authenticated. This is a safeguard.
     useEffect(() => {
         if (!isAuthLoading && !user) {
             router.push('/login');
         }
     }, [user, isAuthLoading, router]);
 
-    // Show a skeleton loader while auth or budget data is loading.
     if (isAuthLoading || isLoading) {
         return (
             <div className="flex flex-col h-screen bg-gradient-to-br from-blue-500 to-green-500">
-                {/* Loading Skeleton */}
                 <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between border-b border-white/20 bg-gradient-to-r from-blue-400 to-green-400 text-white px-4">
                     <div className="flex items-center gap-2">
                          <Skeleton className="h-8 w-8 bg-white/20" />
@@ -57,7 +52,6 @@ function MainContent({ children }: { children: ReactNode }) {
         );
     }
     
-    // When loaded, show the actual app content.
     return (
         <div className="flex flex-col min-h-screen">
             <AppHeader>{children}</AppHeader>
@@ -90,7 +84,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <BudgetClientProvider>
                 {isPublicRoute ? children : <MainContent>{children}</MainContent>}
                 <Toaster />
-                {!isPublicRoute && <GlobalAdScripts />}
             </BudgetClientProvider>
         </FirebaseClientProvider>
       </body>

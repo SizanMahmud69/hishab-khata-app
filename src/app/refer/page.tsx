@@ -5,7 +5,7 @@ import React, { useMemo, Fragment } from 'react';
 import PageHeader from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { Copy, Gift, HelpCircle, Loader2, Users } from 'lucide-react';
+import { Copy, Gift, HelpCircle, Users } from 'lucide-react';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { doc, collection, query, orderBy } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -13,7 +13,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { bn } from 'date-fns/locale';
 import { useBudget } from '@/context/budget-context';
-import { AdBanner } from '@/components/ad-banner';
 
 interface UserProfile {
     userId: string;
@@ -24,7 +23,7 @@ interface Referral {
     id: string;
     referredUserName: string;
     bonusPoints: number;
-    createdAt: any; // Firestore Timestamp
+    createdAt: any;
 }
 
 
@@ -127,24 +126,19 @@ export default function ReferPage() {
                     </div>
                     <div className="space-y-3">
                         {referrals && referrals.length > 0 ? (
-                            referrals.map((referral, index) => (
-                                <Fragment key={referral.id}>
-                                    <div className="flex items-center justify-between p-3 rounded-lg border">
-                                        <div>
-                                            <p className="font-semibold">{referral.referredUserName}</p>
-                                            <p className="text-sm text-muted-foreground">
-                                                {referral.createdAt ? format(referral.createdAt.toDate(), "d MMM, yyyy", { locale: bn }) : ''}
-                                            </p>
-                                        </div>
-                                        <div className="flex items-center gap-1 font-bold text-green-500">
-                                            <Gift className="h-4 w-4" />
-                                            <span>+{referral.bonusPoints}</span>
-                                        </div>
+                            referrals.map((referral) => (
+                                <div key={referral.id} className="flex items-center justify-between p-3 rounded-lg border">
+                                    <div>
+                                        <p className="font-semibold">{referral.referredUserName}</p>
+                                        <p className="text-sm text-muted-foreground">
+                                            {referral.createdAt ? format(referral.createdAt.toDate(), "d MMM, yyyy", { locale: bn }) : ''}
+                                        </p>
                                     </div>
-                                    {(index + 1) % 5 === 0 && (
-                                        <AdBanner adIndex={(index + 1) / 5} />
-                                    )}
-                                </Fragment>
+                                    <div className="flex items-center gap-1 font-bold text-green-500">
+                                        <Gift className="h-4 w-4" />
+                                        <span>+{referral.bonusPoints}</span>
+                                    </div>
+                                </div>
                             ))
                         ) : (
                             <p className="text-center text-muted-foreground py-6">আপনি এখনও কাউকে রেফার করেননি।</p>

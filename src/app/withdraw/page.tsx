@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useMemo, useEffect, useRef, Fragment } from 'react';
+import React, { useState, useEffect, useRef, Fragment } from 'react';
 import { useSearchParams } from 'next/navigation';
 import PageHeader from "@/components/page-header"
 import { Banknote, History, Gift, Info, Loader2 } from "lucide-react"
@@ -23,7 +23,6 @@ import { format } from 'date-fns';
 import { bn } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { AdBanner } from '@/components/ad-banner';
 
 interface UserProfile {
     points?: number;
@@ -65,14 +64,12 @@ export default function WithdrawPage() {
     
     const [pointsToWithdraw, setPointsToWithdraw] = useState(0);
 
-    // Initial value for slider
     useEffect(() => {
         if (rewardPoints >= minWithdrawalPoints && pointsToWithdraw === 0) {
             setPointsToWithdraw(rewardPoints);
         }
     }, [rewardPoints, minWithdrawalPoints, pointsToWithdraw]);
 
-    // History from private sub-collection
     const withdrawalHistoryQuery = useMemoFirebase(() => {
         if (!user || !firestore) return null;
         return query(
@@ -138,7 +135,6 @@ export default function WithdrawPage() {
         try {
             const batch = writeBatch(firestore);
             
-            // Generate a single ID for the user's sub-collection only
             const userSubCollectionRef = collection(firestore, `users/${user.uid}/withdrawalRequests`);
             const newDocRef = doc(userSubCollectionRef);
             const requestId = newDocRef.id;
@@ -156,10 +152,8 @@ export default function WithdrawPage() {
                 isRefunded: false,
             };
             
-            // Only write to the user's private sub-collection to avoid permission issues
             batch.set(newDocRef, requestData);
 
-            // Deduct points from user's main profile
             batch.update(userDocRef, { points: increment(-pointsToDeduct) });
 
             await batch.commit();
@@ -330,37 +324,28 @@ export default function WithdrawPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {history.map((req, index) => (
-                                    <Fragment key={req.id}>
-                                        <TableRow>
-                                            <TableCell className='font-medium whitespace-nowrap'>
-                                                {req.requestedAt ? format(req.requestedAt.toDate(), "d MMM, yyyy", { locale: bn }) : '-'}
-                                            </TableCell>
-                                            <TableCell>{req.paymentMethod}</TableCell>
-                                            <TableCell className='text-muted-foreground'>{req.points}</TableCell>
-                                            <TableCell className='font-semibold whitespace-nowrap'>{formatCurrency(req.amountBdt)}</TableCell>
-                                            <TableCell className='text-right flex justify-end items-center gap-2'>
-                                                {getStatusBadge(req.status)}
-                                                {req.status === 'rejected' && req.rejectionReason && (
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>
-                                                            <p>{req.rejectionReason}</p>
-                                                        </TooltipContent>
-                                                    </Tooltip>
-                                                )}
-                                            </TableCell>
-                                        </TableRow>
-                                        {(index + 1) % 5 === 0 && (
-                                            <TableRow>
-                                                <TableCell colSpan={5} className="p-0">
-                                                    <AdBanner adIndex={(index + 1) / 5} />
-                                                </TableCell>
-                                            </TableRow>
-                                        )}
-                                    </Fragment>
+                                {history.map((req) => (
+                                    <TableRow key={req.id}>
+                                        <TableCell className='font-medium whitespace-nowrap'>
+                                            {req.requestedAt ? format(req.requestedAt.toDate(), "d MMM, yyyy", { locale: bn }) : '-'}
+                                        </TableCell>
+                                        <TableCell>{req.paymentMethod}</TableCell>
+                                        <TableCell className='text-muted-foreground'>{req.points}</TableCell>
+                                        <TableCell className='font-semibold whitespace-nowrap'>{formatCurrency(req.amountBdt)}</TableCell>
+                                        <TableCell className='text-right flex justify-end items-center gap-2'>
+                                            {getStatusBadge(req.status)}
+                                            {req.status === 'rejected' && req.rejectionReason && (
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p>{req.rejectionReason}</p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            )}
+                                        </TableCell>
+                                    </TableRow>
                                 ))}
                             </TableBody>
                         </Table>

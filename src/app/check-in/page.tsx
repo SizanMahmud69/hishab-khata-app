@@ -1,39 +1,35 @@
 
 "use client";
 
-import React, { useState, useEffect, useMemo, Fragment } from 'react';
+import React, { useState, useMemo, Fragment } from 'react';
 import PageHeader from "@/components/page-header"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/ui/card"
 import { CheckCircle, Gift, Star, History, Loader2, Info } from "lucide-react"
-import { useBudget } from "@/context/budget-context";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format, isToday, isYesterday, parseISO, subDays } from 'date-fns';
 import { bn } from 'date-fns/locale';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, addDoc, serverTimestamp, query, orderBy, limit, updateDoc, doc, increment } from 'firebase/firestore';
-import { AdBanner } from '@/components/ad-banner';
 
 const MAX_STREAK_DAYS = 10;
 const BASE_REWARD = 5;
 
 interface CheckInRecord {
     id: string;
-    date: string; // ISO String
+    date: string;
     points: number;
     createdAt: any;
     source?: 'daily-check-in' | 'ad-watch' | 'spin';
 }
 
 export default function CheckInPage() {
-    const { addRewardPoints } = useBudget();
     const { toast } = useToast();
     const { user } = useUser();
     const firestore = useFirestore();
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Fetch all recent check-ins, then filter on the client.
     const allCheckInsQuery = useMemoFirebase(() => {
         if (!user || !firestore) return null;
         return query(
@@ -45,13 +41,11 @@ export default function CheckInPage() {
     
     const { data: allHistory, isLoading } = useCollection<CheckInRecord>(allCheckInsQuery);
     
-    // Client-side filtering for daily check-ins for the history table
     const history = useMemo(() => {
         if (!allHistory) return [];
         return allHistory.filter(item => item.source === 'daily-check-in').slice(0, 30);
     }, [allHistory]);
 
-    // For streak calculation, we still need to look at the daily check-ins from all fetched records
     const dailyCheckInHistory = useMemo(() => {
         if (!allHistory) return [];
         return allHistory.filter(item => item.source === 'daily-check-in');
@@ -234,22 +228,13 @@ export default function CheckInPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {history.map((record, index) => (
-                           <Fragment key={record.id}>
-                             <TableRow>
-                                 <TableCell className='font-medium'>
-                                     {format(parseISO(record.date), "d MMMM, yyyy", { locale: bn })}
-                                 </TableCell>
-                                 <TableCell className='text-right font-semibold text-green-700 dark:text-green-500'>+{record.points}</TableCell>
-                             </TableRow>
-                             {(index + 1) % 5 === 0 && (
-                                <TableRow>
-                                    <TableCell colSpan={2} className="p-0">
-                                        <AdBanner adIndex={(index + 1) / 5} />
-                                    </TableCell>
-                                </TableRow>
-                             )}
-                            </Fragment>
+                        {history.map((record) => (
+                           <TableRow key={record.id}>
+                               <TableCell className='font-medium'>
+                                   {format(parseISO(record.date), "d MMMM, yyyy", { locale: bn })}
+                               </TableCell>
+                               <TableCell className='text-right font-semibold text-green-700 dark:text-green-500'>+{record.points}</TableCell>
+                           </TableRow>
                         ))}
                     </TableBody>
                 </Table>
