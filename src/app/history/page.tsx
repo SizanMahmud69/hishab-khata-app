@@ -1,11 +1,11 @@
 
 "use client";
 
-import React, { useState, useMemo, Fragment } from 'react';
+import React, { useState, useMemo } from 'react';
 import PageHeader from "@/components/page-header";
 import { useBudget } from "@/context/budget-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, TrendingDown, Filter as FilterIcon, Calendar as CalendarIcon } from "lucide-react";
+import { TrendingUp, TrendingDown, Filter as FilterIcon, Calendar as CalendarIcon, Tag } from "lucide-react";
 import { format, parseISO, startOfDay, endOfDay } from "date-fns";
 import { bn } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -13,15 +13,28 @@ import { type DateRange } from "react-day-picker";
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function HistoryPage() {
   const { transactions } = useBudget();
+  
+  // Applied filters
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [selectedCategory, setSelectedCategory] = useState<string | "all">("all");
+
+  // Temporary states for the popover
   const [tempDate, setTempDate] = useState<DateRange | undefined>(undefined);
+  const [tempCategory, setTempCategory] = useState<string | "all">("all");
+  
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [isStartCalendarOpen, setIsStartCalendarOpen] = useState(false);
   const [isEndCalendarOpen, setIsEndCalendarOpen] = useState(false);
 
+  // Get unique categories from all transactions
+  const uniqueCategories = useMemo(() => {
+    const cats = Array.from(new Set(transactions.map(t => t.category)));
+    return cats.sort();
+  }, [transactions]);
 
   const sortedTransactions = useMemo(() => {
     return [...transactions].sort((a, b) => {
@@ -32,27 +45,29 @@ export default function HistoryPage() {
   }, [transactions]);
   
   const filteredTransactions = useMemo(() => {
-    if (!dateRange || (!dateRange.from && !dateRange.to)) {
-      return sortedTransactions;
-    }
-    
     return sortedTransactions.filter(transaction => {
-      const transactionDate = parseISO(transaction.date);
-      const from = dateRange.from ? startOfDay(dateRange.from) : null;
-      const to = dateRange.to ? endOfDay(dateRange.to) : null;
+      // Date Filter logic
+      let matchesDate = true;
+      if (dateRange && (dateRange.from || dateRange.to)) {
+        const transactionDate = parseISO(transaction.date);
+        const from = dateRange.from ? startOfDay(dateRange.from) : null;
+        const to = dateRange.to ? endOfDay(dateRange.to) : null;
 
-      if (from && to) {
-        return transactionDate >= from && transactionDate <= to;
+        if (from && to) {
+          matchesDate = transactionDate >= from && transactionDate <= to;
+        } else if (from) {
+          matchesDate = transactionDate >= from;
+        } else if (to) {
+          matchesDate = transactionDate <= to;
+        }
       }
-      if (from) {
-        return transactionDate >= from;
-      }
-      if (to) {
-        return transactionDate <= to;
-      }
-      return true;
+
+      // Category Filter logic
+      const matchesCategory = selectedCategory === "all" || transaction.category === selectedCategory;
+
+      return matchesDate && matchesCategory;
     });
-  }, [sortedTransactions, dateRange]);
+  }, [sortedTransactions, dateRange, selectedCategory]);
 
   const filteredTotals = useMemo(() => {
     const income = filteredTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
@@ -71,83 +86,122 @@ export default function HistoryPage() {
   
   const resetFilter = () => {
     setDateRange(undefined);
+    setSelectedCategory("all");
     setTempDate(undefined);
+    setTempCategory("all");
     setIsPopoverOpen(false);
   }
 
   const applyFilter = () => {
     setDateRange(tempDate);
+    setSelectedCategory(tempCategory);
     setIsPopoverOpen(false);
   }
 
   return (
     <div className="flex-1 space-y-4">
       <PageHeader title="হিস্টোরি" description="আপনার সকল লেনদেনের ইতিহাস দেখুন।">
-        <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+        <Popover open={isPopoverOpen} onOpenChange={(open) => {
+          setIsPopoverOpen(open);
+          if (open) {
+            setTempDate(dateRange);
+            setTempCategory(selectedCategory);
+          }
+        }}>
           <PopoverTrigger asChild>
-            <Button variant="outline" size="icon">
+            <Button variant={dateRange?.from || selectedCategory !== "all" ? "default" : "outline"} size="icon" className="relative">
               <FilterIcon className="h-4 w-4" />
+              {(dateRange?.from || selectedCategory !== "all") && (
+                 <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-red-500 text-[8px] text-white">!</span>
+              )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-4 space-y-4">
-              <div className="text-center font-semibold">তারিখ অনুযায়ী ফিল্টার</div>
-              <div className="flex flex-col sm:flex-row items-center gap-4">
-                <Popover open={isStartCalendarOpen} onOpenChange={setIsStartCalendarOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-[240px] justify-start text-left font-normal",
-                        !tempDate?.from && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {tempDate?.from ? format(tempDate.from, "dd/MM/yyyy") : <span>শুরুর তারিখ</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={tempDate?.from}
-                      onSelect={(date) => {
-                        setTempDate(prev => ({...prev, from: date}));
-                        setIsStartCalendarOpen(false);
-                      }}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-                <Popover open={isEndCalendarOpen} onOpenChange={setIsEndCalendarOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-[240px] justify-start text-left font-normal",
-                        !tempDate?.to && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {tempDate?.to ? format(tempDate.to, "dd/MM/yyyy") : <span>শেষের তারিখ</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={tempDate?.to}
-                      onSelect={(date) => {
-                        setTempDate(prev => ({...prev, to: date}));
-                        setIsEndCalendarOpen(false);
-                      }}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+          <PopoverContent className="w-[300px] p-4 space-y-4" align="end">
+              <div className="text-center font-bold border-b pb-2">ফিল্টার অপশন</div>
+              
+              {/* Category Selector */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold flex items-center gap-1">
+                  <Tag className="h-3 w-3" /> ক্যাটাগরি বাছুন
+                </label>
+                <Select value={tempCategory} onValueChange={setTempCategory}>
+                  <SelectTrigger className="w-full h-9">
+                    <SelectValue placeholder="সবগুলো" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">সব ক্যাটাগরি</SelectItem>
+                    {uniqueCategories.map(cat => (
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+
+              {/* Date Selectors */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold flex items-center gap-1">
+                  <CalendarIcon className="h-3 w-3" /> তারিখ বাছুন
+                </label>
+                <div className="grid gap-2">
+                  <Popover open={isStartCalendarOpen} onOpenChange={setIsStartCalendarOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        size="sm"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !tempDate?.from && "text-muted-foreground"
+                        )}
+                      >
+                        {tempDate?.from ? format(tempDate.from, "dd/MM/yyyy") : <span>শুরুর তারিখ</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={tempDate?.from}
+                        onSelect={(date) => {
+                          setTempDate(prev => ({...prev, from: date}));
+                          setIsStartCalendarOpen(false);
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+
+                  <Popover open={isEndCalendarOpen} onOpenChange={setIsEndCalendarOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        size="sm"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !tempDate?.to && "text-muted-foreground"
+                        )}
+                      >
+                        {tempDate?.to ? format(tempDate.to, "dd/MM/yyyy") : <span>শেষের তারিখ</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={tempDate?.to}
+                        onSelect={(date) => {
+                          setTempDate(prev => ({...prev, to: date}));
+                          setIsEndCalendarOpen(false);
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+
               <div className='flex w-full gap-2 pt-2'>
-                  <Button onClick={applyFilter} className="w-full" disabled={!tempDate}>
+                  <Button onClick={applyFilter} className="w-full h-9">
                       ফিল্টার করুন
                   </Button>
-                  <Button onClick={resetFilter} variant="ghost" disabled={!dateRange && !tempDate} className="w-full">
+                  <Button onClick={resetFilter} variant="ghost" className="w-full h-9 text-red-500 hover:text-red-600 hover:bg-red-50">
                       রিসেট
                   </Button>
               </div>
@@ -155,41 +209,41 @@ export default function HistoryPage() {
         </Popover>
       </PageHeader>
       
-       {dateRange?.from && (
-            <div className="space-y-4">
-                <Card className="bg-muted/50">
-                    <CardContent className="p-3 text-center text-sm text-muted-foreground">
-                        ফিল্টার চালু আছে: 
-                        <span className="font-semibold mx-1">
-                            {format(dateRange.from, "dd/MM/yyyy")}
-                        </span>
-                        {dateRange.to && (
-                            <>
-                            থেকে
-                            <span className="font-semibold ml-1">
-                                    {format(dateRange.to, "dd/MM/yyyy")}
-                            </span>
-                            </>
+       {(dateRange?.from || selectedCategory !== "all") && (
+            <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                <Card className="bg-muted/50 border-dashed border-2">
+                    <CardContent className="p-3 text-center text-xs text-muted-foreground flex flex-wrap items-center justify-center gap-2">
+                        <span>ফিল্টার চালু:</span>
+                        {selectedCategory !== "all" && (
+                          <span className="bg-primary/20 text-primary-foreground px-2 py-0.5 rounded-full font-bold">
+                            {selectedCategory}
+                          </span>
+                        )}
+                        {dateRange?.from && (
+                          <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">
+                            {format(dateRange.from, "dd/MM/yyyy")} 
+                            {dateRange.to && ` - ${format(dateRange.to, "dd/MM/yyyy")}`}
+                          </span>
                         )}
                     </CardContent>
                 </Card>
                 <div className="grid grid-cols-2 gap-4">
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">নির্বাচিত আয়</CardTitle>
-                            <TrendingUp className="h-4 w-4 text-green-600" />
+                    <Card className="border-green-200">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-3 px-3">
+                            <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">ফিল্টারকৃত আয়</CardTitle>
+                            <TrendingUp className="h-3 w-3 text-green-600" />
                         </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-green-700">{formatCurrency(filteredTotals.income)}</div>
+                        <CardContent className="px-3 pb-3">
+                            <div className="text-xl font-black text-green-700">{formatCurrency(filteredTotals.income)}</div>
                         </CardContent>
                     </Card>
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">নির্বাচিত ব্যয়</CardTitle>
-                            <TrendingDown className="h-4 w-4 text-red-500" />
+                    <Card className="border-red-200">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-3 px-3">
+                            <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">ফিল্টারকৃত ব্যয়</CardTitle>
+                            <TrendingDown className="h-3 w-3 text-red-500" />
                         </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-red-600">{formatCurrency(filteredTotals.expense)}</div>
+                        <CardContent className="px-3 pb-3">
+                            <div className="text-xl font-black text-red-600">{formatCurrency(filteredTotals.expense)}</div>
                         </CardContent>
                     </Card>
                 </div>
@@ -199,30 +253,33 @@ export default function HistoryPage() {
       {filteredTransactions.length > 0 ? (
         <div className="space-y-3">
           {filteredTransactions.map((transaction) => (
-            <Card key={transaction.id} className={cn("overflow-hidden", transaction.type === 'income' ? 'border-green-200 dark:border-green-800' : 'border-red-200 dark:border-red-800')}>
+            <Card key={transaction.id} className={cn("overflow-hidden transition-all duration-300 hover:shadow-md", transaction.type === 'income' ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-red-500')}>
                 <CardContent className="p-4">
-                    <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
-                        <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-between text-[10px] font-bold text-muted-foreground mb-1 uppercase tracking-tighter">
+                        <div className="flex items-center gap-1">
                             {transaction.type === 'income' ? 
-                                <TrendingUp className="h-4 w-4 text-green-600" /> : 
-                                <TrendingDown className="h-4 w-4 text-red-500" />}
+                                <TrendingUp className="h-3 w-3 text-green-600" /> : 
+                                <TrendingDown className="h-3 w-3 text-red-500" />}
                             <span>{transaction.category}</span>
                         </div>
                         {transaction.date && <span>{format(parseISO(transaction.date), "d MMM, yyyy", { locale: bn })}</span>}
                     </div>
                     
-                    <h3 className={cn("text-2xl font-bold", transaction.type === 'income' ? 'text-green-700 dark:text-green-500' : 'text-red-600 dark:text-red-400')}>
-                        {formatCurrency(transaction.amount)}
-                    </h3>
-
-                    {transaction.description && <p className="text-sm text-muted-foreground mt-1">{transaction.description}</p>}
+                    <div className="flex justify-between items-baseline">
+                      <h3 className={cn("text-xl font-black tabular-nums", transaction.type === 'income' ? 'text-green-700' : 'text-red-600')}>
+                          {formatCurrency(transaction.amount)}
+                      </h3>
+                      {transaction.description && <p className="text-[10px] text-muted-foreground italic truncate max-w-[150px]">{transaction.description}</p>}
+                    </div>
                 </CardContent>
             </Card>
           ))}
         </div>
       ) : (
-        <div className="flex items-center justify-center h-96 border rounded-lg">
-          <p className="text-muted-foreground">এই তারিখ সীমার মধ্যে কোনো লেনদেন পাওয়া যায়নি।</p>
+        <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-lg bg-muted/20">
+          <FilterIcon className="h-10 w-10 text-muted-foreground/30 mb-2" />
+          <p className="text-muted-foreground text-sm">এই ফিল্টারের মধ্যে কোনো লেনদেন পাওয়া যায়নি।</p>
+          <Button variant="link" onClick={resetFilter} className="mt-2">সবগুলো দেখুন</Button>
         </div>
       )}
     </div>
