@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useRef } from 'react';
@@ -22,7 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from 'lucide-react';
 
 const months = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
-const billTypes = ['বিদ্যুৎ বিল', 'ইন্টারনেট বিল', 'গ্যাস বিল', 'অন্যান্য বিল'];
+const billTypes = ['বিদ্যুৎ বিল', 'ইন্টারনেট বিল', 'গ্যাস বিল', 'পানি বিল', 'অন্যান্য বিল'];
 
 export default function ExpensesPage() {
     const { addTransaction, totalIncome, totalExpense } = useBudget();
