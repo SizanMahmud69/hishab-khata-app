@@ -22,6 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from 'lucide-react';
 
 const months = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
+const billTypes = ['বিদ্যুৎ বিল', 'ইন্টারনেট বিল', 'গ্যাস বিল', 'অন্যান্য বিল'];
 
 export default function ExpensesPage() {
     const { addTransaction, totalIncome, totalExpense } = useBudget();
@@ -47,8 +48,9 @@ export default function ExpensesPage() {
         const category = formData.get('category') as string;
         const amount = parseFloat(formData.get('amount') as string);
         const date = formData.get('date') as string;
-        const descriptionInput = formData.get('description') as string;
         
+        let description = "";
+
         if (!category || !amount || !date) {
             toast({
                 variant: "destructive",
@@ -69,11 +71,18 @@ export default function ExpensesPage() {
             return;
         }
 
-        let description = descriptionInput;
-        if (category === 'বাড়ি ভাড়া') {
-            description = `${descriptionInput} মাসের বাড়ি ভাড়া`;
+        // Logical handling for different categories
+        if (category === 'সঞ্চয় ডিপোজিট') {
+            description = formData.get('savingsDestination') as string;
+        } else if (category === 'বাড়ি ভাড়া') {
+            const month = formData.get('month') as string;
+            description = `${month} মাসের বাড়ি ভাড়া`;
         } else if (category === 'বিল') {
-            description = `${descriptionInput} মাসের বিল`;
+            const billType = formData.get('billType') as string;
+            const month = formData.get('month') as string;
+            description = `${billType} (${month} মাস)`;
+        } else {
+            description = formData.get('description') as string;
         }
 
         try {
@@ -82,7 +91,7 @@ export default function ExpensesPage() {
                 category,
                 amount,
                 date: new Date(date).toISOString(),
-                description,
+                description: description || 'খরচ',
             });
 
             toast({
@@ -136,12 +145,13 @@ export default function ExpensesPage() {
                 </Label>
                 <Input id="date" name="date" type="date" defaultValue={new Date().toISOString().split('T')[0]} required/>
               </div>
+
+              {/* Dynamic inputs based on selected category */}
               <div className="grid w-full items-center gap-1.5">
-                <Label htmlFor="description">
-                  বিবরণ
-                </Label>
+                <Label htmlFor="dynamic-field">বিবরণ</Label>
+                
                 {selectedCategory === 'সঞ্চয় ডিপোজিট' ? (
-                     <Select name="description" required>
+                     <Select name="savingsDestination" required>
                         <SelectTrigger>
                             <SelectValue placeholder="একটি মাধ্যম নির্বাচন করুন" />
                         </SelectTrigger>
@@ -149,8 +159,31 @@ export default function ExpensesPage() {
                             {savingsDestinations.map(dest => <SelectItem key={dest} value={dest}>{dest}</SelectItem>)}
                         </SelectContent>
                     </Select>
-                ) : selectedCategory === 'বাড়ি ভাড়া' || selectedCategory === 'বিল' ? (
-                     <Select name="description" required>
+                ) : selectedCategory === 'বিল' ? (
+                    <div className="space-y-4">
+                        <div className="grid w-full items-center gap-1.5">
+                            <Select name="billType" required>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="বিলের ধরন নির্বাচন করুন" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {billTypes.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="grid w-full items-center gap-1.5">
+                            <Select name="month" required>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="একটি মাস নির্বাচন করুন" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {months.map(month => <SelectItem key={month} value={month}>{month}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                ) : selectedCategory === 'বাড়ি ভাড়া' ? (
+                     <Select name="month" required>
                         <SelectTrigger>
                             <SelectValue placeholder="একটি মাস নির্বাচন করুন" />
                         </SelectTrigger>
