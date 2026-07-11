@@ -11,15 +11,15 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useUser, useFirestore } from '@/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { useBudget } from '@/context/budget-context';
 
 export default function DonatePage() {
     const { toast } = useToast();
     const { user } = useUser();
+    const { donationNumber } = useBudget();
     const firestore = useFirestore();
     const [isSubmitting, setIsSubmitting] = useState(false);
     
-    const donationNumber = "01740093369";
-
     const copyToClipboard = () => {
         navigator.clipboard.writeText(donationNumber);
         toast({

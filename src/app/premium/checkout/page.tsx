@@ -25,7 +25,7 @@ function CheckoutPageContent() {
     const { toast } = useToast();
     const { user } = useUser();
     const firestore = useFirestore();
-    const { rewardPoints, bdtPer100Points } = useBudget();
+    const { rewardPoints, bdtPer100Points, donationNumber } = useBudget();
     
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,11 +42,10 @@ function CheckoutPageContent() {
     }, [selectedPlan, bdtPer100Points]);
     
     const copyToClipboard = () => {
-        const paymentNumber = "01740093369";
-        navigator.clipboard.writeText(paymentNumber);
+        navigator.clipboard.writeText(donationNumber);
         toast({
             title: "কপি হয়েছে!",
-            description: `নম্বর (${paymentNumber}) ক্লিপবোর্ডে কপি করা হয়েছে।`,
+            description: `নম্বর (${donationNumber}) ক্লিপবোর্ডে কপি করা হয়েছে।`,
         });
     };
 
@@ -213,7 +212,7 @@ function CheckoutPageContent() {
                              <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
                                 <p className="text-sm text-center">অনুগ্রহ করে নিচের নম্বরে <span className='font-bold'>(৳{selectedPlan.price})</span> সেন্ড মানি করুন এবং নিচের তথ্যগুলো পূরণ করুন।</p>
                                 <div className="flex items-center justify-center gap-2 p-3 rounded-lg bg-background border border-dashed">
-                                    <p className="text-lg font-bold text-center text-primary tracking-widest">01740093369</p>
+                                    <p className="text-lg font-bold text-center text-primary tracking-widest">{donationNumber}</p>
                                     <Button type="button" variant="ghost" size="icon" onClick={copyToClipboard} className='h-8 w-8'>
                                         <Copy className="h-4 w-4" />
                                     </Button>

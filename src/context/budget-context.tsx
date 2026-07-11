@@ -73,6 +73,7 @@ interface AppConfig {
     referrerBonusPoints: number;
     referredUserBonusPoints: number;
     bdtPer100Points: number;
+    donationNumber?: string;
     adWatchPoints?: number;
     spinPointsOptions?: number[];
     globalPopup?: {
@@ -135,6 +136,7 @@ interface BudgetContextType {
     referrerBonusPoints: number;
     referredUserBonusPoints: number;
     bdtPer100Points: number;
+    donationNumber: string;
     isLoading: boolean;
     premiumStatus: 'free' | 'premium';
     premiumExpiryDate: Date | null;
@@ -254,6 +256,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                         referrerBonusPoints: 100,
                         referredUserBonusPoints: 50,
                         bdtPer100Points: 5,
+                        donationNumber: "01740093369",
                         adWatchPoints: 20,
                         spinPointsOptions: [5, 10, 15, 20, 25, 30, 40, 50],
                         globalPopup: {
@@ -424,6 +427,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const referrerBonusPoints = appConfig?.referrerBonusPoints ?? 100;
     const referredUserBonusPoints = appConfig?.referredUserBonusPoints ?? 50;
     const bdtPer100Points = appConfig?.bdtPer100Points ?? 5;
+    const donationNumber = appConfig?.donationNumber ?? "01740093369";
     const rewardPoints = userProfile?.points ?? 0;
     const globalPopup = appConfig?.globalPopup ?? null;
     
@@ -794,6 +798,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         referrerBonusPoints,
         referredUserBonusPoints,
         bdtPer100Points,
+        donationNumber,
         isLoading,
         premiumStatus,
         premiumExpiryDate,
@@ -812,7 +817,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     }), [
         transactions, debtNotes, referrals, pointHistory,
         totalIncome, totalExpense, totalSavings, savingsBreakdown,
-        rewardPoints, minWithdrawalPoints, referrerBonusPoints, referredUserBonusPoints, bdtPer100Points,
+        rewardPoints, minWithdrawalPoints, referrerBonusPoints, referredUserBonusPoints, bdtPer100Points, donationNumber,
         isLoading, premiumStatus, premiumExpiryDate, userProfile, premiumSubscriptions, 
         pendingSubscriptionPlanIds, activePremiumPlan, isSubscriptionsLoading, hasUsedFreeTrial,
         addTransaction, addDebtNote, updateDebtNote, awardPointsForTask, canWatchAd, remainingSpins, isTaskLoading,
