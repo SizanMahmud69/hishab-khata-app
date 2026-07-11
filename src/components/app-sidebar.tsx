@@ -1,3 +1,4 @@
+
 "use client"
 
 import Link from "next/link"
@@ -9,6 +10,7 @@ import {
   Crown,
   DollarSign,
   HandCoins,
+  Heart,
   History,
   LayoutDashboard,
   LifeBuoy,
@@ -90,6 +92,11 @@ const menuItems = [
         href: "/calculator",
         label: "হিসাব ক্যালকুলেটর",
         icon: Calculator,
+    },
+    {
+        href: "/donate",
+        label: "ডোনেট করুন",
+        icon: Heart,
     },
     {
         href: "/live-support",

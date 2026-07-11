@@ -4,7 +4,7 @@ import Link from "next/link"
 import { type ReactNode, useState, useEffect, useMemo } from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
-import { Bell, BookMarked, Menu, CalendarCheck, CalendarPlus } from "lucide-react"
+import { Bell, BookMarked, Menu, CalendarCheck, CalendarPlus, Heart } from "lucide-react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import {
     DropdownMenu,
@@ -197,7 +197,13 @@ export function AppHeader({children}: {children: ReactNode}) {
                         <span>হিসাব খাতা</span>
                     </Link>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 sm:gap-2">
+                    <Button variant="ghost" size="icon" asChild className="rounded-full hover:bg-white/20 text-white">
+                        <Link href="/donate">
+                            <Heart className="h-5 w-5 fill-current" />
+                            <span className="sr-only">Donate</span>
+                        </Link>
+                    </Button>
                      <Button variant="ghost" size="icon" asChild className={cn("rounded-full hover:bg-white/20", !isCheckedIn && "animate-glow")}>
                         <Link href="/check-in">
                            {isCheckedIn ? (
