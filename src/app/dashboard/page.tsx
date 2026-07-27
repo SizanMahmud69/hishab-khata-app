@@ -13,11 +13,20 @@ export default function DashboardPage() {
     const { totalIncome, totalExpense, totalSavings, walletBreakdown, savingsBreakdown } = useBudget();
     const balance = totalIncome - totalExpense;
 
+    // Items for the Usable Balance section
     const walletItems = [
         { name: 'ক্যাশ', key: 'ক্যাশ', color: 'text-yellow-600' },
         { name: 'বিকাশ', key: 'বিকাশ', color: 'text-[#E2136E]' },
         { name: 'রকেট', key: 'রকেট', color: 'text-[#8C3494]' },
         { name: 'নগদ', key: 'নগদ', color: 'text-[#F7941D]' }
+    ];
+
+    // Items for the Savings section as per user request
+    const savingsItems = [
+        { name: 'ব্যাংক', key: 'নগদ', color: 'text-blue-600' }, // Shows Nagad's savings value
+        { name: 'বিকাশ', key: 'বিকাশ', color: 'text-[#E2136E]' },
+        { name: 'রকেট', key: 'রকেট', color: 'text-[#8C3494]' },
+        { name: 'নগদ', key: 'zero', color: 'text-[#F7941D]' }   // Will show 0
     ];
 
   return (
@@ -77,14 +86,14 @@ export default function DashboardPage() {
           {/* Savings Breakdown */}
           <div className="w-full border-t border-dashed border-slate-300 dark:border-slate-700 pt-6">
               <div className="grid grid-cols-4 gap-0">
-                  {walletItems.map((item, idx) => (
-                      <div key={item.key} className={cn(
+                  {savingsItems.map((item, idx) => (
+                      <div key={idx} className={cn(
                           "text-center px-1 flex flex-col items-center",
                           idx !== 3 && "border-r border-slate-200/50 dark:border-slate-800"
                       )}>
                           <p className={cn("text-[10px] font-bold uppercase tracking-tighter mb-1", item.color)}>{item.name}</p>
                           <p className="text-sm font-black text-slate-700 dark:text-slate-300">
-                              {(savingsBreakdown[item.key] || 0).toLocaleString('bn-BD')}
+                              {item.key === 'zero' ? "০" : (savingsBreakdown[item.key] || 0).toLocaleString('bn-BD')}
                           </p>
                       </div>
                   ))}
