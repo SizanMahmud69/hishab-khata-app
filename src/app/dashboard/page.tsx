@@ -22,6 +22,7 @@ export default function DashboardPage() {
     ];
 
     // Items for the Savings section with subtle brand backgrounds
+    // Logic: Bank shows Nagad's value, and Nagad shows 0 as requested
     const savingsItems = [
         { name: 'ব্যাংক', key: 'নগদ', color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/10', border: 'border-blue-100 dark:border-blue-900/20' }, 
         { name: 'বিকাশ', key: 'বিকাশ', color: 'text-[#E2136E]', bg: 'bg-[#E2136E]/5 dark:bg-[#E2136E]/10', border: 'border-[#E2136E]/10 dark:border-[#E2136E]/20' },
@@ -43,49 +44,49 @@ export default function DashboardPage() {
           </div>
         </CardHeader>
         <CardContent className="px-6 pb-6">
-          <div className="mb-6">
-              <div className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white mb-2 flex items-baseline gap-1">
+          <div className="mb-4">
+              <div className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white mb-1 flex items-baseline gap-1">
                 {balance.toLocaleString('bn-BD')} <span className="text-2xl font-bold">৳</span>
               </div>
-              <p className="text-xs text-slate-500 font-medium">আপনার বর্তমান ব্যবহারযোগ্য ব্যালেন্স</p>
+              <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">আপনার বর্তমান ব্যবহারযোগ্য ব্যালেন্স</p>
           </div>
           
-          {/* Usable Balance Breakdown with Brand-Colored Subtle Cards */}
-          <div className="grid grid-cols-4 gap-2 mb-8">
+          {/* Usable Balance Breakdown - Extra Thin Cards */}
+          <div className="grid grid-cols-4 gap-1.5 mb-6">
               {walletItems.map((item) => (
-                  <div key={item.key} className={cn("rounded-xl p-1.5 shadow-sm border flex flex-col items-center justify-center transition-transform active:scale-95", item.bg, item.border)}>
-                      <p className={cn("text-[8px] sm:text-[9px] font-bold uppercase tracking-tighter mb-0.5", item.color)}>{item.name}</p>
-                      <p className="text-[11px] sm:text-xs font-black text-slate-700 dark:text-slate-300">
+                  <div key={item.key} className={cn("rounded-lg py-1 px-1 shadow-sm border flex flex-col items-center justify-center transition-transform active:scale-95", item.bg, item.border)}>
+                      <p className={cn("text-[7px] sm:text-[8px] font-bold uppercase tracking-tighter mb-0.5 leading-none", item.color)}>{item.name}</p>
+                      <p className="text-[10px] sm:text-[11px] font-black text-slate-700 dark:text-slate-300 leading-none">
                           {(walletBreakdown[item.key] || 0).toLocaleString('bn-BD')}
                       </p>
                   </div>
               ))}
           </div>
 
-          <div className="w-full h-px bg-slate-200/50 dark:bg-slate-800 my-6" />
+          <div className="w-full h-px bg-slate-200/50 dark:bg-slate-800 my-5" />
 
           {/* Total Savings Section */}
-          <div className="flex items-center justify-between group mb-6">
-            <div className="flex items-center gap-4">
-                <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-full border border-blue-100/50 dark:border-blue-800 shadow-sm">
-                    < Landmark className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+          <div className="flex items-center justify-between group mb-4">
+            <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-full border border-blue-100/50 dark:border-blue-800 shadow-sm">
+                    <Landmark className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">মোট সঞ্চয়</h3>
-                    <p className="text-xs text-slate-500">আপনার জমানো অর্থ</p>
+                    <h3 className="text-base font-bold text-slate-800 dark:text-slate-200 leading-none mb-1">মোট সঞ্চয়</h3>
+                    <p className="text-[10px] text-slate-500 leading-none">আপনার জমানো অর্থ</p>
                 </div>
             </div>
-            <div className="text-2xl font-black text-blue-600 dark:text-blue-400">
+            <div className="text-xl font-black text-blue-600 dark:text-blue-400">
                 {totalSavings.toLocaleString('bn-BD')} ৳
             </div>
           </div>
 
-          {/* Savings Breakdown with Brand-Colored Subtle Cards */}
-          <div className="grid grid-cols-4 gap-2">
+          {/* Savings Breakdown - Extra Thin Cards */}
+          <div className="grid grid-cols-4 gap-1.5">
               {savingsItems.map((item) => (
-                  <div key={item.name} className={cn("rounded-xl p-1.5 shadow-sm border flex flex-col items-center justify-center transition-transform active:scale-95", item.bg, item.border)}>
-                      <p className={cn("text-[8px] sm:text-[9px] font-bold uppercase tracking-tighter mb-0.5", item.color)}>{item.name}</p>
-                      <p className="text-[11px] sm:text-xs font-black text-slate-700 dark:text-slate-300">
+                  <div key={item.name} className={cn("rounded-lg py-1 px-1 shadow-sm border flex flex-col items-center justify-center transition-transform active:scale-95", item.bg, item.border)}>
+                      <p className={cn("text-[7px] sm:text-[8px] font-bold uppercase tracking-tighter mb-0.5 leading-none", item.color)}>{item.name}</p>
+                      <p className="text-[10px] sm:text-[11px] font-black text-slate-700 dark:text-slate-300 leading-none">
                           {item.key === 'zero' ? "০" : (savingsBreakdown[item.key] || 0).toLocaleString('bn-BD')}
                       </p>
                   </div>
