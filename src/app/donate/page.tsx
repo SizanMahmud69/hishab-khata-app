@@ -117,7 +117,7 @@ export default function DonatePage() {
                                 <div>
                                     <p className="text-xs font-bold uppercase text-muted-foreground mb-1">পার্সোনাল নম্বর</p>
                                     <p className="text-2xl font-black text-primary tracking-widest">{donationNumber}</p>
-                                    <p className="text-[10px] text-muted-foreground mt-1">(বিকাশ, ক্যাশ, রকেট পাওয়া যাবে)</p>
+                                    <p className="text-[10px] text-muted-foreground mt-1">(বিকাশ, নগদ, রকেট পাওয়া যাবে)</p>
                                 </div>
                                 <Button variant="outline" size="icon" onClick={copyToClipboard}>
                                     <Copy className="h-4 w-4" />

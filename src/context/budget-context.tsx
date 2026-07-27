@@ -23,7 +23,7 @@ export interface Transaction {
     amount: number;
     date: string;
     description: string;
-    source: string; // নগদ/ক্যাশ, বিকাশ, রকেট, ব্যাংক
+    source: string; // ক্যাশ, বিকাশ, রকেট, নগদ
     createdAt?: any;
 }
 
@@ -451,7 +451,9 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
 
         transactions.forEach(t => {
             let src = t.source || 'ক্যাশ'; 
-            if (src === 'নগদ') src = 'ক্যাশ'; // Support for existing data
+            if (src === 'নগদ' && !walletSources.includes('নগদ')) src = 'ক্যাশ'; // Support for old physical cash name
+            if (src === 'ব্যাংক') src = 'নগদ'; // Migration: old Bank is now MFS Nagad
+            
             if (breakdown[src] !== undefined) {
                 if (t.type === 'income') {
                     breakdown[src] += t.amount;
@@ -473,7 +475,9 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         transactions.forEach(t => {
             if (t.category === 'সঞ্চয় ডিপোজিট') {
                 let dest = t.description;
-                if (dest === 'নগদ') dest = 'ক্যাশ'; // Support for existing data
+                if (dest === 'নগদ' && !savingsDestinations.includes('নগদ')) dest = 'ক্যাশ';
+                if (dest === 'ব্যাংক') dest = 'নগদ';
+
                 if (breakdown[dest] !== undefined) {
                     breakdown[dest] += t.amount;
                 }
@@ -482,7 +486,8 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                 if (dest.endsWith(' থেকে উত্তোলন')) {
                     dest = dest.replace(' থেকে উত্তোলন', '');
                 }
-                if (dest === 'নগদ') dest = 'ক্যাশ'; // Support for existing data
+                if (dest === 'নগদ' && !savingsDestinations.includes('নগদ')) dest = 'ক্যাশ';
+                if (dest === 'ব্যাংক') dest = 'নগদ';
                 
                 if (breakdown[dest] !== undefined) {
                     breakdown[dest] -= t.amount;

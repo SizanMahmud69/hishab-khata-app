@@ -5,7 +5,7 @@ import { OverviewCards } from "@/components/overview-cards"
 import { RecentTransactions } from "@/components/recent-transactions"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { OverviewPieChart } from "@/components/overview-pie-chart"
-import { Wallet, Landmark, Smartphone, Banknote, CreditCard, Coins } from "lucide-react"
+import { Wallet, Smartphone, Banknote, CreditCard, Coins, SmartphoneNfc } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { useBudget } from "@/context/budget-context";
 import { cn } from '@/lib/utils';
@@ -41,7 +41,7 @@ export default function DashboardPage() {
                     { name: 'ক্যাশ', key: 'ক্যাশ', icon: <Coins className="h-3 w-3" /> },
                     { name: 'বিকাশ', key: 'বিকাশ', icon: <Smartphone className="h-3 w-3" /> },
                     { name: 'রকেট', key: 'রকেট', icon: <CreditCard className="h-3 w-3" /> },
-                    { name: 'ব্যাংক', key: 'ব্যাংক', icon: <Banknote className="h-3 w-3" /> }
+                    { name: 'নগদ', key: 'নগদ', icon: <SmartphoneNfc className="h-3 w-3" /> }
                 ].map((item, idx) => (
                     <div key={item.key} className={cn("text-center space-y-1.5", idx > 0 && "border-l border-yellow-100 dark:border-yellow-900/50")}>
                         <div className="flex flex-col items-center gap-1">
@@ -69,7 +69,7 @@ export default function DashboardPage() {
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                             <div className="p-2 bg-blue-100 dark:bg-blue-900/40 rounded-full">
-                                < Landmark className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                < SmartphoneNfc className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                             </div>
                             <div>
                                 <p className="text-sm font-bold">মোট সঞ্চয়</p>
@@ -80,7 +80,7 @@ export default function DashboardPage() {
                     
                     <div className="grid grid-cols-4 gap-1">
                        {[
-                           { name: 'ব্যাংক', key: 'ব্যাংক' },
+                           { name: 'নগদ', key: 'নগদ' },
                            { name: 'বিকাশ', key: 'বিকাশ' },
                            { name: 'ক্যাশ', key: 'ক্যাশ' },
                            { name: 'রকেট', key: 'রকেট' }
