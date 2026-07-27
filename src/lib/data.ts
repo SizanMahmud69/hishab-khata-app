@@ -1,28 +1,5 @@
 
-// This file is now deprecated as Debt and ShopDue are combined into DebtNote in budget-context.
-// Keeping it for categories and other static data.
-
-export interface Debt {
-  id: string;
-  person: string;
-  amount: number;
-  paidAmount: number;
-  type: 'lent' | 'borrowed';
-  date: string;
-  repaymentDate?: string;
-  description?: string;
-  status: 'unpaid' | 'paid' | 'partially-paid';
-}
-
-export interface ShopDue {
-  id: string;
-  shopName: string;
-  amount: number;
-  paidAmount: number;
-  date: string;
-  description?: string;
-  status: 'unpaid' | 'paid' | 'partially-paid';
-}
+// This file contains categories and other static data.
 
 export interface PremiumPlan {
     id: string;
@@ -38,7 +15,6 @@ export interface PremiumPlan {
     points?: number;
     durationDays?: number; // Number of days the plan is valid for
 }
-
 
 export const overviewChartData = [
   { name: 'Jan', income: 0, expense: 0 },
@@ -63,7 +39,7 @@ export const premiumPlans: PremiumPlan[] = [
         price: 0,
         currency: "৳",
         period: "/৩ দিন",
-        description: "আমাদের সমস্ত প্রিমিয়াম ফিচার বিনামূল্যে تجربة করুন।",
+        description: "আমাদের সমস্ত প্রিমিয়াম ফিচার বিনামূল্যে ট্রায়াল করুন।",
         isBestValue: false,
         sortOrder: 1,
         isActive: true,
