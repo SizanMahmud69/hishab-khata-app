@@ -53,9 +53,9 @@ export default function DashboardPage() {
           {/* Usable Balance Breakdown with Brand-Colored Subtle Cards */}
           <div className="grid grid-cols-4 gap-2 mb-8">
               {walletItems.map((item) => (
-                  <div key={item.key} className={cn("rounded-2xl p-2 sm:p-3 shadow-sm border flex flex-col items-center justify-center transition-transform active:scale-95", item.bg, item.border)}>
-                      <p className={cn("text-[9px] sm:text-[10px] font-bold uppercase tracking-tighter mb-1", item.color)}>{item.name}</p>
-                      <p className="text-xs sm:text-sm font-black text-slate-700 dark:text-slate-300">
+                  <div key={item.key} className={cn("rounded-xl p-1.5 shadow-sm border flex flex-col items-center justify-center transition-transform active:scale-95", item.bg, item.border)}>
+                      <p className={cn("text-[8px] sm:text-[9px] font-bold uppercase tracking-tighter mb-0.5", item.color)}>{item.name}</p>
+                      <p className="text-[11px] sm:text-xs font-black text-slate-700 dark:text-slate-300">
                           {(walletBreakdown[item.key] || 0).toLocaleString('bn-BD')}
                       </p>
                   </div>
@@ -83,9 +83,9 @@ export default function DashboardPage() {
           {/* Savings Breakdown with Brand-Colored Subtle Cards */}
           <div className="grid grid-cols-4 gap-2">
               {savingsItems.map((item) => (
-                  <div key={item.name} className={cn("rounded-2xl p-2 sm:p-3 shadow-sm border flex flex-col items-center justify-center transition-transform active:scale-95", item.bg, item.border)}>
-                      <p className={cn("text-[9px] sm:text-[10px] font-bold uppercase tracking-tighter mb-1", item.color)}>{item.name}</p>
-                      <p className="text-xs sm:text-sm font-black text-slate-700 dark:text-slate-300">
+                  <div key={item.name} className={cn("rounded-xl p-1.5 shadow-sm border flex flex-col items-center justify-center transition-transform active:scale-95", item.bg, item.border)}>
+                      <p className={cn("text-[8px] sm:text-[9px] font-bold uppercase tracking-tighter mb-0.5", item.color)}>{item.name}</p>
+                      <p className="text-[11px] sm:text-xs font-black text-slate-700 dark:text-slate-300">
                           {item.key === 'zero' ? "০" : (savingsBreakdown[item.key] || 0).toLocaleString('bn-BD')}
                       </p>
                   </div>
