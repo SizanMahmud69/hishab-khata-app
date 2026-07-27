@@ -7,7 +7,7 @@ import { collection, onSnapshot, addDoc, doc, updateDoc, serverTimestamp, setDoc
 import { createNotification } from '@/components/app-header';
 import { type WithdrawalRequest } from '@/app/withdraw/page';
 import { isAfter, addDays, parseISO } from 'date-fns';
-import { premiumPlans, type PremiumPlan, savingsDestinations } from '@/lib/data';
+import { premiumPlans, type PremiumPlan, savingsDestinations, walletSources } from '@/lib/data';
 
 export interface ShopDueEntry {
     date: string;
@@ -23,6 +23,7 @@ export interface Transaction {
     amount: number;
     date: string;
     description: string;
+    source: string; // নগদ, বিকাশ, রকেট, ব্যাংক
     createdAt?: any;
 }
 
@@ -37,6 +38,7 @@ export interface DebtNote {
     date: string;
     repaymentDate?: string;
     description?: string;
+    source?: string; // Where the money is received/paid from
     createdAt?: any;
     cycleId?: string;
     entries?: ShopDueEntry[];
@@ -126,11 +128,12 @@ interface BudgetContextType {
     pointHistory: PointHistoryItem[];
     addTransaction: (transaction: Omit<Transaction, 'id' | 'createdAt' | 'userId'>) => Promise<void>;
     addDebtNote: (debtNote: Omit<DebtNote, 'id' | 'createdAt' | 'userId'>) => Promise<void>;
-    updateDebtNote: (debtNote: DebtNote, paymentAmount?: number) => Promise<void>;
+    updateDebtNote: (debtNote: DebtNote, paymentAmount?: number, walletSource?: string) => Promise<void>;
     totalIncome: number;
     totalExpense: number;
     totalSavings: number;
     savingsBreakdown: Record<string, number>;
+    walletBreakdown: Record<string, number>;
     rewardPoints: number;
     minWithdrawalPoints: number;
     referrerBonusPoints: number;
@@ -440,6 +443,26 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         return deposits - withdrawals;
     }, [transactions]);
 
+    const walletBreakdown = useMemo(() => {
+        const breakdown: Record<string, number> = {};
+        walletSources.forEach(src => {
+            breakdown[src] = 0;
+        });
+
+        transactions.forEach(t => {
+            const src = t.source || 'নগদ'; // Default for old transactions
+            if (breakdown[src] !== undefined) {
+                if (t.type === 'income') {
+                    breakdown[src] += t.amount;
+                } else {
+                    breakdown[src] -= t.amount;
+                }
+            }
+        });
+        
+        return breakdown;
+    }, [transactions]);
+
     const savingsBreakdown = useMemo(() => {
         const breakdown: Record<string, number> = {};
         savingsDestinations.forEach(dest => {
@@ -453,7 +476,6 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                     breakdown[dest] += t.amount;
                 }
             } else if (t.category === 'সঞ্চয় উত্তোলন') {
-                // Handling both direct destination name and those with suffix " থেকে উত্তোলন"
                 let dest = t.description;
                 if (dest.endsWith(' থেকে উত্তোলন')) {
                     dest = dest.replace(' থেকে উত্তোলন', '');
@@ -569,7 +591,8 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                     paidAmount: 0,
                     status: 'unpaid',
                     date: cycleStartDate.toISOString(),
-                    entries: [newEntry]
+                    entries: [newEntry],
+                    source: debtNote.source || 'নগদ'
                 };
                 await addDocToCollection('debtNotes', newShopDueDoc);
             }
@@ -579,7 +602,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     }, [user, firestore]);
 
 
-    const updateDebtNote = useCallback(async (debtNote: DebtNote, paymentAmount?: number) => {
+    const updateDebtNote = useCallback(async (debtNote: DebtNote, paymentAmount?: number, walletSource?: string) => {
         if (!user || !firestore || !debtNote.id) return;
     
         const batch = writeBatch(firestore);
@@ -598,6 +621,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                 amount: paymentAmount,
                 date: new Date().toISOString(),
                 description: `${debtNote.person} ${debtNote.type === 'lent' ? 'থেকে প্রাপ্তি' : 'কে পরিশোধ'}`,
+                source: walletSource || 'নগদ'
             };
         
             batch.set(transactionDocRef, {...transactionData, createdAt: serverTimestamp()});
@@ -793,6 +817,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         totalExpense, 
         totalSavings, 
         savingsBreakdown,
+        walletBreakdown,
         rewardPoints,
         minWithdrawalPoints,
         referrerBonusPoints,
@@ -816,7 +841,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         adConfig,
     }), [
         transactions, debtNotes, referrals, pointHistory,
-        totalIncome, totalExpense, totalSavings, savingsBreakdown,
+        totalIncome, totalExpense, totalSavings, savingsBreakdown, walletBreakdown,
         rewardPoints, minWithdrawalPoints, referrerBonusPoints, referredUserBonusPoints, bdtPer100Points, donationNumber,
         isLoading, premiumStatus, premiumExpiryDate, userProfile, premiumSubscriptions, 
         pendingSubscriptionPlanIds, activePremiumPlan, isSubscriptionsLoading, hasUsedFreeTrial,

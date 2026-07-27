@@ -20,9 +20,11 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { walletSources } from "@/lib/data";
 
 export default function AddDebtPage() {
-    const { addDebtNote, addTransaction, totalIncome, totalExpense } = useBudget();
+    const { addDebtNote, addTransaction, totalIncome, totalExpense, walletBreakdown } = useBudget();
     const { toast } = useToast();
     const router = useRouter();
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,8 +49,9 @@ export default function AddDebtPage() {
         const date = formData.get('date') as string;
         const repaymentDate = formData.get('repayment-date') as string;
         const description = formData.get('description') as string;
+        const walletSource = formData.get('walletSource') as string;
 
-        if (!type || !person || !amount || !date) {
+        if (!type || !person || !amount || !date || !walletSource) {
             toast({
                 variant: "destructive",
                 title: "ফর্ম পূরণ আবশ্যক",
@@ -58,14 +61,17 @@ export default function AddDebtPage() {
             return;
         }
 
-        if (type === 'lent' && amount > balance) {
-            toast({
-                variant: "destructive",
-                title: "অপর্যাপ্ত ব্যালেন্স",
-                description: `আপনি ${formatCurrency(amount)} ধার দিতে পারবেন না। আপনার বর্তমান ব্যালেন্স ${formatCurrency(balance)}।`,
-            });
-            setIsSubmitting(false);
-            return;
+        if (type === 'lent') {
+            const sourceBalance = walletBreakdown[walletSource] || 0;
+            if (amount > sourceBalance) {
+                toast({
+                    variant: "destructive",
+                    title: "অপর্যাপ্ত ব্যালেন্স",
+                    description: `আপনার "${walletSource}"-এ পর্যাপ্ত ব্যালেন্স নেই। বর্তমান ব্যালেন্স ${formatCurrency(sourceBalance)}।`,
+                });
+                setIsSubmitting(false);
+                return;
+            }
         }
 
         try {
@@ -77,7 +83,8 @@ export default function AddDebtPage() {
                 repaymentDate: repaymentDate ? new Date(repaymentDate).toISOString() : undefined,
                 description,
                 paidAmount: 0,
-                status: 'unpaid'
+                status: 'unpaid',
+                source: walletSource
             };
 
             if (type === 'lent') {
@@ -87,6 +94,7 @@ export default function AddDebtPage() {
                     amount: amount,
                     date: new Date(date).toISOString(),
                     description: `${person} কে ধার দেওয়া হলো`,
+                    source: walletSource
                 });
             } else {
                 await addTransaction({
@@ -95,6 +103,7 @@ export default function AddDebtPage() {
                     amount: amount,
                     date: new Date(date).toISOString(),
                     description: `${person} এর থেকে ধার নেওয়া হলো`,
+                    source: walletSource
                 });
             }
             
@@ -125,7 +134,7 @@ export default function AddDebtPage() {
             </CardHeader>
             <CardContent className="grid gap-4 py-4 px-4 max-h-[70vh] overflow-y-auto">
                 <div className="space-y-1.5">
-                    <Label>ধরন</Label>
+                    <Label>ধারের ধরন</Label>
                     <RadioGroup defaultValue="lent" name="type" className="flex gap-4">
                         <div className="flex items-center space-x-2">
                             <RadioGroupItem value="lent" id="r-lent" />
@@ -137,6 +146,19 @@ export default function AddDebtPage() {
                         </div>
                     </RadioGroup>
                 </div>
+                
+                <div className="space-y-1.5">
+                    <Label htmlFor="walletSource">লেনদেনের মাধ্যম</Label>
+                    <Select name="walletSource" required>
+                        <SelectTrigger>
+                            <SelectValue placeholder="একটি মাধ্যম নির্বাচন করুন" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {walletSources.map(src => <SelectItem key={src} value={src}>{src}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                </div>
+
                 <div className="space-y-1.5">
                     <Label htmlFor="person">ব্যক্তির নাম</Label>
                     <Input id="person" name="person" placeholder="সোহেল" required />

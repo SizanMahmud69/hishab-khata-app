@@ -19,6 +19,8 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { walletSources } from "@/lib/data";
 
 export default function PayDebtPage() {
     const { debtId } = useParams();
@@ -26,7 +28,7 @@ export default function PayDebtPage() {
     const { toast } = useToast();
     const { user } = useUser();
     const firestore = useFirestore();
-    const { updateDebtNote, totalIncome, totalExpense } = useBudget();
+    const { updateDebtNote, totalIncome, totalExpense, walletBreakdown } = useBudget();
 
     const debtDocRef = useMemoFirebase(() => {
         if (!user || !firestore || !debtId) return null;
@@ -42,6 +44,7 @@ export default function PayDebtPage() {
 
     const [paymentAmount, setPaymentAmount] = useState(0);
     const [paymentDate, setPaymentDate] = useState<Date | undefined>(new Date());
+    const [selectedWalletSource, setSelectedWalletSource] = useState<string | undefined>(undefined);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isCalendarOpen, setIsCalendarOpen] = useState(false);
     
@@ -72,6 +75,16 @@ export default function PayDebtPage() {
 
     const handlePaymentConfirm = async () => {
         if (!debtNote || !paymentDate) return;
+        
+        if (!selectedWalletSource) {
+            toast({
+                variant: "destructive",
+                title: "মাধ্যম নির্বাচন করুন",
+                description: "অনুগ্রহ করে লেনদেনের মাধ্যম নির্বাচন করুন।",
+            });
+            return;
+        }
+
         setIsSubmitting(true);
 
         if (paymentAmount <= 0 || paymentAmount > remainingAmount) {
@@ -84,15 +97,18 @@ export default function PayDebtPage() {
             return;
         }
         
-        // Balance check for both borrowed money and shop dues
-        if ((debtNote.type === 'borrowed' || debtNote.type === 'shopDue') && paymentAmount > balance) {
-            toast({
-                variant: "destructive",
-                title: "অপর্যাপ্ত ব্যালেন্স",
-                description: `আপনার বর্তমান ব্যালেন্স ${formatCurrency(balance)}। আপনি এর বেশি পরিশোধ করতে পারবেন না।`,
-            });
-            setIsSubmitting(false);
-            return;
+        // If we are paying someone (repaying a borrowed debt or paying shop dues), check wallet source balance
+        if (debtNote.type === 'borrowed' || debtNote.type === 'shopDue') {
+            const sourceBalance = walletBreakdown[selectedWalletSource] || 0;
+            if (paymentAmount > sourceBalance) {
+                toast({
+                    variant: "destructive",
+                    title: "অপর্যাপ্ত ব্যালেন্স",
+                    description: `আপনার "${selectedWalletSource}"-এ পর্যাপ্ত ব্যালেন্স নেই। বর্তমান ব্যালেন্স ${formatCurrency(sourceBalance)}।`,
+                });
+                setIsSubmitting(false);
+                return;
+            }
         }
 
         try {
@@ -102,7 +118,8 @@ export default function PayDebtPage() {
 
             await updateDebtNote(
                 { ...debtNote, paidAmount: newPaidAmount, status: newStatus },
-                amountToPay
+                amountToPay,
+                selectedWalletSource
             );
 
             toast({
@@ -170,6 +187,19 @@ export default function PayDebtPage() {
                             max={remainingAmount}
                         />
                     </div>
+                    
+                    <div className="space-y-2">
+                        <Label>লেনদেনের মাধ্যম</Label>
+                        <Select onValueChange={setSelectedWalletSource} value={selectedWalletSource} required>
+                            <SelectTrigger>
+                                <SelectValue placeholder="একটি মাধ্যম নির্বাচন করুন" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {walletSources.map(src => <SelectItem key={src} value={src}>{src}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
                     <div className="space-y-2">
                         <Label>স্লাইডার</Label>
                         <Slider

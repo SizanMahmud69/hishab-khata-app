@@ -18,7 +18,7 @@ import { useBudget } from "@/context/budget-context";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { incomeSources, savingsDestinations } from "@/lib/data";
+import { incomeSources, savingsDestinations, walletSources } from "@/lib/data";
 import { Loader2 } from "lucide-react";
 
 const months = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
@@ -46,8 +46,9 @@ export default function IncomePage() {
         const amount = parseFloat(formData.get('amount') as string);
         const date = formData.get('date') as string;
         const descriptionInput = formData.get('description') as string;
+        const walletSource = formData.get('walletSource') as string;
 
-        if (!source || !amount || !date || ((selectedSource === 'মাসিক বেতন' || selectedSource === 'সঞ্চয় উত্তোলন') && !descriptionInput)) {
+        if (!source || !amount || !date || !walletSource || ((selectedSource === 'মাসিক বেতন' || selectedSource === 'সঞ্চয় উত্তোলন') && !descriptionInput)) {
             toast({
                 variant: "destructive",
                 title: "ফর্ম পূরণ আবশ্যক",
@@ -76,8 +77,6 @@ export default function IncomePage() {
             if (selectedSource === 'মাসিক বেতন') {
                 description = `${descriptionInput} মাসের বেতন`;
             } else if (selectedSource === 'সঞ্চয় উত্তোলন') {
-                // For savings withdrawal, we just keep the destination name directly 
-                // to maintain consistent calculation in context
                 description = descriptionInput;
             }
 
@@ -86,7 +85,8 @@ export default function IncomePage() {
                 category: source,
                 amount,
                 date: new Date(date).toISOString(),
-                description,
+                description: description || 'আয়',
+                source: walletSource
             });
 
             toast({
@@ -125,7 +125,7 @@ export default function IncomePage() {
                 </div>
                 <div className="grid w-full items-center gap-1.5">
                     <Label htmlFor="source">
-                    উৎস
+                    আয়ের উৎস
                     </Label>
                     <Select name="source" onValueChange={setSelectedSource} value={selectedSource} required>
                         <SelectTrigger>
@@ -136,6 +136,19 @@ export default function IncomePage() {
                         </SelectContent>
                     </Select>
                 </div>
+                
+                <div className="grid w-full items-center gap-1.5">
+                    <Label htmlFor="walletSource">কোথায় জমা হচ্ছে?</Label>
+                    <Select name="walletSource" required>
+                        <SelectTrigger>
+                            <SelectValue placeholder="একটি মাধ্যম নির্বাচন করুন" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {walletSources.map(src => <SelectItem key={src} value={src}>{src}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                </div>
+
               <div className="grid w-full items-center gap-1.5">
                 <Label htmlFor="date">
                   তারিখ
@@ -158,7 +171,7 @@ export default function IncomePage() {
                 ) : selectedSource === 'সঞ্চয় উত্তোলন' ? (
                      <Select name="description" required>
                         <SelectTrigger>
-                            <SelectValue placeholder="একটি মাধ্যম নির্বাচন করুন" />
+                            <SelectValue placeholder="কোথা থেকে উত্তোলন করছেন?" />
                         </SelectTrigger>
                         <SelectContent>
                             {savingsDestinations.map(dest => <SelectItem key={dest} value={dest}>{dest}</SelectItem>)}

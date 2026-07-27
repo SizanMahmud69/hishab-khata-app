@@ -1,5 +1,4 @@
 
-
 // This file is now deprecated as Debt and ShopDue are combined into DebtNote in budget-context.
 // Keeping it for categories and other static data.
 
@@ -54,6 +53,7 @@ export const overviewChartData = [
 export const expenseCategories = ['খাবার', 'বাজার', 'যাতায়াত', 'শপিং', 'পারিবারিক', 'বিল', 'বাড়ি ভাড়া', 'স্বাস্থ্য', 'সঞ্চয় ডিপোজিট', 'প্রয়োজনীয় জিনিস', 'অন্যান্য'];
 export const incomeSources = ['মাসিক বেতন', 'ফ্রিল্যান্সিং', 'ব্যবসা', 'সঞ্চয় উত্তোলন', 'ধার গ্রহণ', 'অন্যান্য'];
 export const savingsDestinations = ['ব্যাংক', 'বিকাশ', 'রকেট', 'নগদ'];
+export const walletSources = ['নগদ', 'বিকাশ', 'রকেট', 'ব্যাংক'];
 export const paymentMethods = ['বিকাশ', 'নগদ', 'রকেট'];
 
 export const premiumPlans: PremiumPlan[] = [
@@ -63,7 +63,7 @@ export const premiumPlans: PremiumPlan[] = [
         price: 0,
         currency: "৳",
         period: "/৩ দিন",
-        description: "আমাদের সমস্ত প্রিমিয়াম ফিচার বিনামূল্যে تجربه করুন।",
+        description: "আমাদের সমস্ত প্রিমিয়াম ফিচার বিনামূল্যে تجربة করুন।",
         isBestValue: false,
         sortOrder: 1,
         isActive: true,

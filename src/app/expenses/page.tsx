@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useRef } from 'react';
@@ -13,7 +14,7 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { expenseCategories, savingsDestinations } from "@/lib/data"
+import { expenseCategories, savingsDestinations, walletSources } from "@/lib/data"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { useBudget } from "@/context/budget-context"
@@ -24,7 +25,7 @@ const months = ['জানুয়ারি', 'ফেব্রুয়ারি', '�
 const billTypes = ['বিদ্যুৎ বিল', 'ইন্টারনেট বিল', 'গ্যাস বিল', 'পানি বিল', 'অন্যান্য বিল'];
 
 export default function ExpensesPage() {
-    const { addTransaction, totalIncome, totalExpense } = useBudget();
+    const { addTransaction, totalIncome, totalExpense, walletBreakdown } = useBudget();
     const { toast } = useToast();
     const formRef = useRef<HTMLFormElement>(null);
     const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined);
@@ -47,10 +48,11 @@ export default function ExpensesPage() {
         const category = formData.get('category') as string;
         const amount = parseFloat(formData.get('amount') as string);
         const date = formData.get('date') as string;
+        const walletSource = formData.get('walletSource') as string;
         
         let description = "";
 
-        if (!category || !amount || !date) {
+        if (!category || !amount || !date || !walletSource) {
             toast({
                 variant: "destructive",
                 title: "ফর্ম পূরণ আবশ্যক",
@@ -60,11 +62,12 @@ export default function ExpensesPage() {
             return;
         }
 
-        if (amount > balance) {
+        const sourceBalance = walletBreakdown[walletSource] || 0;
+        if (amount > sourceBalance) {
             toast({
                 variant: "destructive",
                 title: "অপর্যাপ্ত ব্যালেন্স",
-                description: `আপনার বর্তমান ব্যালেন্স ${formatCurrency(balance)}। আপনি এর বেশি খরচ করতে পারবেন না।`,
+                description: `আপনার "${walletSource}"-এ পর্যাপ্ত ব্যালেন্স নেই। বর্তমান ব্যালেন্স ${formatCurrency(sourceBalance)}।`,
             });
             setIsSubmitting(false);
             return;
@@ -91,6 +94,7 @@ export default function ExpensesPage() {
                 amount,
                 date: new Date(date).toISOString(),
                 description: description || 'খরচ',
+                source: walletSource
             });
 
             toast({
@@ -128,7 +132,7 @@ export default function ExpensesPage() {
                     <Input id="amount" name="amount" type="number" placeholder="500" required/>
                 </div>
                 <div className="grid w-full items-center gap-1.5">
-                    <Label htmlFor="category">বিভাগ</Label>
+                    <Label htmlFor="category">ব্যয়ের বিভাগ</Label>
                     <Select name="category" onValueChange={setSelectedCategory} value={selectedCategory} required>
                         <SelectTrigger>
                             <SelectValue placeholder="একটি বিভাগ নির্বাচন করুন" />
@@ -138,6 +142,19 @@ export default function ExpensesPage() {
                         </SelectContent>
                     </Select>
                 </div>
+
+                <div className="grid w-full items-center gap-1.5">
+                    <Label htmlFor="walletSource">কোথা থেকে খরচ হচ্ছে?</Label>
+                    <Select name="walletSource" required>
+                        <SelectTrigger>
+                            <SelectValue placeholder="একটি মাধ্যম নির্বাচন করুন" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {walletSources.map(src => <SelectItem key={src} value={src}>{src}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                </div>
+
               <div className="grid w-full items-center gap-1.5">
                 <Label htmlFor="date">
                   তারিখ
@@ -152,7 +169,7 @@ export default function ExpensesPage() {
                 {selectedCategory === 'সঞ্চয় ডিপোজিট' ? (
                      <Select name="savingsDestination" required>
                         <SelectTrigger>
-                            <SelectValue placeholder="একটি মাধ্যম নির্বাচন করুন" />
+                            <SelectValue placeholder="কোথায় জমা করছেন?" />
                         </SelectTrigger>
                         <SelectContent>
                             {savingsDestinations.map(dest => <SelectItem key={dest} value={dest}>{dest}</SelectItem>)}

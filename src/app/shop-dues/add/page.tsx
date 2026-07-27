@@ -24,6 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { type DebtNote } from "@/context/budget-context";
 import PageHeader from "@/components/page-header";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { walletSources } from "@/lib/data";
 
 export default function AddShopDuePage() {
     const { addDebtNote } = useBudget();
@@ -43,8 +44,9 @@ export default function AddShopDuePage() {
         const amount = Number(formData.get('amount'));
         const date = formData.get('date') as string;
         const description = formData.get('description') as string;
+        const walletSource = formData.get('walletSource') as string;
 
-        if (!shopName || !amount || !date) {
+        if (!shopName || !amount || !date || !walletSource) {
             toast({
                 variant: "destructive",
                 title: "ফর্ম পূরণ আবশ্যক",
@@ -62,7 +64,8 @@ export default function AddShopDuePage() {
                 date: new Date(date).toISOString(),
                 description,
                 paidAmount: 0,
-                status: 'unpaid'
+                status: 'unpaid',
+                source: walletSource
             };
             
             await addDebtNote(newDue);
@@ -174,6 +177,19 @@ export default function AddShopDuePage() {
                             </SelectContent>
                         </Select>
                     </div>
+
+                    <div className="space-y-1.5">
+                        <Label htmlFor="walletSource">লেনদেনের মাধ্যম</Label>
+                        <Select name="walletSource" required>
+                            <SelectTrigger>
+                                <SelectValue placeholder="একটি মাধ্যম নির্বাচন করুন" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {walletSources.map(src => <SelectItem key={src} value={src}>{src}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
                     <div className="space-y-1.5">
                         <Label htmlFor="amount">পরিমাণ</Label>
                         <Input id="amount" name="amount" type="number" placeholder="500" required />
