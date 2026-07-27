@@ -13,21 +13,20 @@ export default function DashboardPage() {
     const { totalIncome, totalExpense, totalSavings, walletBreakdown, savingsBreakdown } = useBudget();
     const balance = totalIncome - totalExpense;
 
-    // Items for the Usable Balance section
+    // Items for the Usable Balance section with subtle brand backgrounds
     const walletItems = [
-        { name: 'ক্যাশ', key: 'ক্যাশ', color: 'text-yellow-600' },
-        { name: 'বিকাশ', key: 'বিকাশ', color: 'text-[#E2136E]' },
-        { name: 'রকেট', key: 'রকেট', color: 'text-[#8C3494]' },
-        { name: 'নগদ', key: 'নগদ', color: 'text-[#F7941D]' }
+        { name: 'ক্যাশ', key: 'ক্যাশ', color: 'text-yellow-600', bg: 'bg-yellow-50 dark:bg-yellow-900/10', border: 'border-yellow-100 dark:border-yellow-900/20' },
+        { name: 'বিকাশ', key: 'বিকাশ', color: 'text-[#E2136E]', bg: 'bg-[#E2136E]/5 dark:bg-[#E2136E]/10', border: 'border-[#E2136E]/10 dark:border-[#E2136E]/20' },
+        { name: 'রকেট', key: 'রকেট', color: 'text-[#8C3494]', bg: 'bg-[#8C3494]/5 dark:bg-[#8C3494]/10', border: 'border-[#8C3494]/10 dark:border-[#8C3494]/20' },
+        { name: 'নগদ', key: 'নগদ', color: 'text-[#F7941D]', bg: 'bg-[#F7941D]/5 dark:bg-[#F7941D]/10', border: 'border-[#F7941D]/10 dark:border-[#F7941D]/20' }
     ];
 
-    // Items for the Savings section as requested
-    // Bank shows Nagad's savings value, and Nagad shows 0
+    // Items for the Savings section with subtle brand backgrounds
     const savingsItems = [
-        { name: 'ব্যাংক', key: 'নগদ', color: 'text-blue-600' }, 
-        { name: 'বিকাশ', key: 'বিকাশ', color: 'text-[#E2136E]' },
-        { name: 'রকেট', key: 'রকেট', color: 'text-[#8C3494]' },
-        { name: 'নগদ', key: 'zero', color: 'text-[#F7941D]' }
+        { name: 'ব্যাংক', key: 'নগদ', color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/10', border: 'border-blue-100 dark:border-blue-900/20' }, 
+        { name: 'বিকাশ', key: 'বিকাশ', color: 'text-[#E2136E]', bg: 'bg-[#E2136E]/5 dark:bg-[#E2136E]/10', border: 'border-[#E2136E]/10 dark:border-[#E2136E]/20' },
+        { name: 'রকেট', key: 'রকেট', color: 'text-[#8C3494]', bg: 'bg-[#8C3494]/5 dark:bg-[#8C3494]/10', border: 'border-[#8C3494]/10 dark:border-[#8C3494]/20' },
+        { name: 'নগদ', key: 'zero', color: 'text-[#F7941D]', bg: 'bg-[#F7941D]/5 dark:bg-[#F7941D]/10', border: 'border-[#F7941D]/10 dark:border-[#F7941D]/20' }
     ];
 
   return (
@@ -51,10 +50,10 @@ export default function DashboardPage() {
               <p className="text-xs text-slate-500 font-medium">আপনার বর্তমান ব্যবহারযোগ্য ব্যালেন্স</p>
           </div>
           
-          {/* Usable Balance Breakdown with Individual Cards */}
+          {/* Usable Balance Breakdown with Brand-Colored Subtle Cards */}
           <div className="grid grid-cols-4 gap-2 mb-8">
               {walletItems.map((item) => (
-                  <div key={item.key} className="bg-white/90 dark:bg-slate-800/80 rounded-2xl p-2 sm:p-3 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col items-center justify-center transition-transform active:scale-95">
+                  <div key={item.key} className={cn("rounded-2xl p-2 sm:p-3 shadow-sm border flex flex-col items-center justify-center transition-transform active:scale-95", item.bg, item.border)}>
                       <p className={cn("text-[9px] sm:text-[10px] font-bold uppercase tracking-tighter mb-1", item.color)}>{item.name}</p>
                       <p className="text-xs sm:text-sm font-black text-slate-700 dark:text-slate-300">
                           {(walletBreakdown[item.key] || 0).toLocaleString('bn-BD')}
@@ -69,7 +68,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between group mb-6">
             <div className="flex items-center gap-4">
                 <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-full border border-blue-100/50 dark:border-blue-800 shadow-sm">
-                    <Landmark className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                    < Landmark className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
                     <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">মোট সঞ্চয়</h3>
@@ -81,10 +80,10 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Savings Breakdown with Individual Cards */}
+          {/* Savings Breakdown with Brand-Colored Subtle Cards */}
           <div className="grid grid-cols-4 gap-2">
               {savingsItems.map((item) => (
-                  <div key={item.name} className="bg-white/90 dark:bg-slate-800/80 rounded-2xl p-2 sm:p-3 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col items-center justify-center transition-transform active:scale-95">
+                  <div key={item.name} className={cn("rounded-2xl p-2 sm:p-3 shadow-sm border flex flex-col items-center justify-center transition-transform active:scale-95", item.bg, item.border)}>
                       <p className={cn("text-[9px] sm:text-[10px] font-bold uppercase tracking-tighter mb-1", item.color)}>{item.name}</p>
                       <p className="text-xs sm:text-sm font-black text-slate-700 dark:text-slate-300">
                           {item.key === 'zero' ? "০" : (savingsBreakdown[item.key] || 0).toLocaleString('bn-BD')}
