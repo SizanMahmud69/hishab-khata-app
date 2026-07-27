@@ -38,7 +38,7 @@ export default function DashboardPage() {
           
           <div className="grid grid-cols-4 gap-1 mt-6 pt-4 border-t border-yellow-200/50 dark:border-yellow-800/50">
                 {[
-                    { name: 'নগদ', key: 'নগদ', icon: <Coins className="h-3 w-3" /> },
+                    { name: 'ক্যাশ', key: 'ক্যাশ', icon: <Coins className="h-3 w-3" /> },
                     { name: 'বিকাশ', key: 'বিকাশ', icon: <Smartphone className="h-3 w-3" /> },
                     { name: 'রকেট', key: 'রকেট', icon: <CreditCard className="h-3 w-3" /> },
                     { name: 'ব্যাংক', key: 'ব্যাংক', icon: <Banknote className="h-3 w-3" /> }
@@ -82,7 +82,7 @@ export default function DashboardPage() {
                        {[
                            { name: 'ব্যাংক', key: 'ব্যাংক' },
                            { name: 'বিকাশ', key: 'বিকাশ' },
-                           { name: 'নগদ', key: 'নগদ' },
+                           { name: 'ক্যাশ', key: 'ক্যাশ' },
                            { name: 'রকেট', key: 'রকেট' }
                        ].map((item, idx) => (
                            <div key={item.key} className={cn("text-center space-y-1", idx > 0 && "border-l border-blue-100 dark:border-blue-900/50")}>

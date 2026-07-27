@@ -23,7 +23,7 @@ export interface Transaction {
     amount: number;
     date: string;
     description: string;
-    source: string; // নগদ, বিকাশ, রকেট, ব্যাংক
+    source: string; // নগদ/ক্যাশ, বিকাশ, রকেট, ব্যাংক
     createdAt?: any;
 }
 
@@ -450,7 +450,8 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         });
 
         transactions.forEach(t => {
-            const src = t.source || 'নগদ'; // Default for old transactions
+            let src = t.source || 'ক্যাশ'; 
+            if (src === 'নগদ') src = 'ক্যাশ'; // Support for existing data
             if (breakdown[src] !== undefined) {
                 if (t.type === 'income') {
                     breakdown[src] += t.amount;
@@ -471,7 +472,8 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
 
         transactions.forEach(t => {
             if (t.category === 'সঞ্চয় ডিপোজিট') {
-                const dest = t.description;
+                let dest = t.description;
+                if (dest === 'নগদ') dest = 'ক্যাশ'; // Support for existing data
                 if (breakdown[dest] !== undefined) {
                     breakdown[dest] += t.amount;
                 }
@@ -480,6 +482,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                 if (dest.endsWith(' থেকে উত্তোলন')) {
                     dest = dest.replace(' থেকে উত্তোলন', '');
                 }
+                if (dest === 'নগদ') dest = 'ক্যাশ'; // Support for existing data
                 
                 if (breakdown[dest] !== undefined) {
                     breakdown[dest] -= t.amount;
@@ -592,7 +595,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                     status: 'unpaid',
                     date: cycleStartDate.toISOString(),
                     entries: [newEntry],
-                    source: debtNote.source || 'নগদ'
+                    source: debtNote.source || 'ক্যাশ'
                 };
                 await addDocToCollection('debtNotes', newShopDueDoc);
             }
@@ -621,7 +624,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                 amount: paymentAmount,
                 date: new Date().toISOString(),
                 description: `${debtNote.person} ${debtNote.type === 'lent' ? 'থেকে প্রাপ্তি' : 'কে পরিশোধ'}`,
-                source: walletSource || 'নগদ'
+                source: walletSource || 'ক্যাশ'
             };
         
             batch.set(transactionDocRef, {...transactionData, createdAt: serverTimestamp()});
