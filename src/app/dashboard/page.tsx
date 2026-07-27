@@ -21,12 +21,13 @@ export default function DashboardPage() {
         { name: 'নগদ', key: 'নগদ', color: 'text-[#F7941D]' }
     ];
 
-    // Items for the Savings section as per user request
+    // Items for the Savings section as requested
+    // Bank shows Nagad's savings value, and Nagad shows 0
     const savingsItems = [
-        { name: 'ব্যাংক', key: 'নগদ', color: 'text-blue-600' }, // Shows Nagad's savings value
+        { name: 'ব্যাংক', key: 'নগদ', color: 'text-blue-600' }, 
         { name: 'বিকাশ', key: 'বিকাশ', color: 'text-[#E2136E]' },
         { name: 'রকেট', key: 'রকেট', color: 'text-[#8C3494]' },
-        { name: 'নগদ', key: 'zero', color: 'text-[#F7941D]' }   // Will show 0
+        { name: 'নগদ', key: 'zero', color: 'text-[#F7941D]' }
     ];
 
   return (
@@ -35,7 +36,7 @@ export default function DashboardPage() {
         <OverviewCards />
       </div>
       
-      <Card>
+      <Card className="border-white/20">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-6 pt-6">
           <CardTitle className="text-lg font-bold text-slate-700 dark:text-slate-300">বর্তমান ব্যালেন্স</CardTitle>
           <div className="p-2 bg-slate-100/50 dark:bg-slate-800/50 rounded-lg">
@@ -43,22 +44,19 @@ export default function DashboardPage() {
           </div>
         </CardHeader>
         <CardContent className="px-6 pb-6">
-          <div className="mb-4">
+          <div className="mb-6">
               <div className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white mb-2 flex items-baseline gap-1">
                 {balance.toLocaleString('bn-BD')} <span className="text-2xl font-bold">৳</span>
               </div>
               <p className="text-xs text-slate-500 font-medium">আপনার বর্তমান ব্যবহারযোগ্য ব্যালেন্স</p>
           </div>
           
-          {/* Usable Balance Breakdown */}
-          <div className="grid grid-cols-4 gap-0 border-t border-slate-200/50 dark:border-slate-800 pt-4 mb-6">
-              {walletItems.map((item, idx) => (
-                  <div key={item.key} className={cn(
-                      "text-center px-1 flex flex-col items-center",
-                      idx !== 3 && "border-r border-slate-200/50 dark:border-slate-800"
-                  )}>
-                      <p className={cn("text-[10px] font-bold uppercase tracking-tighter mb-1", item.color)}>{item.name}</p>
-                      <p className="text-sm font-black text-slate-700 dark:text-slate-300">
+          {/* Usable Balance Breakdown with Individual Cards */}
+          <div className="grid grid-cols-4 gap-2 mb-8">
+              {walletItems.map((item) => (
+                  <div key={item.key} className="bg-white/90 dark:bg-slate-800/80 rounded-2xl p-2 sm:p-3 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col items-center justify-center transition-transform active:scale-95">
+                      <p className={cn("text-[9px] sm:text-[10px] font-bold uppercase tracking-tighter mb-1", item.color)}>{item.name}</p>
+                      <p className="text-xs sm:text-sm font-black text-slate-700 dark:text-slate-300">
                           {(walletBreakdown[item.key] || 0).toLocaleString('bn-BD')}
                       </p>
                   </div>
@@ -68,7 +66,7 @@ export default function DashboardPage() {
           <div className="w-full h-px bg-slate-200/50 dark:bg-slate-800 my-6" />
 
           {/* Total Savings Section */}
-          <div className="flex items-center justify-between group mb-4">
+          <div className="flex items-center justify-between group mb-6">
             <div className="flex items-center gap-4">
                 <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-full border border-blue-100/50 dark:border-blue-800 shadow-sm">
                     <Landmark className="h-6 w-6 text-blue-600 dark:text-blue-400" />
@@ -83,21 +81,16 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Savings Breakdown */}
-          <div className="w-full border-t border-dashed border-slate-300 dark:border-slate-700 pt-6">
-              <div className="grid grid-cols-4 gap-0">
-                  {savingsItems.map((item, idx) => (
-                      <div key={idx} className={cn(
-                          "text-center px-1 flex flex-col items-center",
-                          idx !== 3 && "border-r border-slate-200/50 dark:border-slate-800"
-                      )}>
-                          <p className={cn("text-[10px] font-bold uppercase tracking-tighter mb-1", item.color)}>{item.name}</p>
-                          <p className="text-sm font-black text-slate-700 dark:text-slate-300">
-                              {item.key === 'zero' ? "০" : (savingsBreakdown[item.key] || 0).toLocaleString('bn-BD')}
-                          </p>
-                      </div>
-                  ))}
-              </div>
+          {/* Savings Breakdown with Individual Cards */}
+          <div className="grid grid-cols-4 gap-2">
+              {savingsItems.map((item) => (
+                  <div key={item.name} className="bg-white/90 dark:bg-slate-800/80 rounded-2xl p-2 sm:p-3 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col items-center justify-center transition-transform active:scale-95">
+                      <p className={cn("text-[9px] sm:text-[10px] font-bold uppercase tracking-tighter mb-1", item.color)}>{item.name}</p>
+                      <p className="text-xs sm:text-sm font-black text-slate-700 dark:text-slate-300">
+                          {item.key === 'zero' ? "০" : (savingsBreakdown[item.key] || 0).toLocaleString('bn-BD')}
+                      </p>
+                  </div>
+              ))}
           </div>
         </CardContent>
       </Card>
