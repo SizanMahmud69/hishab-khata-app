@@ -5,27 +5,19 @@ import { OverviewCards } from "@/components/overview-cards"
 import { RecentTransactions } from "@/components/recent-transactions"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { OverviewPieChart } from "@/components/overview-pie-chart"
-import { Wallet, Smartphone, CreditCard, Coins, SmartphoneNfc, Landmark } from "lucide-react"
+import { Wallet, Landmark, Smartphone, SmartphoneNfc, Coins, CreditCard } from "lucide-react"
 import { useBudget } from "@/context/budget-context";
 import { cn } from '@/lib/utils';
 
 export default function DashboardPage() {
-    const { totalIncome, totalExpense, totalSavings, walletBreakdown } = useBudget();
+    const { totalIncome, totalExpense, totalSavings, walletBreakdown, savingsBreakdown } = useBudget();
     const balance = totalIncome - totalExpense;
 
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat("bn-BD", {
-          style: "currency",
-          currency: "BDT",
-          minimumFractionDigits: 0,
-        }).format(amount)
-    }
-
     const walletItems = [
-        { name: 'ক্যাশ', key: 'ক্যাশ' },
-        { name: 'বিকাশ', key: 'বিকাশ' },
-        { name: 'রকেট', key: 'রকেট' },
-        { name: 'নগদ', key: 'নগদ' }
+        { name: 'ক্যাশ', key: 'ক্যাশ', color: 'text-yellow-600' },
+        { name: 'বিকাশ', key: 'বিকাশ', color: 'text-[#E2136E]' },
+        { name: 'রকেট', key: 'রকেট', color: 'text-[#8C3494]' },
+        { name: 'নগদ', key: 'নগদ', color: 'text-[#F7941D]' }
     ];
 
   return (
@@ -49,9 +41,25 @@ export default function DashboardPage() {
               <p className="text-sm text-slate-500 font-medium">আপনার বর্তমান ব্যবহারযোগ্য ব্যালেন্স</p>
           </div>
           
+          {/* Usable Balance Breakdown */}
+          <div className="grid grid-cols-4 gap-0 border-t border-slate-100 dark:border-slate-800 pt-4 mb-6">
+              {walletItems.map((item, idx) => (
+                  <div key={item.key} className={cn(
+                      "text-center px-1 flex flex-col items-center",
+                      idx !== 3 && "border-r border-slate-100 dark:border-slate-800"
+                  )}>
+                      <p className={cn("text-[10px] font-bold uppercase tracking-tighter mb-1", item.color)}>{item.name}</p>
+                      <p className="text-sm font-black text-slate-700 dark:text-slate-300">
+                          {(walletBreakdown[item.key] || 0).toLocaleString('bn-BD')}
+                      </p>
+                  </div>
+              ))}
+          </div>
+
           <div className="w-full h-px bg-slate-100 dark:bg-slate-800 my-6" />
 
-          <div className="flex items-center justify-between group">
+          {/* Total Savings Section */}
+          <div className="flex items-center justify-between group mb-4">
             <div className="flex items-center gap-4">
                 <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-full border border-blue-100 dark:border-blue-800 shadow-sm">
                     <Landmark className="h-6 w-6 text-blue-600 dark:text-blue-400" />
@@ -66,16 +74,17 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="w-full border-t border-dashed border-slate-200 dark:border-slate-700 mt-6 pt-6">
+          {/* Savings Breakdown */}
+          <div className="w-full border-t border-dashed border-slate-200 dark:border-slate-700 pt-6">
               <div className="grid grid-cols-4 gap-0">
                   {walletItems.map((item, idx) => (
                       <div key={item.key} className={cn(
                           "text-center px-1 flex flex-col items-center",
                           idx !== 3 && "border-r border-slate-100 dark:border-slate-800"
                       )}>
-                          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-tighter mb-1">{item.name}</p>
+                          <p className={cn("text-[10px] font-bold uppercase tracking-tighter mb-1", item.color)}>{item.name}</p>
                           <p className="text-sm font-black text-slate-700 dark:text-slate-300">
-                              {(walletBreakdown[item.key] || 0).toLocaleString('bn-BD')}
+                              {(savingsBreakdown[item.key] || 0).toLocaleString('bn-BD')}
                           </p>
                       </div>
                   ))}
