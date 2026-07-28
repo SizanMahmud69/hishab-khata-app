@@ -475,7 +475,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         transactions.forEach(t => {
             if (t.category === 'সঞ্চয় ডিপোজিট') {
                 let dest = t.description;
-                if (dest === 'নগদ' && !savingsDestinations.includes('নগদ')) dest = 'ক্যাশ';
+                if ((dest === 'নগদ' || dest === 'ক্যাশ') && !savingsDestinations.includes(dest)) dest = 'ব্যাংক';
                 if (dest === 'ব্যাংক') dest = 'নগদ';
 
                 if (breakdown[dest] !== undefined) {
@@ -486,7 +486,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                 if (dest.endsWith(' থেকে উত্তোলন')) {
                     dest = dest.replace(' থেকে উত্তোলন', '');
                 }
-                if (dest === 'নগদ' && !savingsDestinations.includes('নগদ')) dest = 'ক্যাশ';
+                if ((dest === 'নগদ' || dest === 'ক্যাশ') && !savingsDestinations.includes(dest)) dest = 'ব্যাংক';
                 if (dest === 'ব্যাংক') dest = 'নগদ';
                 
                 if (breakdown[dest] !== undefined) {
