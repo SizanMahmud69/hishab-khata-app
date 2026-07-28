@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -133,7 +132,7 @@ export default function ProfilePage() {
   }
   
   return (
-    <div className="flex-1 space-y-6">
+    <div className="flex-1 space-y-6 animate-slide-in-right">
       <Card className="overflow-hidden">
         <div className="h-24 bg-gradient-to-r from-green-400 to-blue-500" />
         <div className="relative -mt-16 flex justify-center">

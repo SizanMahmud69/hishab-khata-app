@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useRef } from 'react';
@@ -113,7 +112,7 @@ export default function ExpensesPage() {
     }
 
   return (
-    <div className="flex-1 space-y-4">
+    <div className="flex-1 space-y-4 animate-slide-in-right">
       <PageHeader title="নতুন খরচ যোগ করুন" description="আপনার খরচের বিভাগ, পরিমাণ এবং তারিখ লিখুন।" />
       
       <Card className="max-w-2xl mx-auto">

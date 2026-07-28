@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useMemo, useRef, useEffect, useState, Fragment } from 'react';
@@ -69,7 +68,7 @@ function RewardsPageContent() {
   }
 
   return (
-    <div className="flex-1 space-y-6">
+    <div className="flex-1 space-y-6 animate-slide-in-right">
       <PageHeader title="রিওয়ার্ড" description="আপনার অর্জিত রিওয়ার্ড এবং পয়েন্ট দেখুন।" />
       <Card className="bg-gradient-to-br from-primary to-accent text-primary-foreground border-yellow-600 overflow-hidden shadow-lg">
         <CardHeader>

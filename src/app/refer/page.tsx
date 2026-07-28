@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useMemo, Fragment } from 'react';
@@ -77,7 +76,7 @@ export default function ReferPage() {
     }
 
     return (
-        <div className="flex-1 space-y-6">
+        <div className="flex-1 space-y-6 animate-slide-in-right">
             <PageHeader title="রেফার করুন" description="আপনার বন্ধুদের রেফার করে বোনাস পয়েন্ট অর্জন করুন।" />
 
             <Card className='bg-gradient-to-br from-blue-500 to-green-500 text-white shadow-lg'>

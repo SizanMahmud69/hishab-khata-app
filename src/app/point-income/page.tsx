@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -43,7 +42,7 @@ export default function PointIncomePage() {
     };
 
     return (
-        <div className="flex-1 space-y-6">
+        <div className="flex-1 space-y-6 animate-slide-in-right">
             <PageHeader title="পয়েন্ট ইনকাম" description="প্রতিদিন স্পিন করে পয়েন্ট অর্জন করুন।" />
 
             <div className="max-w-md mx-auto">

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -99,7 +98,7 @@ export default function HistoryPage() {
   }
 
   return (
-    <div className="flex-1 space-y-4">
+    <div className="flex-1 space-y-4 animate-slide-in-right">
       <PageHeader title="হিস্টোরি" description="আপনার সকল লেনদেনের ইতিহাস দেখুন।">
         <Popover open={isPopoverOpen} onOpenChange={(open) => {
           setIsPopoverOpen(open);

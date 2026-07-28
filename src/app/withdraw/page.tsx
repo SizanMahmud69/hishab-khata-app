@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useRef, Fragment } from 'react';
@@ -214,7 +213,7 @@ export default function WithdrawPage() {
   }
 
   return (
-    <div className="flex-1 space-y-6">
+    <div className="flex-1 space-y-6 animate-slide-in-right">
       <PageHeader title="পয়েন্ট উইথড্র" description="আপনার অর্জিত পয়েন্ট টাকাতে রূপান্তর করুন।" />
       
       {canWithdraw ? (

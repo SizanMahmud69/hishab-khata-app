@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -51,7 +50,7 @@ export default function DebtsPage() {
     const totalBorrowed = borrowedDebts.reduce((sum, debt) => sum + (debt.amount - debt.paidAmount), 0);
 
   return (
-    <div className="flex-1 space-y-4">
+    <div className="flex-1 space-y-4 animate-slide-in-right">
       <PageHeader title="ধারের হিসাব" description="আপনার সকল দেনা-পাওনার হিসাব রাখুন।">
         <Button asChild>
             <Link href="/debts/add">

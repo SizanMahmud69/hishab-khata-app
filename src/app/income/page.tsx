@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useRef } from "react";
@@ -105,7 +104,7 @@ export default function IncomePage() {
     }
 
   return (
-    <div className="flex-1 space-y-4">
+    <div className="flex-1 space-y-4 animate-slide-in-right">
       <PageHeader title="নতুন আয় যোগ করুন" description="আপনার আয়ের উৎস, পরিমাণ এবং তারিখ লিখুন।" />
       
       <Card className="max-w-2xl mx-auto">

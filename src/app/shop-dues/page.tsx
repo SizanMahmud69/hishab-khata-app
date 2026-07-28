@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import { useMemo, useState } from "react";
@@ -76,7 +74,7 @@ export default function ShopDuesPage() {
     }
 
   return (
-    <div className="flex-1 space-y-4">
+    <div className="flex-1 space-y-4 animate-slide-in-right">
       <PageHeader title="আমার দোকানের বাকি" description="বিভিন্ন দোকানে আপনার মোট বাকির একটি সারসংক্ষেপ।">
         <div className="flex items-center gap-2">
             <Button asChild>

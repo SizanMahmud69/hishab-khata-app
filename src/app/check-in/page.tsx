@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, Fragment } from 'react';
@@ -157,7 +156,7 @@ export default function CheckInPage() {
     }
 
   return (
-    <div className="flex-1 space-y-4">
+    <div className="flex-1 space-y-4 animate-slide-in-right">
       <PageHeader title="দৈনিক চেক-ইন" description="প্রতিদিন চেক-ইন করে রিওয়ার্ড পয়েন্ট অর্জন করুন।" />
       <Card className="max-w-md mx-auto">
         <CardHeader>

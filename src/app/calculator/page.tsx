@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -41,7 +40,7 @@ export default function CalculatorPage() {
     };
 
     return (
-        <div className="flex flex-col h-full max-w-md mx-auto space-y-2 pb-4">
+        <div className="flex flex-col h-full max-w-md mx-auto space-y-2 pb-4 animate-slide-in-right">
             <div className="flex items-center justify-between px-1">
                 <h1 className="text-xl font-bold text-white drop-shadow-sm">হিসাব ক্যালকুলেটর</h1>
                 <Button 

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -23,7 +22,7 @@ export default function LiveSupportPage() {
     };
 
     return (
-        <div className="flex-1 space-y-6">
+        <div className="flex-1 space-y-6 animate-slide-in-right">
             <PageHeader 
                 title="লাইভ সাপোর্ট" 
                 description="আপনার যেকোনো সমস্যা বা জিজ্ঞাসায় আমরা আছি আপনার পাশে।" 

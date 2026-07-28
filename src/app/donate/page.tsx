@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -65,7 +64,7 @@ export default function DonatePage() {
     };
 
     return (
-        <div className="flex-1 space-y-6">
+        <div className="flex-1 space-y-6 animate-slide-in-right">
             <PageHeader 
                 title="ডোনেট করুন" 
                 description="আমাদের অ্যাপকে আরও উন্নত করতে আপনার সাহায্য একান্ত কাম্য।" 

@@ -1,5 +1,4 @@
-
-'use client';
+"use client";
 
 import React, { useMemo } from 'react';
 import PageHeader from "@/components/page-header";
@@ -71,7 +70,7 @@ export default function PremiumPage() {
     };
 
     return (
-        <div className="flex-1 space-y-8">
+        <div className="flex-1 space-y-8 animate-slide-in-right">
             <PageHeader
                 title="প্রিমিয়াম সাবস্ক্রিপশন"
                 description="হিসাব খাতা অ্যাপের সেরা অভিজ্ঞতা পেতে প্রিমিয়াম প্ল্যান বেছে নিন।"

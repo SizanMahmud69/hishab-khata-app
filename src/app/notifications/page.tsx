@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useMemo, Fragment } from 'react';
@@ -74,7 +73,7 @@ export default function NotificationsPage() {
     }
 
     return (
-        <div className="flex-1 space-y-4">
+        <div className="flex-1 space-y-4 animate-slide-in-right">
             <PageHeader title="নোটিফিকেশন" description="আপনার সকল গুরুত্বপূর্ণ আপডেট এবং বার্তা।">
                 <Button onClick={markAllAsRead} disabled={isLoading || (monthlyNotifications && monthlyNotifications.every(n => n.read))}>
                     সবগুলো পঠিত করুন
