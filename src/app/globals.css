@@ -111,4 +111,19 @@
         0%, 100% { box-shadow: 0 0 5px hsl(var(--primary) / 0.2); }
         50% { box-shadow: 0 0 20px hsl(var(--primary) / 0.7); }
     }
+
+    /* Page Slide-in Animation from Right */
+    @keyframes slide-in-right {
+      0% {
+        transform: translateX(100px);
+        opacity: 0;
+      }
+      100% {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    .animate-slide-in-right {
+      animation: slide-in-right 0.6s ease-out forwards;
+    }
 }

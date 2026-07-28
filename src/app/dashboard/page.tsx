@@ -1,4 +1,3 @@
-
 "use client";
 
 import { OverviewCards } from "@/components/overview-cards"
@@ -31,7 +30,7 @@ export default function DashboardPage() {
     ];
 
   return (
-    <div className="flex-1 space-y-4">
+    <div className="flex-1 space-y-4 animate-slide-in-right">
       <div className="grid gap-4 grid-cols-2">
         <OverviewCards />
       </div>
