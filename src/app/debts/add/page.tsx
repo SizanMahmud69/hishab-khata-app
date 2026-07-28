@@ -24,12 +24,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { walletSources } from "@/lib/data";
 
 export default function AddDebtPage() {
-    const { addDebtNote, addTransaction, totalIncome, totalExpense, walletBreakdown } = useBudget();
+    const { addDebtNote, addTransaction, walletBreakdown } = useBudget();
     const { toast } = useToast();
     const router = useRouter();
     const [isSubmitting, setIsSubmitting] = useState(false);
-
-    const balance = totalIncome - totalExpense;
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat("bn-BD", {
@@ -46,12 +44,12 @@ export default function AddDebtPage() {
         const type = formData.get('type') as 'lent' | 'borrowed';
         const person = formData.get('person') as string;
         const amount = Number(formData.get('amount'));
-        const date = formData.get('date') as string;
-        const repaymentDate = formData.get('repayment-date') as string;
+        const dateStr = formData.get('date') as string;
+        const repaymentDateStr = formData.get('repayment-date') as string;
         const description = formData.get('description') as string;
         const walletSource = formData.get('walletSource') as string;
 
-        if (!type || !person || !amount || !date || !walletSource) {
+        if (!type || !person || !amount || !dateStr || !walletSource) {
             toast({
                 variant: "destructive",
                 title: "ফর্ম পূরণ আবশ্যক",
@@ -75,24 +73,30 @@ export default function AddDebtPage() {
         }
 
         try {
-            const newDebtNote: Omit<DebtNote, 'id' | 'userId' | 'createdAt'> = {
+            // Construct base object without optional fields to avoid undefined values
+            const newDebtNote: any = {
                 type,
                 person,
                 amount,
-                date: new Date(date).toISOString(),
-                repaymentDate: repaymentDate ? new Date(repaymentDate).toISOString() : undefined,
-                description,
+                date: new Date(dateStr).toISOString(),
+                description: description || "",
                 paidAmount: 0,
-                status: 'unpaid',
+                status: 'unpaid' as const,
                 source: walletSource
             };
 
+            // Only add repaymentDate if it's actually provided
+            if (repaymentDateStr) {
+                newDebtNote.repaymentDate = new Date(repaymentDateStr).toISOString();
+            }
+
+            // 1. Add Transaction to update main balance
             if (type === 'lent') {
                 await addTransaction({
                     type: 'expense',
                     category: 'ধার প্রদান',
                     amount: amount,
-                    date: new Date(date).toISOString(),
+                    date: new Date(dateStr).toISOString(),
                     description: `${person} কে ধার দেওয়া হলো`,
                     source: walletSource
                 });
@@ -101,12 +105,13 @@ export default function AddDebtPage() {
                     type: 'income',
                     category: 'ধার গ্রহণ',
                     amount: amount,
-                    date: new Date(date).toISOString(),
+                    date: new Date(dateStr).toISOString(),
                     description: `${person} এর থেকে ধার নেওয়া হলো`,
                     source: walletSource
                 });
             }
             
+            // 2. Add Debt Note to history
             await addDebtNote(newDebtNote);
 
             toast({
@@ -117,7 +122,11 @@ export default function AddDebtPage() {
             router.push('/debts');
         } catch (error) {
             console.error("Error adding new debt:", error);
-            toast({ variant: "destructive", title: "ত্রুটি", description: "একটি সমস্যা হয়েছে।" });
+            toast({ 
+                variant: "destructive", 
+                title: "ত্রুটি", 
+                description: "হিসাব সংরক্ষণ করার সময় একটি সমস্যা হয়েছে। আবার চেষ্টা করুন।" 
+            });
         } finally {
             setIsSubmitting(false);
         }
@@ -172,7 +181,7 @@ export default function AddDebtPage() {
                     <Input id="debt-date" name="date" type="date" defaultValue={new Date().toISOString().split('T')[0]} required />
                 </div>
                 <div className="space-y-1.5">
-                    <Label htmlFor="repayment-date">পরিশোধের তারিখ</Label>
+                    <Label htmlFor="repayment-date">পরিশোধের তারিখ (ঐচ্ছিক)</Label>
                     <Input id="repayment-date" name="repayment-date" type="date" />
                 </div>
                 <div className="space-y-1.5">

@@ -52,6 +52,7 @@ interface UserProfile {
     premiumPlanId?: string;
     premiumExpiryDate?: any;
     lastAdWatchDate?: string;
+    lastAdWatchDateNew?: string; // Updated format
     lastSpinDate?: string;
     spinsToday?: number;
 }
@@ -524,9 +525,18 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     
     const addDocToCollection = async (collectionName: string, data: any) => {
         if (!user || !firestore) throw new Error("User or firestore not available");
+        
+        // Sanitize data to remove undefined fields which cause Firestore errors
+        const sanitizedData = Object.keys(data).reduce((acc: any, key) => {
+            if (data[key] !== undefined) {
+                acc[key] = data[key];
+            }
+            return acc;
+        }, {});
+
         const collectionRef = collection(firestore, `users/${user.uid}/${collectionName}`);
         await addDoc(collectionRef, {
-            ...data,
+            ...sanitizedData,
             userId: user.uid,
             createdAt: serverTimestamp()
         });
@@ -653,14 +663,14 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                     type: 'earned',
                     source: sourceText,
                     points: ci.points,
-                    date: ci.createdAt ? ci.createdAt.toDate() : parseISO(ci.date)
+                    date: ci.createdAt && typeof ci.createdAt.toDate === 'function' ? ci.createdAt.toDate() : (ci.date ? parseISO(ci.date) : new Date())
                 });
             });
         }
 
         if (referrals) {
             referrals.forEach(ref => {
-                 if (ref.createdAt) {
+                 if (ref.createdAt && typeof ref.createdAt.toDate === 'function') {
                     history.push({
                         type: 'earned',
                         source: 'রেফারেল বোনাস',
@@ -673,7 +683,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         
         if (premiumSubscriptions) {
             premiumSubscriptions.forEach(sub => {
-                if (sub.createdAt && sub.paymentMethod === 'points' && sub.pointsSpent) {
+                if (sub.createdAt && sub.paymentMethod === 'points' && sub.pointsSpent && typeof sub.createdAt.toDate === 'function') {
                     history.push({
                         type: 'spent',
                         source: 'সাবস্ক্রিপশন ক্রয়',
@@ -687,7 +697,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
 
         if (allWithdrawals) {
             allWithdrawals.forEach(wd => {
-                if (wd.requestedAt) {
+                if (wd.requestedAt && typeof wd.requestedAt.toDate === 'function') {
                     history.push({
                         type: 'spent',
                         source: 'পয়েন্ট উইথড্র',
@@ -697,7 +707,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                     });
                 }
                 
-                if (wd.status === 'rejected' && wd.isRefunded && wd.processedAt) {
+                if (wd.status === 'rejected' && wd.isRefunded && wd.processedAt && typeof wd.processedAt.toDate === 'function') {
                     history.push({
                         type: 'refunded',
                         source: 'পয়েন্ট রিফান্ড',
