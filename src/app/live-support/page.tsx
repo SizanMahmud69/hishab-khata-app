@@ -8,10 +8,14 @@ import { MessageCircle, Clock, ShieldCheck, HeadphonesIcon } from "lucide-react"
 
 export default function LiveSupportPage() {
     const openTawkChat = () => {
-        // Safe check for Tawk_API and its methods
-        if (typeof window !== 'undefined' && (window as any).Tawk_API && typeof (window as any).Tawk_API.maximize === 'function') {
+        if (typeof window === 'undefined') return;
+
+        const Tawk_API = (window as any).Tawk_API;
+
+        // Robust check for Tawk API readiness
+        if (Tawk_API && typeof Tawk_API.maximize === 'function') {
             try {
-                (window as any).Tawk_API.maximize();
+                Tawk_API.maximize();
             } catch (e) {
                 console.error("Tawk maximize error:", e);
                 alert("চ্যাট উইজেটটি এই মুহূর্তে কাজ করছে না, অনুগ্রহ করে পেজটি রিফ্রেশ করুন।");
@@ -39,7 +43,7 @@ export default function LiveSupportPage() {
                     </CardHeader>
                     <CardContent className="pt-6">
                         <p className="text-muted-foreground mb-6">
-                            আপনার আর্থিক হিসাব, উইথড্রয়াল বা প্রিমিয়াম সাবস্ক্রিপশন নিয়ে যেকোনো সমস্যায় আমাদের সাথে লাইভ চ্যাট করতে পারেন। আমরা দ্রুত সমাধানের চেষ্টা করব।
+                            আপনার আর্থিক হিসাব, উইথড্রয়াল বা প্রিমিয়াম সাবস্ক্রিপশন নিয়ে যেকোনো সমস্যায় আমাদের সাথে লাইভ চ্যাট করতে পারেন। আমরা দ্রুত সমাধানের চেষ্টা করব।
                         </p>
                         <Button onClick={openTawkChat} size="lg" className="w-full gap-2">
                             <HeadphonesIcon className="h-5 w-5" />
