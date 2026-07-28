@@ -30,12 +30,12 @@ export default function DashboardPage() {
     ];
 
   return (
-    <div className="flex-1 space-y-4 animate-slide-in-right">
+    <div className="flex-1 space-y-4">
       <div className="grid gap-4 grid-cols-2">
         <OverviewCards />
       </div>
       
-      <Card className="border-white/20">
+      <Card className="border-white/20 animate-slide-in-right delay-300">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-6 pt-6">
           <CardTitle className="text-lg font-bold text-slate-700 dark:text-slate-300">বর্তমান ব্যালেন্স</CardTitle>
           <div className="p-2 bg-slate-100/50 dark:bg-slate-800/50 rounded-lg">
@@ -68,7 +68,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between group mb-4">
             <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-full border border-blue-100/50 dark:border-blue-800 shadow-sm">
-                    <Landmark className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    < Landmark className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
                     <h3 className="text-base font-bold text-slate-800 dark:text-slate-200 leading-none mb-1">মোট সঞ্চয়</h3>
@@ -94,13 +94,13 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 gap-6 animate-slide-in-right delay-400">
         <div>
             <OverviewPieChart />
         </div>
       </div>
       
-      <div className="grid grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 gap-6 animate-slide-in-right delay-500">
         <RecentTransactions />
       </div>
     </div>

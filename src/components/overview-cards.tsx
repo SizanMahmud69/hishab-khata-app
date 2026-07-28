@@ -1,4 +1,3 @@
-
 "use client"
 
 import React from "react"
@@ -75,7 +74,7 @@ export function OverviewCards() {
 
   return (
     <>
-      <Card className="bg-green-50/50 dark:bg-green-900/20 border-green-200 dark:border-green-800 shadow-green-glow">
+      <Card className="bg-green-50/50 dark:bg-green-900/20 border-green-200 dark:border-green-800 shadow-green-glow animate-slide-in-right delay-100">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -119,7 +118,7 @@ export function OverviewCards() {
           </div>
         </CardContent>
       </Card>
-      <Card className="bg-red-50/50 dark:bg-red-900/20 border-red-200 dark:border-red-800 shadow-red-glow">
+      <Card className="bg-red-50/50 dark:bg-red-900/20 border-red-200 dark:border-red-800 shadow-red-glow animate-slide-in-right delay-200">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2">
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
