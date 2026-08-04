@@ -54,6 +54,7 @@ interface UserProfile {
     premiumExpiryDate?: any;
     lastAdWatchDate?: string;
     lastAdWatchDateNew?: string; // Updated format
+    lastAdWatchDateNew2?: string;
     lastSpinDate?: string;
     spinsToday?: number;
 }
@@ -436,6 +437,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const rewardPoints = userProfile?.points ?? 0;
     const globalPopup = appConfig?.globalPopup ?? null;
     
+    // CRITICAL: Exclude isTransfer transactions from the dashboard summary cards
     const totalIncome = useMemo(() => transactions.filter(t => t.type === 'income' && !t.isTransfer).reduce((sum, item) => sum + item.amount, 0), [transactions]);
     const totalExpense = useMemo(() => transactions.filter(t => t.type === 'expense' && !t.isTransfer).reduce((sum, item) => sum + item.amount, 0), [transactions]);
     

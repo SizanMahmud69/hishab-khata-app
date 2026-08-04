@@ -1,3 +1,4 @@
+
 "use client"
 
 import React from "react"
@@ -47,8 +48,9 @@ export function OverviewCards() {
     }
   };
   
-  const income = transactions.filter(t => t.type === 'income');
-  const expenses = transactions.filter(t => t.type === 'expense');
+  // CRITICAL: Filter out transfer transactions so they don't appear in the summary cards
+  const income = transactions.filter(t => t.type === 'income' && !t.isTransfer);
+  const expenses = transactions.filter(t => t.type === 'expense' && !t.isTransfer);
 
   const filteredIncome = filterData(income, incomeFilter);
   const filteredExpenses = filterData(expenses, expenseFilter);
