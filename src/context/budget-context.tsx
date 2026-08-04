@@ -23,8 +23,9 @@ export interface Transaction {
     amount: number;
     date: string;
     description: string;
-    source: string; // ক্যাশ, বিকাশ, রকেট, নগদ
+    source: string; // ক্যাশ, বিকাশ, রকেট, নগদ, ব্যাংক
     createdAt?: any;
+    isTransfer?: boolean;
 }
 
 export interface DebtNote {
@@ -435,13 +436,18 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const rewardPoints = userProfile?.points ?? 0;
     const globalPopup = appConfig?.globalPopup ?? null;
     
-    const totalIncome = useMemo(() => transactions.filter(t => t.type === 'income').reduce((sum, item) => sum + item.amount, 0), [transactions]);
-    const totalExpense = useMemo(() => transactions.filter(t => t.type === 'expense').reduce((sum, item) => sum + item.amount, 0), [transactions]);
+    const totalIncome = useMemo(() => transactions.filter(t => t.type === 'income' && !t.isTransfer).reduce((sum, item) => sum + item.amount, 0), [transactions]);
+    const totalExpense = useMemo(() => transactions.filter(t => t.type === 'expense' && !t.isTransfer).reduce((sum, item) => sum + item.amount, 0), [transactions]);
     
     const totalSavings = useMemo(() => {
         const deposits = transactions.filter(t => t.type === 'expense' && t.category === 'সঞ্চয় ডিপোজিট').reduce((sum, item) => sum + item.amount, 0);
         const withdrawals = transactions.filter(t => t.type === 'income' && t.category === 'সঞ্চয় উত্তোলন').reduce((sum, item) => sum + item.amount, 0);
-        return deposits - withdrawals;
+        
+        // Add manual transfers involving Bank
+        const transferDeposits = transactions.filter(t => t.category === 'ফান্ড ট্রান্সফার' && t.type === 'income' && t.source === 'ব্যাংক').reduce((sum, item) => sum + item.amount, 0);
+        const transferWithdrawals = transactions.filter(t => t.category === 'ফান্ড ট্রান্সফার' && t.type === 'expense' && t.source === 'ব্যাংক').reduce((sum, item) => sum + item.amount, 0);
+
+        return (deposits + transferDeposits) - (withdrawals + transferWithdrawals);
     }, [transactions]);
 
     const walletBreakdown = useMemo(() => {
@@ -452,8 +458,8 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
 
         transactions.forEach(t => {
             let src = t.source || 'ক্যাশ'; 
-            if (src === 'নগদ' && !walletSources.includes('নগদ')) src = 'ক্যাশ'; // Support for old physical cash name
-            if (src === 'ব্যাংক') src = 'নগদ'; // Migration: old Bank is now MFS Nagad
+            if (src === 'নগদ' && !walletSources.includes('নগদ')) src = 'ক্যাশ'; 
+            if (src === 'ব্যাংক') src = 'নগদ'; 
             
             if (breakdown[src] !== undefined) {
                 if (t.type === 'income') {
@@ -493,6 +499,12 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                 if (breakdown[dest] !== undefined) {
                     breakdown[dest] -= t.amount;
                 }
+            } else if (t.category === 'ফান্ড ট্রান্সফার' && t.source === 'ব্যাংক') {
+                // If transferring to/from Bank, update Bank (mapped as Nagad here usually)
+                if (breakdown['নগদ'] !== undefined) {
+                   if (t.type === 'income') breakdown['নগদ'] += t.amount;
+                   else breakdown['নগদ'] -= t.amount;
+                }
             }
         });
         
@@ -526,7 +538,6 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const addDocToCollection = async (collectionName: string, data: any) => {
         if (!user || !firestore) throw new Error("User or firestore not available");
         
-        // Sanitize data to remove undefined fields which cause Firestore errors
         const sanitizedData = Object.keys(data).reduce((acc: any, key) => {
             if (data[key] !== undefined) {
                 acc[key] = data[key];
