@@ -4,7 +4,7 @@ import React, { useState, useMemo } from 'react';
 import PageHeader from "@/components/page-header";
 import { useBudget } from "@/context/budget-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, TrendingDown, Filter as FilterIcon, Calendar as CalendarIcon, Tag } from "lucide-react";
+import { TrendingUp, TrendingDown, Filter as FilterIcon, Calendar as CalendarIcon, Tag, RefreshCw } from "lucide-react";
 import { format, parseISO, startOfDay, endOfDay } from "date-fns";
 import { bn } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -69,8 +69,15 @@ export default function HistoryPage() {
   }, [sortedTransactions, dateRange, selectedCategory]);
 
   const filteredTotals = useMemo(() => {
-    const income = filteredTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
-    const expense = filteredTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+    // CRITICAL: Exclude fund transfers from income/expense totals as they are not real income/expense
+    const income = filteredTransactions
+        .filter(t => t.type === 'income' && !t.isTransfer)
+        .reduce((sum, t) => sum + t.amount, 0);
+        
+    const expense = filteredTransactions
+        .filter(t => t.type === 'expense' && !t.isTransfer)
+        .reduce((sum, t) => sum + t.amount, 0);
+        
     return { income, expense };
   }, [filteredTransactions]);
 
@@ -251,28 +258,43 @@ export default function HistoryPage() {
 
       {filteredTransactions.length > 0 ? (
         <div className="space-y-3">
-          {filteredTransactions.map((transaction) => (
-            <Card key={transaction.id} className={cn("overflow-hidden transition-all duration-300 hover:shadow-md", transaction.type === 'income' ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-red-500')}>
-                <CardContent className="p-4">
-                    <div className="flex items-center justify-between text-[10px] font-bold text-muted-foreground mb-1 uppercase tracking-tighter">
-                        <div className="flex items-center gap-1">
-                            {transaction.type === 'income' ? 
-                                <TrendingUp className="h-3 w-3 text-green-600" /> : 
-                                <TrendingDown className="h-3 w-3 text-red-500" />}
-                            <span>{transaction.category}</span>
+          {filteredTransactions.map((transaction) => {
+            // Define colors based on transaction type and transfer status
+            const isTransfer = transaction.isTransfer || transaction.category === 'ফান্ড ট্রান্সফার';
+            const borderClass = isTransfer 
+                ? 'border-l-blue-500' 
+                : (transaction.type === 'income' ? 'border-l-green-500' : 'border-l-red-500');
+            const textClass = isTransfer 
+                ? 'text-blue-600' 
+                : (transaction.type === 'income' ? 'text-green-700' : 'text-red-600');
+            const Icon = isTransfer 
+                ? RefreshCw 
+                : (transaction.type === 'income' ? TrendingUp : TrendingDown);
+            const iconColor = isTransfer 
+                ? 'text-blue-500' 
+                : (transaction.type === 'income' ? 'text-green-600' : 'text-red-500');
+
+            return (
+                <Card key={transaction.id} className={cn("overflow-hidden transition-all duration-300 hover:shadow-md border-l-4", borderClass)}>
+                    <CardContent className="p-4">
+                        <div className="flex items-center justify-between text-[10px] font-bold text-muted-foreground mb-1 uppercase tracking-tighter">
+                            <div className="flex items-center gap-1">
+                                <Icon className={cn("h-3 w-3", iconColor)} />
+                                <span>{transaction.category}</span>
+                            </div>
+                            {transaction.date && <span>{format(parseISO(transaction.date), "d MMM, yyyy", { locale: bn })}</span>}
                         </div>
-                        {transaction.date && <span>{format(parseISO(transaction.date), "d MMM, yyyy", { locale: bn })}</span>}
-                    </div>
-                    
-                    <div className="flex justify-between items-baseline">
-                      <h3 className={cn("text-xl font-black tabular-nums", transaction.type === 'income' ? 'text-green-700' : 'text-red-600')}>
-                          {formatCurrency(transaction.amount)}
-                      </h3>
-                      {transaction.description && <p className="text-[10px] text-muted-foreground italic truncate max-w-[150px]">{transaction.description}</p>}
-                    </div>
-                </CardContent>
-            </Card>
-          ))}
+                        
+                        <div className="flex justify-between items-baseline">
+                          <h3 className={cn("text-xl font-black tabular-nums", textClass)}>
+                              {formatCurrency(transaction.amount)}
+                          </h3>
+                          {transaction.description && <p className="text-[10px] text-muted-foreground italic truncate max-w-[150px]">{transaction.description}</p>}
+                        </div>
+                    </CardContent>
+                </Card>
+            );
+          })}
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-lg bg-muted/20">
