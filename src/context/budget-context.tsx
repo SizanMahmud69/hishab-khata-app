@@ -26,6 +26,8 @@ export interface Transaction {
     source: string; // ক্যাশ, বিকাশ, রকেট, নগদ, ব্যাংক
     createdAt?: any;
     isTransfer?: boolean;
+    fromWallet?: string; // New field for single-entry transfer
+    toWallet?: string;   // New field for single-entry transfer
 }
 
 export interface DebtNote {
@@ -437,7 +439,6 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     const rewardPoints = userProfile?.points ?? 0;
     const globalPopup = appConfig?.globalPopup ?? null;
     
-    // CRITICAL: Exclude isTransfer transactions from the dashboard summary cards
     const totalIncome = useMemo(() => transactions.filter(t => t.type === 'income' && !t.isTransfer).reduce((sum, item) => sum + item.amount, 0), [transactions]);
     const totalExpense = useMemo(() => transactions.filter(t => t.type === 'expense' && !t.isTransfer).reduce((sum, item) => sum + item.amount, 0), [transactions]);
     
@@ -445,11 +446,21 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         const deposits = transactions.filter(t => t.type === 'expense' && t.category === 'সঞ্চয় ডিপোজিট').reduce((sum, item) => sum + item.amount, 0);
         const withdrawals = transactions.filter(t => t.type === 'income' && t.category === 'সঞ্চয় উত্তোলন').reduce((sum, item) => sum + item.amount, 0);
         
-        // Add manual transfers involving Bank
-        const transferDeposits = transactions.filter(t => t.category === 'ফান্ড ট্রান্সফার' && t.type === 'income' && t.source === 'ব্যাংক').reduce((sum, item) => sum + item.amount, 0);
-        const transferWithdrawals = transactions.filter(t => t.category === 'ফান্ড ট্রান্সফার' && t.type === 'expense' && t.source === 'ব্যাংক').reduce((sum, item) => sum + item.amount, 0);
+        let transferNet = 0;
+        transactions.forEach(t => {
+            if (t.isTransfer) {
+                if (t.fromWallet && t.toWallet) {
+                    if (t.toWallet === 'ব্যাংক') transferNet += t.amount;
+                    if (t.fromWallet === 'ব্যাংক') transferNet -= t.amount;
+                } else if (t.source === 'ব্যাংক') {
+                    // Compatibility for old double-entry format
+                    if (t.type === 'income') transferNet += t.amount;
+                    else transferNet -= t.amount;
+                }
+            }
+        });
 
-        return (deposits + transferDeposits) - (withdrawals + transferWithdrawals);
+        return (deposits - withdrawals) + transferNet;
     }, [transactions]);
 
     const walletBreakdown = useMemo(() => {
@@ -459,15 +470,32 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         });
 
         transactions.forEach(t => {
-            let src = t.source || 'ক্যাশ'; 
-            if (src === 'নগদ' && !walletSources.includes('নগদ')) src = 'ক্যাশ'; 
-            if (src === 'ব্যাংক') src = 'নগদ'; 
-            
-            if (breakdown[src] !== undefined) {
-                if (t.type === 'income') {
-                    breakdown[src] += t.amount;
-                } else {
-                    breakdown[src] -= t.amount;
+            if (t.isTransfer && t.fromWallet && t.toWallet) {
+                // New single record transfer format
+                let from = t.fromWallet === 'ব্যাংক' ? 'নগদ' : t.fromWallet;
+                let to = t.toWallet === 'ব্যাংক' ? 'নগদ' : t.toWallet;
+                
+                if (breakdown[from] !== undefined) breakdown[from] -= t.amount;
+                if (breakdown[to] !== undefined) breakdown[to] += t.amount;
+            } else if (t.category === 'ফান্ড ট্রান্সফার' && !t.fromWallet) {
+                 // Compatibility for old double records
+                 let src = t.source === 'ব্যাংক' ? 'নগদ' : (t.source || 'ক্যাশ');
+                 if (breakdown[src] !== undefined) {
+                    if (t.type === 'income') breakdown[src] += t.amount;
+                    else breakdown[src] -= t.amount;
+                 }
+            } else {
+                // Normal transactions
+                let src = t.source || 'ক্যাশ'; 
+                if (src === 'নগদ' && !walletSources.includes('নগদ')) src = 'ক্যাশ'; 
+                if (src === 'ব্যাংক') src = 'নগদ'; 
+                
+                if (breakdown[src] !== undefined) {
+                    if (t.type === 'income') {
+                        breakdown[src] += t.amount;
+                    } else {
+                        breakdown[src] -= t.amount;
+                    }
                 }
             }
         });
@@ -501,11 +529,19 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
                 if (breakdown[dest] !== undefined) {
                     breakdown[dest] -= t.amount;
                 }
-            } else if (t.category === 'ফান্ড ট্রান্সফার' && t.source === 'ব্যাংক') {
-                // If transferring to/from Bank, update Bank (mapped as Nagad here usually)
-                if (breakdown['নগদ'] !== undefined) {
-                   if (t.type === 'income') breakdown['নগদ'] += t.amount;
-                   else breakdown['নগদ'] -= t.amount;
+            } else if (t.isTransfer) {
+                // Single record transfer
+                if (t.fromWallet === 'ব্যাংক' && breakdown['নগদ'] !== undefined) {
+                    breakdown['নগদ'] -= t.amount;
+                }
+                if (t.toWallet === 'ব্যাংক' && breakdown['নগদ'] !== undefined) {
+                    breakdown['নগদ'] += t.amount;
+                }
+                
+                // Compatibility for old double records
+                if (!t.fromWallet && t.source === 'ব্যাংক' && breakdown['নগদ'] !== undefined) {
+                     if (t.type === 'income') breakdown['নগদ'] += t.amount;
+                     else breakdown['নগদ'] -= t.amount;
                 }
             }
         });

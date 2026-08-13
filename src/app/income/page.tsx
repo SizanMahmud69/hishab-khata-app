@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useBudget } from "@/context/budget-context";
+import { useBudget, type Transaction } from "@/context/budget-context";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -103,25 +103,16 @@ export default function IncomePage() {
 
         try {
             if (source === 'ফান্ড ট্রান্সফার') {
-                // Submit two transactions for transfer
-                // 1. Expense from source
+                // Now creating only ONE transaction record for fund transfer
                 await addTransaction({
-                    type: 'expense',
+                    type: 'expense', // Type filtered out in totals
                     category: 'ফান্ড ট্রান্সফার',
                     amount,
                     date: new Date(date).toISOString(),
-                    description: `${walletSource}-এ ট্রান্সফার`,
+                    description: `${fromWallet} থেকে ${walletSource}-এ ট্রান্সফার`,
                     source: fromWallet,
-                    isTransfer: true
-                });
-                // 2. Income to destination
-                await addTransaction({
-                    type: 'income',
-                    category: 'ফান্ড ট্রান্সফার',
-                    amount,
-                    date: new Date(date).toISOString(),
-                    description: `${fromWallet} থেকে ট্রান্সফার`,
-                    source: walletSource,
+                    fromWallet: fromWallet,
+                    toWallet: walletSource,
                     isTransfer: true
                 });
 
