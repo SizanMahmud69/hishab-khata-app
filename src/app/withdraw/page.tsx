@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { useState, useEffect, useRef, Fragment } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import PageHeader from "@/components/page-header"
 import { Banknote, History, Gift, Info, Loader2 } from "lucide-react"
@@ -49,6 +50,7 @@ export default function WithdrawPage() {
     const { user } = useUser();
     const firestore = useFirestore();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [formKey, setFormKey] = useState(0);
     const searchParams = useSearchParams();
     const historyRef = useRef<HTMLDivElement>(null);
 
@@ -168,6 +170,8 @@ export default function WithdrawPage() {
                 description: `আপনার উইথড্র অনুরোধ সফল হয়েছে। ${pointsToDeduct} পয়েন্ট আপনার অ্যাকাউন্ট থেকে কেটে নেওয়া হয়েছে।`,
             });
             
+            // Reset form
+            setFormKey(prev => prev + 1);
             setPointsToWithdraw(0);
 
         } catch (error: any) {
@@ -228,7 +232,7 @@ export default function WithdrawPage() {
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <form onSubmit={handleWithdraw} className="space-y-6">
+                <form onSubmit={handleWithdraw} key={formKey} className="space-y-6">
                     <div className="grid sm:grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <Label htmlFor="points-to-withdraw">কত পয়েন্ট উইথড্র করবেন?</Label>

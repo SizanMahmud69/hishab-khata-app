@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -18,6 +19,7 @@ export default function DonatePage() {
     const { donationNumber } = useBudget();
     const firestore = useFirestore();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [formKey, setFormKey] = useState(0);
     
     const copyToClipboard = () => {
         navigator.clipboard.writeText(donationNumber);
@@ -50,7 +52,9 @@ export default function DonatePage() {
                 title: "ধন্যবাদ!",
                 description: "আপনার ডোনেশন রিপোর্টটি সফলভাবে জমা হয়েছে। আমাদের সাথে থাকার জন্য ধন্যবাদ।",
             });
-            (event.target as HTMLFormElement).reset();
+            
+            // Reset form
+            setFormKey(prev => prev + 1);
         } catch (error) {
             console.error("Donation report error:", error);
             toast({
@@ -127,7 +131,7 @@ export default function DonatePage() {
                 </div>
 
                 <Card className="h-full">
-                    <form onSubmit={handleDonationSubmit} className="h-full flex flex-col">
+                    <form onSubmit={handleDonationSubmit} key={formKey} className="h-full flex flex-col">
                         <CardHeader>
                             <CardTitle>ডোনেশন রিপোর্ট</CardTitle>
                             <CardDescription>ডোনেট করার পর নিচের ফর্মটি পূরণ করুন যাতে আমরা আপনাকে ধন্যবাদ জানাতে পারি।</CardDescription>

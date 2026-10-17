@@ -2,8 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Plus, Trash2, Loader2 } from "lucide-react";
+import { Plus, Trash2, Loader2, List as ListIcon } from "lucide-react";
 import { useBudget } from "@/context/budget-context";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,12 +24,13 @@ import { type DebtNote } from "@/context/budget-context";
 import PageHeader from "@/components/page-header";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { walletSources } from "@/lib/data";
+import Link from "next/link";
 
 export default function AddShopDuePage() {
     const { addDebtNote } = useBudget();
     const { toast } = useToast();
-    const router = useRouter();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [formKey, setFormKey] = useState(0);
     const { shops, addShop: addNewShopToList, removeShop } = useShops();
     const [isAddShopDialogOpen, setIsAddShopDialogOpen] = useState(false);
     const [isDeleteShopDialogOpen, setIsDeleteShopDialogOpen] = useState(false);
@@ -75,7 +75,8 @@ export default function AddShopDuePage() {
                 description: "নতুন দোকানের বাকি সফলভাবে যোগ করা হয়েছে।",
             });
 
-            router.push('/shop-dues');
+            // Reset form for batch entry
+            setFormKey(prev => prev + 1);
         } catch (error) {
             console.error("Error adding new due:", error);
             toast({ variant: "destructive", title: "ত্রুটি", description: "একটি সমস্যা হয়েছে।" });
@@ -94,22 +95,23 @@ export default function AddShopDuePage() {
                     description: `"${newShopName.trim()}" দোকানে যোগ করা হয়েছে।`,
                 });
                 setIsAddShopDialogOpen(false);
-            } else {
-                 toast({
-                    variant: "destructive",
-                    title: "ব্যর্থ",
-                    description: "এই দোকানটি ইতিমধ্যে তালিকায় রয়েছে।",
-                });
             }
         }
     }
 
 
     return (
-    <div className="flex-1 space-y-4">
-        <PageHeader title="নতুন বাকির হিসাব" description="দোকানের নাম এবং বাকির পরিমাণ লিখুন।" />
+    <div className="flex-1 space-y-4 animate-slide-in-right">
+        <PageHeader title="নতুন বাকির হিসাব" description="দোকানের নাম এবং বাকির পরিমাণ লিখুন।">
+             <Button variant="outline" asChild size="sm">
+                <Link href="/shop-dues">
+                    <ListIcon className="mr-2 h-4 w-4" />
+                    তালিকায় ফিরে যান
+                </Link>
+            </Button>
+        </PageHeader>
         <Card className="max-w-2xl mx-auto">
-            <form onSubmit={handleAddNewDue}>
+            <form onSubmit={handleAddNewDue} key={formKey}>
                 <CardHeader>
                     <CardTitle>নতুন বাকির তথ্য</CardTitle>
                     <CardDescription>অনুগ্রহ করে নিচের ফর্মটি পূরণ করুন।</CardDescription>

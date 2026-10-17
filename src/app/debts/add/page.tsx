@@ -2,9 +2,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react"
-import { useBudget, type DebtNote } from "@/context/budget-context";
+import { Loader2, List as ListIcon } from "lucide-react"
+import { useBudget } from "@/context/budget-context";
 import { Button } from "@/components/ui/button"
 import PageHeader from "@/components/page-header"
 import {
@@ -22,12 +21,13 @@ import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { walletSources } from "@/lib/data";
+import Link from "next/link";
 
 export default function AddDebtPage() {
     const { addDebtNote, addTransaction, walletBreakdown } = useBudget();
     const { toast } = useToast();
-    const router = useRouter();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [formKey, setFormKey] = useState(0);
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat("bn-BD", {
@@ -73,7 +73,6 @@ export default function AddDebtPage() {
         }
 
         try {
-            // Construct base object without optional fields to avoid undefined values
             const newDebtNote: any = {
                 type,
                 person,
@@ -85,12 +84,10 @@ export default function AddDebtPage() {
                 source: walletSource
             };
 
-            // Only add repaymentDate if it's actually provided
             if (repaymentDateStr) {
                 newDebtNote.repaymentDate = new Date(repaymentDateStr).toISOString();
             }
 
-            // 1. Add Transaction to update main balance
             if (type === 'lent') {
                 await addTransaction({
                     type: 'expense',
@@ -111,7 +108,6 @@ export default function AddDebtPage() {
                 });
             }
             
-            // 2. Add Debt Note to history
             await addDebtNote(newDebtNote);
 
             toast({
@@ -119,7 +115,8 @@ export default function AddDebtPage() {
                 description: "নতুন ধারের হিসাব সফলভাবে যোগ করা হয়েছে।",
             });
 
-            router.push('/debts');
+            // Reset form to allow batch entry
+            setFormKey(prev => prev + 1);
         } catch (error) {
             console.error("Error adding new debt:", error);
             toast({ 
@@ -133,10 +130,17 @@ export default function AddDebtPage() {
     }
 
   return (
-    <div className="flex-1 space-y-4">
-      <PageHeader title="নতুন ধারের হিসাব" description="সম্পর্কিত ব্যক্তির নাম এবং অর্থের পরিমাণ লিখুন।" />
+    <div className="flex-1 space-y-4 animate-slide-in-right">
+      <PageHeader title="নতুন ধারের হিসাব" description="সম্পর্কিত ব্যক্তির নাম এবং অর্থের পরিমাণ লিখুন।">
+         <Button variant="outline" asChild size="sm">
+            <Link href="/debts">
+                <ListIcon className="mr-2 h-4 w-4" />
+                তালিকায় ফিরে যান
+            </Link>
+        </Button>
+      </PageHeader>
       <Card className="max-w-2xl mx-auto">
-        <form onSubmit={handleAddNewDebt}>
+        <form onSubmit={handleAddNewDebt} key={formKey}>
             <CardHeader>
                 <CardTitle>নতুন ধারের তথ্য</CardTitle>
                 <CardDescription>অনুগ্রহ করে নিচের ফর্মটি পূরণ করুন।</CardDescription>

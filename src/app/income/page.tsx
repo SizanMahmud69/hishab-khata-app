@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button"
 import PageHeader from "@/components/page-header"
 import {
@@ -14,12 +14,13 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useBudget, type Transaction } from "@/context/budget-context";
+import { useBudget } from "@/context/budget-context";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { incomeSources, savingsDestinations, walletSources } from "@/lib/data";
-import { Loader2 } from "lucide-react";
+import { Loader2, History as HistoryIcon } from "lucide-react";
+import Link from "next/link";
 
 const months = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
 
@@ -28,7 +29,7 @@ const allSources = Array.from(new Set([...walletSources, 'ব্যাংক']))
 export default function IncomePage() {
     const { addTransaction, savingsBreakdown, walletBreakdown } = useBudget();
     const { toast } = useToast();
-    const formRef = useRef<HTMLFormElement>(null);
+    const [formKey, setFormKey] = useState(0);
     const [selectedSource, setSelectedSource] = React.useState<string | undefined>(undefined);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -48,8 +49,8 @@ export default function IncomePage() {
         const amount = parseFloat(formData.get('amount') as string);
         const date = formData.get('date') as string;
         const descriptionInput = formData.get('description') as string;
-        const walletSource = formData.get('walletSource') as string; // This is the "To" wallet
-        const fromWallet = formData.get('fromWallet') as string; // This is the "From" wallet for transfer
+        const walletSource = formData.get('walletSource') as string; 
+        const fromWallet = formData.get('fromWallet') as string; 
 
         if (!source || !amount || !date || !walletSource) {
             toast({
@@ -61,7 +62,6 @@ export default function IncomePage() {
             return;
         }
 
-        // Validation for Fund Transfer
         if (source === 'ফান্ড ট্রান্সফার') {
             if (!fromWallet) {
                 toast({ variant: "destructive", title: "তথ্য দিন", description: "কোথা থেকে ট্রান্সফার করছেন তা সিলেক্ট করুন।" });
@@ -74,7 +74,6 @@ export default function IncomePage() {
                 return;
             }
 
-            // Check balance in fromWallet
             const availableInSource = fromWallet === 'ব্যাংক' ? (savingsBreakdown['নগদ'] || 0) : (walletBreakdown[fromWallet] || 0);
             if (amount > availableInSource) {
                 toast({
@@ -87,7 +86,6 @@ export default function IncomePage() {
             }
         }
 
-        // Validation for Savings Withdrawal
         if (source === 'সঞ্চয় উত্তোলন') {
             const availableInDestination = savingsBreakdown[descriptionInput] || 0;
             if (amount > availableInDestination) {
@@ -103,9 +101,8 @@ export default function IncomePage() {
 
         try {
             if (source === 'ফান্ড ট্রান্সফার') {
-                // Now creating only ONE transaction record for fund transfer
                 await addTransaction({
-                    type: 'expense', // Type filtered out in totals
+                    type: 'expense',
                     category: 'ফান্ড ট্রান্সফার',
                     amount,
                     date: new Date(date).toISOString(),
@@ -115,7 +112,6 @@ export default function IncomePage() {
                     toWallet: walletSource,
                     isTransfer: true
                 });
-
                 toast({ title: "সফল!", description: "ফান্ড ট্রান্সফার সফলভাবে সম্পন্ন হয়েছে।" });
             } else {
                 let description = descriptionInput;
@@ -140,7 +136,8 @@ export default function IncomePage() {
                 });
             }
 
-            formRef.current?.reset();
+            // Reset form by incrementing key and clearing state
+            setFormKey(prev => prev + 1);
             setSelectedSource(undefined);
         } catch (error) {
             console.error("Error adding income:", error);
@@ -152,10 +149,17 @@ export default function IncomePage() {
 
   return (
     <div className="flex-1 space-y-4 animate-slide-in-right">
-      <PageHeader title="নতুন আয় যোগ করুন" description="আপনার আয়ের উৎস, পরিমাণ এবং তারিখ লিখুন।" />
+      <PageHeader title="নতুন আয় যোগ করুন" description="আপনার আয়ের উৎস, পরিমাণ এবং তারিখ লিখুন।">
+         <Button variant="outline" asChild size="sm">
+            <Link href="/history">
+                <HistoryIcon className="mr-2 h-4 w-4" />
+                হিস্টোরি
+            </Link>
+        </Button>
+      </PageHeader>
       
       <Card className="max-w-2xl mx-auto">
-        <form onSubmit={handleSubmit} ref={formRef}>
+        <form onSubmit={handleSubmit} key={formKey}>
             <CardHeader>
               <CardTitle>আয়ের তথ্য</CardTitle>
               <CardDescription>

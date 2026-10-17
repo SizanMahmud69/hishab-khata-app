@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button"
 import PageHeader from "@/components/page-header"
 import {
@@ -18,7 +19,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { useBudget } from "@/context/budget-context"
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from 'lucide-react';
+import { Loader2, History as HistoryIcon } from 'lucide-react';
+import Link from 'next/link';
 
 const months = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
 const billTypes = ['বিদ্যুৎ বিল', 'ইন্টারনেট বিল', 'গ্যাস বিল', 'পানি বিল', 'অন্যান্য বিল'];
@@ -26,7 +28,7 @@ const billTypes = ['বিদ্যুৎ বিল', 'ইন্টারনে�
 export default function ExpensesPage() {
     const { addTransaction, totalIncome, totalExpense, walletBreakdown } = useBudget();
     const { toast } = useToast();
-    const formRef = useRef<HTMLFormElement>(null);
+    const [formKey, setFormKey] = useState(0);
     const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -72,7 +74,6 @@ export default function ExpensesPage() {
             return;
         }
 
-        // Logical handling for different categories
         if (category === 'সঞ্চয় ডিপোজিট') {
             description = formData.get('savingsDestination') as string;
         } else if (category === 'বাড়ি ভাড়া') {
@@ -101,7 +102,8 @@ export default function ExpensesPage() {
                 description: "আপনার নতুন খরচ সফলভাবে যোগ করা হয়েছে।",
             });
 
-            formRef.current?.reset();
+            // Reset form by incrementing key and clearing state
+            setFormKey(prev => prev + 1);
             setSelectedCategory(undefined);
         } catch (error) {
             console.error("Error adding expense:", error);
@@ -113,10 +115,17 @@ export default function ExpensesPage() {
 
   return (
     <div className="flex-1 space-y-4 animate-slide-in-right">
-      <PageHeader title="নতুন খরচ যোগ করুন" description="আপনার খরচের বিভাগ, পরিমাণ এবং তারিখ লিখুন।" />
+      <PageHeader title="নতুন খরচ যোগ করুন" description="আপনার খরচের বিভাগ, পরিমাণ এবং তারিখ লিখুন।">
+         <Button variant="outline" asChild size="sm">
+            <Link href="/history">
+                <HistoryIcon className="mr-2 h-4 w-4" />
+                হিস্টোরি
+            </Link>
+        </Button>
+      </PageHeader>
       
       <Card className="max-w-2xl mx-auto">
-        <form onSubmit={handleSubmit} ref={formRef}>
+        <form onSubmit={handleSubmit} key={formKey}>
             <CardHeader>
               <CardTitle>খরচের তথ্য</CardTitle>
               <CardDescription>
@@ -161,7 +170,6 @@ export default function ExpensesPage() {
                 <Input id="date" name="date" type="date" defaultValue={new Date().toISOString().split('T')[0]} required/>
               </div>
 
-              {/* Dynamic inputs based on selected category */}
               <div className="grid w-full items-center gap-1.5">
                 <Label htmlFor="dynamic-field">বিবরণ</Label>
                 
