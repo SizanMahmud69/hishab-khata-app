@@ -87,7 +87,10 @@ export default function IncomePage() {
         }
 
         if (source === 'সঞ্চয় উত্তোলন') {
-            const availableInDestination = savingsBreakdown[descriptionInput] || 0;
+            // Map "ব্যাংক" to "নগদ" key for consistency with budget context mapping
+            const savingsKey = descriptionInput === 'ব্যাংক' ? 'নগদ' : descriptionInput;
+            const availableInDestination = savingsBreakdown[savingsKey] || 0;
+            
             if (amount > availableInDestination) {
                 toast({
                     variant: "destructive",
@@ -136,7 +139,6 @@ export default function IncomePage() {
                 });
             }
 
-            // Reset form by incrementing key and clearing state
             setFormKey(prev => prev + 1);
             setSelectedSource(undefined);
         } catch (error) {
