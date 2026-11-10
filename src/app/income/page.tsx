@@ -24,8 +24,6 @@ import Link from "next/link";
 
 const months = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
 
-const allSources = Array.from(new Set([...walletSources, 'ব্যাংক']));
-
 export default function IncomePage() {
     const { addTransaction, savingsBreakdown, walletBreakdown } = useBudget();
     const { toast } = useToast();
@@ -64,7 +62,7 @@ export default function IncomePage() {
 
         if (source === 'ফান্ড ট্রান্সফার') {
             if (!fromWallet) {
-                toast({ variant: "destructive", title: "তথ্য দিন", description: "কোথা থেকে ট্রান্সফার করছেন তা সিলেক্ট করুন।" });
+                toast({ variant: "destructive", title: "정보 দিন", description: "কোথা থেকে ট্রান্সফার করছেন তা সিলেক্ট করুন।" });
                 setIsSubmitting(false);
                 return;
             }
@@ -74,7 +72,7 @@ export default function IncomePage() {
                 return;
             }
 
-            const availableInSource = fromWallet === 'ব্যাংক' ? (savingsBreakdown['নগদ'] || 0) : (walletBreakdown[fromWallet] || 0);
+            const availableInSource = walletBreakdown[fromWallet] || 0;
             if (amount > availableInSource) {
                 toast({
                     variant: "destructive",
@@ -197,7 +195,7 @@ export default function IncomePage() {
                                 <SelectValue placeholder="উৎস ওয়ালেট নির্বাচন করুন" />
                             </SelectTrigger>
                             <SelectContent>
-                                {allSources.map(src => <SelectItem key={src} value={src}>{src}</SelectItem>)}
+                                {walletSources.map(src => <SelectItem key={src} value={src}>{src}</SelectItem>)}
                             </SelectContent>
                         </Select>
                     </div>
@@ -205,14 +203,14 @@ export default function IncomePage() {
 
                 <div className="grid w-full items-center gap-1.5">
                     <Label htmlFor="walletSource">
-                        {selectedSource === 'ফান্ড ট্রান্সফার' ? "কোথায় জমা হচ্ছে?" : "কোথায় জমা হচ্ছে?"}
+                        কোথায় জমা হচ্ছে?
                     </Label>
                     <Select name="walletSource" required>
                         <SelectTrigger>
                             <SelectValue placeholder="গন্তব্য ওয়ালেট নির্বাচন করুন" />
                         </SelectTrigger>
                         <SelectContent>
-                            {allSources.map(src => <SelectItem key={src} value={src}>{src}</SelectItem>)}
+                            {walletSources.map(src => <SelectItem key={src} value={src}>{src}</SelectItem>)}
                         </SelectContent>
                     </Select>
                 </div>
