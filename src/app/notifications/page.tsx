@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useMemo, Fragment } from 'react';
@@ -59,13 +60,14 @@ export default function NotificationsPage() {
     }
 
     const markAllAsRead = async () => {
-        if (!user || !firestore || !monthlyNotifications) return;
+        if (!user || !firestore || !notifications) return;
         
-        const unreadNotifications = monthlyNotifications.filter(n => !n.read);
+        const unreadNotifications = notifications.filter(n => !n.read);
         if (unreadNotifications.length === 0) return;
 
         const batch = writeBatch(firestore);
-        unreadNotifications.forEach(notification => {
+        // Only mark the first 500 (Firestore batch limit) just in case there are too many
+        unreadNotifications.slice(0, 500).forEach(notification => {
             const docRef = doc(firestore, `users/${user.uid}/notifications`, notification.id);
             batch.update(docRef, { read: true });
         });
@@ -75,7 +77,7 @@ export default function NotificationsPage() {
     return (
         <div className="flex-1 space-y-4 animate-slide-in-right">
             <PageHeader title="নোটিফিকেশন" description="আপনার সকল গুরুত্বপূর্ণ আপডেট এবং বার্তা।">
-                <Button onClick={markAllAsRead} disabled={isLoading || (monthlyNotifications && monthlyNotifications.every(n => n.read))}>
+                <Button onClick={markAllAsRead} disabled={isLoading || !notifications || notifications.every(n => n.read)}>
                     সবগুলো পঠিত করুন
                 </Button>
             </PageHeader>
